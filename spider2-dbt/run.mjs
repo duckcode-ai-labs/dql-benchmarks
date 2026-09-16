@@ -115,11 +115,14 @@ async function main() {
       continue;
     }
     const imported = importTask(id, { runId: options.run, cli });
-    if (imported.dbtParse.code !== 0 || imported.dqlInit.code !== 0) {
-      results.set(id, { error: 'import failed', import: imported });
-      console.log('import failed');
+    // A starting project that does not parse is still attempted: making it
+    // build is often the task. Only a failed `dql init` stops a task.
+    if (imported.dqlInit.code !== 0) {
+      results.set(id, { error: 'dql init failed', import: imported });
+      console.log('dql init failed');
       continue;
     }
+    if (imported.dbtParse.code !== 0) process.stdout.write('(starting project does not parse) ');
     const meta = taskMetaDir(options.run, id);
     const runFile = join(meta, 'run.json');
     writeFileSync(runFile, `${JSON.stringify({
@@ -145,6 +148,7 @@ async function main() {
       console.log(`no result (exit ${run.code}; see ${join(meta, 'agent-stderr.txt')})`);
       continue;
     }
+    result.startingProjectParses = imported.dbtParse.code === 0;
     results.set(id, result);
     console.log(`${result.stop}, ${result.toolCalls} tool calls, ${result.providerDispatches} AI calls, `
       + `${Math.round(result.wallMs / 1000)} s, final dbt run exit ${result.finalDbtRun.exitCode}`);
@@ -197,6 +201,7 @@ async function main() {
         passed,
         ran: Boolean(result),
         ...(result && !result.error ? {
+          startingProjectParses: result.startingProjectParses ?? null,
           stop: result.stop,
           terminated: result.terminated,
           budgetTripped: result.budgetTripped,
