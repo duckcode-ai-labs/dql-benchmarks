@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-DATA="$ROOT/data/dbt-sl-bench"
+DATA="$ROOT/data/insurance"
 mkdir -p "$DATA"
 
 clone() {
