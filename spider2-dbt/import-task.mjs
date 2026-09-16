@@ -7,7 +7,7 @@
 // Nothing task-specific is added. DQL reads the dbt project and the DuckDB
 // database on its own; that is part of what is being measured.
 
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -34,7 +34,16 @@ function linkSharedConnectors(dir) {
 }
 
 export function taskWorkDir(runId, instanceId) {
-  return join(REPO_ROOT, 'work', 'spider2-dbt', 'runs', runId, instanceId);
+  return join(REPO_ROOT, 'work', 'spider2-dbt', 'runs', runId, 'projects', instanceId);
+}
+
+/**
+ * Where a task's instruction, run file, trajectory and result live. Kept out
+ * of the project folder: the agent lists that folder, and the database built
+ * there is what gets graded.
+ */
+export function taskMetaDir(runId, instanceId) {
+  return join(REPO_ROOT, 'work', 'spider2-dbt', 'runs', runId, 'meta', instanceId);
 }
 
 function dbt(args, cwd) {
@@ -61,10 +70,19 @@ export function importTask(instanceId, { runId = 'dev', cli = resolveDqlCli() } 
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
   cpSync(join(EXAMPLES_DIR, instanceId), dir, { recursive: true });
-  writeFileSync(join(dir, 'TASK.md'), `# ${instanceId}\n\n${task.instruction}\n`);
+  const meta = taskMetaDir(runId, instanceId);
+  rmSync(meta, { recursive: true, force: true });
+  mkdirSync(meta, { recursive: true });
+  const instructionFile = join(meta, 'instruction.txt');
+  writeFileSync(instructionFile, `${task.instruction}\n`);
 
   const parse = dbt(['parse'], dir);
+  // What `dql init` adds is DQL's workspace, not part of the dbt project: the
+  // agent's file listing leaves those entries out. dbt's own output folders
+  // are excluded by the agent already.
+  const before = new Set(readdirSync(dir));
   const init = runDql(['init', dir], { cli, cwd: dir });
+  const addedByDqlInit = readdirSync(dir).filter((name) => !before.has(name)).sort();
   linkSharedConnectors(dir);
   const configPath = join(dir, 'dql.config.json');
   const config = existsSync(configPath) ? JSON.parse(readFileSync(configPath, 'utf-8')) : null;
@@ -72,12 +90,15 @@ export function importTask(instanceId, { runId = 'dev', cli = resolveDqlCli() } 
   const result = {
     instanceId,
     dir,
+    meta,
+    instructionFile,
     database: task.database,
+    addedByDqlInit,
     dbtParse: { code: parse.code, tail: parse.output.split('\n').slice(-6).join('\n') },
     dqlInit: { code: init.code, tail: `${init.stdout}${init.stderr}`.split('\n').slice(-6).join('\n') },
     config,
   };
-  writeFileSync(join(dir, '.import.json'), `${JSON.stringify(result, null, 2)}\n`);
+  writeFileSync(join(meta, 'import.json'), `${JSON.stringify(result, null, 2)}\n`);
   return result;
 }
 

@@ -60,7 +60,14 @@ Where a benchmark ships its own grader (Spider 2.0-DBT's `evaluate.py`), that gr
 
 Where we compare rows ourselves, column names and order are ignored, numbers compare within 1e-6, a date equals a midnight timestamp of the same day, and duplicate rows must appear the same number of times.
 
-## 8. Before any number is trusted
+## 8. No tuning on the test set, and no path to the answers
+
+- **The product is not tuned to benchmark tasks.** The agent's prompt names no task, table or schema, and its code has no task-specific branches. Changes made while building the harness fix general faults (a truncated file listing, a prose reply treated as finishing), never a task's content.
+- **Development tasks are declared and kept out of scored runs.** Any task whose run was inspected while building the harness is listed in the benchmark's `dev-tasks.json` with the reason. `run.mjs --scored` refuses to include them, and any result on them is reported separately.
+- **The agent code is frozen before a scored run.** The report records the DQL version and commit, and a scored run from a modified or unreleased build is not published.
+- **The agent cannot reach the graded answers.** The answer databases live outside the task folder. The agent's file tools are confined to the task folder. Its SQL tool opens only the task database, with file access limited to the task folder and then locked (no reading other files, no `ATTACH`, no switching the restriction off). Model files that reference absolute paths, leave the folder with `..`, or use `ATTACH` are refused before dbt can run them, and each refusal is recorded in the result.
+
+## 9. Before any number is trusted
 
 - The baseline condition must reproduce the publisher's own reported baseline within a few points. If it does not, the harness is wrong and nothing is published.
 - Replaying the recordings on a clean machine must reproduce the published accuracy columns exactly.
