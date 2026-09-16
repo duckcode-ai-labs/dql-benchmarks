@@ -9,11 +9,11 @@ if [ ! -x "$VENV/bin/python" ]; then
   python3 -m venv "$VENV"
 fi
 "$VENV/bin/pip" install --quiet --upgrade pip
-"$VENV/bin/pip" install --quiet dbt-core dbt-duckdb duckdb pandas
+# google-cloud-bigquery: the publisher's grader imports it at module load even
+# for the DuckDB tasks, and fails to start without it.
+"$VENV/bin/pip" install --quiet dbt-core dbt-duckdb duckdb pandas google-cloud-bigquery tqdm
 
-REQUIREMENTS="$ROOT/data/spider2-dbt/Spider2/methods/spider-agent-dbt/requirements.txt"
-if [ -f "$REQUIREMENTS" ]; then
-  "$VENV/bin/pip" install --quiet -r "$REQUIREMENTS"
-fi
+# The publisher's reference agent (methods/spider-agent-dbt) is not used here:
+# its requirements pull in GPU packages that do not build on every machine.
 
 "$VENV/bin/dbt" --version

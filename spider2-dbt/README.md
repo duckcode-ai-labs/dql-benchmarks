@@ -17,17 +17,24 @@ Both run every task with the same model, budget and recordings policy (see [meth
 
 | Step | State |
 |---|---|
-| Download and set-up scripts | written, not yet run |
-| Task importer (task → DQL project) | to do |
+| Download and set-up scripts | done (upstream `cafb867`) |
+| Task inventory (`manifest.json`) | done: 68 graded tasks |
+| Submission writer and pre-check with the publisher's `evaluate.py` | done; untouched starting databases score 9/68 |
+| Task importer (task → DQL project) | done; `playbook001` imports, `dql doctor` passes, DQL queries the task database |
 | DQL `dbt-task` agent command | to do, in the core DQL repo |
-| Submission writer and local pre-check with `evaluate.py` | to do |
 | Baseline reproduces the published GPT-5 number | to do |
+
+**Read [FINDINGS.md](FINDINGS.md) first:** only 61 of the 68 graded tasks can pass with the published grader, and 9 pass with no work at all.
 
 ## Running
 
 ```bash
-./spider2-dbt/download.sh    # clones the publisher's repo into data/ and fetches the task data
-./spider2-dbt/setup.sh       # Python environment with dbt-duckdb and the grader's requirements
+./spider2-dbt/setup.sh                 # Python environment: dbt-duckdb and the grader's requirements
+./spider2-dbt/download.sh              # publisher's repo and task data into data/
+npm run connectors:install             # DuckDB driver DQL loads, shared by every task
+node spider2-dbt/inventory.mjs         # record the task set in manifest.json
+node spider2-dbt/pipe-check.mjs        # score untouched starting databases with evaluate.py
+node spider2-dbt/import-task.mjs playbook001   # one task → a DQL project under work/
 ```
 
 Downloaded data lives under `data/spider2-dbt/` and is never committed.
