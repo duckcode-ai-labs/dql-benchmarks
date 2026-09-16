@@ -39,7 +39,7 @@ export function normalizeReport(report, label, metric = 'passed') {
       durationMs: typeof result.durationMs === 'number' ? result.durationMs : (result.wallMs ?? null),
       dispatches: result.providerDispatchCount ?? result.dispatches ?? null,
       costUsd: typeof result.costUsd === 'number' ? result.costUsd : null,
-      trustState: result.trustState ?? null,
+      trustState: result.trustState ?? result.answer?.trustState ?? null,
     });
   }
   const eligible = report.provenance?.realProviderQualityEligible
