@@ -271,7 +271,7 @@ A separate agent, which had not seen the benchmark, wrote both layers under the 
 
 **Deviation 3 (SQL dialect).** dbt Labs' MetricFlow time spine (L2 and L3 only) uses Snowflake's `to_date('01/01/2000','mm/dd/yyyy')`; it is built with the DATE literal `DATE '2000-01-01'` instead (`MODEL_PORTS` in `build.mjs`).
 
-**Next:** L1, L2 and L3 are run on the 41 headline questions, under the rules in [layers/AUTHORING.md](layers/AUTHORING.md); then L1, L2 and L3 are run and compared with L0, with repeats.
+**Next:** L1, L2 and L3 are run on the 41 headline questions and compared with L0, then repeated; the unanswerable set is run on L0 and L3.
 
 ## Reproduce
 

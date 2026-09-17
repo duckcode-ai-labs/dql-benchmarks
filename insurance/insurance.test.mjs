@@ -75,3 +75,19 @@ test('flags a right answer that skipped a table the correct query reads', () => 
     { same: false, missing: ['policy', 'premium'], extra: [] },
   );
 });
+
+import { baselinePrompt, stripFence } from './baseline-text2sql.mjs';
+
+test("the baseline keeps dbt Labs' prompt and adds only the dialect line", () => {
+  const prompt = baselinePrompt('CREATE TABLE t (a int);', 'How many?');
+  assert.match(prompt, /Given the database described by the following DDL:\n\s+CREATE TABLE t \(a int\);/);
+  assert.match(prompt, /The database is DuckDB\./);
+  assert.match(prompt, /return just the query, so it can be run\n\s+verbatim from your response\./);
+  assert.match(prompt, /Here's the question:\n\s+How many\?/);
+});
+
+test('a code fence around the reply is removed, nothing else', () => {
+  assert.equal(stripFence('```sql\nSELECT 1;\n```'), 'SELECT 1;');
+  assert.equal(stripFence('SELECT 1;'), 'SELECT 1;');
+  assert.equal(stripFence('Here: ```sql\nSELECT 1\n```'), 'Here: ```sql\nSELECT 1\n```');
+});
