@@ -95,3 +95,34 @@ test('a code fence around the reply is removed, nothing else', () => {
 test('names defined by a WITH clause are not counted as tables', () => {
   assert.deepEqual(tablesIn('WITH claim_totals AS (SELECT 1 FROM main.claim_amount), "p" as (select 2 from policy) SELECT * FROM claim_totals JOIN p ON true JOIN main.claim c ON true'), ['claim', 'claim_amount', 'policy']);
 });
+
+import { outcome, summarizeRepeats } from './repeats.mjs';
+
+test('reading several runs together: averages, pooled interval and stability', () => {
+  const run = (label, outcomes) => ({ label, results: outcomes.map(([name, kind, trust]) => ({
+    name,
+    executionMatched: kind === 'right',
+    ...(kind === 'stopped' ? { kind: 'no_answer' } : { kind: 'uncertified' }),
+    answer: { trustState: trust ?? 'review_required' },
+  })) });
+  const runs = [
+    run('a', [['q1', 'right'], ['q2', 'wrong'], ['q3', 'stopped'], ['q4', 'wrong', 'governed']]),
+    run('b', [['q1', 'right'], ['q2', 'right'], ['q3', 'stopped'], ['q4', 'right']]),
+  ];
+  const summary = summarizeRepeats(runs);
+  assert.deepEqual(summary.runs.map((r) => r.right), [1, 3]);
+  assert.equal(summary.meanAccuracy, 0.5);
+  assert.deepEqual([summary.pooled.right, summary.pooled.total], [4, 8]);
+  assert.equal(summary.stability, 0.5);
+  assert.equal(summary.alwaysRight, 1);
+  assert.equal(summary.alwaysWrongOrStopped, 1);
+  assert.equal(summary.wrongShownAsTrustworthy, 1);
+  assert.deepEqual(summary.unstable.map((row) => row.name), ['q2', 'q4']);
+});
+
+test('an outcome is what the user saw', () => {
+  assert.equal(outcome({ executionMatched: true, kind: 'uncertified' }), 'right');
+  assert.equal(outcome({ executionMatched: false, kind: 'no_answer' }), 'stopped');
+  assert.equal(outcome({ executionMatched: false, route: 'clarify', kind: 'uncertified' }), 'stopped');
+  assert.equal(outcome({ runtimeError: 'timeout' }), 'no answer');
+});
