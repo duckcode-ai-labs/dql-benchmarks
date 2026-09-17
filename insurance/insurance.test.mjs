@@ -126,3 +126,44 @@ test('an outcome is what the user saw', () => {
   assert.equal(outcome({ executionMatched: false, route: 'clarify', kind: 'uncertified' }), 'stopped');
   assert.equal(outcome({ runtimeError: 'timeout' }), 'no answer');
 });
+
+import { answeredBy, measureColumnIndexes, regrade } from './regrade.mjs';
+
+test('the measure columns of a correct answer are the ones it aggregates or names as numbers', () => {
+  assert.deepEqual(measureColumnIndexes('select policy_number, sum(policy_amount) from t', ['Policy_Number', 'sum(policy_amount)']), [1]);
+  assert.deepEqual(measureColumnIndexes('SELECT company_claim_number, (a.claim_amount + b.claim_amount) as LossAmount FROM t', ['Company_Claim_Number', 'LossAmount']), [1]);
+  assert.deepEqual(measureColumnIndexes('select policy_number, agentid from t', ['Policy_Number', 'agentid']), []);
+  // A name that identifies the thing is not the number asked for.
+  assert.deepEqual(measureColumnIndexes('select policy_number, company_claim_number from t', ['Policy_Number', 'Company_Claim_Number']), []);
+  assert.deepEqual(measureColumnIndexes('select party_identifier, count(x) as NoOfPolicies from t', ['Party_Identifier', 'NoOfPolicies']), [1]);
+  assert.deepEqual(measureColumnIndexes('select avg(DATEDIFF(\'day\', a, b)) from t', ['avg(datediff)']), [0]);
+});
+
+test('an answer is attributed to the path that produced it', () => {
+  assert.equal(answeredBy({ answer: { tier: 'certified' } }), 'certified block');
+  assert.equal(answeredBy({ answer: { tier: 'semantic' } }), 'governed metric');
+  assert.equal(answeredBy({ answer: { tier: 'exploratory' } }), 'AI-written SQL');
+  assert.equal(answeredBy({ kind: 'no_answer' }), 'stopped');
+  assert.equal(answeredBy({ answer: {} }), 'no SQL recorded');
+});
+
+test('grading the same answers strictly and leniently', () => {
+  const gold = { cases: [
+    { id: 'a', quadrant: 'HQLS', dbtLabsSelected: true, goldSql: 'select party_identifier, sum(policy_amount) from t', gold: { columns: ['Party_Identifier', 'sum(policy_amount)'], rows: [[1, 98000]] } },
+    { id: 'b', quadrant: 'LQLS', dbtLabsSelected: false, goldSql: 'select 2 from policy', gold: { columns: ['n'], rows: [[2]] } },
+  ] };
+  const report = { run: { layer: 'L3', id: 'r' }, results: [
+    // Right values, missing the id column: strict no, lenient yes.
+    { name: 'a', executionMatched: false, answer: { tier: 'semantic', trustState: 'governed', sql: 'select total' } },
+    { name: 'b', executionMatched: true, answer: { tier: 'exploratory', trustState: 'review_required', sql: 'select 2 from main.policy' } },
+  ] };
+  const rows = regrade(report, gold, { 'select total': { rows: [[98000]] }, 'select 2 from main.policy': { rows: [[2]] } });
+  // a: the number is right, the id column the correct answer has is missing.
+  // b: a listing question with no measure keeps its strict verdict.
+  assert.deepEqual(rows.map((row) => [row.id, row.strict, row.measures, row.answeredBy]), [
+    ['a', false, true, 'governed metric'],
+    ['b', true, true, 'AI-written SQL'],
+  ]);
+  assert.equal(rows[1].tables.same, true);
+  assert.equal(rows[0].rerunAgrees, true);
+});
