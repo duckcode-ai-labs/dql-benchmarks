@@ -36,10 +36,24 @@ We repeat this on four copies of the project. Each copy adds one DQL layer:
 - Every AI call is recorded, so the run can be replayed.
 - We report the questions we looked at while building, separately from the headline numbers.
 
-**Where we are** (see [Step 9](#step-9-results)): on DQL's development build with the benchmark's fixes (`629db0f9`), Claude Sonnet 5 through the subscription, one run each:
+**Where we are** (see [Step 9](#step-9-results)): latest run `sub-r6`, on DQL's development build `f064f023`, Claude Sonnet 5 through the subscription, one run per layer:
 
 | | Right | Wrong, flagged for review | **Wrong, shown as trustworthy** | Stopped | Median time |
 |---|---:|---:|---:|---:|---:|
+| Plain text-to-SQL (dbt Labs' prompt, 13 hand-picked tables with keys) | 19/41 (46%) | 0 | **22** | 0 | 6 s |
+| DQL L0: dbt project only | 14/41 (34%) | 9 | **0** | 18 | 47 s |
+| DQL L1: + modeling | 17/41 (41%) | 13 | **0** | 11 | 38 s |
+| DQL L2: + dbt Labs' semantic layer | 22/41 (54%) | 15 | **0** | 4 | 36 s |
+| DQL L3: + skills | 26/41 (63%) | 12 | **0** | 3 | 33 s |
+
+- **L3 is significantly more accurate than plain text-to-SQL:** +17 points, 95% CI +4 to +30, exact McNemar p = 0.04. L3 was right on 8 questions that text-to-SQL missed, and text-to-SQL on 1 that L3 missed.
+- **L3 against L0:** +29 points, p = 0.0005, with no question lost.
+- **The hardest quadrant** (complex questions over the complex schema): L3 answered 7 of 10. The 2023 paper reported 0% for SQL and 36–39% with a knowledge graph there, using GPT-4, so this is context, not a head-to-head result.
+- **dbt Labs' 11 questions:** 10 right.
+- **No DQL layer showed a wrong answer as trustworthy.** Plain text-to-SQL showed 22.
+- **Single runs swing by about ±4 questions** (L1 was 20 in `sub-r5` and 17 here), so none of this is final. Repeat runs come next. These results are **not published**: a development build, single runs, and answers still slower than we want.
+
+---|---:|---:|---:|---:|---:|
 | Plain text-to-SQL (dbt Labs' prompt, 13 hand-picked tables with keys) | 19/41 (46%) | 0 | **22** | 0 | 6 s |
 | DQL L0: dbt project only | 10/41 (24%) | 6 | **0** | 25 | 46 s |
 | DQL L1: + modeling | 20/41 (49%) | 7 | **0** | 14 | 42 s |
@@ -287,6 +301,18 @@ Full scorecard: [results/L0-subscription-r2.md](results/L0-subscription-r2.md). 
 - **In every run**, no result rows were sent to the AI model.
 - **About the "harness had uncommitted changes" flag on these runs:** the harness was being edited while they ran. From the next runs on, no tracked file is edited during a run.
 
+### Run `sub-r6`: all layers on DQL `f064f023` (marker tables and wide questions)
+
+Scorecards: [L0](results/L0-subscription-r6.md) · [L1](results/L1-subscription-r6.md) · [L2](results/L2-subscription-r6.md) · [L3](results/L3-subscription-r6.md) · paired: [against plain text-to-SQL](results/paired-r6-vs-baseline.md), [between layers](results/paired-r6-layers.md) · unanswerable: [L0](results/L0-unanswerable-r6.md), [L3](results/L3-unanswerable-r6.md) (each stopped correctly on 14 of 15).
+
+**What changed against `sub-r5`:**
+- L0 10 → 14, L1 20 → 17, L2 21 → 22, L3 23 → 26.
+- Stops fell again: L3 from 6 to 3.
+
+**Reading the L1 drop question by question:**
+- Four of the five questions L1 lost were the model writing different SQL for the same reading: a guessed role code, an average per amount row instead of per claim, the parts of a total without the total.
+- **The fifth was a DQL side effect of the wide-question change.** More tables were named, the warehouse is asked about at most five tables per call, and the bridge tables the Modeling map had added were left without columns and dropped. DQL now asks in batches, bridge tables first (defect 16).
+
 ### Run `sub-r5`: all layers on DQL `629db0f9` (the benchmark's fixes)
 
 Scorecards: [L0](results/L0-subscription-r5.md) · [L1](results/L1-subscription-r5.md) · [L2](results/L2-subscription-r5.md) · [L3](results/L3-subscription-r5.md) · paired: [against plain text-to-SQL](results/paired-r5-vs-baseline.md), [between layers](results/paired-r5-layers.md) · unanswerable: [L0](results/L0-unanswerable-r5.md), [L3](results/L3-unanswerable-r5.md).
@@ -369,6 +395,7 @@ Every fix below is general: it names no benchmark table, column or question. Eac
 | 12 | Ask stops on about half of answerable questions | every run | defects 3–5 cut stops from 25 to 6 (run `sub-r5`) | partly fixed |
 | 13 | A table that only marks rows of another (a `loss_payment` row marks a claim amount) was not understood: drafts summed every claim amount, or stopped because "no table holds loss reserve amounts" | `sub-r5` L3 misses | a key-only side of a modeled one-to-one relationship is described to the SQL writer as a marker, and its base table is added | DQL `f064f023` |
 | 14 | Wide questions lost tables: "loss reserves" did not name `loss_reserve`, and tables named in a metric's definition were not included | `sub-r5` L3 misses | question words match table names; a metric brings the tables its definition names; larger table budget | DQL `f064f023` |
+| 16 | Bridge tables added from the Modeling map were dropped on wide questions (columns are described five tables per call, and the bridges came last) | `sub-r6` L1 | columns described in batches of five, bridge tables first | written, being verified |
 | 15 | The question-reading step can stop with a question back before any answer path is tried | `sub-r5` L3 misses | a first fix (send such readings straight to AI SQL) was dropped: DQL's golden suite showed it lost a follow-up's inherited limit and skipped a certified answer. It needs a design that tries certified and semantic answers first | open |
 
 ## Reproduce
