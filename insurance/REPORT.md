@@ -317,6 +317,25 @@ A separate agent, which had not seen the benchmark, wrote both layers under the 
 
 **Next:** L1, L2 and L3 are run on the 41 headline questions and compared with L0, then repeated; the unanswerable set is run on L0 and L3.
 
+## Step 10: DQL defects the benchmark found, and their fixes
+
+Every fix below is general: it names no benchmark table, column or question. Each is checked on DQL's own golden question suites (jaffle, NBA, office), and every benchmark number reports the DQL build it ran on.
+
+| # | Defect | Found by | Fix | State |
+|---|---|---|---|---|
+| 1 | Ask never sent a reasoning effort to the AI model (lost when the previous runtime was removed on 2026-09-05); on the Claude subscription one step took 80–120 s and often timed out | first L0 run | effort again set per call: reading at the route effort, SQL writing at the SQL-authoring effort, repairs one level up, capped by Settings | DQL `0a23c4d9` |
+| 2 | `dql agent eval` stopped the whole suite when one question timed out | first L0 run | the question is recorded as failed, never as a refusal; `--case-timeout-ms` | DQL `afa6f908` |
+| 3 | When Ask writes SQL itself, the tables *between* the question's tables (bridge tables) were never chosen, so modeled joins could not be used ("no column links claim to policy") | L1 run | the cheapest route over the Modeling map (certified joins first, up to 3 hops) adds its bridge tables and shows each hop as a join hint | written, golden suites being re-recorded |
+| 4 | Skills never reached the SQL writer, and the question reader sees only their first 300 characters | L3 run | the two skills sharing the most words with the question and tables are given to the SQL writer, up to 1,500 characters each | written, same check |
+| 5 | Tables that only share a column name with the question's tables (look-alikes) were ranked like connected ones, and joins through them returned no rows | L1/L3 runs | on a modeled project, a table on the Modeling map ranks by whether a modeled route (two hops at most) reaches the question's tables | written, same check |
+| 6 | An absolute machine path appeared in an answer summary and the next AI prompt ("MetricFlow is installed but /var/…/semantic_manifest.json was not found") | re-recording DQL's golden suites | the path is shown relative to the project | written, same check |
+| 7 | DQL's golden suite used whichever MetricFlow the developer had installed, so recordings made on one machine did not replay | same | the suite pins the native semantic engine, as CI has no MetricFlow | written, same check |
+| 8 | MetricFlow counted as ready when `mf --version` works, even without the warehouse adapter; no fallback to DQL's native semantic engine when MetricFlow fails | L2 run | to do | open |
+| 9 | Certification check passes a join whose keys are empty in every row (0 rows joined) | L1 authoring | to do | open |
+| 10 | No CLI command writes the warehouse evidence certification needs | L1 authoring | to do | open |
+| 11 | The Claude Code CLI rejects the model's first structured answer to DQL's reading schema about 60% of the time (one wasted turn per question) | timeout diagnosis | measure answering without the CLI's schema feature | open (separate task) |
+| 12 | Ask stops on about half of answerable questions | every run | defects 3–5 target the main causes; re-measured after they land | open |
+
 ## Reproduce
 
 ```bash
