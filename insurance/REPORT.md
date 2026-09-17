@@ -52,8 +52,8 @@ We repeat this on four copies of the project. Each copy adds one DQL layer:
 | 6 | Audit the answer key | first pass done; owner review pending |
 | 7 | Harness: ask, score, record, stamp identity | done; smoke-tested on 1 declared dev question |
 | 8 | First L0 run | stopped on a timeout; cause traced to a DQL defect (Step 8) |
-| 8a | Fix the defect in DQL and re-check DQL's golden suites | fix written with tests; golden suites being re-recorded |
-| 8b | L0 run on the fixed build, 41 headline questions | to do |
+| 8a | Fix the defect in DQL and re-check DQL's golden suites | done: DQL `0a23c4d9`; golden jaffle 83/83, NBA 25/25, office 8/8 on fresh live recordings |
+| 8b | L0 run on the fixed build, 41 headline questions | done: 8/41 right (Step 9) |
 | 9 | Write L1 modeling and L3 skills from documentation only | to do (by a separate agent that has not seen the questions) |
 | 10 | L1, L2, L3 runs; repeats; paired comparison | to do |
 | 11 | Same runs on the Anthropic API (with cost), then other model families | to do |
@@ -217,24 +217,41 @@ In the same questions, the AI calls that wrote SQL took 1.7–2.9 s. Direct `cla
 
 ## Step 9: results
 
-*Pending. The L0 run waits for the Step 8 fix.*
+### L0 (dbt project only), Claude subscription, run `sub-L0-r2`
 
-What each results table will show:
+Full scorecard: [results/L0-subscription-r2.md](results/L0-subscription-r2.md). This run is **not publishable**: DQL came from the development build (`d0c91022`), and the harness had an uncommitted documentation edit when it started. It is one run; repeats come next.
 
-- per layer: correct / total, accuracy, Wilson 95% interval; median and 95th-percentile time; mean and maximum AI calls;
-- between layers: questions only one of them got right, exact McNemar test, difference with a 95% interval;
-- by quadrant (LQLS / HQLS / LQHS / HQHS), since data.world's finding was about high schema complexity;
-- trust labels against correctness. **A wrong answer labelled `certified` is counted on its own; the target is zero**;
-- dbt Labs' 11 questions as their own table, next to dbt Labs' published Sonnet 5 numbers;
-- the declared development question, separately.
+| | Right | Accuracy (95% CI) |
+|---|---:|---|
+| All 41 headline questions | 8 | 19.5% (10.2–34.0%) |
+| dbt Labs' 11 | 2 | 18.2% (5.1–47.7%) |
+| Low question, low schema complexity | 5/10 | 50% |
+| Low question, high schema complexity | 1/10 | 10% |
+| High question, low schema complexity | 2/11 | 18% |
+| High question, high schema complexity | 0/10 | 0% |
 
-**What these runs can and cannot claim**
-- The first runs use DQL built from commit `62258981`, not an npm release. They are therefore marked *not publishable* by our own rules. Publishable numbers need the answer-scoring change released first, then a re-run (or replay) on the release.
-- The subscription route does not report token usage, so cost is shown as "not measured". Cost comes with the Anthropic API runs.
-- dbt Labs ran each question 5–20 times. We will repeat each layer several times before comparing.
-- dbt Labs' Claude 5 results use three extra models they added later (`claim_policy_bridge`, `policy_holder_policy`, `policy_premium_detail`), written with an AI assistant according to their commit message. Our L0 uses their main-branch project without them. So L0 is closest to their "minimal" setup, and they published no Claude 5 runs of that setup.
+- **Where this sits.** It is close to the paper's GPT-4 result on the raw tables (16.7%). It is far below dbt Labs' published Sonnet 5 text-to-SQL results (78–91%), but those runs gave the model a hand-written schema plus three extra models dbt Labs built for the questions; L0 gives it neither.
+- **What the answers were:**
+  - 8 right;
+  - 13 wrong, all labelled `review_required`;
+  - 13 declined and 7 asked a clarifying question, 20 with no answer in total.
+- **Trust.** No wrong answer was labelled certified. No result rows were sent to the AI model (104 AI calls recorded).
+- **Speed.** Median 53 s, 95th percentile 170 s, 2.5 AI calls per question.
+- **Chance matches.** 6 of the 8 right answers read exactly the correct query's tables. The other 2 read extra tables and missed none.
 
----
+**Why L0 got questions wrong** (a reading of the failures, used to decide what L1 must describe, not to change DQL):
+- **Wrong join paths.** For example, it reached a claim's policy through the insured object instead of through claim coverage.
+- **Missing type rules.** Premiums are the policy amounts that have a premium record; losses, reserves and expenses are claim amounts told apart by their subtype tables. L0 contains nothing that says so.
+- **Party roles.** Agents and policy holders are parties with role codes `AG` and `PH` on the agreement; L0 does not say this.
+- **One strict case.** "Total premiums a policy holder has paid" was answered without the policy holder's id, which the correct answer (and dbt Labs' grader) requires.
+
+**Why it declined or asked back.** In most of the 20 cases Ask named the missing knowledge instead of guessing. For example: "Which party-role column identifies the selling agent?", and "Should total loss be all claim amounts, or only those in the loss and expense subtype tables?" That is the behaviour a governed product should show, and it is exactly what L1 supplies.
+
+**Two things in DQL to look at.** They are recorded here and will be fixed only as general fixes, checked on DQL's own suites, and disclosed:
+- One question stopped because the run's time budget was nearly spent after 197 s.
+- In two questions, Ask said the loss and expense subtype tables share no key with claims, although they join through the claim amount table.
+
+**Next:** the L1 and L3 layers are written by a separate agent, under the rules in [layers/AUTHORING.md](layers/AUTHORING.md); then L1, L2 and L3 are run and compared with L0, with repeats.
 
 ## Reproduce
 
