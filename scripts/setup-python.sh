@@ -23,14 +23,15 @@ fi
 
 "$VENV/bin/dbt" --version
 
-# MetricFlow with the DuckDB adapter, in its own environment. DQL uses the
-# `mf` it finds first; a machine's own `mf` may lack the DuckDB adapter, so
-# runs point DQL at this one (DQL_METRICFLOW_BIN in insurance/run.mjs).
+# MetricFlow with the DuckDB adapter, in its own environment, at the version
+# range DQL's own managed installer uses (apps/cli/src/metricflow-installer.ts).
+# DQL uses the `mf` it finds first; a machine's own `mf` may lack the DuckDB
+# adapter, so runs point DQL at this one (DQL_METRICFLOW_BIN in insurance/run.mjs).
 MF_VENV="$ROOT/.venv-mf"
 if [ ! -x "$MF_VENV/bin/mf" ]; then
   "$PYTHON" -m venv "$MF_VENV"
 fi
 "$MF_VENV/bin/pip" install --quiet --upgrade pip
-"$MF_VENV/bin/pip" install --quiet "dbt-metricflow[dbt-duckdb]==0.8.2" "dbt-core~=1.9.0" "dbt-duckdb~=1.9.0"
+"$MF_VENV/bin/pip" install --quiet "dbt-metricflow[dbt-duckdb]>=0.13,<0.14"
 "$MF_VENV/bin/pip" freeze --quiet > "$ROOT/requirements-metricflow.lock"
 "$MF_VENV/bin/mf" --version

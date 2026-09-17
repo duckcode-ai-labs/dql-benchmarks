@@ -273,6 +273,28 @@ Full scorecard: [results/L0-subscription-r2.md](results/L0-subscription-r2.md). 
 - **In every run**, no result rows were sent to the AI model.
 - **About the "harness had uncommitted changes" flag on these runs:** the harness was being edited while they ran. From the next runs on, no tracked file is edited during a run.
 
+### Run `sub-r4`: plain text-to-SQL baseline, and L2/L3 again
+
+**Plain text-to-SQL baseline** ([scorecard](results/baseline-text2sql-small-r4.md)): dbt Labs' own prompt and schema file (13 hand-picked tables with 25 foreign keys), Claude Sonnet 5 at medium effort, one call per question, on our warehouse. **19/41 right (46.3%, 95% CI 32.1–61.3%)**; dbt Labs' 11: 7/11. Median 6 s per question. Every reply ran on DuckDB.
+
+**The comparison that matters commercially** (all 41 questions are answerable, so every stop is an unnecessary stop):
+
+| | Right | Wrong, flagged | **Wrong, shown as a plain answer** | Unnecessary stop | Median time |
+|---|---:|---:|---:|---:|---:|
+| Plain text-to-SQL (13 curated tables + keys) | 19 (46%) | 0 | **22 (54%)** | 0 | 6 s |
+| DQL L0 (dbt project only) | 8 (20%) | 13 | **0** | 20 (49%) | 53 s |
+| DQL L1 (+ modeling) | 11 (27%) | 9 | **0** | 21 (51%) | 45 s |
+| DQL L3 (+ skills; semantic layer not running, see below) | 12 (29%) | 7 | **0** | 22 (54%) | 49 s |
+
+What this says, plainly:
+
+- **Plain text-to-SQL is right more often (46% against 20–29%) and about eight times faster.** It was also given a hand-picked schema of the 13 tables the questions need, with their keys; DQL was given the whole project.
+- **More than half of plain text-to-SQL's answers are wrong numbers with no warning.** DQL gave no wrong answer without flagging it, in any layer.
+- **DQL's weakness is stopping too often.** It declined or asked back on about half of questions it could have answered. A tool that is never silently wrong but answers half the time does not win a buyer either. Cutting unnecessary stops while keeping silent-wrong at zero is the product goal these numbers set.
+- **Latency is DQL's other gap:** 45–53 s median against 6 s. The Claude subscription CLI accounts for part of it (a rejected first structured reply on every question-reading call).
+
+**L2 and L3 are invalid again as semantic-layer measurements.** With the harness's MetricFlow (0.8.2 at the time), DQL called `mf query --compile`, which that version does not have. DQL picks the flag from the MetricFlow version (`--explain` from 0.13 on), and DQL's own installer installs 0.13. The harness now installs exactly DQL's range (`dbt-metricflow[dbt-duckdb]>=0.13,<0.14`, currently 0.13.0), which compiles dbt Labs' metrics on this project. L2 and L3 are run again with it.
+
 ### Writing L1 and L3
 
 A separate agent, which had not seen the benchmark, wrote both layers under the rules in [layers/AUTHORING.md](layers/AUTHORING.md). It took **about 11 minutes** (01:53–02:04 UTC); its full log is [layers/AUTHORING-LOG.md](layers/AUTHORING-LOG.md). It produced:
