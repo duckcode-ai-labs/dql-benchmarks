@@ -13,8 +13,8 @@
 // Everything a run produces goes to work/insurance/runs/<run-id>/<layer>/<set>/:
 // the eval file, DQL's JSON report, the recorded AI calls and the server log.
 
-import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { spawn, spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { REPO_ROOT, dqlVersion, resolveDqlCli } from '../lib/dql.mjs';
 import { buildIdentity } from '../lib/build-identity.mjs';
@@ -23,9 +23,20 @@ import { startRuntime } from '../lib/runtime.mjs';
 
 const WORK = join(REPO_ROOT, 'work', 'insurance');
 const SETS = ['all', 'dbt-labs', 'dev'];
+/** How long one question may take before the harness records it as unanswered. Ask's own limits apply first. */
+const CASE_TIMEOUT_MS = 900_000;
+
+/**
+ * Settings pinned for every run and recorded in its report.
+ * DQL switches to local Ollama embeddings on its own when a machine serves
+ * them, in the background after the server starts; that would make results
+ * depend on the machine and on timing. Scored runs use DQL's built-in
+ * retrieval, which is what a machine without Ollama gets.
+ */
+export const RUN_ENV = { DQL_EMBEDDINGS_AUTODETECT: 'off', DQL_TELEMETRY_DISABLED: '1' };
 
 function parseArgs(argv) {
-  const options = { layer: 'L0', set: 'dbt-labs', run: null, cassette: 'record', provider: 'claude-code', model: 'claude-sonnet-5', only: null };
+  const options = { layer: 'L0', set: 'dbt-labs', run: null, cassette: 'record', provider: 'claude-code', model: 'claude-sonnet-5', only: null, debugCli: false };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     const next = () => argv[++index];
@@ -36,6 +47,7 @@ function parseArgs(argv) {
     else if (arg === '--provider') options.provider = next();
     else if (arg === '--model') options.model = next();
     else if (arg === '--only') options.only = next().split(',');
+    else if (arg === '--debug-cli') options.debugCli = true;
     else throw new Error(`Unknown argument ${arg}`);
   }
   if (!options.run) throw new Error('--run <run-id> is required');
@@ -88,12 +100,35 @@ function writeProviderSettings(projectDir, provider, model) {
   }, null, 2)}\n`, { mode: 0o600 });
 }
 
-function runEval(cli, projectDir, evalPath, runtimeBase, logPath) {
+/**
+ * Each run asks its questions on a fresh copy of the built project, so nothing
+ * one run leaves in DQL's local state (run history, memory, caches) can reach
+ * another run. The built project itself is never served.
+ */
+function freshProject(layer, outDir) {
+  const source = join(WORK, 'projects', layer);
+  const target = join(outDir, 'project');
+  rmSync(target, { recursive: true, force: true });
+  const copy = spawnSync('rsync', ['-a', '--exclude', '.dql/local', '--exclude', '.dql/cache', '--exclude', 'logs', `${source}/`, `${target}/`], { encoding: 'utf-8' });
+  if (copy.status !== 0) throw new Error(`copying the ${layer} project failed: ${copy.stderr}`);
+  // The dbt profile names the database by absolute path; point it at the copy.
+  const profile = join(target, 'profiles.yml');
+  writeFileSync(profile, readFileSync(profile, 'utf-8').split(source).join(target));
+  return target;
+}
+
+function runEval(cli, projectDir, evalPath, runtimeBase, logPath, cassetteDir) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [
       cli.entry, 'agent', 'eval', relative(projectDir, evalPath),
       '--via', 'runtime', '--runtime-url', runtimeBase, '--format', 'json',
-    ], { cwd: projectDir, env: { ...process.env, DQL_TELEMETRY_DISABLED: '1' }, stdio: ['ignore', 'pipe', 'pipe'] });
+      '--case-timeout-ms', String(CASE_TIMEOUT_MS),
+    ], {
+      cwd: projectDir,
+      // The CLI reads the server's cassette folder to report provenance.
+      env: { ...process.env, ...RUN_ENV, DQL_EVAL_CASSETTE_DIR: cassetteDir },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
     let stdout = '';
     let stderr = '';
     child.stdout.on('data', (chunk) => { stdout += chunk; });
@@ -128,8 +163,8 @@ export function cassetteEvidence(dir, mode) {
 
 async function main() {
   const options = parseArgs(process.argv.slice(2));
-  const projectDir = join(WORK, 'projects', options.layer);
-  if (!existsSync(join(projectDir, 'dql.config.json'))) throw new Error(`Build the ${options.layer} project first: node insurance/build.mjs --layer ${options.layer}`);
+  const builtDir = join(WORK, 'projects', options.layer);
+  if (!existsSync(join(builtDir, 'dql.config.json'))) throw new Error(`Build the ${options.layer} project first: node insurance/build.mjs --layer ${options.layer}`);
   const gold = JSON.parse(readFileSync(join(WORK, 'gold', 'answers.json'), 'utf-8'));
   const audit = loadAudit(join(REPO_ROOT, 'insurance', 'gold-audit.jsonl'));
   if (audit.problems.length) throw new Error(audit.problems.join('\n'));
@@ -140,7 +175,11 @@ async function main() {
   if (cases.length === 0) throw new Error('No questions selected.');
 
   const outDir = join(WORK, 'runs', options.run, options.layer, options.set);
+  if (options.cassette === 'record' && existsSync(join(outDir, 'report.json'))) {
+    throw new Error(`Run ${options.run} already has ${options.layer}/${options.set}; pick a new run id or replay it.`);
+  }
   mkdirSync(outDir, { recursive: true });
+  const projectDir = freshProject(options.layer, outDir);
   const evalPath = join(outDir, 'evals.yml');
   // JSON is valid YAML, so no YAML library is needed.
   writeFileSync(evalPath, `${JSON.stringify(evalFile(cases), null, 2)}\n`);
@@ -157,12 +196,19 @@ async function main() {
     model: options.model,
     cassetteMode: options.cassette,
     dataHash: build.source.seedHash,
-    tools: { dbt: build.tools.dbt.join('; '), duckdbPython: build.tools.duckdbPython, source: build.source.commit },
+    tools: {
+      dbt: build.tools.dbt.join('; '),
+      duckdbPython: build.tools.duckdbPython,
+      source: build.source.commit,
+      claudeCli: options.provider === 'claude-code' ? spawnSync('claude', ['--version'], { encoding: 'utf-8' }).stdout.trim() : null,
+    },
   });
+  identity.settings = { ...RUN_ENV, caseTimeoutMs: CASE_TIMEOUT_MS, debugCli: options.debugCli };
 
   writeProviderSettings(projectDir, options.provider, options.model);
   const runtime = await startRuntime(projectDir, {
     cli,
+    env: { ...RUN_ENV, ...(options.debugCli ? { DQL_DEBUG_PROVIDER_CLI: '1' } : {}) },
     cassetteMode: options.cassette,
     cassetteDir: join(outDir, 'cassettes'),
     startupTimeoutMs: 180_000,
@@ -171,7 +217,7 @@ async function main() {
   let result;
   try {
     console.error(`${options.layer}/${options.set}: ${cases.length} question(s) on ${runtime.base}`);
-    result = await runEval(cli, projectDir, evalPath, runtime.base, join(outDir, 'eval.stderr.log'));
+    result = await runEval(cli, projectDir, evalPath, runtime.base, join(outDir, 'eval.stderr.log'), join(outDir, 'cassettes'));
   } finally {
     writeFileSync(join(outDir, 'server.log'), runtime.logs());
     await runtime.close();
