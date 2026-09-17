@@ -60,3 +60,18 @@ test('provenance counts only real-provider recordings', () => {
   assert.equal(evidence.realProviderQualityEligible, false);
   assert.deepEqual(evidence.kinds, { recorded_provider: 1, synthetic_fixture: 1 });
 });
+
+import { tableCheck, tablesIn } from './score.mjs';
+
+test('reads table names from quoted, qualified and plain SQL', () => {
+  assert.deepEqual(tablesIn('SELECT 1 FROM "acme"."main"."claim" c JOIN main.Policy p ON 1=1 left join premium on 1=1'), ['claim', 'policy', 'premium']);
+  assert.deepEqual(tablesIn('select count(*) from (select 1 from claim) t'), ['claim']);
+});
+
+test('flags a right answer that skipped a table the correct query reads', () => {
+  assert.deepEqual(tableCheck('select count(*) from claim', 'SELECT COUNT(*) FROM claim'), { same: true, missing: [], extra: [] });
+  assert.deepEqual(
+    tableCheck('select sum(policy_amount) from policy_amount', 'select sum(policy_amount) from policy join policy_amount on 1=1 join premium on 1=1'),
+    { same: false, missing: ['policy', 'premium'], extra: [] },
+  );
+});
