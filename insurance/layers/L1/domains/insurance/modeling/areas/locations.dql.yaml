@@ -1,0 +1,206 @@
+# Insured objects and where they are.
+domain: insurance
+area:
+  id: locations
+  name: Insured objects and locations
+  description: >-
+    An insurable object (the insured property) sits at a geographic location. A geographic
+    location points to a postal address (location_address) and to a physical location with
+    latitude and longitude (pysical_location). All locations in this data are in Austin, Texas.
+  references: [policy, policy_amount, occurrence]
+entities:
+  - id: insurable_object
+    dbt_model: model.cwd_benchmark_data.insurable_object
+    business_name: Insurable object
+    business_context: >-
+      The thing that is insured (here, a property) and its geographic location. The object type
+      code is empty, so the kind of object (house, vehicle) is not recorded.
+    analytical_role: dimension
+    grain: Insurable_Object_Identifier
+    keys: [Insurable_Object_Identifier]
+    owner: insurance-analytics@acme-insurance.test
+  - id: geographic_location
+    dbt_model: model.cwd_benchmark_data.geographic_location
+    business_name: Geographic location
+    business_context: >-
+      A location, with its State_Code, its postal address (Location_Address_Identifier) and its
+      physical coordinates (Physical_Location_Identifier). Parent location, type, code, name and
+      number are empty.
+    analytical_role: dimension
+    grain: Geographic_Location_Identifier
+    keys: [Geographic_Location_Identifier]
+    concept_refs: [location]
+    owner: insurance-analytics@acme-insurance.test
+  - id: location_address
+    dbt_model: model.cwd_benchmark_data.location_address
+    business_name: Address
+    business_context: >-
+      A postal address: Line_1_Address (street), Municipality_Name (city), State_Code,
+      Postal_Code (zip code), Country_Code. Line 2 and validity dates are empty.
+    analytical_role: dimension
+    grain: Location_Address_Identifier
+    keys: [Location_Address_Identifier]
+    concept_refs: [location]
+    owner: insurance-analytics@acme-insurance.test
+  - id: physical_location
+    dbt_model: model.cwd_benchmark_data.pysical_location
+    business_name: Physical location
+    business_context: >-
+      The coordinates of a location (Latitude_Value, Longitude_Value). The dbt model name is
+      spelled 'pysical_location'. Altitude, accuracy and name are empty.
+    analytical_role: dimension
+    grain: Physical_Location_Identifier
+    keys: [Physical_Location_Identifier]
+    concept_refs: [location]
+    owner: insurance-analytics@acme-insurance.test
+relationships:
+  - id: insurable_object_to_geographic_location
+    from: insurable_object
+    to: geographic_location
+    verb: is located at
+    description: Each insurable object is at one geographic location.
+    keys: [{ from: Geographic_Location_Identifier, to: Geographic_Location_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: Insurable_Object_Identifier, keys: [Insurable_Object_Identifier] }
+      to: { grain: Geographic_Location_Identifier, keys: [Geographic_Location_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:57.457Z"
+      query_fingerprint: 8513267731a92453c3214dd23b433969df723a8ae40370afa36736de5417ff86
+      proof_fingerprint: 79e8c7fee7f6d023336dbb49f6edc836eb6087311697081ea6c30301bbf514db
+      from_rows: 2
+      to_rows: 8
+      joined_rows: 2
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: geographic_location_to_location_address
+    from: geographic_location
+    to: location_address
+    verb: has address
+    description: Each geographic location has one postal address.
+    keys: [{ from: Location_Address_Identifier, to: Location_Address_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: Geographic_Location_Identifier, keys: [Geographic_Location_Identifier] }
+      to: { grain: Location_Address_Identifier, keys: [Location_Address_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:57.301Z"
+      query_fingerprint: d8d78c94314e761ef46dba9372f78e394acf3931fc6c7ab53b86791e5632ef8e
+      proof_fingerprint: 1ad119f62c95c3c792d2ece3d65338ba125598b15e9a32ba87cd5806aca41b8e
+      from_rows: 8
+      to_rows: 8
+      joined_rows: 8
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: geographic_location_to_physical_location
+    from: geographic_location
+    to: physical_location
+    verb: has coordinates
+    description: Each geographic location has one physical location (latitude and longitude).
+    keys: [{ from: Physical_Location_Identifier, to: Physical_Location_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: Geographic_Location_Identifier, keys: [Geographic_Location_Identifier] }
+      to: { grain: Physical_Location_Identifier, keys: [Physical_Location_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:57.379Z"
+      query_fingerprint: 7260fc5c9da6ae5db527d0e1b880afaceb07b586f33ff51c7335a63a04a5ade7
+      proof_fingerprint: e7e5d266a4da225c4ba1dc166340c642b6743008f00a84d894ba03e88066fa44
+      from_rows: 8
+      to_rows: 8
+      joined_rows: 8
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: physical_location_to_location_address
+    from: physical_location
+    to: location_address
+    verb: has address
+    description: Each physical location also names its postal address.
+    keys: [{ from: Location_Address_Identifier, to: Location_Address_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: Physical_Location_Identifier, keys: [Physical_Location_Identifier] }
+      to: { grain: Location_Address_Identifier, keys: [Location_Address_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:57.922Z"
+      query_fingerprint: ddaa232964fd5ee0095f1d2bc1bfb0e97bfe1112299b79e73512ba08efe45c2a
+      proof_fingerprint: 3dfd7918fbb64488a98dc4346949c3eef4e9456fded3e23a3b38f020391751a2
+      from_rows: 8
+      to_rows: 8
+      joined_rows: 8
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  # The following foreign keys exist in the schema documentation but every key value is
+  # empty in this data, so nothing can be proven. They stay draft.
+  - id: policy_to_geographic_location
+    from: policy
+    to: geographic_location
+    verb: is written in
+    description: Declared in the DDL; policy.Geographic_Location_Identifier is empty for every policy.
+    keys: [{ from: Geographic_Location_Identifier, to: Geographic_Location_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: draft
+    owner: insurance-analytics@acme-insurance.test
+  - id: policy_amount_to_geographic_location
+    from: policy_amount
+    to: geographic_location
+    verb: is rated at
+    description: Declared in the DDL; policy_amount.Geographic_Location_Identifier is empty for every row.
+    keys: [{ from: Geographic_Location_Identifier, to: Geographic_Location_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: draft
+    owner: insurance-analytics@acme-insurance.test
+  - id: policy_amount_to_insurable_object
+    from: policy_amount
+    to: insurable_object
+    verb: is for
+    description: Declared in the DDL; policy_amount.Insurable_Object_Identifier is empty for every row. Use policy_coverage_detail for the insured object.
+    keys: [{ from: Insurable_Object_Identifier, to: Insurable_Object_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: draft
+    owner: insurance-analytics@acme-insurance.test
+  - id: occurrence_to_geographic_location
+    from: occurrence
+    to: geographic_location
+    verb: happened at
+    description: occurrences.Geographic_Location_Identifier is empty for every row; use the claim's insurable object for the loss location.
+    keys: [{ from: Geographic_Location_Identifier, to: Geographic_Location_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: draft
+    owner: insurance-analytics@acme-insurance.test

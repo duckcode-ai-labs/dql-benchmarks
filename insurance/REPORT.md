@@ -212,7 +212,7 @@ In the same questions, the AI calls that wrote SQL took 1.7–2.9 s. Direct `cla
 
 **Other settings pinned during the diagnosis**
 - **Embeddings.** When a machine runs Ollama, DQL switches to Ollama embeddings on its own, in the background after the server starts. Results could then depend on the machine and on timing. Scored runs set `DQL_EMBEDDINGS_AUTODETECT=off`, which is what a machine without Ollama gets, and record it.
-- **Starter content.** `dql init` adds a starter business term ("Customer") and two starter skills (block authoring, SQL conventions) to every project. L0 keeps them, because a new customer project has them too.
+- **Starter content.** `dql init` adds a starter business term ("Customer") and four starter skills (block authoring, domain rules, metrics glossary, SQL conventions) to every project. L0 keeps them, because a new customer project has them too.
 - **Timing we saw.** "How many claims do we have?" stays in the headline set. We saw its timing while diagnosing (16 s, 2 AI calls) but not its answer; `dev-questions.json` records this.
 
 ## Step 9: results
@@ -251,7 +251,27 @@ Full scorecard: [results/L0-subscription-r2.md](results/L0-subscription-r2.md). 
 - One question stopped because the run's time budget was nearly spent after 197 s.
 - In two questions, Ask said the loss and expense subtype tables share no key with claims, although they join through the claim amount table.
 
-**Next:** the L1 and L3 layers are written by a separate agent, under the rules in [layers/AUTHORING.md](layers/AUTHORING.md); then L1, L2 and L3 are run and compared with L0, with repeats.
+### Writing L1 and L3
+
+A separate agent, which had not seen the benchmark, wrote both layers under the rules in [layers/AUTHORING.md](layers/AUTHORING.md). It took **about 11 minutes** (01:53–02:04 UTC); its full log is [layers/AUTHORING-LOG.md](layers/AUTHORING-LOG.md). It produced:
+
+- **L1: one `insurance` domain.** All 29 dbt models are bound as entities, with their grain and keys, and there are 36 relationships:
+  - **31 certified.** Each passed DQL's own relationship check against the warehouse.
+  - **5 left as drafts.** One is true in the data, but the `agreement` model names its id column `Agreement_Type_Code`. The other four are keys from the schema document that are empty in every row.
+- **L3: five skills.** Policies and parties, coverage and premium, claims (reserves and payments), locations, and what the data does and does not cover.
+- **The unanswerable set:** 15 questions this data cannot answer, each with the reason ([unanswerable.json](unanswerable.json)).
+- **What DQL's own `dql model discover` proposed:** one domain holding all 29 models, with no relationships. The author used it only as a cross-check.
+
+**What the author found in DQL:**
+- **No command writes certification evidence.** The warehouse evidence that certification needs had to be produced with a small script that calls DQL's own validation code.
+- **Empty-key joins pass the check.** DQL's relationship check reports "passed" for a join whose keys are empty in every row (0 rows joined), so a join could be certified on no evidence. The author kept those as drafts; the check itself needs a fix.
+- **Two things the modeling format cannot say:** "a party is an agent when its role code is AG" (a relationship with a role filter; it went into descriptions and skills instead), and "a premium is a kind of policy amount".
+
+**How the layers are built:** `dql init` runs on the dbt project first, then the layer's files are added and `dql model validate` must pass, the order a team would follow. An earlier build ran `dql init` after adding the files, which added an extra generated domain skill to L1; that was fixed before any L1 run.
+
+**Deviation 3 (SQL dialect).** dbt Labs' MetricFlow time spine (L2 and L3 only) uses Snowflake's `to_date('01/01/2000','mm/dd/yyyy')`; it is built with the DATE literal `DATE '2000-01-01'` instead (`MODEL_PORTS` in `build.mjs`).
+
+**Next:** L1, L2 and L3 are run on the 41 headline questions, under the rules in [layers/AUTHORING.md](layers/AUTHORING.md); then L1, L2 and L3 are run and compared with L0, with repeats.
 
 ## Reproduce
 

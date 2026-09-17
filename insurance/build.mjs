@@ -134,6 +134,47 @@ function widenIntegerSeedColumns(dir) {
   return wide;
 }
 
+/**
+ * dbt Labs' MetricFlow time spine was written for a cloud warehouse:
+ * `to_date('01/01/2000','mm/dd/yyyy')` does not exist in DuckDB. The same
+ * dates are written as DATE literals. Spelling only; recorded in build.json.
+ */
+export const MODEL_PORTS = [
+  {
+    file: join('models', 'omg_semantics', 'metricflow_time_spine.sql'),
+    pattern: /to_date\('(\d{2})\/(\d{2})\/(\d{4})','mm\/dd\/yyyy'\)/g,
+    replacement: "DATE '$3-$1-$2'",
+    reason: "Snowflake's to_date(text, format) does not exist in DuckDB; the same dates are written as DATE literals.",
+  },
+];
+
+function portModelSql(dir) {
+  const applied = [];
+  for (const port of MODEL_PORTS) {
+    const path = join(dir, port.file);
+    if (!existsSync(path)) continue;
+    const before = readFileSync(path, 'utf-8');
+    const after = before.replace(port.pattern, port.replacement);
+    if (after !== before) {
+      writeFileSync(path, after);
+      applied.push({ file: port.file, reason: port.reason });
+    }
+  }
+  return applied;
+}
+
+/** Add a layer's authored files on top of an initialised project, the way a team adds them after `dql init`. */
+function applyOverlays(layer, dir) {
+  const added = [];
+  for (const overlay of LAYERS[layer].overlays) {
+    const from = join(REPO_ROOT, 'insurance', 'layers', overlay);
+    if (!existsSync(from)) throw new Error(`Layer ${layer} needs insurance/layers/${overlay}/, which has not been written yet.`);
+    cpSync(from, dir, { recursive: true });
+    added.push(...listFiles(from).map((file) => relative(from, file)));
+  }
+  return added.sort();
+}
+
 /** Copy the dbt project for one layer and write its dbt profile. */
 function copyProject(layer, dir) {
   rmSync(dir, { recursive: true, force: true });
@@ -149,11 +190,7 @@ function copyProject(layer, dir) {
   }
   widenIntegerSeedColumns(dir);
   if (!LAYERS[layer].semanticLayer) rmSync(join(dir, SEMANTIC_DIR), { recursive: true, force: true });
-  for (const overlay of LAYERS[layer].overlays) {
-    const from = join(REPO_ROOT, 'insurance', 'layers', overlay);
-    if (!existsSync(from)) throw new Error(`Layer ${layer} needs insurance/layers/${overlay}/, which has not been written yet.`);
-    cpSync(from, dir, { recursive: true });
-  }
+  if (LAYERS[layer].semanticLayer) portModelSql(dir);
   writeFileSync(
     join(dir, 'profiles.yml'),
     [
@@ -281,6 +318,7 @@ export function build({ layer = 'L0', skipGold = false } = {}) {
   copyProject(layer, dir);
   record.projectDir = relative(REPO_ROOT, dir);
   record.projectFiles = listFiles(dir).map((file) => relative(dir, file)).sort();
+  record.modelPorts = LAYERS[layer].semanticLayer ? MODEL_PORTS.map((port) => ({ file: port.file, reason: port.reason })) : [];
 
   for (const args of [['seed'], ['run'], ['docs', 'generate']]) {
     const step = dbt(args, dir);
@@ -302,6 +340,12 @@ export function build({ layer = 'L0', skipGold = false } = {}) {
   if (init.code !== 0) throw new Error(`dql init failed:\n${init.stderr || init.stdout}`);
   record.addedByDqlInit = readdirSync(dir).filter((name) => !before.has(name)).sort();
   linkSharedConnectors(dir);
+  record.layerFiles = applyOverlays(layer, dir);
+  if (record.layerFiles.length) {
+    const validate = runDql(['model', 'validate'], { cli, cwd: dir });
+    record.steps.push({ command: 'dql model validate', code: validate.code, summary: `${validate.stdout}${validate.stderr}`.split('\n').filter(Boolean).slice(-4) });
+    if (validate.code !== 0) throw new Error(`dql model validate failed:\n${validate.stdout}${validate.stderr}`);
+  }
   const config = JSON.parse(readFileSync(join(dir, 'dql.config.json'), 'utf-8'));
   record.dqlConfig = { connections: config.connections, dbt: config.dbt, semanticLayer: config.semanticLayer ?? null, modeling: config.modeling ?? null };
 

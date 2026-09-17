@@ -1,0 +1,432 @@
+# Policies, their parties, coverage periods and policy amounts.
+# Column names are the dbt model columns (mixed case, as materialized in schema main).
+domain: insurance
+area:
+  id: policies
+  name: Policies, parties and premiums
+  description: >-
+    A policy is an insurance agreement. Parties (people and organizations) play roles on a
+    policy through agreement_party_role (PH = policy holder, AG = agent). A policy is split
+    into policy coverage details (one per coverage period / insured object), and each coverage
+    detail carries policy amounts; the premium table marks which policy amounts are premiums.
+  references: [insurable_object]
+entities:
+  - id: policy
+    dbt_model: model.cwd_benchmark_data.policy
+    business_name: Policy
+    business_context: >-
+      One insurance policy (an agreement of type policy). Policy_Number is the business policy
+      number; Effective_Date and Expiration_Date bound the whole policy term. Policy_Identifier
+      is the same identifier as Agreement_Identifier in agreement_party_role and
+      agreement_assessment. Status_Code and Geographic_Location_Identifier are empty in this data.
+    analytical_role: dimension
+    grain: Policy_Identifier
+    keys: [Policy_Identifier]
+    concept_refs: [policy]
+    owner: insurance-analytics@acme-insurance.test
+  - id: agreement
+    dbt_model: model.cwd_benchmark_data.agreement
+    business_name: Agreement
+    business_context: >-
+      The generic agreement record that a policy specializes. The dbt model has no column named
+      Agreement_Identifier: the seed file's header labels its first column Agreement_Type_Code,
+      but that column holds the agreement identifier (1, 2), matching policy.Policy_Identifier
+      (Agreement_Name is 'Policy ' followed by the policy number). Do not read
+      Agreement_Type_Code as a type code. Product_Identifier and inception date are empty.
+    analytical_role: dimension
+    grain: Agreement_Type_Code
+    keys: [Agreement_Type_Code]
+    concept_refs: [policy]
+    owner: insurance-analytics@acme-insurance.test
+  - id: agreement_party_role
+    dbt_model: model.cwd_benchmark_data.agreement_party_role
+    business_name: Policy party role
+    business_context: >-
+      Bridge between agreements (policies) and parties: one row per agreement, party and role.
+      Party_Role_Code PH marks the policy holder, AG the agent who sold the policy. The DDL key
+      also includes Effective_Date, which is empty in this data, so role history is not available.
+    analytical_role: bridge
+    grain: Agreement_Identifier, Party_Identifier, Party_Role_Code
+    keys: [Agreement_Identifier, Party_Identifier, Party_Role_Code]
+    owner: insurance-analytics@acme-insurance.test
+  - id: party
+    dbt_model: model.cwd_benchmark_data.party
+    business_name: Party
+    business_context: >-
+      Any person or organization the company deals with. Party has only its identifier in this
+      data (name, type and dates are empty); names come from person (Person_Identifier =
+      Party_Identifier) or organizations (Organization_Identifier = Party_Identifier).
+    analytical_role: dimension
+    grain: Party_Identifier
+    keys: [Party_Identifier]
+    concept_refs: [party, policy_holder, agent, underwriter]
+    owner: insurance-analytics@acme-insurance.test
+  - id: person
+    dbt_model: model.cwd_benchmark_data.person
+    business_name: Person
+    business_context: >-
+      A party who is a human being; Person_Identifier is the Party_Identifier. Only first,
+      middle and last names are filled (and only for persons 1 to 3); birth date, gender and
+      other attributes are empty.
+    analytical_role: dimension
+    grain: Person_Identifier
+    keys: [Person_Identifier]
+    concept_refs: [party]
+    owner: insurance-analytics@acme-insurance.test
+  - id: organization
+    dbt_model: model.cwd_benchmark_data.organizations
+    business_name: Organization
+    business_context: >-
+      A party that is an organization; Organization_Identifier is the Party_Identifier. The only
+      organization is the insurer itself, Mesa Underwriters Specialty Insurance Company (MUSIC).
+    analytical_role: dimension
+    grain: Organization_Identifier
+    keys: [Organization_Identifier]
+    concept_refs: [party]
+    owner: insurance-analytics@acme-insurance.test
+  - id: party_role
+    dbt_model: model.cwd_benchmark_data.party_role
+    business_name: Party role
+    business_context: Code list of party roles. AG = Agent, UW = Underwriter, PH = PolicyHolder.
+    analytical_role: dimension
+    grain: Party_Role_Code
+    keys: [Party_Role_Code]
+    owner: insurance-analytics@acme-insurance.test
+  - id: policy_coverage_detail
+    dbt_model: model.cwd_benchmark_data.policy_coverage_detail
+    business_name: Policy coverage detail
+    business_context: >-
+      One coverage period of a policy on one insurable object. Identified by Effective_Date plus
+      Policy_Coverage_Detail_Identifier; Effective_Date and Expiration_Date bound the coverage
+      period (yearly periods here), which is narrower than the policy term. Coverage, coverage
+      part and description codes are empty.
+    analytical_role: dimension
+    grain: Effective_Date, Policy_Coverage_Detail_Identifier
+    keys: [Effective_Date, Policy_Coverage_Detail_Identifier]
+    owner: insurance-analytics@acme-insurance.test
+  - id: policy_amount
+    dbt_model: model.cwd_benchmark_data.policy_amount
+    business_name: Policy amount
+    business_context: >-
+      A money amount attached to a policy coverage detail (Policy_Amount, with the policy and
+      coverage effective date). Generic parent of premium: a row is a premium only when its
+      Policy_Amount_Identifier is in premium. Premium rows carry Amount_Type_Code 'Year'
+      (annual amount); the other rows have an empty Amount_Type_Code and are not labeled in the
+      data. Earning dates, location, insurable object and insurance type are empty.
+    analytical_role: event
+    grain: Policy_Amount_Identifier
+    keys: [Policy_Amount_Identifier]
+    concept_refs: [premium]
+    owner: insurance-analytics@acme-insurance.test
+  - id: premium
+    dbt_model: model.cwd_benchmark_data.premium
+    business_name: Premium
+    business_context: >-
+      Subtype marker of policy_amount: one row per policy amount that is a premium. It has no
+      columns of its own; the premium amount, period and dates come from policy_amount through
+      Policy_Amount_Identifier.
+    analytical_role: event
+    grain: Policy_Amount_Identifier
+    keys: [Policy_Amount_Identifier]
+    concept_refs: [premium]
+    owner: insurance-analytics@acme-insurance.test
+relationships:
+  - id: policy_to_agreement
+    from: policy
+    to: agreement
+    verb: is a
+    description: >-
+      A policy is an agreement. The agreement side of the key is the column the dbt model
+      calls Agreement_Type_Code (it holds the agreement identifier).
+    rationale: >-
+      Proven in the data (both rows match, Agreement_Name = 'Policy ' || Policy_Number), but the
+      agreement key column is mislabeled in the dbt model. Kept as draft until the dbt model
+      exposes the column as Agreement_Identifier.
+    keys: [{ from: Policy_Identifier, to: Agreement_Type_Code }]
+    cardinality: one_to_one
+    fanout: safe
+    status: draft
+    owner: insurance-analytics@acme-insurance.test
+  - id: agreement_party_role_to_policy
+    from: agreement_party_role
+    to: policy
+    verb: is a role on
+    description: >-
+      Each party role row belongs to one policy (Agreement_Identifier = Policy_Identifier). To
+      find a policy's holder or agent, join policy to agreement_party_role and filter
+      Party_Role_Code ('PH' holder, 'AG' agent); a policy has one row per role, so filter the
+      role before aggregating policy measures.
+    keys: [{ from: Agreement_Identifier, to: Policy_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    roles: { from: party role on policy, to: policy }
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: "Agreement_Identifier, Party_Identifier, Party_Role_Code", keys: [Agreement_Identifier, Party_Identifier, Party_Role_Code] }
+      to: { grain: Policy_Identifier, keys: [Policy_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:56.285Z"
+      query_fingerprint: 44061757c71b59dac752dbc012153da36240139f7b0256c2d2af2eec0a7384f8
+      proof_fingerprint: 0ab023caa08f60670119193bcd833d2ac81999c2960f8ca01d71f7f6f7d97d8f
+      from_rows: 4
+      to_rows: 2
+      joined_rows: 4
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 2
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: agreement_party_role_to_party
+    from: agreement_party_role
+    to: party
+    verb: is played by
+    description: Each policy party role is played by one party.
+    keys: [{ from: Party_Identifier, to: Party_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: "Agreement_Identifier, Party_Identifier, Party_Role_Code", keys: [Agreement_Identifier, Party_Identifier, Party_Role_Code] }
+      to: { grain: Party_Identifier, keys: [Party_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:56.129Z"
+      query_fingerprint: c55ebd484cda9350f2c0cbc619b48bffba84d29689e922bddaf496444b1a0b05
+      proof_fingerprint: 7b0d96d1f384389a91ccc3d1a792672ce02530fcbda62402431d4d804b346ec5
+      from_rows: 4
+      to_rows: 30
+      joined_rows: 4
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 2
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: agreement_party_role_to_party_role
+    from: agreement_party_role
+    to: party_role
+    verb: has role
+    description: Each policy party role row has one role code (PH, AG).
+    keys: [{ from: Party_Role_Code, to: Party_Role_Code }]
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: "Agreement_Identifier, Party_Identifier, Party_Role_Code", keys: [Agreement_Identifier, Party_Identifier, Party_Role_Code] }
+      to: { grain: Party_Role_Code, keys: [Party_Role_Code] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:56.207Z"
+      query_fingerprint: eed7c0b192a06ee09dcdc3c5bd3d6c40a646b604d1ca0c3590a1b32b3df01173
+      proof_fingerprint: 715aeda10f254a97cc89951a62b4c36cc124fcca17170880c2c7ca20c51e18c7
+      from_rows: 4
+      to_rows: 3
+      joined_rows: 4
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 2
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: person_is_party
+    from: person
+    to: party
+    verb: is a
+    description: A person is a party; Person_Identifier is the Party_Identifier. Use it to get a policy holder's, agent's or underwriter's name.
+    keys: [{ from: Person_Identifier, to: Party_Identifier }]
+    cardinality: one_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: Person_Identifier, keys: [Person_Identifier] }
+      to: { grain: Party_Identifier, keys: [Party_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:57.846Z"
+      query_fingerprint: 1c23619aac27c7a7067c228d164311ada1458cda64cc2e2954fa52c2e8fb0ab1
+      proof_fingerprint: 8931a3a9b908c526784e7611f511627fa4b2284aa8596060d05919349638cb3b
+      from_rows: 29
+      to_rows: 30
+      joined_rows: 29
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: organization_is_party
+    from: organization
+    to: party
+    verb: is a
+    description: An organization is a party; Organization_Identifier is the Party_Identifier.
+    keys: [{ from: Organization_Identifier, to: Party_Identifier }]
+    cardinality: one_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: Organization_Identifier, keys: [Organization_Identifier] }
+      to: { grain: Party_Identifier, keys: [Party_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:57.767Z"
+      query_fingerprint: 15274e24b0cc70a53990fa3b8ed978b8dbd9f90298a0fc24c248b6b6650bb03d
+      proof_fingerprint: 6fd165f21a1ab0d061f93a90ad0789500ae7760d1644cfc2f83fdcab1de4896b
+      from_rows: 1
+      to_rows: 30
+      joined_rows: 1
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: policy_coverage_detail_to_policy
+    from: policy_coverage_detail
+    to: policy
+    verb: covers under
+    description: Each coverage detail belongs to one policy; a policy has one coverage detail per coverage period.
+    keys: [{ from: Policy_Identifier, to: Policy_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: "Effective_Date, Policy_Coverage_Detail_Identifier", keys: [Effective_Date, Policy_Coverage_Detail_Identifier] }
+      to: { grain: Policy_Identifier, keys: [Policy_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:58.383Z"
+      query_fingerprint: d387ceb6ce88629c0356e7a49f5e9344b61c731e9deaa2e88b3ae17a2d92d73d
+      proof_fingerprint: fd5343a7d7cce8c3bb7100fe0515225d58c6131895e98559590b9e382d72970b
+      from_rows: 6
+      to_rows: 2
+      joined_rows: 6
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 5
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: policy_coverage_detail_to_insurable_object
+    from: policy_coverage_detail
+    to: insurable_object
+    verb: insures
+    description: Each coverage detail insures one insurable object.
+    keys: [{ from: Insurable_Object_Identifier, to: Insurable_Object_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: "Effective_Date, Policy_Coverage_Detail_Identifier", keys: [Effective_Date, Policy_Coverage_Detail_Identifier] }
+      to: { grain: Insurable_Object_Identifier, keys: [Insurable_Object_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:58.305Z"
+      query_fingerprint: 66388d8a4c412bb26d07456e4a5f2f8f206b336176fad65378ed39e0f73af374
+      proof_fingerprint: bf332a60cdccb9a302d238f86212fa27018962d9a6192dde19790872790ab3c5
+      from_rows: 6
+      to_rows: 2
+      joined_rows: 6
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 5
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: policy_amount_to_policy_coverage_detail
+    from: policy_amount
+    to: policy_coverage_detail
+    verb: is an amount of
+    description: >-
+      Each policy amount belongs to one coverage detail, matched on both Effective_Date and
+      Policy_Coverage_Detail_Identifier (the coverage detail's full key).
+    keys:
+      - { from: Effective_Date, to: Effective_Date }
+      - { from: Policy_Coverage_Detail_Identifier, to: Policy_Coverage_Detail_Identifier }
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: Policy_Amount_Identifier, keys: [Policy_Amount_Identifier] }
+      to: { grain: "Effective_Date, Policy_Coverage_Detail_Identifier", keys: [Effective_Date, Policy_Coverage_Detail_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:58.226Z"
+      query_fingerprint: c8286abd590519791a02bec2ae8827bf9dc912aea4d078055d44bd8eea841621
+      proof_fingerprint: 7b95517b6b188bd837cdf108501d120fa8a6c2340bbd88cf9645b07e989e978e
+      from_rows: 12
+      to_rows: 6
+      joined_rows: 12
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 2
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: policy_amount_to_policy
+    from: policy_amount
+    to: policy
+    verb: is an amount of
+    description: Each policy amount names its policy directly (Policy_Identifier).
+    keys: [{ from: Policy_Identifier, to: Policy_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: Policy_Amount_Identifier, keys: [Policy_Amount_Identifier] }
+      to: { grain: Policy_Identifier, keys: [Policy_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:58.148Z"
+      query_fingerprint: 69df50db1f3eed8e1d189fc183137ebb0137d9745c6c45e4944bd402fa5e3a4c
+      proof_fingerprint: f2cc37b69deb824f172fdcab241455e095b4f5b56fa55ca5bfb21c445de2d71b
+      from_rows: 12
+      to_rows: 2
+      joined_rows: 12
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 10
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: premium_is_policy_amount
+    from: premium
+    to: policy_amount
+    verb: is a
+    description: >-
+      Specialization: a premium is a policy amount. Join premium to policy_amount on
+      Policy_Amount_Identifier to get the premium amount (policy_amount.Policy_Amount), its
+      period (Amount_Type_Code) and dates. An inner join keeps only premiums.
+    keys: [{ from: Policy_Amount_Identifier, to: Policy_Amount_Identifier }]
+    cardinality: one_to_one
+    fanout: safe
+    join_types: [inner]
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: Policy_Amount_Identifier, keys: [Policy_Amount_Identifier] }
+      to: { grain: Policy_Amount_Identifier, keys: [Policy_Amount_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:58.606Z"
+      query_fingerprint: bfd0599772abf731967088d62146fb50e937cf50e5328a051822cf3b9a7bdf9d
+      proof_fingerprint: 3a8fa34113296cc719114d370d73434070acdaf57e540a27835db8d788648261
+      from_rows: 6
+      to_rows: 12
+      joined_rows: 6
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."

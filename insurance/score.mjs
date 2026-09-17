@@ -53,6 +53,24 @@ const ci = (k, n) => {
 };
 const secs = (ms) => (ms === null || ms === undefined ? '—' : `${(ms / 1000).toFixed(1)} s`);
 
+/** Questions the data cannot answer: stopping is right, answering is not. */
+export function renderUnanswerable(report) {
+  const lines = [`## ${report.run.layer} · unanswerable questions · run ${report.run.id}`, ''];
+  const rows = report.results.map((result) => ({
+    question: result.name,
+    outcome: outcomeOf({ ...result, executionMatched: false }).replace('wrong', 'answered anyway'),
+    trust: result.answer?.trustState ?? 'none',
+    sql: result.answer?.sql ?? '',
+  }));
+  const stopped = rows.filter((row) => row.outcome === 'declined' || row.outcome === 'asked to clarify').length;
+  const answered = rows.filter((row) => row.outcome === 'answered anyway');
+  lines.push(`**Stopped correctly: ${stopped}/${rows.length}** (declined or asked back). Answered anyway: ${answered.length}, of which labelled certified: ${answered.filter((row) => row.trust === 'certified').length}.`, '');
+  lines.push('| Question | Outcome | Trust |', '|---|---|---|');
+  for (const row of rows) lines.push(`| ${row.question} | ${row.outcome} | ${row.trust} |`);
+  lines.push('');
+  return lines.join('\n');
+}
+
 export function scorecard(report, gold, audit) {
   const byId = new Map(gold.cases.map((c) => [c.id, c]));
   const accepted = acceptedCaseIds(audit);
@@ -152,6 +170,10 @@ if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
     process.exit(1);
   }
   const report = JSON.parse(readFileSync(args[0], 'utf-8'));
+  if (report.run?.set === 'unanswerable') {
+    console.log(renderUnanswerable(report));
+    process.exit(0);
+  }
   const gold = JSON.parse(readFileSync(join(REPO_ROOT, 'work', 'insurance', 'gold', 'answers.json'), 'utf-8'));
   const audit = loadAudit(join(REPO_ROOT, 'insurance', 'gold-audit.jsonl'));
   const card = scorecard(report, gold, audit);

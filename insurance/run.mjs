@@ -20,9 +20,10 @@ import { REPO_ROOT, dqlVersion, resolveDqlCli } from '../lib/dql.mjs';
 import { buildIdentity } from '../lib/build-identity.mjs';
 import { loadAudit, unauditedCases } from '../lib/gold-audit.mjs';
 import { startRuntime } from '../lib/runtime.mjs';
+import { caseId } from './questions.mjs';
 
 const WORK = join(REPO_ROOT, 'work', 'insurance');
-const SETS = ['all', 'dbt-labs', 'dev'];
+const SETS = ['all', 'dbt-labs', 'dev', 'unanswerable'];
 /** How long one question may take before the harness records it as unanswered. Ask's own limits apply first. */
 const CASE_TIMEOUT_MS = 900_000;
 
@@ -67,10 +68,24 @@ export function selectCases(gold, audit, devIds, set) {
   return set === 'dbt-labs' ? headline.filter((c) => c.dbtLabsSelected) : headline;
 }
 
+/**
+ * Questions this data cannot answer (insurance/unanswerable.json, written from
+ * the schema by the layer author). Stopping, by declining or asking back, is
+ * the right outcome; answering is the failure.
+ */
+export function unanswerableCases(file = join(REPO_ROOT, 'insurance', 'unanswerable.json')) {
+  const { questions } = JSON.parse(readFileSync(file, 'utf-8'));
+  return questions.map((entry) => ({ id: `unanswerable-${caseId(entry.question)}`, question: entry.question, why: entry.why, unanswerable: true }));
+}
+
 /** The eval file DQL reads. The correct rows sit here, outside the project. */
 export function evalFile(cases) {
   return {
-    cases: cases.map((c) => ({
+    cases: cases.map((c) => c.unanswerable ? {
+      name: c.id,
+      question: c.question,
+      expected: { answerable: false },
+    } : ({
       name: c.id,
       question: c.question,
       expected: {
@@ -170,7 +185,7 @@ async function main() {
   if (audit.problems.length) throw new Error(audit.problems.join('\n'));
   const dev = JSON.parse(readFileSync(join(REPO_ROOT, 'insurance', 'dev-questions.json'), 'utf-8'));
   const devIds = new Set(dev.questions.map((q) => q.caseId));
-  let cases = selectCases(gold, audit, devIds, options.set);
+  let cases = options.set === 'unanswerable' ? unanswerableCases() : selectCases(gold, audit, devIds, options.set);
   if (options.only) cases = cases.filter((c) => options.only.includes(c.id));
   if (cases.length === 0) throw new Error('No questions selected.');
 
@@ -239,8 +254,8 @@ async function main() {
   writeFileSync(join(outDir, 'report.json'), `${JSON.stringify(out, null, 2)}\n`);
   const results = report.results ?? [];
   if (!out.provenance.realProviderQualityEligible) console.error(`not publishable: ${out.provenance.reasons.join('; ')}`);
-  const correct = results.filter((r) => r.executionMatched === true).length;
-  console.log(`${options.layer}/${options.set}: ${correct}/${results.length} correct → ${relative(REPO_ROOT, join(outDir, 'report.json'))}`);
+  const correct = results.filter((r) => (options.set === 'unanswerable' ? r.passed : r.executionMatched === true)).length;
+  console.log(`${options.layer}/${options.set}: ${correct}/${results.length} ${options.set === 'unanswerable' ? 'stopped correctly' : 'correct'} → ${relative(REPO_ROOT, join(outDir, 'report.json'))}`);
 }
 
 if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {

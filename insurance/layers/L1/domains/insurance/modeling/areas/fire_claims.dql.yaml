@@ -1,0 +1,21 @@
+# A separate, unlinked fire-claim risk table.
+domain: insurance
+area:
+  id: fire_claims
+  name: Fire claim risk sample
+  description: >-
+    fire_claim is a stand-alone table of 820 fire-claim risk records (loss ratio, distance to
+    the nearest fire station, number of firefighters, fireplace yes/no, year built). It is not
+    connected to the policy or claim tables.
+entities:
+  - id: fire_claim
+    dbt_model: model.cwd_benchmark_data.fire_claim
+    business_name: Fire claim risk record
+    business_context: >-
+      One fire-claim risk record. Loss_Ratio (0.1 to 1.1), Nearest_Firestation_miles,
+      Number_of_Firefighters, Fireplace ('yes'/'no') and Year_Built (1960 to 2020) are filled.
+      PolicyNo, ClaimNumber, Premium and InsuredLocation are empty in every row, so the table
+      has no key and cannot be joined to policies, claims or locations. Rows are not unique
+      records of any named business object; count rows only as records of this sample.
+    analytical_role: event
+    owner: insurance-analytics@acme-insurance.test

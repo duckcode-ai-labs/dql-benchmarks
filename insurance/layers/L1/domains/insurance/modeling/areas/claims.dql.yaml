@@ -1,0 +1,386 @@
+# Claims, the coverage they are made against, and claim money (reserves and payments).
+domain: insurance
+area:
+  id: claims
+  name: Claims, reserves and payments
+  description: >-
+    A claim is made against a policy coverage detail (through claim_coverage), is linked to a
+    loss occurrence, an insured object and optionally a catastrophe. Claim money lives in
+    claim_amount; loss_payment, loss_reserve, expense_payment and expense_reserve mark which
+    claim amounts are of each kind.
+  references: [policy_coverage_detail, insurable_object, policy]
+entities:
+  - id: claim
+    dbt_model: model.cwd_benchmark_data.claim
+    business_name: Claim
+    business_context: >-
+      One insurance claim. Company_Claim_Number is the business claim number. Claim_Open_Date
+      and Claim_Close_Date are filled; reported, claims-made, reopen dates, status code and
+      description are empty. Catastrophe_Identifier links the claim to a catastrophe type,
+      Occurrence_Identifier to the loss event, Insurable_Object_Identifier to what was damaged.
+    analytical_role: event
+    grain: Claim_Identifier
+    keys: [Claim_Identifier]
+    owner: insurance-analytics@acme-insurance.test
+  - id: claim_amount
+    dbt_model: model.cwd_benchmark_data.claim_amount
+    business_name: Claim amount
+    business_context: >-
+      A money amount on a claim (Claim_Amount). Generic parent of loss payment, loss reserve,
+      expense payment and expense reserve: what kind of amount a row is comes only from which of
+      those four tables holds its Claim_Amount_Identifier. Amount_Type_Code, Event_Date, offer
+      and insurance type are empty, so an amount has no date of its own.
+    analytical_role: event
+    grain: Claim_Amount_Identifier
+    keys: [Claim_Amount_Identifier]
+    concept_refs: [loss_payment, loss_reserve, expense_payment, expense_reserve]
+    owner: insurance-analytics@acme-insurance.test
+  - id: loss_payment
+    dbt_model: model.cwd_benchmark_data.loss_payment
+    business_name: Loss payment
+    business_context: Subtype marker of claim_amount. A claim amount paid to settle the loss itself. The amount is claim_amount.Claim_Amount.
+    analytical_role: event
+    grain: Claim_Amount_Identifier
+    keys: [Claim_Amount_Identifier]
+    concept_refs: [loss_payment]
+    owner: insurance-analytics@acme-insurance.test
+  - id: loss_reserve
+    dbt_model: model.cwd_benchmark_data.loss_reserve
+    business_name: Loss reserve
+    business_context: Subtype marker of claim_amount. An amount set aside for the expected loss on a claim. The amount is claim_amount.Claim_Amount.
+    analytical_role: event
+    grain: Claim_Amount_Identifier
+    keys: [Claim_Amount_Identifier]
+    concept_refs: [loss_reserve]
+    owner: insurance-analytics@acme-insurance.test
+  - id: expense_payment
+    dbt_model: model.cwd_benchmark_data.expense_payment
+    business_name: Expense payment
+    business_context: Subtype marker of claim_amount. A claim amount paid for the cost of handling the claim (not the loss). The amount is claim_amount.Claim_Amount.
+    analytical_role: event
+    grain: Claim_Amount_Identifier
+    keys: [Claim_Amount_Identifier]
+    concept_refs: [expense_payment]
+    owner: insurance-analytics@acme-insurance.test
+  - id: expense_reserve
+    dbt_model: model.cwd_benchmark_data.expense_reserve
+    business_name: Expense reserve
+    business_context: Subtype marker of claim_amount. An amount set aside for the expected cost of handling a claim. The amount is claim_amount.Claim_Amount.
+    analytical_role: event
+    grain: Claim_Amount_Identifier
+    keys: [Claim_Amount_Identifier]
+    concept_refs: [expense_reserve]
+    owner: insurance-analytics@acme-insurance.test
+  - id: claim_coverage
+    dbt_model: model.cwd_benchmark_data.claim_coverage
+    business_name: Claim coverage
+    business_context: >-
+      Bridge saying which policy coverage detail a claim is made against: one row per claim and
+      coverage detail (Effective_Date + Policy_Coverage_Detail_Identifier). This is the path from
+      a claim to its policy.
+    analytical_role: bridge
+    grain: Claim_Identifier, Effective_Date, Policy_Coverage_Detail_Identifier
+    keys: [Claim_Identifier, Effective_Date, Policy_Coverage_Detail_Identifier]
+    owner: insurance-analytics@acme-insurance.test
+  - id: catastrophe
+    dbt_model: model.cwd_benchmark_data.catastrophe
+    business_name: Catastrophe
+    business_context: >-
+      A catastrophe (a large, many-claim event). Only Catastrophe_Name is filled, and the names
+      are peril types (Hurricane, Tornado, Flood, Fire), not named events; type and industry
+      codes are empty.
+    analytical_role: dimension
+    grain: Catastrophe_Identifier
+    keys: [Catastrophe_Identifier]
+    owner: insurance-analytics@acme-insurance.test
+  - id: occurrence
+    dbt_model: model.cwd_benchmark_data.occurrences
+    business_name: Loss occurrence
+    business_context: >-
+      The event that caused a loss, with its begin and end date (the date of loss). Name, times,
+      location and catastrophic-event indicator are empty.
+    analytical_role: event
+    grain: Occurrence_Identifier
+    keys: [Occurrence_Identifier]
+    owner: insurance-analytics@acme-insurance.test
+relationships:
+  - id: claim_coverage_to_claim
+    from: claim_coverage
+    to: claim
+    verb: is coverage for
+    description: Each claim coverage row belongs to one claim.
+    keys: [{ from: Claim_Identifier, to: Claim_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: "Claim_Identifier, Effective_Date, Policy_Coverage_Detail_Identifier", keys: [Claim_Identifier, Effective_Date, Policy_Coverage_Detail_Identifier] }
+      to: { grain: Claim_Identifier, keys: [Claim_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:56.753Z"
+      query_fingerprint: 1dd809ab9a2a5f522551a6467175ec02e85f09766a12f78fbebf3727f077eb0c
+      proof_fingerprint: ba83f2897193c914c14f7ccd4628c0b9c440ea4c802b351375cd75ea3a520643
+      from_rows: 2
+      to_rows: 2
+      joined_rows: 2
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: claim_coverage_to_policy_coverage_detail
+    from: claim_coverage
+    to: policy_coverage_detail
+    verb: is made against
+    description: >-
+      Each claim coverage row points to one policy coverage detail, matched on both
+      Effective_Date and Policy_Coverage_Detail_Identifier. claim -> claim_coverage ->
+      policy_coverage_detail -> policy is the path from a claim to its policy.
+    keys:
+      - { from: Effective_Date, to: Effective_Date }
+      - { from: Policy_Coverage_Detail_Identifier, to: Policy_Coverage_Detail_Identifier }
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: "Claim_Identifier, Effective_Date, Policy_Coverage_Detail_Identifier", keys: [Claim_Identifier, Effective_Date, Policy_Coverage_Detail_Identifier] }
+      to: { grain: "Effective_Date, Policy_Coverage_Detail_Identifier", keys: [Effective_Date, Policy_Coverage_Detail_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:56.832Z"
+      query_fingerprint: 7604f11ea12bfabfbfef6fe8f5e640b2d98a2abcb048b43d88fd3c4dde9fe6f3
+      proof_fingerprint: 63994d33594a2568289f0c2a075653d5a050c3f6614a0ef097bb90f684424820
+      from_rows: 2
+      to_rows: 6
+      joined_rows: 2
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 2
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: claim_to_catastrophe
+    from: claim
+    to: catastrophe
+    verb: arises from
+    description: A claim may be linked to one catastrophe.
+    keys: [{ from: Catastrophe_Identifier, to: Catastrophe_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    optionality: { from: optional, to: required }
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: Claim_Identifier, keys: [Claim_Identifier] }
+      to: { grain: Catastrophe_Identifier, keys: [Catastrophe_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:56.910Z"
+      query_fingerprint: fc719ef47e598297717c8938b9f9a4aa5b25e570ca31d3b1621ed061f3d93485
+      proof_fingerprint: 15e042bc97089c42f264137c2d3b0c6d4e28928ba92c1423f70a4fea27154243
+      from_rows: 2
+      to_rows: 4
+      joined_rows: 2
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 2
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: claim_to_occurrence
+    from: claim
+    to: occurrence
+    verb: results from
+    description: A claim results from one loss occurrence.
+    keys: [{ from: Occurrence_Identifier, to: Occurrence_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: Claim_Identifier, keys: [Claim_Identifier] }
+      to: { grain: Occurrence_Identifier, keys: [Occurrence_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:57.068Z"
+      query_fingerprint: 73b76414267ebd8204a825ab35fe55183867455786b575c50436a42f40308902
+      proof_fingerprint: 8b76770d0733a15838081f37e259ca89367d96c50ef347ed72d7ba22ec0b0a0f
+      from_rows: 2
+      to_rows: 2
+      joined_rows: 2
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: claim_to_insurable_object
+    from: claim
+    to: insurable_object
+    verb: involves
+    description: A claim involves one insurable object (the damaged property).
+    keys: [{ from: Insurable_Object_Identifier, to: Insurable_Object_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: Claim_Identifier, keys: [Claim_Identifier] }
+      to: { grain: Insurable_Object_Identifier, keys: [Insurable_Object_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:56.989Z"
+      query_fingerprint: 48defc31d8dffe8ba2963074a496735077d519660e76424d8adf879bd3d8be74
+      proof_fingerprint: 740a341676e8e4e96df1e65158f5031e88b3246a3857900163878d40394c941f
+      from_rows: 2
+      to_rows: 2
+      joined_rows: 2
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: claim_amount_to_claim
+    from: claim_amount
+    to: claim
+    verb: is an amount on
+    description: Each claim amount belongs to one claim; a claim has several amounts (reserves and payments).
+    keys: [{ from: Claim_Identifier, to: Claim_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: Claim_Amount_Identifier, keys: [Claim_Amount_Identifier] }
+      to: { grain: Claim_Identifier, keys: [Claim_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:56.675Z"
+      query_fingerprint: 5417260e5cf025d35a634f044775b35a74e44d2fdd46a28d7c261f86b9d00e32
+      proof_fingerprint: 83ad7eb04f1532b1b34a0d0c49bf25834de35722da3bd06a1921f2dcd07ab8cf
+      from_rows: 8
+      to_rows: 2
+      joined_rows: 8
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 4
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: loss_payment_is_claim_amount
+    from: loss_payment
+    to: claim_amount
+    verb: is a
+    description: Specialization - a loss payment is a claim amount. Inner join on Claim_Amount_Identifier keeps only loss payments; the amount is claim_amount.Claim_Amount.
+    keys: [{ from: Claim_Amount_Identifier, to: Claim_Amount_Identifier }]
+    cardinality: one_to_one
+    fanout: safe
+    join_types: [inner]
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: Claim_Amount_Identifier, keys: [Claim_Amount_Identifier] }
+      to: { grain: Claim_Amount_Identifier, keys: [Claim_Amount_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:57.534Z"
+      query_fingerprint: 6c62b2cc228761b1acd89949aeabca02d8c1a61459bff4511b2004b391275457
+      proof_fingerprint: 88f5ec62316a146603d58e5ca7acd10977b03ed88aaff6185e69ba9127873aea
+      from_rows: 2
+      to_rows: 8
+      joined_rows: 2
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: loss_reserve_is_claim_amount
+    from: loss_reserve
+    to: claim_amount
+    verb: is a
+    description: Specialization - a loss reserve is a claim amount. Inner join on Claim_Amount_Identifier keeps only loss reserves; the amount is claim_amount.Claim_Amount.
+    keys: [{ from: Claim_Amount_Identifier, to: Claim_Amount_Identifier }]
+    cardinality: one_to_one
+    fanout: safe
+    join_types: [inner]
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: Claim_Amount_Identifier, keys: [Claim_Amount_Identifier] }
+      to: { grain: Claim_Amount_Identifier, keys: [Claim_Amount_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:57.612Z"
+      query_fingerprint: cdceb077b318a887c97ae63280684e4753bd417fe4b783186b1473432b33b5ae
+      proof_fingerprint: bc79fe2f876f24155705fd41eafc7a04dae445dc0b047bd33ce4aaeb1de3aaf2
+      from_rows: 2
+      to_rows: 8
+      joined_rows: 2
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: expense_payment_is_claim_amount
+    from: expense_payment
+    to: claim_amount
+    verb: is a
+    description: Specialization - an expense payment is a claim amount. Inner join on Claim_Amount_Identifier keeps only expense payments; the amount is claim_amount.Claim_Amount.
+    keys: [{ from: Claim_Amount_Identifier, to: Claim_Amount_Identifier }]
+    cardinality: one_to_one
+    fanout: safe
+    join_types: [inner]
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: Claim_Amount_Identifier, keys: [Claim_Amount_Identifier] }
+      to: { grain: Claim_Amount_Identifier, keys: [Claim_Amount_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:57.146Z"
+      query_fingerprint: 52cdcd54be62db4a1c4bcaffa1655dc41c6f4c8a47d417452a2a244c3dc56eb1
+      proof_fingerprint: e66958e1937b09a53b4e4b7abc0504f245610e4ea56d78db511e631478d97e47
+      from_rows: 2
+      to_rows: 8
+      joined_rows: 2
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: expense_reserve_is_claim_amount
+    from: expense_reserve
+    to: claim_amount
+    verb: is a
+    description: Specialization - an expense reserve is a claim amount. Inner join on Claim_Amount_Identifier keeps only expense reserves; the amount is claim_amount.Claim_Amount.
+    keys: [{ from: Claim_Amount_Identifier, to: Claim_Amount_Identifier }]
+    cardinality: one_to_one
+    fanout: safe
+    join_types: [inner]
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: Claim_Amount_Identifier, keys: [Claim_Amount_Identifier] }
+      to: { grain: Claim_Amount_Identifier, keys: [Claim_Amount_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:57.223Z"
+      query_fingerprint: f17b15f93d6e211033b7cfd46a2d52c6256893a4c26f1c7ecc3473179eb63e5c
+      proof_fingerprint: 8e7d9dde75ee9256cecafd6501810dc2c1492e08bd0d4295f6be0d9c5354235a
+      from_rows: 2
+      to_rows: 8
+      joined_rows: 2
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
