@@ -366,7 +366,10 @@ Every fix below is general: it names no benchmark table, column or question. Eac
 | 9 | Certification check passes a join whose keys are empty in every row (0 rows joined) | L1 authoring | to do | open |
 | 10 | No CLI command writes the warehouse evidence certification needs | L1 authoring | to do | open |
 | 11 | The Claude Code CLI rejects the model's first structured answer to DQL's reading schema about 60% of the time (one wasted turn per question) | timeout diagnosis | measure answering without the CLI's schema feature | open (separate task) |
-| 12 | Ask stops on about half of answerable questions | every run | defects 3–5 target the main causes; re-measured after they land | open |
+| 12 | Ask stops on about half of answerable questions | every run | defects 3–5 cut stops from 25 to 6 (run `sub-r5`) | partly fixed |
+| 13 | A table that only marks rows of another (a `loss_payment` row marks a claim amount) was not understood: drafts summed every claim amount, or stopped because "no table holds loss reserve amounts" | `sub-r5` L3 misses | a key-only side of a modeled one-to-one relationship is described to the SQL writer as a marker, and its base table is added | DQL `f064f023` |
+| 14 | Wide questions lost tables: "loss reserves" did not name `loss_reserve`, and tables named in a metric's definition were not included | `sub-r5` L3 misses | question words match table names; a metric brings the tables its definition names; larger table budget | DQL `f064f023` |
+| 15 | The question-reading step can stop with a question back before any answer path is tried | `sub-r5` L3 misses | a first fix (send such readings straight to AI SQL) was dropped: DQL's golden suite showed it lost a follow-up's inherited limit and skipped a certified answer. It needs a design that tries certified and semantic answers first | open |
 
 ## Reproduce
 
