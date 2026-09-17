@@ -34,7 +34,13 @@ const CASE_TIMEOUT_MS = 900_000;
  * depend on the machine and on timing. Scored runs use DQL's built-in
  * retrieval, which is what a machine without Ollama gets.
  */
-export const RUN_ENV = { DQL_EMBEDDINGS_AUTODETECT: 'off', DQL_TELEMETRY_DISABLED: '1' };
+export const RUN_ENV = {
+  DQL_EMBEDDINGS_AUTODETECT: 'off',
+  DQL_TELEMETRY_DISABLED: '1',
+  // DQL runs the first `mf` it finds; the machine's own may lack the DuckDB
+  // adapter (it did on the first L2 run, and every semantic compile failed).
+  DQL_METRICFLOW_BIN: join(REPO_ROOT, '.venv-mf', 'bin', 'mf'),
+};
 
 function parseArgs(argv) {
   const options = { layer: 'L0', set: 'dbt-labs', run: null, cassette: 'record', provider: 'claude-code', model: 'claude-sonnet-5', only: null, debugCli: false };
@@ -178,6 +184,7 @@ export function cassetteEvidence(dir, mode) {
 
 async function main() {
   const options = parseArgs(process.argv.slice(2));
+  if (!existsSync(RUN_ENV.DQL_METRICFLOW_BIN)) throw new Error('MetricFlow for the benchmark is not installed. Run: ./scripts/setup-python.sh');
   const builtDir = join(WORK, 'projects', options.layer);
   if (!existsSync(join(builtDir, 'dql.config.json'))) throw new Error(`Build the ${options.layer} project first: node insurance/build.mjs --layer ${options.layer}`);
   const gold = JSON.parse(readFileSync(join(WORK, 'gold', 'answers.json'), 'utf-8'));
@@ -215,6 +222,7 @@ async function main() {
       dbt: build.tools.dbt.join('; '),
       duckdbPython: build.tools.duckdbPython,
       source: build.source.commit,
+      metricflow: spawnSync(RUN_ENV.DQL_METRICFLOW_BIN, ['--version'], { encoding: 'utf-8' }).stdout.trim(),
       claudeCli: options.provider === 'claude-code' ? spawnSync('claude', ['--version'], { encoding: 'utf-8' }).stdout.trim() : null,
     },
   });

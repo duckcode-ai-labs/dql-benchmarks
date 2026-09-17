@@ -251,6 +251,28 @@ Full scorecard: [results/L0-subscription-r2.md](results/L0-subscription-r2.md). 
 - One question stopped because the run's time budget was nearly spent after 197 s.
 - In two questions, Ask said the loss and expense subtype tables share no key with claims, although they join through the claim amount table.
 
+### Run `sub-r3`: L1, L2, L3 and the unanswerable set
+
+| Layer | Right | Accuracy (95% CI) | dbt Labs' 11 | Wrong | Declined / asked back | Wrong but certified | Median time |
+|---|---:|---|---:|---:|---:|---:|---:|
+| L0 (run `sub-L0-r2`) | 8 | 19.5% (10.2–34.0%) | 2 | 13 | 20 | 0 | 53 s |
+| L1 | 11 | 26.8% (15.7–41.9%) | 5 | 9 | 21 | 0 | 45 s |
+| L2 *(invalid, see below)* | 11 | 26.8% | 6 | 6 | 24 | 0 | 45 s |
+| L3 *(invalid, see below)* | 10 | 24.4% | 6 | 9 | 22 | 0 | 46 s |
+
+- **L1 against L0:** +7.3 points (95% CI −6.8 to +21.5). 6 questions became right and 3 became wrong; exact McNemar p = 0.51, so **not a significant difference on one run**.
+- **Where L1 helped:** the hardest quadrant (complex questions over the complex schema) went from 0/10 to 3/10.
+- **Why many questions are still declined with L1:** Ask said, for example, "no listed column links claim to policy". L1 describes exactly that link as a certified relationship through the coverage tables. So when DQL writes SQL itself, the certified relationships and bridge tables do not reach that step. This is a DQL product gap. It will be fixed as a general change, checked on DQL's own suites, and disclosed.
+- **L2 and L3 are invalid as semantic-layer measurements.** DQL used the machine's own MetricFlow (`mf` on the PATH, version 0.14.0), which lacks the DuckDB adapter, so every semantic compile failed and Ask fell back to AI-written SQL. The harness now installs its own MetricFlow with the DuckDB adapter (`.venv-mf`, dbt-metricflow 0.8.2 on dbt-core 1.9.11), passes it to DQL as `DQL_METRICFLOW_BIN`, and records its version. L2 and L3 are re-run.
+- **This exposed two more DQL gaps:**
+  - DQL treats MetricFlow as ready when `mf --version` works, without checking the adapter.
+  - When MetricFlow fails, Ask does not try DQL's native semantic engine.
+- **Unanswerable questions** ([results](results/L0-unanswerable-r3.md)):
+  - L0 stopped correctly on 14 of 15; L3 (invalid run) on 13 of 15.
+  - None of the answers it gave anyway was labelled certified.
+- **In every run**, no result rows were sent to the AI model.
+- **About the "harness had uncommitted changes" flag on these runs:** the harness was being edited while they ran. From the next runs on, no tracked file is edited during a run.
+
 ### Writing L1 and L3
 
 A separate agent, which had not seen the benchmark, wrote both layers under the rules in [layers/AUTHORING.md](layers/AUTHORING.md). It took **about 11 minutes** (01:53–02:04 UTC); its full log is [layers/AUTHORING-LOG.md](layers/AUTHORING-LOG.md). It produced:
