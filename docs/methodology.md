@@ -27,6 +27,8 @@ DuckCode sells DQL on these numbers, so a result is published only with every ro
 | Reproducibility | replaying the recordings reproduces the accuracy columns exactly | replay on a clean checkout (§9) |
 | Defects found | DQL defects the benchmark uncovered, the fix, and the release that carries it | the benchmark's REPORT.md |
 
+**When results are published.** Numbers are published only from a released DQL version, with repeats, on the audited answer key, and only when the benchmark's own quality gates in section 9 are met. Fixes to DQL ship in ordinary releases before any publication, and results are never obtained by tuning DQL to the questions.
+
 A defect the benchmark uncovers is fixed in DQL as a general fix (never a rule about a benchmark question), described in the report, and scored on a released version that contains it.
 
 ## 1. Paired comparisons only
