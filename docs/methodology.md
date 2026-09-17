@@ -88,7 +88,7 @@ When a benchmark includes questions the data cannot answer, a refusal counts as 
 
 ## 6. Cost and latency
 
-- Latency: median and 95th percentile per question.
+- Latency: median and 95th percentile per question. A run measured while other AI work shared the same provider account is marked, and its timings are not published; speed is measured in a quiet window.
 - AI calls: mean and maximum per question, from DQL's run receipts.
 - Cost: dollars per question at the provider's list price on the date in `pricing.json`. Cost is shown only when **every** question measured its token usage; otherwise the column reads "—". Cost is never estimated.
 
