@@ -40,6 +40,8 @@ export function normalizeReport(report, label, metric = 'passed') {
       dispatches: result.providerDispatchCount ?? result.dispatches ?? null,
       costUsd: typeof result.costUsd === 'number' ? result.costUsd : null,
       trustState: result.trustState ?? result.answer?.trustState ?? null,
+      // Declined or asked back: no data answer was shown.
+      declined: result.kind === 'no_answer' || result.route === 'clarify' || Boolean(result.runtimeError),
     });
   }
   const eligible = report.provenance?.realProviderQualityEligible
@@ -62,6 +64,10 @@ function summarize(report, ids) {
   const costs = rows.map((row) => row.costUsd);
   const allCostsMeasured = rows.length > 0 && costs.every((cost) => typeof cost === 'number');
   const wrongCertified = rows.filter((row) => !row.correct && row.trustState === 'certified').length;
+  // Wrong answers shown as trustworthy: labelled certified or governed, or,
+  // for a tool with no trust labels at all, every wrong answer it gave.
+  const wrongTrusted = rows.filter((row) => !row.correct && !row.declined && (row.trustState === 'certified' || row.trustState === 'governed' || row.trustState === 'none')).length;
+  const stops = rows.filter((row) => row.declined).length;
   return {
     label: report.label,
     n: rows.length,
@@ -77,6 +83,8 @@ function summarize(report, ids) {
     // Cost is shown only when every case measured it; a partial sum would lie.
     costPerQuestionUsd: allCostsMeasured ? mean(costs) : null,
     wrongCertified,
+    wrongTrusted,
+    stops,
   };
 }
 
@@ -160,11 +168,12 @@ export function renderMarkdown(result) {
   }
   for (const subset of result.subsets) {
     lines.push(`### ${subset.name === 'all' ? 'All questions' : 'Questions with an accepted answer key'} (n = ${subset.n})`, '');
-    lines.push('| Condition | Correct | Accuracy | 95% CI | p50 latency | p95 latency | AI calls (mean / max) | $ / question | Wrong but certified |');
-    lines.push('|---|---:|---:|---|---:|---:|---:|---:|---:|');
+    lines.push('| Condition | Correct | Accuracy | 95% CI | Wrong, shown as trustworthy | Stopped | p50 latency | p95 latency | AI calls (mean / max) | $ / question | Wrong but certified |');
+    lines.push('|---|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|');
     for (const condition of subset.conditions) {
       lines.push(`| ${condition.label} | ${condition.correct}/${condition.n} | ${percent(condition.accuracy)} `
         + `| ${percent(condition.ci95.low)}–${percent(condition.ci95.high)} `
+        + `| ${condition.wrongTrusted} | ${condition.stops} `
         + `| ${orDash(condition.latencyP50Ms, (ms) => `${(ms / 1000).toFixed(1)} s`)} `
         + `| ${orDash(condition.latencyP95Ms, (ms) => `${(ms / 1000).toFixed(1)} s`)} `
         + `| ${orDash(condition.dispatchesMean, (value) => value.toFixed(1))} / ${orDash(condition.dispatchesMax, String)} `
@@ -210,10 +219,12 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
       audit = loadAudit(options.audit);
       if (audit.problems.length) throw new Error(`Gold audit is invalid:\n  ${audit.problems.join('\n  ')}`);
     }
-    const inputs = files.map((file) => ({
-      label: basename(file).replace(/\.json$/, ''),
-      report: JSON.parse(readFileSync(file, 'utf-8')),
-    }));
+    // `label=path` names a condition; a bare path is named after its file.
+    const inputs = files.map((spec) => {
+      const at = spec.indexOf('=');
+      const [label, file] = at > 0 ? [spec.slice(0, at), spec.slice(at + 1)] : [basename(spec).replace(/\.json$/, ''), spec];
+      return { label, report: JSON.parse(readFileSync(file, 'utf-8')) };
+    });
     const result = pairedCompare(inputs, { metric: options.metric, audit, allowUnpublishable: options.allowUnpublishable });
     if (options.json) writeFileSync(options.json, `${JSON.stringify(result, null, 2)}\n`);
     console.log(renderMarkdown(result));

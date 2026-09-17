@@ -36,7 +36,21 @@ We repeat this on four copies of the project. Each copy adds one DQL layer:
 - Every AI call is recorded, so the run can be replayed.
 - We report the questions we looked at while building, separately from the headline numbers.
 
-**Where we are** (see [Progress](#progress)): the warehouse is built and verified against dbt Labs' own graded answers. All 43 correct answers run. The harness works end to end. The first full L0 run stopped on a timeout, and tracing it found a DQL defect: since September 5, Ask has not told the AI model how hard to think, so on the Claude subscription one step took 80–120 seconds. The fix is written and is being checked against DQL's own golden question suites before any benchmark run uses it (see [Step 8](#step-8-why-the-first-run-timed-out-and-the-dql-defect-it-found)).
+**Where we are** (see [Step 9](#step-9-results)): on DQL's development build with the benchmark's fixes (`629db0f9`), Claude Sonnet 5 through the subscription, one run each:
+
+| | Right | Wrong, flagged for review | **Wrong, shown as trustworthy** | Stopped | Median time |
+|---|---:|---:|---:|---:|---:|
+| Plain text-to-SQL (dbt Labs' prompt, 13 hand-picked tables with keys) | 19/41 (46%) | 0 | **22** | 0 | 6 s |
+| DQL L0: dbt project only | 10/41 (24%) | 6 | **0** | 25 | 46 s |
+| DQL L1: + modeling | 20/41 (49%) | 7 | **0** | 14 | 42 s |
+| DQL L2: + dbt Labs' semantic layer | 21/41 (51%) | 13 | **1** | 6 | 39 s |
+| DQL L3: + skills | 23/41 (56%) | 11 | **1** | 6 | 36 s |
+
+- **Against L0, each layer's gain is statistically significant** (L1 +24 points, p = 0.002; L3 +32 points, p = 0.0002). No question that L0 answered correctly was lost.
+- **Against plain text-to-SQL, the accuracy differences are not significant yet** (L3 +10 points, p = 0.34). Plain text-to-SQL is about six times faster.
+- **Plain text-to-SQL showed 22 wrong numbers with no warning; DQL showed at most one.** That one (L2 and L3) is a borderline answer key: the right total without the policy-holder column the question implies.
+- **On dbt Labs' 11 questions, L3 answered 10.** dbt Labs published 78–91% for Sonnet 5 text-to-SQL with its enhanced schema. Our runs are single runs on our own warehouse, so this is context, not a head-to-head result.
+- **These runs are not publishable:** DQL is a development build, and each condition has one run. Repeats and a DQL release come next.
 
 ---
 
@@ -273,6 +287,24 @@ Full scorecard: [results/L0-subscription-r2.md](results/L0-subscription-r2.md). 
 - **In every run**, no result rows were sent to the AI model.
 - **About the "harness had uncommitted changes" flag on these runs:** the harness was being edited while they ran. From the next runs on, no tracked file is edited during a run.
 
+### Run `sub-r5`: all layers on DQL `629db0f9` (the benchmark's fixes)
+
+Scorecards: [L0](results/L0-subscription-r5.md) · [L1](results/L1-subscription-r5.md) · [L2](results/L2-subscription-r5.md) · [L3](results/L3-subscription-r5.md) · paired: [against plain text-to-SQL](results/paired-r5-vs-baseline.md), [between layers](results/paired-r5-layers.md) · unanswerable: [L0](results/L0-unanswerable-r5.md), [L3](results/L3-unanswerable-r5.md).
+
+| Layer | Right | dbt Labs' 11 | Hard questions over the complex schema | Stopped | Governed answers (right / wrong) | Median / 95th pct time |
+|---|---:|---:|---:|---:|---:|---:|
+| L0 | 10 (24.4%) | 4 | 1/10 | 25 | 0 / 0 | 46 / 178 s |
+| L1 | 20 (48.8%) | 9 | 3/10 | 14 | 0 / 0 | 42 / 187 s |
+| L2 | 21 (51.2%) | 9 | 4/10 | 6 | 3 / 1 | 39 / 104 s |
+| L3 | 23 (56.1%) | 10 | 3/10 | 6 | 3 / 1 | 36 / 117 s |
+
+- **The semantic layer ran this time.** L2 and L3 each answered 4 questions from dbt Labs' metrics, labelled `governed`. Three were right.
+- **The fourth governed answer is the "wrong, shown as trustworthy" case.** "What is the total amount of premiums that a policy holder has paid?" was answered with the right total (98,000) but without the policy-holder id the answer key requires. It counts as wrong, and it is the only such case in any DQL layer.
+- **Chance-match review.** Some right answers summed every claim amount rather than only the loss and expense subtypes. That is the same total only because every claim amount in this data belongs to one of those four subtypes; on real data it would be wrong. The scorecards list each case (right answers that left out a table the correct query reads). Reviewing them by hand, and reporting accuracy with and without them, is part of the publication step.
+- **Unanswerable questions.** L0 stopped correctly on 14 of 15 and L3 on 13 of 15. None of the answers given anyway was labelled trustworthy.
+- **No result rows were sent to the AI model in any run.**
+- **What changed since `sub-r3`:** the DQL fixes in Step 10 (#3–#7) and a working MetricFlow. The same question set, model and layers were used. Because these fixes came from reading failures on this benchmark, the next confirmation must come from a benchmark DQL was not tuned on (the Trust Benchmark design).
+
 ### Run `sub-r4`: plain text-to-SQL baseline, and L2/L3 again
 
 **Plain text-to-SQL baseline** ([scorecard](results/baseline-text2sql-small-r4.md)): dbt Labs' own prompt and schema file (13 hand-picked tables with 25 foreign keys), Claude Sonnet 5 at medium effort, one call per question, on our warehouse. **19/41 right (46.3%, 95% CI 32.1–61.3%)**; dbt Labs' 11: 7/11. Median 6 s per question. Every reply ran on DuckDB.
@@ -325,11 +357,11 @@ Every fix below is general: it names no benchmark table, column or question. Eac
 |---|---|---|---|---|
 | 1 | Ask never sent a reasoning effort to the AI model (lost when the previous runtime was removed on 2026-09-05); on the Claude subscription one step took 80–120 s and often timed out | first L0 run | effort again set per call: reading at the route effort, SQL writing at the SQL-authoring effort, repairs one level up, capped by Settings | DQL `0a23c4d9` |
 | 2 | `dql agent eval` stopped the whole suite when one question timed out | first L0 run | the question is recorded as failed, never as a refusal; `--case-timeout-ms` | DQL `afa6f908` |
-| 3 | When Ask writes SQL itself, the tables *between* the question's tables (bridge tables) were never chosen, so modeled joins could not be used ("no column links claim to policy") | L1 run | the cheapest route over the Modeling map (certified joins first, up to 3 hops) adds its bridge tables and shows each hop as a join hint | written, golden suites being re-recorded |
-| 4 | Skills never reached the SQL writer, and the question reader sees only their first 300 characters | L3 run | the two skills sharing the most words with the question and tables are given to the SQL writer, up to 1,500 characters each | written, same check |
-| 5 | Tables that only share a column name with the question's tables (look-alikes) were ranked like connected ones, and joins through them returned no rows | L1/L3 runs | on a modeled project, a table on the Modeling map ranks by whether a modeled route (two hops at most) reaches the question's tables | written, same check |
-| 6 | An absolute machine path appeared in an answer summary and the next AI prompt ("MetricFlow is installed but /var/…/semantic_manifest.json was not found") | re-recording DQL's golden suites | the path is shown relative to the project | written, same check |
-| 7 | DQL's golden suite used whichever MetricFlow the developer had installed, so recordings made on one machine did not replay | same | the suite pins the native semantic engine, as CI has no MetricFlow | written, same check |
+| 3 | When Ask writes SQL itself, the tables *between* the question's tables (bridge tables) were never chosen, so modeled joins could not be used ("no column links claim to policy") | L1 run | the cheapest route over the Modeling map (certified joins first, up to 3 hops) adds its bridge tables and shows each hop as a join hint | DQL `629db0f9` |
+| 4 | Skills never reached the SQL writer, and the question reader sees only their first 300 characters | L3 run | the two skills sharing the most words with the question and tables are given to the SQL writer, up to 1,500 characters each | DQL `629db0f9` |
+| 5 | Tables that only share a column name with the question's tables (look-alikes) were ranked like connected ones, and joins through them returned no rows | L1/L3 runs | on a modeled project, a table on the Modeling map ranks by whether a modeled route (two hops at most) reaches the question's tables | DQL `629db0f9` |
+| 6 | An absolute machine path appeared in an answer summary and the next AI prompt ("MetricFlow is installed but /var/…/semantic_manifest.json was not found") | re-recording DQL's golden suites | the path is shown relative to the project | DQL `ebf7455e` |
+| 7 | DQL's golden suite used whichever MetricFlow the developer had installed, so recordings made on one machine did not replay | same | the suite pins the native semantic engine, as CI has no MetricFlow | DQL `ebf7455e` |
 | 8 | MetricFlow counted as ready when `mf --version` works, even without the warehouse adapter; no fallback to DQL's native semantic engine when MetricFlow fails | L2 run | to do | open |
 | 9 | Certification check passes a join whose keys are empty in every row (0 rows joined) | L1 authoring | to do | open |
 | 10 | No CLI command writes the warehouse evidence certification needs | L1 authoring | to do | open |

@@ -20,11 +20,13 @@ import { QUADRANTS } from './questions.mjs';
 export function tablesIn(sql) {
   if (!sql) return [];
   const names = new Set();
+  // Names a WITH clause defines are the statement's own, not tables.
+  const cteNames = new Set([...sql.matchAll(/(?:\bwith\s+(?:recursive\s+)?|,\s*)("?[A-Za-z_][\w$]*"?)\s+as\s*\(/gi)].map((match) => match[1].replace(/"/g, '').toLowerCase()));
   const pattern = /\b(?:from|join)\s+((?:"[^"]+"|[A-Za-z_][\w$]*)(?:\s*\.\s*(?:"[^"]+"|[A-Za-z_][\w$]*))*)/gi;
   for (const match of sql.matchAll(pattern)) {
     const parts = match[1].split('.').map((part) => part.trim().replace(/^"|"$/g, ''));
     const name = parts[parts.length - 1].toLowerCase();
-    if (name && name !== 'select' && name !== 'lateral') names.add(name);
+    if (name && name !== 'select' && name !== 'lateral' && !(parts.length === 1 && cteNames.has(name))) names.add(name);
   }
   return [...names].sort();
 }

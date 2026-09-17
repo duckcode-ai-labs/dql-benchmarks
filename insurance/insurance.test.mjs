@@ -91,3 +91,7 @@ test('a code fence around the reply is removed, nothing else', () => {
   assert.equal(stripFence('SELECT 1;'), 'SELECT 1;');
   assert.equal(stripFence('Here: ```sql\nSELECT 1\n```'), 'Here: ```sql\nSELECT 1\n```');
 });
+
+test('names defined by a WITH clause are not counted as tables', () => {
+  assert.deepEqual(tablesIn('WITH claim_totals AS (SELECT 1 FROM main.claim_amount), "p" as (select 2 from policy) SELECT * FROM claim_totals JOIN p ON true JOIN main.claim c ON true'), ['claim', 'claim_amount', 'policy']);
+});
