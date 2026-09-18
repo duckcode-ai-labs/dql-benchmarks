@@ -611,3 +611,8 @@ This is the result the main set could not show:
   - median 34.3 s (subscription route).
 
   Against the subscription runs before today's fixes (`fx`, 67.5%): 10 against 7, p = 0.63. Against the API runs (72.4%): 3 against 6, p = 0.51. So the route does not change accuracy. Against plain text-to-SQL: 39 against 3, p ≈ 6×10⁻⁹.
+- 2026-09-18: First local-model test. The model is Qwen 3.8 27B on Ollama, measured for accuracy only (DQL's largest deadline); the DQL build is `9ca7e70c`, whose fix gives Ollama calls a context window sized to the prompt (the reading is ~12k tokens and Ollama's default window cut it). On 6 questions, 1 run:
+  - DQL L3 got **5/6**, answering 2 through dbt's semantic layer; the sixth asked back whether expense amounts come from the claim-amount metric or the expense tables;
+  - the same model alone, on dbt Labs' prompt, got **3/6**, and 2 of its statements did not run.
+
+  A signal, not a measurement; the full set is next.
