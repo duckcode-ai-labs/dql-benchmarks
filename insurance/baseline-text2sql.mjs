@@ -86,11 +86,12 @@ function parseArgs(argv) {
     else if (arg === '--repeat') options.repeat = Number(next());
     else if (arg === '--replay') options.replay = true;
     else if (arg === '--provider') options.provider = next();
+    else if (arg === '--only') options.only = next().split(',');
     else throw new Error(`Unknown argument ${arg}`);
   }
   if (!options.run) throw new Error('--run <id> is required');
   if (!DDL_FILES[options.ddl]) throw new Error(`--ddl must be one of ${Object.keys(DDL_FILES).join(', ')}`);
-  if (!['claude-code', 'anthropic', 'codex'].includes(options.provider)) throw new Error('--provider must be claude-code, anthropic or codex');
+  if (!['claude-code', 'anthropic', 'codex', 'ollama'].includes(options.provider)) throw new Error('--provider must be claude-code, anthropic, codex or ollama');
   if (options.provider === 'anthropic' && !options.replay && !process.env.ANTHROPIC_API_KEY) throw new Error('--provider anthropic needs ANTHROPIC_API_KEY in the environment');
   return options;
 }
@@ -153,6 +154,23 @@ function askCodex(prompt, { model, effort }) {
   });
 }
 
+/** The same prompt to a local Ollama model, with a context window that fits it (as DQL's provider asks). */
+async function askOllama(prompt, { model }) {
+  const started = Date.now();
+  const numCtx = Math.min(65_536, Math.max(8192, Math.ceil((Math.ceil(prompt.length / 3) + 8192 + 512) / 4096) * 4096));
+  try {
+    const response = await fetch(`${process.env.OLLAMA_BASE_URL ?? 'http://127.0.0.1:11434'}/api/chat`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ model, stream: false, think: false, messages: [{ role: 'user', content: prompt }], options: { temperature: 0.2, num_predict: 8192, num_ctx: numCtx } }),
+    });
+    const body = await response.json().catch(() => null);
+    return { ms: Date.now() - started, code: response.status, text: body?.message?.content ?? '', isError: !response.ok, usage: body ? { input: body.prompt_eval_count, output: body.eval_count } : null, apiMs: null, error: response.ok ? null : JSON.stringify(body).slice(0, 300) };
+  } catch (error) {
+    return { ms: Date.now() - started, code: null, text: '', isError: true, usage: null, apiMs: null, error: String(error).slice(0, 300) };
+  }
+}
+
 function askClaude(prompt, { model, effort }) {
   return new Promise((resolve) => {
     const cwd = mkdtempSync(join(tmpdir(), 'baseline-claude-'));
@@ -205,6 +223,7 @@ async function main() {
     const dev = JSON.parse(readFileSync(join(REPO_ROOT, 'insurance', 'dev-questions.json'), 'utf-8'));
     cases = selectCases(gold, audit, new Set(dev.questions.map((q) => q.caseId)), options.set);
   }
+  if (options.only) cases = cases.filter((c) => options.only.includes(c.id));
   if (options.ddl === 'full' && !existsSync(DDL_FILES.full)) writeFileSync(DDL_FILES.full, fullDdl(join(WORK, 'projects', 'L0', 'acme_insurance.duckdb')));
   const ddl = readFileSync(DDL_FILES[options.ddl], 'utf-8');
   const outDir = join(WORK, 'runs', options.run, `baseline-${options.ddl}`, options.set);
@@ -219,7 +238,7 @@ async function main() {
       const key = `${c.id}#${round}`;
       if (replies[key]) continue;
       if (options.replay) throw new Error(`No recorded reply for ${key}`);
-      const ask = options.provider === 'anthropic' ? askAnthropic : options.provider === 'codex' ? askCodex : askClaude;
+      const ask = options.provider === 'anthropic' ? askAnthropic : options.provider === 'codex' ? askCodex : options.provider === 'ollama' ? askOllama : askClaude;
       const reply = await ask(baselinePrompt(ddl, c.question), options);
       replies[key] = reply;
       writeFileSync(repliesFile, `${JSON.stringify(replies, null, 2)}\n`);

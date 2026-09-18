@@ -29,7 +29,7 @@ const WORK = join(REPO_ROOT, 'work', 'insurance');
 const SETS = ['all', 'dbt-labs', 'dev', 'unanswerable'];
 const stopsAreRight = (set) => set.endsWith('unanswerable');
 /** claude-code: the `claude` command's subscription login. anthropic: the Messages API with ANTHROPIC_API_KEY. */
-const PROVIDERS = ['claude-code', 'anthropic', 'codex'];
+const PROVIDERS = ['claude-code', 'anthropic', 'codex', 'ollama'];
 /**
  * Where the Codex command lives when it is not on PATH: the ChatGPT desktop app
  * bundles it. Prepended to PATH for codex runs only.
@@ -53,6 +53,15 @@ export const RUN_ENV = {
   // adapter (it did on the first L2 run, and every semantic compile failed).
   DQL_METRICFLOW_BIN: join(REPO_ROOT, '.venv-mf', 'bin', 'mf'),
 };
+
+/**
+ * A local model is measured for accuracy, not speed: its runs get DQL's
+ * largest deadline (20 × the Ask budget) so a slow machine does not turn a
+ * reading into a stop. Recorded in the report's settings.
+ */
+function LOCAL_ENV(provider) {
+  return provider === 'ollama' ? { DQL_AGENT_DEADLINE_SCALE: '20' } : {};
+}
 
 function codexEffort() {
   try {
@@ -286,12 +295,12 @@ async function main() {
       codexCli: options.provider === 'codex' ? `${spawnSync('codex', ['--version'], { encoding: 'utf-8', env: { ...process.env, PATH: codexPath() } }).stdout.trim()}; ${codexEffort()}` : null,
     },
   });
-  identity.settings = { ...RUN_ENV, caseTimeoutMs: CASE_TIMEOUT_MS, debugCli: options.debugCli, readingEffort: options.readingEffort ?? 'default (route effort)' };
+  identity.settings = { ...RUN_ENV, ...LOCAL_ENV(options.provider), caseTimeoutMs: CASE_TIMEOUT_MS, debugCli: options.debugCli, readingEffort: options.readingEffort ?? 'default (route effort)' };
 
   writeProviderSettings(projectDir, options.provider, options.model);
   const runtime = await startRuntime(projectDir, {
     cli,
-    env: { ...RUN_ENV, ...(options.provider === 'codex' ? { PATH: codexPath() } : {}), DQL_PROVIDER_USAGE_LEDGER: join(outDir, 'usage.jsonl'), ...(options.readingEffort ? { DQL_ASK_READING_EFFORT: options.readingEffort } : {}), ...(options.debugCli ? { DQL_DEBUG_PROVIDER_CLI: '1' } : {}) },
+    env: { ...RUN_ENV, ...(options.provider === 'codex' ? { PATH: codexPath() } : {}), ...LOCAL_ENV(options.provider), DQL_PROVIDER_USAGE_LEDGER: join(outDir, 'usage.jsonl'), ...(options.readingEffort ? { DQL_ASK_READING_EFFORT: options.readingEffort } : {}), ...(options.debugCli ? { DQL_DEBUG_PROVIDER_CLI: '1' } : {}) },
     cassetteMode: options.cassette,
     cassetteDir: join(outDir, 'cassettes'),
     startupTimeoutMs: 180_000,
