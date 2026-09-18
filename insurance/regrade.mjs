@@ -26,6 +26,7 @@ import { REPO_ROOT } from '../lib/dql.mjs';
 import { rowsMatch, valuesCovered } from '../lib/row-match.mjs';
 import { wilsonInterval } from '../lib/stats.mjs';
 import { tableCheck } from './score.mjs';
+import { heldoutPaths, heldoutSetOf } from './heldout.mjs';
 
 const PYTHON = join(REPO_ROOT, '.venv', 'bin', 'python');
 
@@ -180,7 +181,7 @@ if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
   }
   const report = JSON.parse(readFileSync(file, 'utf-8'));
   const sealed = Boolean(report.run?.set?.startsWith('heldout'));
-  const gold = JSON.parse(readFileSync(join(REPO_ROOT, 'work', 'insurance', 'gold', sealed ? 'heldout.json' : 'answers.json'), 'utf-8'));
+  const gold = JSON.parse(readFileSync(sealed ? heldoutPaths(heldoutSetOf(report.run.set).number).gold : join(REPO_ROOT, 'work', 'insurance', 'gold', 'answers.json'), 'utf-8'));
   const database = join(REPO_ROOT, 'work', 'insurance', 'projects', report.run.layer, 'acme_insurance.duckdb');
   const statements = [...new Set(report.results.map((result) => result.answer?.sql).filter(Boolean))];
   const executed = runSql(database, statements.map((sql, index) => ({ id: String(index), sql })));

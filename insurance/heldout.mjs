@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // The held-out insurance questions: a second, sealed question set.
 //
-//   node insurance/heldout.mjs import <heldout-questions.json>
-//   node insurance/heldout.mjs gold
+//   node insurance/heldout.mjs [--number N] import <heldout-questions.json>
+//   node insurance/heldout.mjs [--number N] gold
 //
 // The 41 headline questions were read, run and failed many times while DQL was
 // being fixed, so a gain on them can be a gain on those questions only. The
@@ -25,6 +25,24 @@ import { caseId, QUADRANTS } from './questions.mjs';
 
 export const HELDOUT_FILE = join(REPO_ROOT, 'insurance', 'heldout', 'questions.json');
 export const HELDOUT_GOLD = join(REPO_ROOT, 'work', 'insurance', 'gold', 'heldout.json');
+
+/**
+ * Held-out sets are numbered. A set is spent once a DQL change is made because
+ * of what it showed, and the next checkpoint uses a fresh one. Set 1 keeps its
+ * original file names; set N lives in questions-N.json and heldout-N.json.
+ * Run-set names: heldout, heldout-unanswerable (set 1); heldout-2,
+ * heldout-2-unanswerable (set 2) …
+ */
+export function heldoutPaths(number = 1) {
+  if (number === 1) return { file: HELDOUT_FILE, gold: HELDOUT_GOLD };
+  return { file: join(REPO_ROOT, 'insurance', 'heldout', `questions-${number}.json`), gold: join(REPO_ROOT, 'work', 'insurance', 'gold', `heldout-${number}.json`) };
+}
+
+/** The held-out set a run-set name refers to, or undefined for a non-held-out set. */
+export function heldoutSetOf(set) {
+  const match = /^heldout(?:-(\d+))?(-unanswerable)?$/.exec(set ?? '');
+  return match ? { number: match[1] ? Number(match[1]) : 1, unanswerable: Boolean(match[2]) } : undefined;
+}
 const PYTHON = join(REPO_ROOT, '.venv', 'bin', 'python');
 
 export const heldoutId = (question) => `heldout-${caseId(question)}`;
@@ -70,19 +88,24 @@ function counts(questions) {
 }
 
 function main() {
-  const [command, path] = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  const at = args.indexOf('--number');
+  const number = at >= 0 ? Number(args.splice(at, 2)[1]) : 1;
+  const paths = heldoutPaths(number);
+  const [command, path] = args;
   if (command === 'import') {
     if (!path) throw new Error('Usage: node insurance/heldout.mjs import <file>');
     const file = JSON.parse(readFileSync(path, 'utf-8'));
     const problems = checkHeldout(file);
     if (problems.length) throw new Error(problems.join('\n'));
     mkdirSync(join(REPO_ROOT, 'insurance', 'heldout'), { recursive: true });
-    writeFileSync(HELDOUT_FILE, `${JSON.stringify(file, null, 2)}\n`);
-    console.log(`imported ${counts(file.questions)} and ${(file.unanswerable ?? []).length} unanswerable → insurance/heldout/questions.json`);
+    if (existsSync(paths.file)) throw new Error(`held-out set ${number} already exists; a set is never overwritten, use a new --number`);
+    writeFileSync(paths.file, `${JSON.stringify(file, null, 2)}\n`);
+    console.log(`imported set ${number}: ${counts(file.questions)} and ${(file.unanswerable ?? []).length} unanswerable → ${paths.file.slice(REPO_ROOT.length + 1)}`);
     return;
   }
   if (command === 'gold') {
-    const file = JSON.parse(readFileSync(HELDOUT_FILE, 'utf-8'));
+    const file = JSON.parse(readFileSync(paths.file, 'utf-8'));
     const database = join(REPO_ROOT, 'work', 'insurance', 'projects', 'L0', 'acme_insurance.duckdb');
     if (!existsSync(database)) throw new Error('Build L0 first: node insurance/build.mjs --layer L0');
     const results = runGold(database, file.questions);
@@ -96,12 +119,12 @@ function main() {
     });
     const broken = cases.filter((c) => c.gold.error || c.gold.rowCount === 0).length;
     mkdirSync(join(REPO_ROOT, 'work', 'insurance', 'gold'), { recursive: true });
-    writeFileSync(HELDOUT_GOLD, `${JSON.stringify({ builtAt: new Date().toISOString(), database: 'L0', cases }, null, 2)}\n`);
-    console.log(`correct answers for ${cases.length} held-out questions; ${broken} did not run or returned no rows → work/insurance/gold/heldout.json`);
+    writeFileSync(paths.gold, `${JSON.stringify({ builtAt: new Date().toISOString(), database: 'L0', set: number, cases }, null, 2)}\n`);
+    console.log(`correct answers for ${cases.length} questions of held-out set ${number}; ${broken} did not run or returned no rows → ${paths.gold.slice(REPO_ROOT.length + 1)}`);
     if (broken) process.exitCode = 1;
     return;
   }
-  throw new Error('Usage: node insurance/heldout.mjs import <file> | gold');
+  throw new Error('Usage: node insurance/heldout.mjs [--number N] import <file> | gold');
 }
 
 if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {

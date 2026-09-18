@@ -25,7 +25,7 @@ import { rowsMatch } from '../lib/row-match.mjs';
 import { loadAudit } from '../lib/gold-audit.mjs';
 import { buildIdentity } from '../lib/build-identity.mjs';
 import { selectCases } from './run.mjs';
-import { HELDOUT_GOLD } from './heldout.mjs';
+import { heldoutPaths, heldoutSetOf } from './heldout.mjs';
 import { loadPricing, priceUsage } from '../lib/usage.mjs';
 
 const WORK = join(REPO_ROOT, 'work', 'insurance');
@@ -168,8 +168,8 @@ function runSql(database, queries) {
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   let cases;
-  if (options.set === 'heldout') {
-    cases = JSON.parse(readFileSync(HELDOUT_GOLD, 'utf-8')).cases;
+  if (heldoutSetOf(options.set)) {
+    cases = JSON.parse(readFileSync(heldoutPaths(heldoutSetOf(options.set).number).gold, 'utf-8')).cases;
   } else {
     const gold = JSON.parse(readFileSync(join(WORK, 'gold', 'answers.json'), 'utf-8'));
     const audit = loadAudit(join(REPO_ROOT, 'insurance', 'gold-audit.jsonl'));

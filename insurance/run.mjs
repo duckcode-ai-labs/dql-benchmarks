@@ -23,10 +23,10 @@ import { loadAudit, unauditedCases } from '../lib/gold-audit.mjs';
 import { startRuntime } from '../lib/runtime.mjs';
 import { caseId } from './questions.mjs';
 import { attributeUsage, loadPricing, readLedger, runSpans } from '../lib/usage.mjs';
-import { HELDOUT_GOLD, heldoutUnanswerableCases } from './heldout.mjs';
+import { heldoutPaths, heldoutSetOf, heldoutUnanswerableCases } from './heldout.mjs';
 
 const WORK = join(REPO_ROOT, 'work', 'insurance');
-const SETS = ['all', 'dbt-labs', 'dev', 'unanswerable', 'heldout', 'heldout-unanswerable'];
+const SETS = ['all', 'dbt-labs', 'dev', 'unanswerable'];
 const stopsAreRight = (set) => set.endsWith('unanswerable');
 /** claude-code: the `claude` command's subscription login. anthropic: the Messages API with ANTHROPIC_API_KEY. */
 const PROVIDERS = ['claude-code', 'anthropic'];
@@ -64,7 +64,7 @@ function parseArgs(argv) {
     else throw new Error(`Unknown argument ${arg}`);
   }
   if (!options.run) throw new Error('--run <run-id> is required');
-  if (!SETS.includes(options.set)) throw new Error(`--set must be one of ${SETS.join(', ')}`);
+  if (!SETS.includes(options.set) && !heldoutSetOf(options.set)) throw new Error(`--set must be one of ${SETS.join(', ')}, heldout[-N][-unanswerable]`);
   if (!['record', 'replay'].includes(options.cassette)) throw new Error('--cassette must be record or replay');
   if (!PROVIDERS.includes(options.provider)) throw new Error(`--provider must be one of ${PROVIDERS.join(', ')}`);
   // The API key comes from the environment of whoever runs the harness. It is
@@ -220,11 +220,13 @@ async function main() {
   const dev = JSON.parse(readFileSync(join(REPO_ROOT, 'insurance', 'dev-questions.json'), 'utf-8'));
   const devIds = new Set(dev.questions.map((q) => q.caseId));
   let cases;
+  const heldout = heldoutSetOf(options.set);
   if (options.set === 'unanswerable') cases = unanswerableCases();
-  else if (options.set === 'heldout-unanswerable') cases = heldoutUnanswerableCases();
-  else if (options.set === 'heldout') {
-    if (!existsSync(HELDOUT_GOLD)) throw new Error('Compute the held-out answers first: node insurance/heldout.mjs gold');
-    cases = JSON.parse(readFileSync(HELDOUT_GOLD, 'utf-8')).cases;
+  else if (heldout?.unanswerable) cases = heldoutUnanswerableCases(heldoutPaths(heldout.number).file);
+  else if (heldout) {
+    const { gold: goldFile } = heldoutPaths(heldout.number);
+    if (!existsSync(goldFile)) throw new Error(`Compute the held-out answers first: node insurance/heldout.mjs --number ${heldout.number} gold`);
+    cases = JSON.parse(readFileSync(goldFile, 'utf-8')).cases;
     const broken = cases.filter((c) => c.gold.error || c.gold.rowCount === 0);
     if (broken.length) throw new Error(`${broken.length} held-out correct answers did not run or returned no rows`);
   } else cases = selectCases(gold, audit, devIds, options.set);

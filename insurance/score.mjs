@@ -15,6 +15,7 @@ import { REPO_ROOT } from '../lib/dql.mjs';
 import { acceptedCaseIds, loadAudit } from '../lib/gold-audit.mjs';
 import { mean, quantile, wilsonInterval } from '../lib/stats.mjs';
 import { QUADRANTS } from './questions.mjs';
+import { heldoutPaths, heldoutSetOf } from './heldout.mjs';
 
 /** Table names a statement reads, without database/schema or quoting, lower case. */
 export function tablesIn(sql) {
@@ -208,7 +209,7 @@ if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
     console.log(sealed ? renderSealed(renderUnanswerable(report)) : renderUnanswerable(report));
     process.exit(0);
   }
-  const gold = JSON.parse(readFileSync(join(REPO_ROOT, 'work', 'insurance', 'gold', sealed ? 'heldout.json' : 'answers.json'), 'utf-8'));
+  const gold = JSON.parse(readFileSync(sealed ? heldoutPaths(heldoutSetOf(report.run.set).number).gold : join(REPO_ROOT, 'work', 'insurance', 'gold', 'answers.json'), 'utf-8'));
   const audit = sealed ? { entries: new Map(), problems: [] } : loadAudit(join(REPO_ROOT, 'insurance', 'gold-audit.jsonl'));
   const card = scorecard(report, gold, audit);
   if (jsonOut) writeFileSync(jsonOut, `${JSON.stringify(card, null, 2)}\n`);
