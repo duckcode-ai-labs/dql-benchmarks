@@ -29,7 +29,13 @@ const WORK = join(REPO_ROOT, 'work', 'insurance');
 const SETS = ['all', 'dbt-labs', 'dev', 'unanswerable'];
 const stopsAreRight = (set) => set.endsWith('unanswerable');
 /** claude-code: the `claude` command's subscription login. anthropic: the Messages API with ANTHROPIC_API_KEY. */
-const PROVIDERS = ['claude-code', 'anthropic'];
+const PROVIDERS = ['claude-code', 'anthropic', 'codex'];
+/**
+ * Where the Codex command lives when it is not on PATH: the ChatGPT desktop app
+ * bundles it. Prepended to PATH for codex runs only.
+ */
+export const CODEX_DIRS = ['/Applications/ChatGPT.app/Contents/Resources'];
+const codexPath = () => [...CODEX_DIRS, process.env.PATH ?? ''].join(':');
 /** How long one question may take before the harness records it as unanswered. Ask's own limits apply first. */
 const CASE_TIMEOUT_MS = 900_000;
 
@@ -47,6 +53,13 @@ export const RUN_ENV = {
   // adapter (it did on the first L2 run, and every semantic compile failed).
   DQL_METRICFLOW_BIN: join(REPO_ROOT, '.venv-mf', 'bin', 'mf'),
 };
+
+function codexEffort() {
+  try {
+    const text = readFileSync(join(process.env.HOME ?? '', '.codex', 'config.toml'), 'utf-8');
+    return `model_reasoning_effort=${/^model_reasoning_effort\s*=\s*"?([a-z]+)/m.exec(text)?.[1] ?? 'unset'} (~/.codex/config.toml)`;
+  } catch { return 'model_reasoning_effort unknown'; }
+}
 
 function parseArgs(argv) {
   const options = { layer: 'L0', set: 'dbt-labs', run: null, cassette: 'record', provider: 'claude-code', model: 'claude-sonnet-5', only: null, debugCli: false, readingEffort: null };
@@ -104,10 +117,10 @@ export function unanswerableCases(file = join(REPO_ROOT, 'insurance', 'unanswera
 export function providerOutages(projectDir) {
   const store = join(projectDir, '.dql', 'local', 'agent-runs.sqlite');
   if (!existsSync(store)) return [];
-  const result = spawnSync('sqlite3', [store, "select payload_json from agent_runs where payload_json like '%usage limit is reached%' or payload_json like '%rate limit%' or payload_json like '%not logged in%'"], { encoding: 'utf-8', maxBuffer: 512 * 1024 * 1024 });
+  const result = spawnSync('sqlite3', [store, "select payload_json from agent_runs where payload_json like '%usage limit%' or payload_json like '%rate limit%' or payload_json like '%quota%' or payload_json like '%not logged in%'"], { encoding: 'utf-8', maxBuffer: 512 * 1024 * 1024 });
   if (result.status !== 0) throw new Error(`could not read the run store: ${result.stderr}`);
   return result.stdout.split('\n').filter(Boolean).map((line) => {
-    const found = /(usage limit is reached|rate limit[^".]*|not logged in[^".]*)/i.exec(line);
+    const found = /(usage limit[^".]*|rate limit[^".]*|quota[^".]*|not logged in[^".]*)/i.exec(line);
     return found ? found[1] : 'provider refused';
   });
 }
@@ -269,6 +282,8 @@ async function main() {
       source: build.source.commit,
       metricflow: spawnSync(RUN_ENV.DQL_METRICFLOW_BIN, ['--version'], { encoding: 'utf-8' }).stdout.trim(),
       claudeCli: options.provider === 'claude-code' ? spawnSync('claude', ['--version'], { encoding: 'utf-8' }).stdout.trim() : null,
+      // Codex takes its reasoning effort from ~/.codex/config.toml; DQL passes none.
+      codexCli: options.provider === 'codex' ? `${spawnSync('codex', ['--version'], { encoding: 'utf-8', env: { ...process.env, PATH: codexPath() } }).stdout.trim()}; ${codexEffort()}` : null,
     },
   });
   identity.settings = { ...RUN_ENV, caseTimeoutMs: CASE_TIMEOUT_MS, debugCli: options.debugCli, readingEffort: options.readingEffort ?? 'default (route effort)' };
@@ -276,7 +291,7 @@ async function main() {
   writeProviderSettings(projectDir, options.provider, options.model);
   const runtime = await startRuntime(projectDir, {
     cli,
-    env: { ...RUN_ENV, DQL_PROVIDER_USAGE_LEDGER: join(outDir, 'usage.jsonl'), ...(options.readingEffort ? { DQL_ASK_READING_EFFORT: options.readingEffort } : {}), ...(options.debugCli ? { DQL_DEBUG_PROVIDER_CLI: '1' } : {}) },
+    env: { ...RUN_ENV, ...(options.provider === 'codex' ? { PATH: codexPath() } : {}), DQL_PROVIDER_USAGE_LEDGER: join(outDir, 'usage.jsonl'), ...(options.readingEffort ? { DQL_ASK_READING_EFFORT: options.readingEffort } : {}), ...(options.debugCli ? { DQL_DEBUG_PROVIDER_CLI: '1' } : {}) },
     cassetteMode: options.cassette,
     cassetteDir: join(outDir, 'cassettes'),
     startupTimeoutMs: 180_000,

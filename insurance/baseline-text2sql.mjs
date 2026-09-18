@@ -90,7 +90,7 @@ function parseArgs(argv) {
   }
   if (!options.run) throw new Error('--run <id> is required');
   if (!DDL_FILES[options.ddl]) throw new Error(`--ddl must be one of ${Object.keys(DDL_FILES).join(', ')}`);
-  if (!['claude-code', 'anthropic'].includes(options.provider)) throw new Error('--provider must be claude-code or anthropic');
+  if (!['claude-code', 'anthropic', 'codex'].includes(options.provider)) throw new Error('--provider must be claude-code, anthropic or codex');
   if (options.provider === 'anthropic' && !options.replay && !process.env.ANTHROPIC_API_KEY) throw new Error('--provider anthropic needs ANTHROPIC_API_KEY in the environment');
   return options;
 }
@@ -122,6 +122,35 @@ async function askAnthropic(prompt, { model, effort }) {
   } catch (error) {
     return { ms: Date.now() - started, code: null, text: '', isError: true, usage: null, apiMs: null, error: String(error).slice(0, 300) };
   }
+}
+
+/**
+ * The same prompt through the Codex command (ChatGPT subscription), with the
+ * same invocation DQL's Codex provider uses, plus the reasoning effort set
+ * explicitly.
+ */
+function askCodex(prompt, { model, effort }) {
+  return new Promise((resolve) => {
+    const cwd = mkdtempSync(join(tmpdir(), 'baseline-codex-'));
+    const outFile = join(cwd, 'last-message.txt');
+    const started = Date.now();
+    const child = spawn('codex', [
+      'exec', '-', '--sandbox', 'read-only', '--skip-git-repo-check', '--cd', cwd, '--ephemeral',
+      '--output-last-message', outFile, '--model', model, '-c', `model_reasoning_effort="${effort}"`,
+    ], { cwd, stdio: ['pipe', 'pipe', 'pipe'], env: { ...process.env, PATH: ['/Applications/ChatGPT.app/Contents/Resources', process.env.PATH ?? ''].join(':') } });
+    let stderr = '';
+    child.stdout.on('data', () => {});
+    child.stderr.on('data', (chunk) => { stderr += chunk; });
+    const timer = setTimeout(() => child.kill('SIGTERM'), 300_000);
+    child.on('exit', (code) => {
+      clearTimeout(timer);
+      let text = '';
+      try { text = readFileSync(outFile, 'utf-8'); } catch { /* reported below */ }
+      rmSync(cwd, { recursive: true, force: true });
+      resolve({ ms: Date.now() - started, code, text, isError: code !== 0 || !text.trim(), usage: null, apiMs: null, error: code === 0 && text.trim() ? null : stderr.slice(-300) });
+    });
+    child.stdin.end(prompt);
+  });
 }
 
 function askClaude(prompt, { model, effort }) {
@@ -190,7 +219,8 @@ async function main() {
       const key = `${c.id}#${round}`;
       if (replies[key]) continue;
       if (options.replay) throw new Error(`No recorded reply for ${key}`);
-      const reply = options.provider === 'anthropic' ? await askAnthropic(baselinePrompt(ddl, c.question), options) : await askClaude(baselinePrompt(ddl, c.question), options);
+      const ask = options.provider === 'anthropic' ? askAnthropic : options.provider === 'codex' ? askCodex : askClaude;
+      const reply = await ask(baselinePrompt(ddl, c.question), options);
       replies[key] = reply;
       writeFileSync(repliesFile, `${JSON.stringify(replies, null, 2)}\n`);
       console.error(`${key}: ${Math.round(reply.ms / 1000)}s${reply.isError ? ' (error)' : ''}`);
@@ -228,7 +258,7 @@ async function main() {
   const identity = buildIdentity({
     cli, dqlVersion: 'none (plain text-to-SQL)', benchmark: 'insurance', condition: `baseline-${options.ddl}`,
     provider: options.provider, model: options.model, cassetteMode: 'record',
-    tools: { ...(options.provider === 'claude-code' ? { claudeCli: spawnSync('claude', ['--version'], { encoding: 'utf-8' }).stdout.trim() } : { api: 'Anthropic Messages API' }), effort: options.effort },
+    tools: { ...(options.provider === 'claude-code' ? { claudeCli: spawnSync('claude', ['--version'], { encoding: 'utf-8' }).stdout.trim() } : options.provider === 'codex' ? { codexCli: 'codex exec (ChatGPT subscription)' } : { api: 'Anthropic Messages API' }), effort: options.effort },
   });
   identity.notPublishableBecause = identity.notPublishableBecause.filter((reason) => !/DQL/.test(reason));
   identity.publishable = identity.notPublishableBecause.length === 0;
