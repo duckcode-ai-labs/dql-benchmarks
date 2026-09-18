@@ -603,3 +603,11 @@ This is the result the main set could not show:
 - 2026-09-18: DQL `fd7aebe9` (a concept with one binding is drafted from the tables, not asked of the user; plain advice when a join check refuses) and `8c133011` (`DQL_ASK_READING_EFFORT`: reading effort apart from SQL drafting). The answer-key questions are listed for the owner. Not run yet: a speed test with the reading at low effort.
 - 2026-09-18: Speed test, one L3 run on the API with the reading at low effort and SQL writing at high (`--reading-effort low`, DQL `8c133011`): 30/41 right (the medium runs got 31, 29, 29), 3 stops (against 4–5), median 15.7 s (against 19.5–22.7 s), 95th percentile 72.9 s, $0.063 per question. Its 2 wrong answers labelled governed are both on the owner's answer-key list. One run only: accuracy is within run-to-run noise; more runs are needed before this becomes the default.
 - 2026-09-18: Two more low-effort reading runs ([summary](results/repeats-api-L3-reading-low.md)): 30, 28, 28 correct, 69.9% (pooled 95% CI 61.3–77.3%), against 72.4% at medium; paired 4 against 7 (p = 0.55), no significant change. Median 15.3 s against 20.6 s; stops 8 against 14 of 123; same stability (80.5%); 4 wrong answers labelled governed (all on the answer-key list) against 3. Owner decides whether it becomes the default for API providers. From now on, accuracy iterations run on the Claude subscription; the API is used only at release checkpoints (API spend so far ≈ $25).
+- 2026-09-18: Three L3 runs on the Claude subscription on DQL `1b3d2f39` (all fixes through the MetricFlow filter repair; [summary](results/repeats-1b3d2f39-sub-L3.md)):
+  - 29, 28 and 29 correct: 69.9% (pooled 95% CI 61.3–77.3%);
+  - **stability 82.9%**, the highest so far;
+  - stops 10 of 123 (8.1%);
+  - 2 wrong answers labelled governed (both on the borderline policy-holder-total question);
+  - median 34.3 s (subscription route).
+
+  Against the subscription runs before today's fixes (`fx`, 67.5%): 10 against 7, p = 0.63. Against the API runs (72.4%): 3 against 6, p = 0.51. So the route does not change accuracy. Against plain text-to-SQL: 39 against 3, p ≈ 6×10⁻⁹.
