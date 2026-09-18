@@ -330,6 +330,30 @@ This is the first run on the Anthropic Messages API. The model is Claude Sonnet 
 
 Against the launch bar: average ≥70% and significant against text-to-SQL is **met**. Wrong-but-trusted ≤1% is not met: 2.4%, all from one borderline question. Stops ≤10% is not met (11.4%). Median ≤15 s is not met (20.6 s). ≥90% stable is not met (80.5%). The held-out set decides whether the 41-question numbers carry over.
 
+### Held-out set 2 on the Anthropic API (DQL `b83d2c68`; sealed, one run each; answer key not yet reviewed)
+
+Set 2 was written, like set 1, by a separate agent that saw only the warehouse. Set 1 was retired because defect 19 was found on it. Totals only ([DQL scorecard](results/heldout2-L3-api.md)).
+
+| | Plain text-to-SQL (all 29 tables, same model and API) | DQL L3 |
+|---|---:|---:|
+| Right | 19/43 (44.2%) | **23/43 (53.5%**, 95% CI 38.9–67.5%) |
+| Low schema complexity (23 questions) | 15 | 17 |
+| High schema complexity (20 questions) | 4 | 6 |
+| Wrong, with nothing to tell the reader to check | 24 | **0** |
+| Wrong, labelled governed | — | 1 |
+| Stopped | 0 | 8 |
+| Unanswerable questions stopped correctly | — | 9/9 |
+| Median time · cost per question | — · $0.011 | 19.5 s · $0.059 |
+
+What this says:
+
+- **On new questions DQL is ahead, but not significantly.** Paired, DQL was right where the baseline was wrong 7 times, and the reverse 3 times (p = 0.34). On the 41 main questions the same build scores 72.4%. **The gap between 72% and 54% is the measure of how much of the main-set gain came from fixes found on those questions.**
+- **The difference that holds on new questions is trust.** The baseline gave 24 wrong answers with nothing to warn the reader; DQL gave none (one wrong answer carried the governed label). DQL also stopped on all 9 unanswerable questions.
+- **Questions over many tables are still the weak spot** for both (DQL 6 of 20, baseline 4 of 20).
+- **Some many-table answers need the owner's answer-key review.** The author found that the claim-to-coverage table puts both claims on the same coverage, while the second claim's property and loss date belong to the second policy. So set 2 links a claim to its policy through the damaged property and the loss date, whereas DQL's Modeling map follows the claim-coverage table. Where the two disagree, the answer key decides. Which route is right is a data question for the owner, not something DQL is tuned to.
+
+Against the launch bar, the held-out split decides, and it does not yet confirm the main-set accuracy. DQL is not ready for a public accuracy claim; the trust claim (no silent wrong answers) holds on both sets.
+
 ### Three repeat runs of L3 on DQL `953067e7` (defects 17 and 18 fixed, unreleased)
 
 These are the same 41 questions, run three times at L3 on fresh project copies. Summary: [repeats-953067e7-L3](results/repeats-953067e7-L3.md). A first attempt at runs 2 and 3 hit the subscription's usage limit and is invalid (see the change log).
