@@ -87,6 +87,23 @@ export function unanswerableCases(file = join(REPO_ROOT, 'insurance', 'unanswera
   return questions.map((entry) => ({ id: `unanswerable-${caseId(entry.question)}`, question: entry.question, why: entry.why, unanswerable: true }));
 }
 
+/**
+ * Questions whose run stopped because the AI provider refused the call (a
+ * usage limit, a rate limit, an expired login). Those are not DQL's answers:
+ * the run is marked invalid and scored nowhere, instead of counting as wrong
+ * answers or as correct stops.
+ */
+export function providerOutages(projectDir) {
+  const store = join(projectDir, '.dql', 'local', 'agent-runs.sqlite');
+  if (!existsSync(store)) return [];
+  const result = spawnSync('sqlite3', [store, "select payload_json from agent_runs where payload_json like '%usage limit is reached%' or payload_json like '%rate limit%' or payload_json like '%not logged in%'"], { encoding: 'utf-8', maxBuffer: 512 * 1024 * 1024 });
+  if (result.status !== 0) throw new Error(`could not read the run store: ${result.stderr}`);
+  return result.stdout.split('\n').filter(Boolean).map((line) => {
+    const found = /(usage limit is reached|rate limit[^".]*|not logged in[^".]*)/i.exec(line);
+    return found ? found[1] : 'provider refused';
+  });
+}
+
 /** The eval file DQL reads. The correct rows sit here, outside the project. */
 export function evalFile(cases) {
   return {
@@ -270,9 +287,11 @@ async function main() {
     writeFileSync(join(outDir, 'eval.stdout.txt'), result.stdout);
     throw new Error(`dql agent eval exited ${result.code} without a JSON report; see ${relative(REPO_ROOT, outDir)}`);
   }
+  const outages = providerOutages(projectDir);
   const out = {
     identity,
     provenance: cassetteEvidence(join(outDir, 'cassettes'), options.cassette),
+    ...(outages.length ? { invalid: { reason: 'the AI provider refused calls during the run', questions: outages.length, messages: [...new Set(outages)].slice(0, 3) } } : {}),
     run: { id: options.run, layer: options.layer, set: options.set, startedAt, finishedAt: new Date().toISOString(), evalExitCode: result.code },
     questions: cases.length,
     ...report,
@@ -280,6 +299,10 @@ async function main() {
   writeFileSync(join(outDir, 'report.json'), `${JSON.stringify(out, null, 2)}\n`);
   const results = report.results ?? [];
   if (!out.provenance.realProviderQualityEligible) console.error(`not publishable: ${out.provenance.reasons.join('; ')}`);
+  if (out.invalid) {
+    console.error(`INVALID RUN: the AI provider refused calls on ${out.invalid.questions} question(s): ${out.invalid.messages.join(' | ')}`);
+    process.exitCode = 3;
+  }
   const correct = results.filter((r) => (stopsAreRight(options.set) ? r.passed : r.executionMatched === true)).length;
   console.log(`${options.layer}/${options.set}: ${correct}/${results.length} ${stopsAreRight(options.set) ? 'stopped correctly' : 'correct'} → ${relative(REPO_ROOT, join(outDir, 'report.json'))}`);
 }
