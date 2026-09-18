@@ -59,7 +59,10 @@ export function renderRepeats(summary, label) {
   lines.push(`| **average** | | **${pct(summary.meanAccuracy)}** |`, '');
   lines.push(`Pooled over all runs: ${summary.pooled.right}/${summary.pooled.total} (${pct(summary.pooled.accuracy)}, 95% CI ${pct(summary.pooled.ci95.low)}–${pct(summary.pooled.ci95.high)}).`, '');
   lines.push(`**Stability: ${pct(summary.stability)}** of questions came out the same way in every run (${summary.alwaysRight} always right, ${summary.alwaysWrongOrStopped} always wrong or stopped). Wrong answers shown as trustworthy, counted over all runs: ${summary.wrongShownAsTrustworthy}.`, '');
-  if (summary.unstable.length) {
+  // Held-out questions are sealed: count the changes, don't name them.
+  if (summary.unstable.some((row) => row.name.startsWith('heldout-'))) {
+    lines.push(`${summary.unstable.length} held-out questions changed between runs (sealed; not listed).`, '');
+  } else if (summary.unstable.length) {
     lines.push('Questions that changed between runs:', '', '| Question | Outcomes |', '|---|---|');
     for (const row of summary.unstable) lines.push(`| ${row.name} | ${row.outcomes.join(', ')} |`);
     lines.push('');

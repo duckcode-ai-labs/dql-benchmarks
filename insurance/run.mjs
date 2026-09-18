@@ -6,9 +6,10 @@
 //        [--cassette record|replay] [--provider claude-code] [--model claude-sonnet-5]
 //
 // Sets: `all` (the 43 questions), `dbt-labs` (dbt Labs' 11), `dev` (declared
-// development questions). Development questions are left out of `all` and
-// `dbt-labs` so headline numbers never include a question we looked at while
-// building the harness.
+// development questions), `unanswerable`, and the sealed `heldout` and
+// `heldout-unanswerable` sets (insurance/heldout.mjs). Development questions
+// are left out of `all` and `dbt-labs` so headline numbers never include a
+// question we looked at while building the harness.
 //
 // Everything a run produces goes to work/insurance/runs/<run-id>/<layer>/<set>/:
 // the eval file, DQL's JSON report, the recorded AI calls and the server log.
@@ -21,9 +22,11 @@ import { buildIdentity } from '../lib/build-identity.mjs';
 import { loadAudit, unauditedCases } from '../lib/gold-audit.mjs';
 import { startRuntime } from '../lib/runtime.mjs';
 import { caseId } from './questions.mjs';
+import { HELDOUT_GOLD, heldoutUnanswerableCases } from './heldout.mjs';
 
 const WORK = join(REPO_ROOT, 'work', 'insurance');
-const SETS = ['all', 'dbt-labs', 'dev', 'unanswerable'];
+const SETS = ['all', 'dbt-labs', 'dev', 'unanswerable', 'heldout', 'heldout-unanswerable'];
+const stopsAreRight = (set) => set.endsWith('unanswerable');
 /** How long one question may take before the harness records it as unanswered. Ask's own limits apply first. */
 const CASE_TIMEOUT_MS = 900_000;
 
@@ -192,7 +195,15 @@ async function main() {
   if (audit.problems.length) throw new Error(audit.problems.join('\n'));
   const dev = JSON.parse(readFileSync(join(REPO_ROOT, 'insurance', 'dev-questions.json'), 'utf-8'));
   const devIds = new Set(dev.questions.map((q) => q.caseId));
-  let cases = options.set === 'unanswerable' ? unanswerableCases() : selectCases(gold, audit, devIds, options.set);
+  let cases;
+  if (options.set === 'unanswerable') cases = unanswerableCases();
+  else if (options.set === 'heldout-unanswerable') cases = heldoutUnanswerableCases();
+  else if (options.set === 'heldout') {
+    if (!existsSync(HELDOUT_GOLD)) throw new Error('Compute the held-out answers first: node insurance/heldout.mjs gold');
+    cases = JSON.parse(readFileSync(HELDOUT_GOLD, 'utf-8')).cases;
+    const broken = cases.filter((c) => c.gold.error || c.gold.rowCount === 0);
+    if (broken.length) throw new Error(`${broken.length} held-out correct answers did not run or returned no rows`);
+  } else cases = selectCases(gold, audit, devIds, options.set);
   if (options.only) cases = cases.filter((c) => options.only.includes(c.id));
   if (cases.length === 0) throw new Error('No questions selected.');
 
@@ -262,8 +273,8 @@ async function main() {
   writeFileSync(join(outDir, 'report.json'), `${JSON.stringify(out, null, 2)}\n`);
   const results = report.results ?? [];
   if (!out.provenance.realProviderQualityEligible) console.error(`not publishable: ${out.provenance.reasons.join('; ')}`);
-  const correct = results.filter((r) => (options.set === 'unanswerable' ? r.passed : r.executionMatched === true)).length;
-  console.log(`${options.layer}/${options.set}: ${correct}/${results.length} ${options.set === 'unanswerable' ? 'stopped correctly' : 'correct'} → ${relative(REPO_ROOT, join(outDir, 'report.json'))}`);
+  const correct = results.filter((r) => (stopsAreRight(options.set) ? r.passed : r.executionMatched === true)).length;
+  console.log(`${options.layer}/${options.set}: ${correct}/${results.length} ${stopsAreRight(options.set) ? 'stopped correctly' : 'correct'} → ${relative(REPO_ROOT, join(outDir, 'report.json'))}`);
 }
 
 if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {

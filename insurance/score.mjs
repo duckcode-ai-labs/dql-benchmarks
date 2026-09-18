@@ -73,6 +73,27 @@ export function renderUnanswerable(report) {
   return lines.join('\n');
 }
 
+/**
+ * A held-out scorecard keeps its totals and drops everything that names a
+ * question (the per-question table, the table-check list, the unanswerable
+ * list), so reading results does not reveal the sealed questions one by one.
+ * The full report stays in the run directory for the answer-key review.
+ */
+export function renderSealed(markdown) {
+  const kept = [];
+  let skipping = false;
+  for (const line of markdown.split('\n')) {
+    if (/^### (Every question|Right answers that read different tables)/.test(line)) { skipping = true; continue; }
+    if (skipping && line.startsWith('### ')) skipping = false;
+    if (skipping) continue;
+    // The unanswerable list: its header, separator and one row per question.
+    if (/^\| (Question \| Outcome \||.+ \| (declined|asked to clarify|answered anyway) \|)/.test(line) || /^\|---\|---\|---\|$/.test(line)) continue;
+    kept.push(line);
+  }
+  kept.push('> Held-out set: questions are sealed; this scorecard shows totals only. Answer key not yet reviewed by the owner.', '');
+  return kept.join('\n');
+}
+
 export function scorecard(report, gold, audit) {
   const byId = new Map(gold.cases.map((c) => [c.id, c]));
   const accepted = acceptedCaseIds(audit);
@@ -172,13 +193,14 @@ if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
     process.exit(1);
   }
   const report = JSON.parse(readFileSync(args[0], 'utf-8'));
-  if (report.run?.set === 'unanswerable') {
-    console.log(renderUnanswerable(report));
+  const sealed = report.run?.set?.startsWith('heldout');
+  if (report.run?.set?.endsWith('unanswerable')) {
+    console.log(sealed ? renderSealed(renderUnanswerable(report)) : renderUnanswerable(report));
     process.exit(0);
   }
-  const gold = JSON.parse(readFileSync(join(REPO_ROOT, 'work', 'insurance', 'gold', 'answers.json'), 'utf-8'));
-  const audit = loadAudit(join(REPO_ROOT, 'insurance', 'gold-audit.jsonl'));
+  const gold = JSON.parse(readFileSync(join(REPO_ROOT, 'work', 'insurance', 'gold', sealed ? 'heldout.json' : 'answers.json'), 'utf-8'));
+  const audit = sealed ? { entries: new Map(), problems: [] } : loadAudit(join(REPO_ROOT, 'insurance', 'gold-audit.jsonl'));
   const card = scorecard(report, gold, audit);
   if (jsonOut) writeFileSync(jsonOut, `${JSON.stringify(card, null, 2)}\n`);
-  console.log(renderScorecard(card));
+  console.log(sealed ? renderSealed(renderScorecard(card)) : renderScorecard(card));
 }

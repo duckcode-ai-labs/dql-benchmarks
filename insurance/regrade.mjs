@@ -128,7 +128,7 @@ export function regrade(report, gold, rowsBySql) {
 
 const pct = (k, n) => (n ? `${((k / n) * 100).toFixed(1)}%` : '—');
 
-export function renderRegrade(rows, label) {
+export function renderRegrade(rows, label, { sealed = false } = {}) {
   const lines = [`## ${label}: the same answers, graded several ways`, ''];
   const strict = rows.filter((row) => row.strict).length;
   const measures = rows.filter((row) => row.measures).length;
@@ -158,6 +158,10 @@ export function renderRegrade(rows, label) {
   lines.push(`| dbt Labs' 11 | ${eleven.length} | ${pct(eleven.filter((row) => row.strict).length, eleven.length)} | ${pct(eleven.filter((row) => row.measures).length, eleven.length)} |`, '');
 
   const disagreed = rows.filter((row) => row.rerunAgrees === false);
+  if (sealed) {
+    lines.push(`Held-out set: questions are sealed. Re-run disagreements: ${disagreed.length}. Numbers right but rejected by the strict rule: ${rows.filter((row) => !row.strict && row.measures).length}.`, '');
+    return lines.join('\n');
+  }
   if (disagreed.length) lines.push(`> **${disagreed.length} answer(s) graded differently when their SQL was run again** — the warehouse or the recording changed: ${disagreed.map((row) => row.id).join(', ')}.`, '');
   const gained = rows.filter((row) => !row.strict && row.measures);
   if (gained.length) {
@@ -175,7 +179,8 @@ if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
     process.exit(1);
   }
   const report = JSON.parse(readFileSync(file, 'utf-8'));
-  const gold = JSON.parse(readFileSync(join(REPO_ROOT, 'work', 'insurance', 'gold', 'answers.json'), 'utf-8'));
+  const sealed = Boolean(report.run?.set?.startsWith('heldout'));
+  const gold = JSON.parse(readFileSync(join(REPO_ROOT, 'work', 'insurance', 'gold', sealed ? 'heldout.json' : 'answers.json'), 'utf-8'));
   const database = join(REPO_ROOT, 'work', 'insurance', 'projects', report.run.layer, 'acme_insurance.duckdb');
   const statements = [...new Set(report.results.map((result) => result.answer?.sql).filter(Boolean))];
   const executed = runSql(database, statements.map((sql, index) => ({ id: String(index), sql })));
@@ -183,5 +188,5 @@ if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
   const rows = regrade(report, gold, rowsBySql);
   const out = file.replace(/report\.json$/, 'regrade.json');
   writeFileSync(out, `${JSON.stringify({ run: report.run, identity: report.identity, rows }, null, 2)}\n`);
-  console.log(renderRegrade(rows, `${report.run.layer} · run ${report.run.id}`));
+  console.log(renderRegrade(rows, `${report.run.layer} · run ${report.run.id}`, { sealed }));
 }

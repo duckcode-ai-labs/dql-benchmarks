@@ -325,7 +325,10 @@ What the repeats change:
 
   A governed answer must cover everything the question asks for, or not carry the label. This is the most important DQL defect found so far (17), because the product's claim rests on that label.
 - **Unanswerable questions:** L0 stopped correctly on 14 of 15, L3 on 13 of 15, none shown as trustworthy.
-- **The plain text-to-SQL baseline has been run once.** It needs the same three repeats before the averages are compared.
+- **The plain text-to-SQL baseline, three times** ([summary](results/repeats-baseline.md)): the same model, given the warehouse schema and asked for one SQL statement, averaged **44.7%** (19, 17, 19 of 41; pooled 95% CI 36.2–53.5%) and gave the same outcome in every run for **90%** of questions.
+  - **L3 is 9 points higher, and that is not yet significant.** Paired over the 123 question-and-run pairs, L3 was right where the baseline was wrong 22 times, and the reverse 11 times (exact McNemar p = 0.08).
+  - **The baseline is more stable than DQL** (90% against 73%). One prompt and one statement vary less than a pipeline that reads the question, chooses tables and then writes SQL. Most of DQL's run-to-run changes are in the SQL it writes itself on the multi-table loss questions (see defect 18).
+  - **Where DQL is already clearly ahead is trust.** The baseline gave 68 wrong answers over its three runs, each as a plain answer, with nothing to tell the reader to check it. DQL's wrong answers carried `review_required` except the 7 governed ones above.
 
 ### Run `sub-r6`: all layers on DQL `f064f023` (marker tables and wide questions)
 
@@ -423,7 +426,8 @@ Every fix below is general: it names no benchmark table, column or question. Eac
 | 14 | Wide questions lost tables: "loss reserves" did not name `loss_reserve`, and tables named in a metric's definition were not included | `sub-r5` L3 misses | question words match table names; a metric brings the tables its definition names; larger table budget | DQL `f064f023` |
 | 15 | The question-reading step can stop with a question back before any answer path is tried | `sub-r5` L3 misses | a first fix (send such readings straight to AI SQL) was dropped: DQL's golden suite showed it lost a follow-up's inherited limit and skipped a certified answer. It needs a design that tries certified and semantic answers first | open |
 | 16 | Bridge tables added from the Modeling map were dropped on wide questions (columns are described five tables per call, and the bridges came last) | `sub-r6` L1 | columns described in batches of five, bridge tables first | written, being verified |
-| 17 | A governed (semantic-layer) answer can drop a breakdown or grain the question asked for and still carry the `governed` label: a list of premiums collapsed into one total, a breakdown missing a column | 1.17.3 repeats | a governed answer must cover every measure, breakdown and grain the reading asks for, or be downgraded to review-required | open, highest priority |
+| 17 | A governed (semantic-layer) answer can drop a breakdown or grain the question asked for and still carry the `governed` label: a list of premiums collapsed into one total, a breakdown missing a column | 1.17.3 repeats | a governed answer must cover every measure, breakdown and grain the reading asks for, or be downgraded to review-required | **split on diagnosis.** (b) *Code:* a question grouped by two dates bound only the last one, because each time grouping overwrote the request's single time dimension. Fixed in DQL 73295860 (unreleased): the second date at day grain is grouped too; at another grain, or whenever any grouping would be lost, the semantic tier refuses and the question falls through to a review-required answer. (a) and (c) *Reading:* the reading turned "all the premiums paid" into one total; and for "average policy size … total amount of premium" it divided every policy amount (5,698,000) by 2 policies instead of premium amounts only (98,000). The semantic model documents the `has_premium` flag for exactly this. These are reading errors, not binding errors; they count against accuracy and stay open under stability/reading work |
+| 18 | AI-written SQL related two tables through a parent they both only reference (claims and coverage details each name the insured object), instead of the bridge the team modeled. Every claim then met every coverage on that object, and totals landed on the wrong policies. The route search ignored which way each relationship runs, so the two 3-hop routes tied. On this small warehouse no key repeats, so DQL's row-count probe could not see it | L3 repeats (stability) | the route search knows each relationship's direction: a route that climbs to a table and comes back down is a last resort. A new check fails AI-written SQL that relates two tables through a shared parent when the Modeling map connects them by certified or validated direct links, and names the route to use. Over the 105 AI-written L3 answers in the three 1.17.3 runs, it flags 20 of the 48 wrong answers and none of the 57 right ones | DQL `953067e7` (unreleased) |
 
 ## Reproduce
 
@@ -439,6 +443,20 @@ node insurance/run.mjs --layer L0 --set all --run my-run
 ```
 
 Replaying a recorded run: `node insurance/run.mjs --layer L0 --set all --run <same id> --cassette replay`.
+
+## Held-out questions
+
+Every fix in Step 10 came from reading failures on the 41 questions, so a gain on them may not carry over to other questions. A second, sealed set answers that:
+
+- **Who wrote it:** a separate agent that saw only the warehouse (its schema, sample values and a read-only query tool). It never saw the 41 questions, any result or DQL. It was also told not to recall any published question set for this data.
+- **What it holds:** 44 answerable questions (LQLS 12, HQLS 11, LQHS 10, HQHS 11), covering single numbers, lists, breakdowns, rankings, ratios and trends. There are also 9 questions the data cannot answer. Every correct query was run and returns rows.
+- **The rules:**
+  - DQL is never changed because of a held-out failure;
+  - the set runs at release checkpoints (`--set heldout`, `--set heldout-unanswerable`);
+  - its scorecards, regrades and repeat summaries print totals only, never a question.
+- **The answer key is not yet reviewed.** It needs an owner review, like the main set's, before a held-out number is published. The author noted that the data is very small (most tables have 2–12 rows), and that some joins rest on conventions the schema doesn't state; those choices are recorded in each question's notes.
+
+File: [heldout/questions.json](heldout/questions.json) · tool: `insurance/heldout.mjs`.
 
 ## Change log
 
