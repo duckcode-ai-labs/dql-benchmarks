@@ -49,7 +49,7 @@ export const RUN_ENV = {
 };
 
 function parseArgs(argv) {
-  const options = { layer: 'L0', set: 'dbt-labs', run: null, cassette: 'record', provider: 'claude-code', model: 'claude-sonnet-5', only: null, debugCli: false };
+  const options = { layer: 'L0', set: 'dbt-labs', run: null, cassette: 'record', provider: 'claude-code', model: 'claude-sonnet-5', only: null, debugCli: false, readingEffort: null };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     const next = () => argv[++index];
@@ -61,6 +61,7 @@ function parseArgs(argv) {
     else if (arg === '--model') options.model = next();
     else if (arg === '--only') options.only = next().split(',');
     else if (arg === '--debug-cli') options.debugCli = true;
+    else if (arg === '--reading-effort') options.readingEffort = next();
     else throw new Error(`Unknown argument ${arg}`);
   }
   if (!options.run) throw new Error('--run <run-id> is required');
@@ -270,12 +271,12 @@ async function main() {
       claudeCli: options.provider === 'claude-code' ? spawnSync('claude', ['--version'], { encoding: 'utf-8' }).stdout.trim() : null,
     },
   });
-  identity.settings = { ...RUN_ENV, caseTimeoutMs: CASE_TIMEOUT_MS, debugCli: options.debugCli };
+  identity.settings = { ...RUN_ENV, caseTimeoutMs: CASE_TIMEOUT_MS, debugCli: options.debugCli, readingEffort: options.readingEffort ?? 'default (route effort)' };
 
   writeProviderSettings(projectDir, options.provider, options.model);
   const runtime = await startRuntime(projectDir, {
     cli,
-    env: { ...RUN_ENV, DQL_PROVIDER_USAGE_LEDGER: join(outDir, 'usage.jsonl'), ...(options.debugCli ? { DQL_DEBUG_PROVIDER_CLI: '1' } : {}) },
+    env: { ...RUN_ENV, DQL_PROVIDER_USAGE_LEDGER: join(outDir, 'usage.jsonl'), ...(options.readingEffort ? { DQL_ASK_READING_EFFORT: options.readingEffort } : {}), ...(options.debugCli ? { DQL_DEBUG_PROVIDER_CLI: '1' } : {}) },
     cassetteMode: options.cassette,
     cassetteDir: join(outDir, 'cassettes'),
     startupTimeoutMs: 180_000,
