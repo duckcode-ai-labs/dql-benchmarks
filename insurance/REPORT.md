@@ -444,6 +444,26 @@ node insurance/run.mjs --layer L0 --set all --run my-run
 
 Replaying a recorded run: `node insurance/run.mjs --layer L0 --set all --run <same id> --cassette replay`.
 
+## Speed: where a question's time goes
+
+On the Claude subscription route, L1–L3 take a median of 34–41 s per question, and L0 52–58 s. The target is 15 s. Timed from the run store of a clean L3 run (`v1173-c`), average per question:
+
+| Step | Time |
+|---|---:|
+| Reading the question against the governed vocabulary (one AI call, sometimes a correction) | **27 s** |
+| Writing the SQL (one AI call) | 7–11 s |
+| Searching every table for a field the reading missed (when it happens, 9 of 41) | 21 s |
+| Everything DQL does itself: context, grounding, the semantic-layer compile, checks, running the query | about 2 s |
+
+- **Almost all the time is in the AI calls.** DQL's own work is about 2 s, most of it the MetricFlow compile.
+- **The reading call is the slow one.** It goes through the `claude` command line with a structured-output schema. An earlier DQL experiment put the schema in the prompt instead: 2–3 times faster, but it lost accuracy on DQL's own golden suite (10 of 15 against 15 of 15). So there is no free speed-up on this route.
+- **The next measurement is the Anthropic API route.** It has no command-line start-up and supports prompt caching, and it also gives the cost figures. It needs an API key from the owner.
+
+**One run's speed is partly invalid.** The L3 run of `v1173-b` was started twice. Recording reuses any recording it finds, so 8 of its 41 answers replayed the first attempt's recordings: no AI call, about 3 s each.
+- Their answers are real model output from the same build, so accuracy stands.
+- Their times are not real, so speed figures leave them out; that run's median over the other 33 questions is 37 s.
+- The harness now refuses to record into a run that already holds recordings.
+
 ## Held-out questions
 
 Every fix in Step 10 came from reading failures on the 41 questions, so a gain on them may not carry over to other questions. A second, sealed set answers that:

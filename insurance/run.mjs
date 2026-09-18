@@ -211,6 +211,13 @@ async function main() {
   if (options.cassette === 'record' && existsSync(join(outDir, 'report.json'))) {
     throw new Error(`Run ${options.run} already has ${options.layer}/${options.set}; pick a new run id or replay it.`);
   }
+  // A recording run starts with no recordings. An interrupted attempt leaves
+  // some behind, and recording reuses any it finds: those answers would take
+  // no AI call and report a few seconds, and their speed would be false.
+  const cassetteDir = join(outDir, 'cassettes');
+  if (options.cassette === 'record' && existsSync(cassetteDir) && readdirSync(cassetteDir).length > 0) {
+    throw new Error(`${relative(REPO_ROOT, cassetteDir)} already holds recordings from an earlier attempt; delete ${relative(REPO_ROOT, outDir)} or pick a new run id.`);
+  }
   mkdirSync(outDir, { recursive: true });
   const projectDir = freshProject(options.layer, outDir);
   const evalPath = join(outDir, 'evals.yml');
