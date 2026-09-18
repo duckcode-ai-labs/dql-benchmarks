@@ -301,6 +301,32 @@ Full scorecard: [results/L0-subscription-r2.md](results/L0-subscription-r2.md). 
 - **In every run**, no result rows were sent to the AI model.
 - **About the "harness had uncommitted changes" flag on these runs:** the harness was being edited while they ran. From the next runs on, no tracked file is edited during a run.
 
+### Three repeat runs on DQL 1.17.3 (the released fixes)
+
+The same 41 questions, three times per layer, each run on a fresh copy of the project with nothing carried over. Summaries: [L0](results/repeats-v1.17.3-L0.md) · [L1](results/repeats-v1.17.3-L1.md) · [L2](results/repeats-v1.17.3-L2.md) · [L3](results/repeats-v1.17.3-L3.md) · unanswerable: [L0](results/L0-unanswerable-v1.17.3.md), [L3](results/L3-unanswerable-v1.17.3.md).
+
+| Layer | Runs | Average right | Pooled 95% CI | Same outcome in every run | Wrong, shown as trustworthy (of 123 answers) |
+|---|---|---:|---|---:|---:|
+| L0 | 10, 12, 10 | **26.0%** | 19.1–34.4% | 61% | 0 |
+| L1 | 19, 17, 19 | **44.7%** | 36.2–53.5% | 63% | 0 |
+| L2 | 20, 20, 21 | **49.6%** | 40.9–58.3% | 78% | 3 |
+| L3 | 23, 20, 23 | **53.7%** | 44.9–62.2% | 73% | 4 |
+
+What the repeats change:
+
+- **The single best runs overstated the result.** `sub-r6` put L3 at 63%; the average on the released code is 54%. The order of the layers holds (L0 < L1 < L2 < L3), and every step up is visible in every run.
+- **Stability is well short of where it should be:** 61–78% of questions came out the same way in all three runs. Too many answers depend on how the model happened to read the question that time.
+- **Governed answers are not always right.** Across the six L2 and L3 runs, 7 wrong answers carried the `governed` label:
+  - 4 are the borderline "total premiums a policy holder has paid": the right total, without the policy-holder id the answer key requires;
+  - **3 are real defects:**
+    - a list of premiums collapsed into one total;
+    - a breakdown missing one of the columns asked for;
+    - an average policy size computed wrongly.
+
+  A governed answer must cover everything the question asks for, or not carry the label. This is the most important DQL defect found so far (17), because the product's claim rests on that label.
+- **Unanswerable questions:** L0 stopped correctly on 14 of 15, L3 on 13 of 15, none shown as trustworthy.
+- **The plain text-to-SQL baseline has been run once.** It needs the same three repeats before the averages are compared.
+
 ### Run `sub-r6`: all layers on DQL `f064f023` (marker tables and wide questions)
 
 Scorecards: [L0](results/L0-subscription-r6.md) · [L1](results/L1-subscription-r6.md) · [L2](results/L2-subscription-r6.md) · [L3](results/L3-subscription-r6.md) · paired: [against plain text-to-SQL](results/paired-r6-vs-baseline.md), [between layers](results/paired-r6-layers.md) · unanswerable: [L0](results/L0-unanswerable-r6.md), [L3](results/L3-unanswerable-r6.md) (each stopped correctly on 14 of 15).
@@ -396,6 +422,7 @@ Every fix below is general: it names no benchmark table, column or question. Eac
 | 13 | A table that only marks rows of another (a `loss_payment` row marks a claim amount) was not understood: drafts summed every claim amount, or stopped because "no table holds loss reserve amounts" | `sub-r5` L3 misses | a key-only side of a modeled one-to-one relationship is described to the SQL writer as a marker, and its base table is added | DQL `f064f023` |
 | 14 | Wide questions lost tables: "loss reserves" did not name `loss_reserve`, and tables named in a metric's definition were not included | `sub-r5` L3 misses | question words match table names; a metric brings the tables its definition names; larger table budget | DQL `f064f023` |
 | 15 | The question-reading step can stop with a question back before any answer path is tried | `sub-r5` L3 misses | a first fix (send such readings straight to AI SQL) was dropped: DQL's golden suite showed it lost a follow-up's inherited limit and skipped a certified answer. It needs a design that tries certified and semantic answers first | open |
+| 17 | A governed (semantic-layer) answer can drop a breakdown or grain the question asked for and still carry the `governed` label: a list of premiums collapsed into one total, a breakdown missing a column | 1.17.3 repeats | a governed answer must cover every measure, breakdown and grain the reading asks for, or be downgraded to review-required | open, highest priority |
 | 16 | Bridge tables added from the Modeling map were dropped on wide questions (columns are described five tables per call, and the bridges came last) | `sub-r6` L1 | columns described in batches of five, bridge tables first | written, being verified |
 
 ## Reproduce
