@@ -301,6 +301,35 @@ Full scorecard: [results/L0-subscription-r2.md](results/L0-subscription-r2.md). 
 - **In every run**, no result rows were sent to the AI model.
 - **About the "harness had uncommitted changes" flag on these runs:** the harness was being edited while they ran. From the next runs on, no tracked file is edited during a run.
 
+### Anthropic API: L3 and plain text-to-SQL, three runs each (DQL `b83d2c68`, unreleased)
+
+This is the first run on the Anthropic Messages API. The model is Claude Sonnet 5 with the same reasoning effort as before, and the question set and layer are unchanged. Cost is measured from DQL's usage ledger at the list prices of 2026-09-18 (Sonnet 5: $2 per million input tokens, $10 per million output). Summaries: [L3](results/repeats-api-L3.md) · [baseline](results/repeats-api-baseline.md).
+
+| | DQL L3 | Plain text-to-SQL (dbt Labs' prompt, same model, same API) |
+|---|---:|---:|
+| Right per run | 31, 29, 29 | 17, 14, 19 |
+| **Average** | **72.4%** (pooled 95% CI 63.9–79.5%) | 40.7% (32.4–49.5%) |
+| Same outcome in every run | 80.5% | 87.8% |
+| Wrong answers with nothing telling the reader to check them | 0 | 73 of 123 |
+| Wrong answers labelled governed | 3 of 123 (one borderline question, see below) | — |
+| Stopped (declined or asked back) | 14 of 123 (11.4%) | 0 |
+| Median time per question | 20.6 s (95th percentile 74.5 s) | 3.3 s |
+| Cost per question | $0.064 (2.1 AI calls, about 19,200 input and 2,600 output tokens) | $0.004 |
+
+- **DQL's lead is large and significant.** Paired on the same question and run, L3 was right where the baseline was wrong 41 times, and the reverse 2 times (exact McNemar p ≈ 2×10⁻¹⁰).
+- **Against the subscription route on the same fixes** (`fx` runs, 67.5%), the API runs are 5 points higher. That is not significant (9 against 3, p = 0.15).
+- **Speed:** a median of 20.6 s on the API, against 34 s on the subscription command line. Still above the 15 s target.
+- **The 3 wrong governed answers are one question, once per run:** "What is the total amount of premiums that a policy holder has paid?" DQL returns the correct total (98,000) without the policy-holder id the answer key includes. The number is right; the answer is a column short.
+- **The 14 stops:**
+  - 4 hit Ask's 90-second run limit on long multi-table loss questions;
+  - 4 asked back on real ambiguities in this data (which role marks the agent, which premium to divide by, which key is the policy holder);
+  - 4 could not write the SQL;
+  - 1 reading error;
+  - 1 SQL that failed the unused-join check twice. That question was answered wrongly before; it is now an honest stop.
+- **Unanswerable questions:** L3 stopped correctly on 13 of 15, L0 on 12 of 15.
+
+Against the launch bar: average ≥70% and significant against text-to-SQL is **met**. Wrong-but-trusted ≤1% is not met: 2.4%, all from one borderline question. Stops ≤10% is not met (11.4%). Median ≤15 s is not met (20.6 s). ≥90% stable is not met (80.5%). The held-out set decides whether the 41-question numbers carry over.
+
 ### Three repeat runs of L3 on DQL `953067e7` (defects 17 and 18 fixed, unreleased)
 
 These are the same 41 questions, run three times at L3 on fresh project copies. Summary: [repeats-953067e7-L3](results/repeats-953067e7-L3.md). A first attempt at runs 2 and 3 hit the subscription's usage limit and is invalid (see the change log).
