@@ -616,3 +616,8 @@ This is the result the main set could not show:
   - the same model alone, on dbt Labs' prompt, got **3/6**, and 2 of its statements did not run.
 
   A signal, not a measurement; the full set is next.
+- 2026-09-18: **Local model, full set.** Qwen 3.8 27B on Ollama, one run, accuracy only (median 120 s per question, not scored); DQL `9ca7e70c`.
+  - DQL L3 got **25/41 (61.0%)**, including **all 11 of dbt Labs' questions**; 14 stops, mostly clarifying questions on the long multi-table loss questions; **0 wrong answers without a review label**.
+  - The same model alone on dbt Labs' prompt got **16/41 (39.0%)** and 7/11 of dbt Labs' questions; 25 wrong answers presented as answers, and 8 statements did not run.
+  - Paired, DQL was right where the model alone was wrong 11 times, and the reverse 2 times (p = 0.022).
+  - By quadrant, DQL against the model alone: LQLS 8/10 against 5/10, HQLS 11/11 against 7/11, LQHS 4/10 against 1/10, HQHS 2/10 against 3/10.
