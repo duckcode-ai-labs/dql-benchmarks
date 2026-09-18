@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Plain text-to-SQL, the way dbt Labs' benchmark does it, on our warehouse.
 //
-//   node insurance/baseline-text2sql.mjs --run <id> [--set all|dbt-labs] [--ddl small]
+//   node insurance/baseline-text2sql.mjs --run <id> [--set all|dbt-labs|heldout] [--ddl small|full]
 //        [--model claude-sonnet-5] [--effort medium] [--repeat 1] [--replay]
 //
 // One AI call per question: dbt Labs' own prompt (dbt-llm-sl-bench
@@ -25,12 +25,30 @@ import { rowsMatch } from '../lib/row-match.mjs';
 import { loadAudit } from '../lib/gold-audit.mjs';
 import { buildIdentity } from '../lib/build-identity.mjs';
 import { selectCases } from './run.mjs';
+import { HELDOUT_GOLD } from './heldout.mjs';
 
 const WORK = join(REPO_ROOT, 'work', 'insurance');
 const PYTHON = join(REPO_ROOT, '.venv', 'bin', 'python');
 const DDL_FILES = {
   small: join(REPO_ROOT, 'data', 'insurance', 'dbt-llm-sl-bench', 'ACME_small.ddl'),
+  // Every relation the warehouse exposes, as CREATE TABLE statements written
+  // from the warehouse itself (no keys: the warehouse declares none). The
+  // held-out questions were written against all of them, so the baseline
+  // sees the same tables DQL's L0 sees. Written by `fullDdl()` on first use.
+  full: join(REPO_ROOT, 'work', 'insurance', 'ACME_full.ddl'),
 };
+
+/** CREATE TABLE statements for every relation in the warehouse's main schema. */
+function fullDdl(database) {
+  const tables = runSql(database, [{ id: 'cols', sql: "select table_name, column_name, data_type from information_schema.columns where table_schema = 'main' order by table_name, ordinal_position" }]).cols;
+  if (tables.error) throw new Error(tables.error);
+  const byTable = new Map();
+  for (const [table, column, type] of tables.rows) {
+    if (!byTable.has(table)) byTable.set(table, []);
+    byTable.get(table).push(`  ${column} ${type}`);
+  }
+  return [...byTable].map(([table, columns]) => `CREATE TABLE ${table} (\n${columns.join(',\n')}\n);`).join('\n\n') + '\n';
+}
 
 /** dbt Labs' prompt, verbatim, with the one disclosed dialect line. */
 export function baselinePrompt(ddl, question) {
@@ -116,10 +134,16 @@ function runSql(database, queries) {
 
 async function main() {
   const options = parseArgs(process.argv.slice(2));
-  const gold = JSON.parse(readFileSync(join(WORK, 'gold', 'answers.json'), 'utf-8'));
-  const audit = loadAudit(join(REPO_ROOT, 'insurance', 'gold-audit.jsonl'));
-  const dev = JSON.parse(readFileSync(join(REPO_ROOT, 'insurance', 'dev-questions.json'), 'utf-8'));
-  const cases = selectCases(gold, audit, new Set(dev.questions.map((q) => q.caseId)), options.set);
+  let cases;
+  if (options.set === 'heldout') {
+    cases = JSON.parse(readFileSync(HELDOUT_GOLD, 'utf-8')).cases;
+  } else {
+    const gold = JSON.parse(readFileSync(join(WORK, 'gold', 'answers.json'), 'utf-8'));
+    const audit = loadAudit(join(REPO_ROOT, 'insurance', 'gold-audit.jsonl'));
+    const dev = JSON.parse(readFileSync(join(REPO_ROOT, 'insurance', 'dev-questions.json'), 'utf-8'));
+    cases = selectCases(gold, audit, new Set(dev.questions.map((q) => q.caseId)), options.set);
+  }
+  if (options.ddl === 'full' && !existsSync(DDL_FILES.full)) writeFileSync(DDL_FILES.full, fullDdl(join(WORK, 'projects', 'L0', 'acme_insurance.duckdb')));
   const ddl = readFileSync(DDL_FILES[options.ddl], 'utf-8');
   const outDir = join(WORK, 'runs', options.run, `baseline-${options.ddl}`, options.set);
   mkdirSync(outDir, { recursive: true });

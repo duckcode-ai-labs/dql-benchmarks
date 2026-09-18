@@ -301,6 +301,25 @@ Full scorecard: [results/L0-subscription-r2.md](results/L0-subscription-r2.md). 
 - **In every run**, no result rows were sent to the AI model.
 - **About the "harness had uncommitted changes" flag on these runs:** the harness was being edited while they ran. From the next runs on, no tracked file is edited during a run.
 
+### Three repeat runs of L3 on DQL `953067e7` (defects 17 and 18 fixed, unreleased)
+
+These are the same 41 questions, run three times at L3 on fresh project copies. Summary: [repeats-953067e7-L3](results/repeats-953067e7-L3.md). A first attempt at runs 2 and 3 hit the subscription's usage limit and is invalid (see the change log).
+
+| | 1.17.3 (3 runs) | `953067e7` (3 runs) |
+|---|---:|---:|
+| Right per run | 23, 20, 23 | 26, 27, 30 |
+| **Average** | 53.7% | **67.5%** (pooled 95% CI 58.8–75.1%) |
+| Same outcome in every run | 73% | 68% |
+| Wrong answers labelled governed or certified | 4 | **2** |
+| Stops (of 123 answers) | 5 | 9 |
+| Median time per question | 34–39 s | 34 s |
+
+- **The gain is significant.** Paired on the same question and run, the new build was right where 1.17.3 was wrong 24 times, and the reverse 7 times (exact McNemar p = 0.003).
+- **L3 is now clearly ahead of plain text-to-SQL:** 67.5% against 44.7%. The new build was right where the baseline was wrong 37 times, and the reverse 9 times (p < 0.001).
+- **The two wrong governed answers are the reading errors diagnosed under defect 17** (a list read as a total, and premium read as every policy amount). The binding fix removed the third.
+- **Stability did not improve.** More answers are right, but 13 of 41 questions still change between runs. That is the next piece of work.
+- **The new shared-parent check never had to fire** in these runs. The route search now leads the AI onto the modeled route before it writes SQL.
+
 ### Three repeat runs on DQL 1.17.3 (the released fixes)
 
 The same 41 questions, three times per layer, each run on a fresh copy of the project with nothing carried over. Summaries: [L0](results/repeats-v1.17.3-L0.md) · [L1](results/repeats-v1.17.3-L1.md) · [L2](results/repeats-v1.17.3-L2.md) · [L3](results/repeats-v1.17.3-L3.md) · unanswerable: [L0](results/L0-unanswerable-v1.17.3.md), [L3](results/L3-unanswerable-v1.17.3.md).
@@ -428,6 +447,7 @@ Every fix below is general: it names no benchmark table, column or question. Eac
 | 16 | Bridge tables added from the Modeling map were dropped on wide questions (columns are described five tables per call, and the bridges came last) | `sub-r6` L1 | columns described in batches of five, bridge tables first | written, being verified |
 | 17 | A governed (semantic-layer) answer can drop a breakdown or grain the question asked for and still carry the `governed` label: a list of premiums collapsed into one total, a breakdown missing a column | 1.17.3 repeats | a governed answer must cover every measure, breakdown and grain the reading asks for, or be downgraded to review-required | **split on diagnosis.** (b) *Code:* a question grouped by two dates bound only the last one, because each time grouping overwrote the request's single time dimension. Fixed in DQL 73295860 (unreleased): the second date at day grain is grouped too; at another grain, or whenever any grouping would be lost, the semantic tier refuses and the question falls through to a review-required answer. (a) and (c) *Reading:* the reading turned "all the premiums paid" into one total; and for "average policy size … total amount of premium" it divided every policy amount (5,698,000) by 2 policies instead of premium amounts only (98,000). The semantic model documents the `has_premium` flag for exactly this. These are reading errors, not binding errors; they count against accuracy and stay open under stability/reading work |
 | 18 | AI-written SQL related two tables through a parent they both only reference (claims and coverage details each name the insured object), instead of the bridge the team modeled. Every claim then met every coverage on that object, and totals landed on the wrong policies. The route search ignored which way each relationship runs, so the two 3-hop routes tied. On this small warehouse no key repeats, so DQL's row-count probe could not see it | L3 repeats (stability) | the route search knows each relationship's direction: a route that climbs to a table and comes back down is a last resort. A new check fails AI-written SQL that relates two tables through a shared parent when the Modeling map connects them by certified or validated direct links, and names the route to use. Over the 105 AI-written L3 answers in the three 1.17.3 runs, it flags 20 of the 48 wrong answers and none of the 57 right ones | DQL `953067e7` (unreleased) |
+| 19 | DQL's personal-data guard refuses any question containing one of its sensitive words unless it asks for a total or count over a group. Its word list includes `insurance`, `street`, `zip code` and `gender`, so ordinary business questions for an insurance company (or about a property's address) never reach the pipeline | held-out set, first run (12 of 44 questions) | proposed: keep refusing card, bank, government-id, health-record and contact details about an individual; drop words that name an industry or describe a place. Awaits the owner's decision (privacy policy, and held-out protocol) | open, owner decision |
 
 ## Reproduce
 
@@ -477,6 +497,27 @@ Every fix in Step 10 came from reading failures on the 41 questions, so a gain o
 - **The answer key is not yet reviewed.** It needs an owner review, like the main set's, before a held-out number is published. The author noted that the data is very small (most tables have 2–12 rows), and that some joins rest on conventions the schema doesn't state; those choices are recorded in each question's notes.
 
 File: [heldout/questions.json](heldout/questions.json) · tool: `insurance/heldout.mjs`.
+
+### First held-out results (DQL `953067e7`, one run each; answer key not yet reviewed)
+
+| | Plain text-to-SQL (all 29 tables) | DQL L0 | DQL L3 |
+|---|---:|---:|---:|
+| Right | **17/44 (38.6%)** | 14/44 (31.8%) | 15/44 (34.1%) |
+| Low schema complexity (23 questions) | 13 | 13 | 15 |
+| High schema complexity (21 questions) | 4 | 1 | **0** |
+| Wrong, with nothing to tell the reader to check | 27 | 0 | 0 |
+| Wrong, labelled governed | — | 0 | 1 |
+| Stopped (declined or asked back) | 0 | 23 | 18 |
+| Unanswerable held-out questions stopped correctly | — | — | 9/9 |
+
+This is the result the main set could not show:
+
+- **On new questions, DQL is not ahead of plain text-to-SQL.** L3 against the baseline, paired: 5 against 7. L3 against L0: 2 against 1. Neither difference is significant. The 41-question gains came partly from fixes found on those questions.
+- **The biggest single cause is a DQL defect: 12 of the 44 questions never reached the pipeline** (defect 19). DQL's personal-data guard refuses, before anything else runs, any question containing one of its sensitive words, unless it asks for a total or count over a group. The word list includes `insurance`, plus `street`, `zip code` and `gender`, which also describe properties, not people. For an insurance company that is a false refusal on ordinary business questions. The 41 main questions rarely use these words, which is why it never showed there.
+- **Many-table questions still fail at L3** (0 of 21), even with the Modeling map and skills. The author noted that several joins in these questions rest on conventions the schema does not state (an agreement's type-code column holds the policy id; party ids match person ids). The Modeling map does not declare those joins either. Part of this may be the answer key, which awaits review.
+- **Trust holds:** DQL gave no wrong answer without a review label, apart from one governed answer. The baseline gave 27 wrong answers as plain answers. Stopping on all 9 unanswerable questions is also right.
+
+**How the held-out rule applies.** DQL is not changed to pass these questions. Defect 19 is a general product defect, but it was found on this set. Fixing it is the owner's decision, both as privacy policy and as protocol. If it is fixed, this set is spent for that defect, and a fresh held-out set is written before the next checkpoint.
 
 ## Change log
 
