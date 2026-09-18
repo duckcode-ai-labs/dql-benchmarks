@@ -22,11 +22,14 @@ import { buildIdentity } from '../lib/build-identity.mjs';
 import { loadAudit, unauditedCases } from '../lib/gold-audit.mjs';
 import { startRuntime } from '../lib/runtime.mjs';
 import { caseId } from './questions.mjs';
+import { attributeUsage, loadPricing, readLedger, runSpans } from '../lib/usage.mjs';
 import { HELDOUT_GOLD, heldoutUnanswerableCases } from './heldout.mjs';
 
 const WORK = join(REPO_ROOT, 'work', 'insurance');
 const SETS = ['all', 'dbt-labs', 'dev', 'unanswerable', 'heldout', 'heldout-unanswerable'];
 const stopsAreRight = (set) => set.endsWith('unanswerable');
+/** claude-code: the `claude` command's subscription login. anthropic: the Messages API with ANTHROPIC_API_KEY. */
+const PROVIDERS = ['claude-code', 'anthropic'];
 /** How long one question may take before the harness records it as unanswered. Ask's own limits apply first. */
 const CASE_TIMEOUT_MS = 900_000;
 
@@ -63,6 +66,10 @@ function parseArgs(argv) {
   if (!options.run) throw new Error('--run <run-id> is required');
   if (!SETS.includes(options.set)) throw new Error(`--set must be one of ${SETS.join(', ')}`);
   if (!['record', 'replay'].includes(options.cassette)) throw new Error('--cassette must be record or replay');
+  if (!PROVIDERS.includes(options.provider)) throw new Error(`--provider must be one of ${PROVIDERS.join(', ')}`);
+  // The API key comes from the environment of whoever runs the harness. It is
+  // never written to the project, the report or a log.
+  if (options.provider === 'anthropic' && options.cassette === 'record' && !process.env.ANTHROPIC_API_KEY) throw new Error('--provider anthropic needs ANTHROPIC_API_KEY in the environment');
   return options;
 }
 
@@ -266,7 +273,7 @@ async function main() {
   writeProviderSettings(projectDir, options.provider, options.model);
   const runtime = await startRuntime(projectDir, {
     cli,
-    env: { ...RUN_ENV, ...(options.debugCli ? { DQL_DEBUG_PROVIDER_CLI: '1' } : {}) },
+    env: { ...RUN_ENV, DQL_PROVIDER_USAGE_LEDGER: join(outDir, 'usage.jsonl'), ...(options.debugCli ? { DQL_DEBUG_PROVIDER_CLI: '1' } : {}) },
     cassetteMode: options.cassette,
     cassetteDir: join(outDir, 'cassettes'),
     startupTimeoutMs: 180_000,
@@ -288,6 +295,9 @@ async function main() {
     throw new Error(`dql agent eval exited ${result.code} without a JSON report; see ${relative(REPO_ROOT, outDir)}`);
   }
   const outages = providerOutages(projectDir);
+  // Tokens and cost per question, from DQL's usage ledger (API providers only).
+  const ledger = readLedger(join(outDir, 'usage.jsonl'));
+  const usage = ledger.length ? attributeUsage(ledger, runSpans(projectDir), loadPricing()) : null;
   const out = {
     identity,
     provenance: cassetteEvidence(join(outDir, 'cassettes'), options.cassette),
@@ -295,6 +305,7 @@ async function main() {
     run: { id: options.run, layer: options.layer, set: options.set, startedAt, finishedAt: new Date().toISOString(), evalExitCode: result.code },
     questions: cases.length,
     ...report,
+    ...(usage ? { usage } : {}),
   };
   writeFileSync(join(outDir, 'report.json'), `${JSON.stringify(out, null, 2)}\n`);
   const results = report.results ?? [];

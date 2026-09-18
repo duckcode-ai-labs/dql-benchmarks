@@ -118,12 +118,22 @@ export function scorecard(report, gold, audit) {
       tables: right && result.answer?.sql ? tableCheck(result.answer.sql, question.gold.ranSql ?? question.goldSql) : null,
     };
   });
-  return { identity: report.identity, provenance: report.provenance, run: report.run, rows };
+  return { identity: report.identity, provenance: report.provenance, run: report.run, rows, usage: report.usage ?? null };
 }
 
 function accuracyLine(label, rows) {
   const k = rows.filter((row) => row.right).length;
   return `| ${label} | ${k}/${rows.length} | ${pct(k, rows.length)} | ${ci(k, rows.length)} |`;
+}
+
+/** Cost as measured from DQL's usage ledger; never estimated. */
+export function costLine(usage, questions) {
+  if (!usage) return 'cost: not measured on this provider route';
+  const perQuestion = Object.values(usage.byQuestion);
+  const tokens = perQuestion.reduce((sum, item) => sum + item.inputTokens + item.outputTokens + item.cacheReadTokens + item.cacheWriteTokens, 0);
+  const tokenText = `${Math.round(tokens / Math.max(1, questions)).toLocaleString('en-US')} tokens per question`;
+  if (usage.totalCostUsd == null) return `${tokenText}; cost: prices not checked in pricing.json`;
+  return `${tokenText}; cost $${usage.totalCostUsd.toFixed(2)} in all, $${(usage.totalCostUsd / Math.max(1, questions)).toFixed(4)} per question at list prices of ${usage.pricingAsOf}`;
 }
 
 export function renderScorecard(card) {
@@ -162,7 +172,7 @@ export function renderScorecard(card) {
   const durations = rows.map((row) => row.durationMs);
   const dispatches = rows.map((row) => row.dispatches).filter((value) => typeof value === 'number');
   lines.push('### Speed and AI calls', '');
-  lines.push(`Median ${secs(quantile(durations, 0.5))} · 95th percentile ${secs(quantile(durations, 0.95))} · slowest ${secs(Math.max(...durations))} · AI calls per question: mean ${dispatches.length ? mean(dispatches).toFixed(1) : '—'}, max ${dispatches.length ? Math.max(...dispatches) : '—'} · cost: not measured on this provider route`, '');
+  lines.push(`Median ${secs(quantile(durations, 0.5))} · 95th percentile ${secs(quantile(durations, 0.95))} · slowest ${secs(Math.max(...durations))} · AI calls per question: mean ${dispatches.length ? mean(dispatches).toFixed(1) : '—'}, max ${dispatches.length ? Math.max(...dispatches) : '—'} · ${costLine(card.usage, rows.length)}`, '');
 
   const egress = rows.map((row) => row.egress).filter(Boolean);
   lines.push('### Data sent to the AI model', '');

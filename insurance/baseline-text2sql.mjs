@@ -26,6 +26,7 @@ import { loadAudit } from '../lib/gold-audit.mjs';
 import { buildIdentity } from '../lib/build-identity.mjs';
 import { selectCases } from './run.mjs';
 import { HELDOUT_GOLD } from './heldout.mjs';
+import { loadPricing, priceUsage } from '../lib/usage.mjs';
 
 const WORK = join(REPO_ROOT, 'work', 'insurance');
 const PYTHON = join(REPO_ROOT, '.venv', 'bin', 'python');
@@ -73,7 +74,7 @@ export function stripFence(text) {
 }
 
 function parseArgs(argv) {
-  const options = { run: null, set: 'all', ddl: 'small', model: 'claude-sonnet-5', effort: 'medium', repeat: 1, replay: false };
+  const options = { run: null, set: 'all', ddl: 'small', model: 'claude-sonnet-5', effort: 'medium', repeat: 1, replay: false, provider: 'claude-code' };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     const next = () => argv[++index];
@@ -84,11 +85,43 @@ function parseArgs(argv) {
     else if (arg === '--effort') options.effort = next();
     else if (arg === '--repeat') options.repeat = Number(next());
     else if (arg === '--replay') options.replay = true;
+    else if (arg === '--provider') options.provider = next();
     else throw new Error(`Unknown argument ${arg}`);
   }
   if (!options.run) throw new Error('--run <id> is required');
   if (!DDL_FILES[options.ddl]) throw new Error(`--ddl must be one of ${Object.keys(DDL_FILES).join(', ')}`);
+  if (!['claude-code', 'anthropic'].includes(options.provider)) throw new Error('--provider must be claude-code or anthropic');
+  if (options.provider === 'anthropic' && !options.replay && !process.env.ANTHROPIC_API_KEY) throw new Error('--provider anthropic needs ANTHROPIC_API_KEY in the environment');
   return options;
+}
+
+/**
+ * The same prompt through the Messages API: one user turn, the same model and
+ * effort, the output ceiling DQL gives an API call. The key is read from the
+ * environment and sent only to the API.
+ */
+async function askAnthropic(prompt, { model, effort }) {
+  const started = Date.now();
+  try {
+    const response = await fetch(`${process.env.ANTHROPIC_BASE_URL ?? 'https://api.anthropic.com'}/v1/messages`, {
+      method: 'POST',
+      headers: { 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
+      body: JSON.stringify({ model, max_tokens: 8192, messages: [{ role: 'user', content: prompt }], output_config: { effort } }),
+    });
+    const body = await response.json().catch(() => null);
+    const text = (body?.content ?? []).filter((block) => block.type === 'text').map((block) => block.text).join('');
+    return {
+      ms: Date.now() - started,
+      code: response.status,
+      text,
+      isError: !response.ok,
+      usage: body?.usage ? { input: body.usage.input_tokens, cacheRead: body.usage.cache_read_input_tokens, cacheWrite: body.usage.cache_creation_input_tokens, output: body.usage.output_tokens } : null,
+      apiMs: Date.now() - started,
+      error: response.ok ? null : JSON.stringify(body?.error ?? body).slice(0, 300),
+    };
+  } catch (error) {
+    return { ms: Date.now() - started, code: null, text: '', isError: true, usage: null, apiMs: null, error: String(error).slice(0, 300) };
+  }
 }
 
 function askClaude(prompt, { model, effort }) {
@@ -157,13 +190,14 @@ async function main() {
       const key = `${c.id}#${round}`;
       if (replies[key]) continue;
       if (options.replay) throw new Error(`No recorded reply for ${key}`);
-      const reply = await askClaude(baselinePrompt(ddl, c.question), options);
+      const reply = options.provider === 'anthropic' ? await askAnthropic(baselinePrompt(ddl, c.question), options) : await askClaude(baselinePrompt(ddl, c.question), options);
       replies[key] = reply;
       writeFileSync(repliesFile, `${JSON.stringify(replies, null, 2)}\n`);
       console.error(`${key}: ${Math.round(reply.ms / 1000)}s${reply.isError ? ' (error)' : ''}`);
     }
   }
 
+  const pricing = loadPricing();
   const database = join(WORK, 'projects', 'L0', 'acme_insurance.duckdb');
   const keys = Object.keys(replies).filter((key) => cases.some((c) => key.startsWith(`${c.id}#`)));
   const executed = runSql(database, keys.map((key) => ({ id: key, sql: stripFence(replies[key].text) })));
@@ -184,6 +218,8 @@ async function main() {
       kind: 'uncertified',
       answer: { trustState: 'none', sql: stripFence(reply.text), ...(run.rows ? { rowCount: run.rows.length } : {}) },
       usage: reply.usage,
+      // Priced only for API calls: the subscription's usage is not billed per token.
+      costUsd: options.provider === 'anthropic' && reply.usage ? priceUsage({ inputTokens: reply.usage.input ?? 0, outputTokens: reply.usage.output ?? 0, cacheReadTokens: reply.usage.cacheRead ?? 0, cacheWriteTokens: reply.usage.cacheWrite ?? 0 }, options.model, pricing) : null,
       ...(reply.isError ? { runtimeError: reply.error ?? 'the model returned an error' } : {}),
     };
   });
@@ -191,8 +227,8 @@ async function main() {
   const cli = { source: 'none', entry: '' };
   const identity = buildIdentity({
     cli, dqlVersion: 'none (plain text-to-SQL)', benchmark: 'insurance', condition: `baseline-${options.ddl}`,
-    provider: 'claude-code', model: options.model, cassetteMode: 'record',
-    tools: { claudeCli: spawnSync('claude', ['--version'], { encoding: 'utf-8' }).stdout.trim(), effort: options.effort },
+    provider: options.provider, model: options.model, cassetteMode: 'record',
+    tools: { ...(options.provider === 'claude-code' ? { claudeCli: spawnSync('claude', ['--version'], { encoding: 'utf-8' }).stdout.trim() } : { api: 'Anthropic Messages API' }), effort: options.effort },
   });
   identity.notPublishableBecause = identity.notPublishableBecause.filter((reason) => !/DQL/.test(reason));
   identity.publishable = identity.notPublishableBecause.length === 0;
@@ -207,6 +243,16 @@ async function main() {
     },
     results,
   };
+  // The same usage summary the DQL runs carry, so one scorecard prices both.
+  if (options.provider === 'anthropic') {
+    const byQuestion = Object.fromEntries(results.map((result) => {
+      const usage = result.usage ?? {};
+      const question = cases.find((c) => c.id === result.name)?.question ?? result.name;
+      return [question, { calls: 1, inputTokens: usage.input ?? 0, outputTokens: usage.output ?? 0, cacheReadTokens: usage.cacheRead ?? 0, cacheWriteTokens: usage.cacheWrite ?? 0, reasoningTokens: 0, costUsd: result.costUsd, priced: result.costUsd != null }];
+    }));
+    const priced = Object.values(byQuestion).every((item) => item.priced);
+    report.usage = { byQuestion, outside: null, totalCostUsd: priced ? Object.values(byQuestion).reduce((sum, item) => sum + item.costUsd, 0) : null, pricingAsOf: pricing.asOf ?? null };
+  }
   writeFileSync(join(outDir, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
   const right = results.filter((r) => r.executionMatched).length;
   const ran = results.filter((r) => !r.goldMatchReason?.startsWith('the SQL did not run')).length;
