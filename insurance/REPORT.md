@@ -545,6 +545,20 @@ On the Claude subscription route, L1–L3 take a median of 34–41 s per questio
 - Their times are not real, so speed figures leave them out; that run's median over the other 33 questions is 37 s.
 - The harness now refuses to record into a run that already holds recordings.
 
+## Answer-key questions for the owner
+
+These are cases where DQL's answer is defensible and the answer key wants something else. None is fixed by changing DQL. Each needs the owner's ruling, recorded in `gold-audit.jsonl` (as disputed or corrected, with an alternative answer) before a number is published.
+
+| Question (main set) | Answer key | DQL | The choice |
+|---|---|---|---|
+| "What is the premium amount of all policies by policy number?" | 6 rows: every premium amount with its policy number | 2 rows: total premium per policy | Does "by policy number" list the amounts, or total them? |
+| "What are all the premiums that have been paid by policy holders?" | 6 rows: every premium amount | 1–2 rows: totals | The same choice |
+| "What is the total amount of premiums that a policy holder has paid?" | the policy holder's id and 98,000 | 98,000, labelled governed | The number is right; is the policy-holder id required? |
+| "Return policy holders and the claims they have made and the corresponding catastrophe" | also the policy number | policy holder, claim, claim number, catastrophe | The question does not ask for the policy number |
+| The loss and premium questions "by claim number and … premium" | the premium of the coverage the claim was made against (20,000) | the policy's total premium (86,000) | Which premium does a claim "correspond" to? |
+
+**Held-out set 2 (sealed; reviewed by the owner only):** the author found that the claim-coverage table puts both claims on the same coverage, although the second claim's property and loss date belong to the second policy. So the key links a claim to its policy through the damaged property and the loss date. DQL's Modeling map follows the claim-coverage table. Which link is correct is a question about the data itself.
+
 ## Held-out questions
 
 Every fix in Step 10 came from reading failures on the 41 questions, so a gain on them may not carry over to other questions. A second, sealed set answers that:
@@ -586,3 +600,4 @@ This is the result the main set could not show:
 - 2026-09-16: The L0 run stopped on a timeout. Grading fix `afa6f908`. Diagnosis found the missing reasoning effort (Step 8); fix written, golden suites being re-recorded. A second development question was declared.
 - 2026-09-18: Re-measure on DQL `953067e7` (defects 17 and 18 fixed, unreleased). The first L3 run, `fx-a`, scored 26/41: 0 wrong answers labelled governed, 0 labelled certified. The Claude subscription's usage limit was then reached mid-batch. Five runs recorded refused calls as wrong answers or as correct stops: `fx-b` (10 questions affected), `fx-c` (all 41), both held-out runs, and the held-out unanswerable run. All five are invalid, kept under `runs/INVALID-usage-limit-2026-09-18/` and scored nowhere. The harness now marks any run whose AI calls were refused as invalid, and a batch stops there. A scan of every earlier run found no other refused calls. Re-runs `fx-b2`, `fx-c2` and `fx-h` started.
 - 2026-09-18: Fixes 19–27 in DQL (unreleased; see Step 10), all general. Both DQL suites and the golden replays pass. Nothing was run against the benchmark after them: the next measurement is on the Anthropic API (`--provider anthropic`, key from the environment), with tokens and cost per question. Before its held-out numbers are compared with the first held-out run, a fresh held-out set is needed (defect 19 was found on the first one).
+- 2026-09-18: DQL `fd7aebe9` (a concept with one binding is drafted from the tables, not asked of the user; plain advice when a join check refuses) and `8c133011` (`DQL_ASK_READING_EFFORT`: reading effort apart from SQL drafting). The answer-key questions are listed for the owner. Not run yet: a speed test with the reading at low effort.
