@@ -11,7 +11,7 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { REPO_ROOT, dqlVersion, resolveDqlCli } from '../lib/dql.mjs';
+import { REPO_ROOT, buildIdentity, dqlVersion, resolveDqlCli } from '../lib/dql.mjs';
 import { startRuntime } from '../lib/runtime.mjs';
 import { CODEX_DIRS, RUN_ENV, providerOutages } from '../insurance/run.mjs';
 import { questionText, readTasks } from './tasks.mjs';
@@ -75,7 +75,21 @@ async function main() {
   };
   const byDb = new Map();
   for (const task of selected) byDb.set(task.db, [...(byDb.get(task.db) ?? []), task]);
-  const summary = { run: options.run, condition: options.condition, provider: options.provider, model: options.model, dql: { version: dqlVersion(cli), source: cli.source, entry: cli.entry }, startedAt: new Date().toISOString(), missingDatabases, tasks: selected.length, databases: {}, invalid: [] };
+  // The code behind the number: commit, uncommitted edits (saved as a patch),
+  // and the DQL_* switches the run sets. A dist older than its source is
+  // refused, because it would run code the identity does not describe.
+  const { patch, ...build } = buildIdentity(cli, { env: { ...process.env, ...env } });
+  if (build.distOlderThanSource && !process.env.SPIDER2_ALLOW_STALE_DIST) throw new Error(`${cli.entry} was built before the latest source edit in ${build.root}; rebuild DQL first (or set SPIDER2_ALLOW_STALE_DIST=1 to record it as stale).`);
+  const buildPath = join(runDir, 'build.json');
+  if (existsSync(buildPath)) {
+    // A resumed run must be the same build, or its databases mix two codes.
+    const before = JSON.parse(readFileSync(buildPath, 'utf-8'));
+    if (before.head !== build.head || before.patchSha256 !== build.patchSha256) throw new Error(`run ${options.run}/${options.condition} was started on ${before.head?.slice(0, 8)}${before.dirty ? ` + patch ${before.patchSha256?.slice(0, 8)}` : ''}; this build is ${build.head?.slice(0, 8)}${build.dirty ? ` + patch ${build.patchSha256?.slice(0, 8)}` : ''}. Use a new --run id.`);
+  } else {
+    writeFileSync(buildPath, `${JSON.stringify(build, null, 2)}\n`);
+    if (patch && build.dirty) writeFileSync(join(runDir, 'build.patch'), patch);
+  }
+  const summary = { run: options.run, condition: options.condition, provider: options.provider, model: options.model, dql: { version: dqlVersion(cli), source: cli.source, entry: cli.entry, build }, startedAt: new Date().toISOString(), missingDatabases, tasks: selected.length, databases: {}, invalid: [] };
   const retried = new Set();
   const queue = [...byDb.entries()].sort(([a], [b]) => a.localeCompare(b));
   while (queue.length) {
