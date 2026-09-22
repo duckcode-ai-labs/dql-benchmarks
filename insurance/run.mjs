@@ -126,11 +126,16 @@ export function unanswerableCases(file = join(REPO_ROOT, 'insurance', 'unanswera
 export function providerOutages(projectDir) {
   const store = join(projectDir, '.dql', 'local', 'agent-runs.sqlite');
   if (!existsSync(store)) return [];
-  const result = spawnSync('sqlite3', [store, "select payload_json from agent_runs where payload_json like '%usage limit%' or payload_json like '%rate limit%' or payload_json like '%quota%' or payload_json like '%not logged in%'"], { encoding: 'utf-8', maxBuffer: 512 * 1024 * 1024 });
+  const result = spawnSync('sqlite3', ['-json', store, "select question, payload_json from agent_runs where payload_json like '%limit%' or payload_json like '%quota%' or payload_json like '%not logged in%'"], { encoding: 'utf-8', maxBuffer: 512 * 1024 * 1024 });
   if (result.status !== 0) throw new Error(`could not read the run store: ${result.stderr}`);
-  return result.stdout.split('\n').filter(Boolean).map((line) => {
-    const found = /(usage limit[^".]*|rate limit[^".]*|quota[^".]*|not logged in[^".]*)/i.exec(line);
-    return found ? found[1] : 'provider refused';
+  const rows = result.stdout.trim() ? JSON.parse(result.stdout) : [];
+  // A refusal is the provider's message, never a word the question used
+  // ("…the sales quota for each year" is a question, not an outage).
+  const REFUSAL = /(usage limit[^".]*|rate limit[^".]*|exceeded your (?:current )?quota[^".]*|quota exceeded[^".]*|insufficient_quota[^".]*|not logged in[^".]*)/i;
+  return rows.flatMap((row) => {
+    const text = String(row.payload_json ?? '').split(String(row.question ?? '')).join(' ');
+    const found = REFUSAL.exec(text);
+    return found ? [found[1]] : [];
   });
 }
 
@@ -183,8 +188,9 @@ function freshProject(layer, outDir) {
   const copy = spawnSync('rsync', ['-a', '--exclude', '.dql/local', '--exclude', '.dql/cache', '--exclude', 'logs', `${source}/`, `${target}/`], { encoding: 'utf-8' });
   if (copy.status !== 0) throw new Error(`copying the ${layer} project failed: ${copy.stderr}`);
   // The dbt profile names the database by absolute path; point it at the copy.
+  // A warehouse layer (no dbt) has no profile: its connection path is relative.
   const profile = join(target, 'profiles.yml');
-  writeFileSync(profile, readFileSync(profile, 'utf-8').split(source).join(target));
+  if (existsSync(profile)) writeFileSync(profile, readFileSync(profile, 'utf-8').split(source).join(target));
   return target;
 }
 
@@ -308,6 +314,16 @@ async function main() {
   const startedAt = new Date().toISOString();
   let result;
   try {
+    // A warehouse layer (no dbt): Ask's schema index lives in .dql/cache, which
+    // the fresh copy leaves out, so sync it once, as the project's owner did
+    // when it was set up. Metadata only; no AI call.
+    const projectConfig = JSON.parse(readFileSync(join(projectDir, 'dql.config.json'), 'utf-8'));
+    if (projectConfig.manifestVersion === 3 && ['warehouse-first', 'hybrid'].includes(projectConfig.modeling?.mode)) {
+      const synced = await fetch(`${runtime.base}/api/connections/default/metadata-sync`, { method: 'POST' });
+      const body = await synced.json();
+      if (!synced.ok || body.warehouseCatalog?.error) throw new Error(`Schema sync failed: ${JSON.stringify(body).slice(0, 400)}`);
+      identity.settings.warehouseSync = { relations: body.status?.relationCount, catalogRelations: body.warehouseCatalog?.relations };
+    }
     console.error(`${options.layer}/${options.set}: ${cases.length} question(s) on ${runtime.base}`);
     result = await runEval(cli, projectDir, evalPath, runtime.base, join(outDir, 'eval.stderr.log'), join(outDir, 'cassettes'));
   } finally {

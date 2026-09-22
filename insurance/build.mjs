@@ -36,7 +36,23 @@ export const LAYERS = {
   L1: { description: 'L0 + DQL modeling', semanticLayer: false, overlays: ['L1'] },
   L2: { description: 'L1 + dbt semantic layer (MetricFlow)', semanticLayer: true, overlays: ['L1'] },
   L3: { description: 'L2 + DQL skills', semanticLayer: true, overlays: ['L1', 'L3'] },
+  // Without dbt (DQL RFC 0007, warehouse-first modeling). The project holds
+  // only the warehouse: the same DuckDB file the dbt project built, and no dbt
+  // project, manifest or docs. DQL reads the warehouse's own catalog.
+  W0: { description: 'warehouse only, no dbt: DQL warehouse-first, schema synced', warehouse: true, semanticLayer: false, overlays: [] },
+  W1a: { description: 'W0 + the model DQL drafts from the warehouse (dql model apply-discovery --validate), not reviewed', warehouse: true, semanticLayer: false, overlays: [], discover: true },
+  W1: { description: 'W0 + L1 modeling, bound to the warehouse tables and validated again on the warehouse', warehouse: true, semanticLayer: false, overlays: ['L1'] },
+  W3: { description: 'W1 + L3 skills (no semantic layer: that one is dbt MetricFlow)', warehouse: true, semanticLayer: false, overlays: ['L1', 'L3'] },
+  // The semantic layer without dbt: dbt Labs' own metric definitions (the ones
+  // L2 runs through MetricFlow), converted once by `dql semantic import` into
+  // DQL's native semantic YAML. Queries run on DQL's native engine; the project
+  // has no dbt project, manifest or MetricFlow.
+  W2: { description: 'W1 + dbt Labs\' metrics as DQL native semantic YAML (dql semantic import; no dbt or MetricFlow at query time)', warehouse: true, semanticLayer: false, overlays: ['L1'], nativeMetrics: true },
+  W4: { description: 'W2 + L3 skills: the no-dbt counterpart of L3', warehouse: true, semanticLayer: false, overlays: ['L1', 'L3'], nativeMetrics: true },
 };
+
+/** The schema the dbt project builds its models into; the warehouse layers model it. */
+const WAREHOUSE_SCHEMA = 'main';
 
 /**
  * The parts of dbt Labs' repository that make up the dbt project. Everything
@@ -291,8 +307,177 @@ function computeGold(dir, questions) {
   return answers;
 }
 
-export function build({ layer = 'L0', skipGold = false } = {}) {
+/**
+ * L1 names dbt models; without dbt the same entities name the tables dbt
+ * built from them (model `x` is table `main.x`). The port changes the binding
+ * only: every name, grain, key, description and relationship stays as written.
+ */
+function portToRelations(dir) {
+  const ported = [];
+  for (const file of listFiles(join(dir, 'domains')).filter((path) => path.endsWith('.yaml'))) {
+    const before = readFileSync(file, 'utf-8');
+    const after = before.replace(/dbt_model:\s*model\.cwd_benchmark_data\.([A-Za-z0-9_]+)/g, (_match, name) => `relation: ${WAREHOUSE_SCHEMA}.${name}`);
+    if (after !== before) {
+      writeFileSync(file, after);
+      ported.push({ file: relative(dir, file), bindings: (before.match(/dbt_model:/g) ?? []).length });
+    }
+    if (/dbt_model:/.test(after)) throw new Error(`${relative(dir, file)} still names a dbt model after the port.`);
+  }
+  return ported;
+}
+
+/**
+ * The evidence on L1's certified relationships was measured against dbt's
+ * relation names and dbt's column types, so it does not prove the same join
+ * on a project without dbt. A team moving these relationships onto warehouse
+ * tables presses Validate again; this does exactly that through DQL's own
+ * Validate route, then writes the new evidence in place of the old.
+ */
+async function revalidateRelationships(dir, cli) {
+  const { startRuntime } = await import('../lib/runtime.mjs');
+  const runtime = await startRuntime(dir, { cli, cassetteMode: 'live', env: { DQL_TELEMETRY_DISABLED: '1', DQL_EMBEDDINGS_AUTODETECT: 'off' } });
+  const results = [];
+  try {
+    const modeling = await (await fetch(`${runtime.base}/api/modeling/dbt-first`)).json();
+    if (!modeling.modeling) throw new Error(`Modeling did not load: ${JSON.stringify(modeling).slice(0, 300)}`);
+    const evidenceBySource = new Map();
+    for (const relationship of Object.values(modeling.modeling.relationships)) {
+      if (!relationship.validation) continue;
+      const response = await fetch(`${runtime.base}/api/modeling/dbt-first/relationships/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          expectedSnapshotId: modeling.snapshotId,
+          relationship: { id: relationship.localId, domain: relationship.domain, from: relationship.from, to: relationship.to, keys: relationship.keys, cardinality: relationship.cardinality, fanout: relationship.fanout, status: relationship.status },
+        }),
+      });
+      const body = await response.json();
+      if (!response.ok) throw new Error(`Validating ${relationship.localId} failed: ${body.message ?? body.error}`);
+      results.push({ id: relationship.localId, status: body.evidence.status, before: relationship.validation.status });
+      const list = evidenceBySource.get(relationship.sourcePath) ?? [];
+      list.push({ id: relationship.localId, evidence: body.evidence });
+      evidenceBySource.set(relationship.sourcePath, list);
+    }
+    // Write the evidence the way the Modeling page stores it (snake_case keys).
+    for (const [sourcePath, items] of evidenceBySource) {
+      const script = [
+        'import json, sys, yaml',
+        'path, items = sys.argv[1], json.loads(sys.argv[2])',
+        'doc = yaml.safe_load(open(path))',
+        'snake = lambda k: "".join("_" + c.lower() if c.isupper() else c for c in k)',
+        'by_id = {i["id"]: i["evidence"] for i in items}',
+        'for rel in doc.get("relationships", []):',
+        '    ev = by_id.get(rel.get("id"))',
+        '    if ev is not None: rel["validation"] = {snake(k): v for k, v in ev.items()}',
+        'yaml.safe_dump(doc, open(path, "w"), sort_keys=False, allow_unicode=True, width=100)',
+      ].join('\n');
+      const written = sh(PYTHON, ['-c', script, join(dir, sourcePath), JSON.stringify(items)]);
+      if (written.code !== 0) throw new Error(`Writing evidence to ${sourcePath} failed: ${written.stderr}`);
+    }
+  } finally {
+    await runtime.close();
+  }
+  return results;
+}
+
+/**
+ * A warehouse layer (W*): no dbt project. The warehouse is built once by dbt
+ * Labs' project (so the data is identical to L0-L3), then only its DuckDB
+ * file goes into a fresh folder, where a team without dbt would start.
+ */
+async function buildWarehouseLayer(layer, { skipGold }) {
+  const cli = resolveDqlCli();
+  const source = join(WORK, 'warehouse-source');
+  const dir = join(WORK, 'projects', layer);
+  const record = {
+    layer,
+    description: LAYERS[layer].description,
+    builtAt: new Date().toISOString(),
+    source: {
+      repository: 'https://github.com/dbt-labs/semantic-layer-llm-benchmarking',
+      commit: git(['rev-parse', 'HEAD']),
+      branch: git(['rev-parse', '--abbrev-ref', 'HEAD']),
+      dirty: git(['status', '--porcelain']) !== '',
+      seedHash: hashFiles(SOURCE, listFiles(join(SOURCE, SEED_DIR)).filter((file) => file.endsWith('.csv'))),
+    },
+    tools: {
+      dbt: sh(DBT, ['--version']).stdout.split('\n').filter((line) => /installed|duckdb/i.test(line)).map((line) => line.trim()),
+      duckdbPython: sh(PYTHON, ['-c', 'import duckdb; print(duckdb.__version__)']).stdout.trim(),
+      dql: { version: dqlVersion(cli), source: cli.source },
+    },
+    steps: [],
+    warehouseSchema: WAREHOUSE_SCHEMA,
+  };
+
+  // 1. The warehouse: dbt Labs' project built into DuckDB, as for L0.
+  copyProject('L0', source);
+  for (const args of [['seed'], ['run']]) {
+    const step = dbt(args, source);
+    record.steps.push(step);
+    if (step.code !== 0) throw new Error(`${step.command} failed:\n${step.summary.join('\n')}`);
+  }
+  record.rowCounts = checkRowCounts(source);
+  if (record.rowCounts.seeds.some((seed) => !seed.ok) || record.rowCounts.models.some((model) => !model.ok)) {
+    throw new Error('Row counts differ from the data files.');
+  }
+
+  // 2. The project: the DuckDB file and nothing else.
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
+  cpSync(join(source, DATABASE_FILE), join(dir, DATABASE_FILE));
+  record.projectDir = relative(REPO_ROOT, dir);
+
+  const run = (args, label = `dql ${args.join(' ')}`, timeoutMs = 300_000) => {
+    const result = runDql(args, { cli, cwd: dir, timeoutMs });
+    record.steps.push({ command: label, code: result.code, summary: `${result.stdout}${result.stderr}`.split('\n').filter(Boolean).slice(-8) });
+    if (result.code !== 0) throw new Error(`${label} failed:\n${result.stderr || result.stdout}`);
+    return result;
+  };
+  const before = new Set(readdirSync(dir));
+  run(['init', dir, '--warehouse-first']);
+  record.addedByDqlInit = readdirSync(dir).filter((name) => !before.has(name)).sort();
+  linkSharedConnectors(dir);
+  run(['sync', 'warehouse', dir, '--schemas', WAREHOUSE_SCHEMA]);
+
+  // 3. The layer's modeling.
+  record.layerFiles = applyOverlays(layer, dir);
+  if (LAYERS[layer].overlays.includes('L1')) {
+    record.portedBindings = portToRelations(dir);
+    record.revalidated = await revalidateRelationships(dir, cli);
+  }
+  if (LAYERS[layer].nativeMetrics) {
+    // The definitions come from L2's dbt project; only DQL's import reads it.
+    const l2 = join(WORK, 'projects', 'L2');
+    if (!existsSync(join(l2, 'target', 'semantic_manifest.json'))) throw new Error('Build L2 first: its dbt project holds the semantic definitions W2 imports.');
+    run(['semantic', 'import', 'dbt', dir, '--input', l2], 'dql semantic import dbt');
+    const listed = runDql(['semantic', 'list', dir, '--format', 'json'], { cli, cwd: dir });
+    const layerInfo = JSON.parse(listed.stdout);
+    record.nativeSemanticLayer = { provider: layerInfo.provider, metrics: layerInfo.metrics.map((metric) => metric.name), dimensions: layerInfo.dimensions.length };
+    // The import leaves no path back to dbt: the project must not name one.
+    const config = JSON.parse(readFileSync(join(dir, 'dql.config.json'), 'utf-8'));
+    if (config.dbt || config.semanticLayer?.provider === 'dbt') throw new Error('W2 must not configure dbt.');
+  }
+  if (LAYERS[layer].discover) {
+    run(['model', 'apply-discovery', dir, '--apply', '--validate']);
+    record.drafted = listFiles(join(dir, 'domains')).map((file) => relative(dir, file)).sort();
+  }
+  if (existsSync(join(dir, 'domains')) && listFiles(join(dir, 'domains')).length) run(['model', 'validate', dir]);
+  record.projectFiles = listFiles(dir).filter((file) => !file.includes(`${join('.dql', 'connectors')}`) && !file.includes(join('.dql', 'cache'))).map((file) => relative(dir, file)).sort();
+  const config = JSON.parse(readFileSync(join(dir, 'dql.config.json'), 'utf-8'));
+  record.dqlConfig = { connections: config.connections, dbt: config.dbt ?? null, semanticLayer: config.semanticLayer ?? null, modeling: config.modeling ?? null, metadataScopes: config.metadataScopes ?? null };
+  const catalog = JSON.parse(readFileSync(join(dir, '.dql', 'warehouse-catalog.json'), 'utf-8'));
+  record.warehouseCatalog = { relations: catalog.relations.length, fingerprint: catalog.fingerprint, primaryKeys: catalog.relations.filter((relation) => relation.primaryKey?.length).length, foreignKeys: catalog.relations.reduce((n, relation) => n + (relation.foreignKeys?.length ?? 0), 0), comments: catalog.relations.filter((relation) => relation.comment).length };
+  // The correct answers come from the same data as L0; build them there.
+  if (!skipGold && !existsSync(join(WORK, 'gold', 'answers.json'))) throw new Error('Build L0 first: the correct answers come from its warehouse.');
+
+  mkdirSync(WORK, { recursive: true });
+  writeFileSync(join(WORK, `build-${layer}.json`), `${JSON.stringify(record, null, 2)}\n`);
+  return record;
+}
+
+export async function build({ layer = 'L0', skipGold = false } = {}) {
   if (!LAYERS[layer]) throw new Error(`Unknown layer ${layer}. Known: ${Object.keys(LAYERS).join(', ')}`);
+  if (LAYERS[layer].warehouse) return buildWarehouseLayer(layer, { skipGold });
   if (!existsSync(SOURCE)) throw new Error('Insurance data is missing. Run: insurance/download.sh');
   const cli = resolveDqlCli();
   const dir = join(WORK, 'projects', layer);
@@ -381,7 +566,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const layerIndex = args.indexOf('--layer');
   const layer = layerIndex >= 0 ? args[layerIndex + 1] : 'L0';
   try {
-    const record = build({ layer, skipGold: args.includes('--skip-gold') });
+    const record = await build({ layer, skipGold: args.includes('--skip-gold') });
+    if (LAYERS[layer].warehouse) {
+      console.log(`${layer}: ${record.projectDir}`);
+      console.log(`warehouse catalog: ${JSON.stringify(record.warehouseCatalog)}`);
+      if (record.portedBindings) console.log(`ported bindings: ${record.portedBindings.reduce((n, item) => n + item.bindings, 0)} in ${record.portedBindings.length} files`);
+      if (record.revalidated) console.log(`revalidated: ${record.revalidated.map((item) => `${item.id}=${item.status}`).join(', ')}`);
+      if (record.drafted) console.log(`drafted: ${record.drafted.join(', ')}`);
+      process.exit(0);
+    }
     const seeds = record.rowCounts.seeds;
     const models = record.rowCounts.models;
     console.log(`${layer}: ${record.projectDir}`);

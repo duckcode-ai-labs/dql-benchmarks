@@ -402,6 +402,53 @@ What the repeats change:
   - **The baseline is more stable than DQL** (90% against 73%). One prompt and one statement vary less than a pipeline that reads the question, chooses tables and then writes SQL. Most of DQL's run-to-run changes are in the SQL it writes itself on the multi-table loss questions (see defect 18).
   - **Where DQL is already clearly ahead is trust.** The baseline gave 68 wrong answers over its three runs, each as a plain answer, with nothing to tell the reader to check it. DQL's wrong answers carried `review_required` except the 7 governed ones above.
 
+### Without dbt: runs `nd-a` / `nd-b` (DQL `847edc8b` + `9c92fec2`, warehouse-first modeling)
+
+The project holds only the warehouse: the same DuckDB file dbt Labs' project builds, with no dbt project, manifest or docs. DQL reads the warehouse's own catalog, where this warehouse declares no keys or comments. W1 uses the L1 modeling, with each `dbt_model:` rebound to the table dbt built (`relation: main.<model>`) and every relationship validated again on the warehouse. W3 adds the L3 skills. W1a is what `dql model apply-discovery --validate` drafts on its own, with no review. dbt L0 and L1 were run in the same session on the same DQL. Claude Sonnet 5 via the subscription, one run each.
+
+| Condition | Right | dbt Labs' 11 | Wrong | Stopped | Wrong, shown as trustworthy | Median time |
+|---|---:|---:|---:|---:|---:|---:|
+| L0: dbt project only | 11/41 (27%) | 3 | 12 | 18 | 0 | 47 s |
+| W0: warehouse only | 14/41 (34%) | 7 | 8 | 19 | 0 | 49 s |
+| W1a: warehouse + DQL's own draft | 11/41 (27%) | 6 | 7 | 23 | 0 | 40 s |
+| L1: dbt + modeling | 25/41 (61%) | 9 | 8 | 8 | 0 | 34 s |
+| W1: warehouse + modeling | 24/41 (59%) | 9 | 8 | 9 | 0 | 41 s |
+| W3: warehouse + modeling + skills | 26/41 (63%) | 10 | 7 | 8 | 0 | 36 s |
+
+- **The same modeling works as well without dbt:** W1 against L1, 3 questions only W1 got right and 4 only L1 got right (exact McNemar p = 1.0). W0 against L0, p = 0.51.
+- **Modeling is what lifts accuracy:** W1 against W0, 11 gained and 1 lost (p = 0.006); W3 against W0, 12 gained and none lost (p < 0.001).
+- **W3 against dbt L3:** W3 scored 26; the three recent dbt L3 runs (`sub-a/b/c`) scored 29, 29 and 28. L3 also has dbt Labs' MetricFlow semantic layer (L2), which W3 does not; the no-dbt equivalent (DQL native metrics) has not been written yet.
+- **DQL's own draft (W1a) adds nothing on this warehouse:** it declares no keys, and its key columns are named `*_Identifier`, which drafting does not recognise. It drafted 29 entities and no joins. A generic improvement (propose joins from shared key columns, checked against the data) must be judged on data DQL was not tuned on.
+- **The first no-dbt run found a DQL defect:** a table had two names (`main.x` in the catalog, `acme_insurance.main.x` in Ask's schema index), so Ask dropped tables it had chosen, and W1 declined 23 of 41. Fixed in `9c92fec2` (three-part names on DuckDB and PostgreSQL). The `nd-a` W0/W1 numbers from before the fix (7 and 12) are superseded by `nd-b`.
+- No wrong answer was shown as trustworthy, and no result rows were sent to the model, in any run. Development build, single runs: not publishable.
+
+### Without dbt, fixed native engine: run `nd-d` (W2, W4, W1a; DQL `f2d1e52e`)
+
+| Condition | Right | dbt Labs' 11 | Wrong, shown as governed | Median time |
+|---|---:|---:|---:|---:|
+| W1a: warehouse + DQL's own draft (now proves joins from data) | 18/41 (44%) | 7 | 0 | 45 s |
+| W2: W1 + dbt Labs' metrics on DQL's native engine | 30/41 (73%) | 10 | 1 | 32 s |
+| W4: W2 + skills | 27/41 (66%) | 9 | 1 | 36 s |
+| (reference) L3 on dbt + MetricFlow, `sub-a/b/c` | 28–29/41 (68–71%) | — | — | — |
+
+- **No dbt, same accuracy:** W2 against dbt L3 (`sub-a`), 3 questions only W2 got right and 2 only L3 got right (p = 1.0).
+- **The one wrong governed answer is dbt Labs' metric definition, faithfully applied.** "Average policy size" was computed with dbt Labs' `premium` metric, which their semantic layer defines as `SUM(fire_claim.Premium)`. The answer key takes premiums from `policy_amount`. The native engine did what the definition says. It is still counted as wrong but trusted.
+- **DQL's own draft (W1a) went from 11 to 18.** Once drafting read views, it proved 34 joins and 15 grains from the data. It is still well below the hand-written model (W1: 24; 2 gained, 8 lost against W1). The draft joins are unreviewed and some are artifacts of this tiny dataset. The inference was built after seeing this schema, so its independent test is Spider 2.0-Lite.
+- Single runs, development build: not publishable.
+
+### Without dbt, with the semantic layer: run `nd-c` (W2, W4; superseded, see below)
+
+W2 is W1 plus dbt Labs' own metric definitions, converted once by `dql semantic import dbt` into DQL's native semantic YAML. Queries run on DQL's native engine, with no dbt project, manifest or MetricFlow in the project. W4 adds the L3 skills: the no-dbt counterpart of L3.
+
+| Condition | Right | dbt Labs' 11 | **Wrong, shown as governed** | Median time |
+|---|---:|---:|---:|---:|
+| W2: W1 + native metrics | 26/41 (63%) | 7 | **4** | 32 s |
+| W4: W2 + skills | 24/41 (59%) | 6 | **4** | 38 s |
+
+- **Not usable as results: a trust failure.** Four answers per run were labelled `governed` and were wrong. For example, "how many claims by policy number" returned both claims under a NULL policy. DQL's native engine reached `policy` from `claim` by walking a dbt entity join backwards, through `insurable_object` to `policy_amount`. That one-to-many step reaches every row sharing the key, and it never meets this data's policies. MetricFlow refuses such paths. Fixed in DQL: a join that follows a dbt entity is walked many-to-one only, and the importer now keeps each join's entity.
+- **Converting the metrics also found a silently wrong metric**, fixed in `192bb465`. `loss_payment_amount` summed every claim amount: the import dropped its filter, and the native engine turned a filter on another table into `1 = 1`. It is now refused rather than computed wrong.
+- W2 and W4 are rerun on the fixed build (run `nd-d`).
+
 ### Run `sub-r6`: all layers on DQL `f064f023` (marker tables and wide questions)
 
 Scorecards: [L0](results/L0-subscription-r6.md) · [L1](results/L1-subscription-r6.md) · [L2](results/L2-subscription-r6.md) · [L3](results/L3-subscription-r6.md) · paired: [against plain text-to-SQL](results/paired-r6-vs-baseline.md), [between layers](results/paired-r6-layers.md) · unanswerable: [L0](results/L0-unanswerable-r6.md), [L3](results/L3-unanswerable-r6.md) (each stopped correctly on 14 of 15).
