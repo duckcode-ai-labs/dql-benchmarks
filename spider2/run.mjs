@@ -80,6 +80,13 @@ async function main() {
   // refused, because it would run code the identity does not describe.
   const { patch, ...build } = buildIdentity(cli, { env: { ...process.env, ...env } });
   if (build.distOlderThanSource && !process.env.SPIDER2_ALLOW_STALE_DIST) throw new Error(`${cli.entry} was built before the latest source edit in ${build.root}; rebuild DQL first (or set SPIDER2_ALLOW_STALE_DIST=1 to record it as stale).`);
+  // The projects must come from the same code: S1a's drafted model is DQL's
+  // output too, and a run over projects built by another build measures two.
+  const projectsRecordPath = join(WORK, `build-${options.condition}.json`);
+  const projects = existsSync(projectsRecordPath) ? JSON.parse(readFileSync(projectsRecordPath, 'utf-8')) : null;
+  const projectsBuild = projects?.dql?.build ?? null;
+  const sameCode = (a, b) => Boolean(a && b && a.head === b.head && (a.patchSha256 ?? null) === (b.patchSha256 ?? null));
+  if (!sameCode(projectsBuild, build) && !process.env.SPIDER2_ALLOW_MIXED_BUILD) throw new Error(`the ${options.condition} projects were built ${projectsBuild ? `on ${projectsBuild.head?.slice(0, 8)}${projectsBuild.dirty ? ` + patch ${projectsBuild.patchSha256?.slice(0, 8)}` : ''}` : 'by an unrecorded build'}, not this build (${build.head?.slice(0, 8)}${build.dirty ? ` + patch ${build.patchSha256?.slice(0, 8)}` : ''}). Rebuild: node spider2/build.mjs --condition ${options.condition} (or set SPIDER2_ALLOW_MIXED_BUILD=1 to record it as mixed).`);
   const buildPath = join(runDir, 'build.json');
   if (existsSync(buildPath)) {
     // A resumed run must be the same build, or its databases mix two codes.
@@ -89,7 +96,7 @@ async function main() {
     writeFileSync(buildPath, `${JSON.stringify(build, null, 2)}\n`);
     if (patch && build.dirty) writeFileSync(join(runDir, 'build.patch'), patch);
   }
-  const summary = { run: options.run, condition: options.condition, provider: options.provider, model: options.model, dql: { version: dqlVersion(cli), source: cli.source, entry: cli.entry, build }, startedAt: new Date().toISOString(), missingDatabases, tasks: selected.length, databases: {}, invalid: [] };
+  const summary = { run: options.run, condition: options.condition, provider: options.provider, model: options.model, dql: { version: dqlVersion(cli), source: cli.source, entry: cli.entry, build }, projects: { builtAt: projects?.builtAt ?? null, build: projectsBuild, sameBuild: sameCode(projectsBuild, build) }, startedAt: new Date().toISOString(), missingDatabases, tasks: selected.length, databases: {}, invalid: [] };
   const retried = new Set();
   const queue = [...byDb.entries()].sort(([a], [b]) => a.localeCompare(b));
   while (queue.length) {

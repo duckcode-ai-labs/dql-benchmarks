@@ -11,7 +11,7 @@
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { REPO_ROOT, resolveDqlCli, runDql, dqlVersion } from '../lib/dql.mjs';
+import { REPO_ROOT, buildIdentity, resolveDqlCli, runDql, dqlVersion } from '../lib/dql.mjs';
 import { LOCALDB, readTasks } from './tasks.mjs';
 
 export const CONDITIONS = {
@@ -25,7 +25,11 @@ export function build({ condition, only }) {
   const cli = resolveDqlCli();
   const { tasks, missingDatabases } = readTasks();
   const databases = [...new Set(tasks.map((task) => task.db))].filter((db) => !only || db === only).sort();
-  const record = { condition, description: CONDITIONS[condition].description, builtAt: new Date().toISOString(), dql: { version: dqlVersion(cli), source: cli.source }, missingDatabases, databases: {} };
+  // The code that built the projects: a drafted model is as much a product of
+  // DQL as an answer is, so a run on projects from another build is two
+  // builds at once. run.mjs compares this with its own.
+  const { patch: _patch, ...build } = buildIdentity(cli);
+  const record = { condition, description: CONDITIONS[condition].description, builtAt: new Date().toISOString(), dql: { version: dqlVersion(cli), source: cli.source, build }, missingDatabases, databases: {} };
   for (const db of databases) {
     const dir = join(WORK, 'projects', condition, db);
     rmSync(dir, { recursive: true, force: true });
