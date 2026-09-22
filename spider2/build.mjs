@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Build one DQL project per Spider 2.0-Lite SQLite database, for one condition.
 //
-//   node spider2/build.mjs --condition S0|S1a [--db <name>]
+//   node spider2/build.mjs --condition S0|S1a|E0|E1 [--db <name>]
 //
 // S0:  the warehouse only. `dql init --warehouse-first` on a folder whose one
 //      connection is the task database (opened read-only), then `dql sync
@@ -17,6 +17,13 @@ import { LOCALDB, readTasks } from './tasks.mjs';
 export const CONDITIONS = {
   S0: { description: 'warehouse only: DQL warehouse-first, schema synced', draft: false },
   S1a: { description: 'S0 + the model DQL drafts from the warehouse (apply-discovery --validate), not reviewed', draft: true },
+  // The same project as S0, kept apart so a build under test never shares
+  // projects with a run in progress. What E0 measures is the DQL build it runs.
+  E0: { description: 'warehouse only, as S0: the arm for the drafter evidence work (whole schema, declared keys, dialect notes)', draft: false },
+  // E0 with the column value profile switched on (agent.valueProfile
+  // "sampled"): example values and ranges reach the drafter. A project
+  // setting, off by default, because the values leave the machine.
+  E1: { description: 'E0 + the column value profile (agent.valueProfile: sampled)', draft: false, valueProfile: true },
 };
 const WORK = join(REPO_ROOT, 'work', 'spider2');
 
@@ -47,6 +54,7 @@ export function build({ condition, only }) {
     config.project = db;
     config.defaultConnectionName = 'default';
     config.connections = { default: { driver: 'sqlite', filepath: join(LOCALDB, `${db}.sqlite`) } };
+    if (CONDITIONS[condition].valueProfile) config.agent = { ...(config.agent ?? {}), valueProfile: { mode: 'sampled' } };
     writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
     run(['sync', 'warehouse', dir, '--schemas', 'main']);
     let drafted = null;
