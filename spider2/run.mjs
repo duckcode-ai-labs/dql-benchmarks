@@ -2,7 +2,7 @@
 // Ask Spider 2.0-Lite's SQLite questions through DQL's Ask, one database at a
 // time, and keep each answer's final SQL for the official grader.
 //
-//   node spider2/run.mjs --condition S0|S1a --run <id> [--provider codex] [--model gpt-5.6-luna] [--db <name>] [--only id,id]
+//   node spider2/run.mjs --condition S0|S1a|E0|E1|E2 --run <id> [--provider codex] [--model gpt-6-luna] [--db <name>] [--only id,id]
 //
 // Output: work/spider2/runs/<run>/<condition>/<db>/ (project copy, eval file,
 // DQL report, server log, recorded AI calls) and .../predictions/<id>.sql.
@@ -21,7 +21,7 @@ const CASE_TIMEOUT_MS = 900_000;
 const codexPath = () => [...CODEX_DIRS, process.env.PATH ?? ''].join(':');
 
 function parseArgs(argv) {
-  const options = { condition: 'S0', run: null, provider: 'codex', model: 'gpt-5.6-luna', db: null, only: null };
+  const options = { condition: 'S0', run: null, provider: 'codex', model: 'gpt-6-luna', db: null, only: null };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     const next = () => argv[++index];

@@ -1,6 +1,6 @@
 // Spider 2.0-Lite, SQLite subset: the model on its own.
 //
-//   node spider2/baseline.mjs --run <id> [--model gpt-5.6-luna] [--db <name>]
+//   node spider2/baseline.mjs --run <id> [--model gpt-6-luna] [--db <name>]
 //
 // The control arm for the DQL conditions: the SAME questions, the SAME model,
 // the SAME scorer, with no DQL between them. The model is given the whole
@@ -23,7 +23,7 @@ const WORK = join(REPO_ROOT, 'work', 'spider2');
 const CASE_TIMEOUT_MS = 300_000;
 
 function parseArgs(argv) {
-  const options = { run: null, model: 'gpt-5.6-luna', db: null, only: null };
+  const options = { run: null, model: 'gpt-6-luna', db: null, only: null };
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
     if (flag === '--run') options.run = argv[++index];
