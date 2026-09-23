@@ -107,7 +107,20 @@ async function main() {
         env: { ...process.env, PATH: [...CODEX_DIRS, process.env.PATH ?? ''].join(':') },
       });
       const durationMs = Date.now() - startedAt;
-      const sql = result.status === 0 ? sqlFrom(result.stdout ?? '') : '';
+      // A call the provider refused (usage limit, quota, sign-in) is not an
+      // answer the model gave: scored as "no SQL" it counts as the model being
+      // wrong. The run stops and is marked invalid instead, as the DQL runner does.
+      const said = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
+      if (result.status !== 0 || /usage limit|rate limit|quota|unauthori[sz]ed|not logged in|login required/i.test(said)) {
+        const reason = said.split('\n').filter((line) => /error|limit|quota|unauthori|login/i.test(line)).slice(-3).join(' ').slice(0, 400) || `exit ${result.status}`;
+        summary.invalid.push({ db, task: task.id, reason });
+        summary.databases[db] = { tasks: dbTasks.map((item) => item.id), answered, outcomes };
+        writeFileSync(join(runDir, 'summary.json'), `${JSON.stringify(summary, null, 2)}\n`);
+        console.error(`INVALID RUN: the provider refused the call for ${task.id}: ${reason}`);
+        process.exitCode = 3;
+        return;
+      }
+      const sql = sqlFrom(result.stdout ?? '');
       if (sql) {
         writeFileSync(join(runDir, 'predictions', `${task.id}.sql`), `${sql}\n`);
         answered.push(task.id);
