@@ -25,7 +25,7 @@ const CASE_TIMEOUT_MS = 900_000;
 const codexPath = () => [...CODEX_DIRS, process.env.PATH ?? ''].join(':');
 
 function parseArgs(argv) {
-  const options = { condition: 'S0', run: null, provider: 'codex', model: 'gpt-6-luna', db: null, only: null, set: null, jobs: 1 };
+  const options = { condition: 'S0', run: null, provider: 'codex', model: 'gpt-5.6-sol', db: null, only: null, set: null, jobs: 1 };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     const next = () => argv[++index];

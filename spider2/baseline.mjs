@@ -24,7 +24,7 @@ const WORK = join(REPO_ROOT, 'work', 'spider2');
 const CASE_TIMEOUT_MS = 300_000;
 
 function parseArgs(argv) {
-  const options = { run: null, model: 'gpt-6-luna', db: null, only: null, set: null };
+  const options = { run: null, model: 'gpt-5.6-sol', db: null, only: null, set: null };
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
     if (flag === '--run') options.run = argv[++index];
