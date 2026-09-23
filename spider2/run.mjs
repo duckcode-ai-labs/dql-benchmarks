@@ -21,11 +21,11 @@ import { questionText, readTasks } from './tasks.mjs';
 import { taskSet } from './sets.mjs';
 
 const WORK = join(REPO_ROOT, 'work', 'spider2');
-const CASE_TIMEOUT_MS = 900_000;
+const DEFAULT_CASE_TIMEOUT_MS = 900_000;
 const codexPath = () => [...CODEX_DIRS, process.env.PATH ?? ''].join(':');
 
 function parseArgs(argv) {
-  const options = { condition: 'S0', run: null, provider: 'codex', model: 'gpt-5.6-sol', db: null, only: null, set: null, jobs: 1 };
+  const options = { condition: 'S0', run: null, provider: 'codex', model: 'gpt-5.6-sol', db: null, only: null, set: null, jobs: 1, caseTimeoutMs: DEFAULT_CASE_TIMEOUT_MS };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     const next = () => argv[++index];
@@ -37,6 +37,7 @@ function parseArgs(argv) {
     else if (arg === '--only') options.only = next().split(',');
     else if (arg === '--set') options.set = next();
     else if (arg === '--jobs') options.jobs = Math.max(1, Number(next()) || 1);
+    else if (arg === '--case-timeout-ms') options.caseTimeoutMs = Math.max(30_000, Number(next()) || DEFAULT_CASE_TIMEOUT_MS);
     else throw new Error(`Unknown argument ${arg}`);
   }
   if (!options.run) throw new Error('--run <id> is required');
@@ -52,9 +53,9 @@ function yamlString(value) {
   return JSON.stringify(value);
 }
 
-function runEval(cli, projectDir, evalPath, runtimeBase, logPath, cassetteDir, env) {
+function runEval(cli, projectDir, evalPath, runtimeBase, logPath, cassetteDir, env, caseTimeoutMs) {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [cli.entry, 'agent', 'eval', relative(projectDir, evalPath), '--via', 'runtime', '--runtime-url', runtimeBase, '--format', 'json', '--case-timeout-ms', String(CASE_TIMEOUT_MS)], {
+    const child = spawn(process.execPath, [cli.entry, 'agent', 'eval', relative(projectDir, evalPath), '--via', 'runtime', '--runtime-url', runtimeBase, '--format', 'json', '--case-timeout-ms', String(caseTimeoutMs)], {
       cwd: projectDir,
       env: { ...process.env, ...env, DQL_EVAL_CASSETTE_DIR: cassetteDir },
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -103,7 +104,7 @@ async function main() {
     writeFileSync(buildPath, `${JSON.stringify(build, null, 2)}\n`);
     if (patch && build.dirty) writeFileSync(join(runDir, 'build.patch'), patch);
   }
-  const summary = { run: options.run, condition: options.condition, provider: options.provider, model: options.model, dql: { version: dqlVersion(cli), source: cli.source, entry: cli.entry, build }, projects: { builtAt: projects?.builtAt ?? null, build: projectsBuild, sameBuild: sameCode(projectsBuild, build) }, set: options.set ?? 'full', startedAt: new Date().toISOString(), missingDatabases, tasks: selected.length, databases: {}, invalid: [] };
+  const summary = { run: options.run, condition: options.condition, provider: options.provider, model: options.model, dql: { version: dqlVersion(cli), source: cli.source, entry: cli.entry, build }, projects: { builtAt: projects?.builtAt ?? null, build: projectsBuild, sameBuild: sameCode(projectsBuild, build) }, set: options.set ?? 'full', caseTimeoutMs: options.caseTimeoutMs, startedAt: new Date().toISOString(), missingDatabases, tasks: selected.length, databases: {}, invalid: [] };
   const retried = new Set();
   const queue = [...byDb.entries()].sort(([a], [b]) => a.localeCompare(b));
   // One database per worker at a time; a worker takes the next from the queue.
@@ -146,7 +147,7 @@ async function main() {
       const synced = await fetch(`${runtime.base}/api/connections/default/metadata-sync`, { method: 'POST' });
       if (!synced.ok) throw new Error(`${db}: schema sync failed: ${(await synced.text()).slice(0, 300)}`);
       console.error(`${options.condition}/${db}: ${dbTasks.length} question(s)`);
-      result = await runEval(cli, projectDir, evalPath, runtime.base, join(outDir, 'eval.stderr.log'), join(outDir, 'cassettes'), env);
+      result = await runEval(cli, projectDir, evalPath, runtime.base, join(outDir, 'eval.stderr.log'), join(outDir, 'cassettes'), env, options.caseTimeoutMs);
     } finally {
       runtimeAlive = runtime.alive?.() ?? true;
       runtimeEnded = runtime.ended?.() ?? null;
