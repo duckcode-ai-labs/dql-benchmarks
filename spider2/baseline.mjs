@@ -1,6 +1,6 @@
 // Spider 2.0-Lite, SQLite subset: the model on its own.
 //
-//   node spider2/baseline.mjs --run <id> [--model gpt-6-luna] [--db <name>]
+//   node spider2/baseline.mjs --run <id> [--model <model>] [--db <name>] [--set quick]
 //
 // The control arm for the DQL conditions: the SAME questions, the SAME model,
 // the SAME scorer, with no DQL between them. The model is given the whole
@@ -18,18 +18,20 @@ import { join, relative } from 'node:path';
 import { REPO_ROOT } from '../lib/dql.mjs';
 import { CODEX_DIRS } from '../insurance/run.mjs';
 import { LOCALDB, readTasks, questionText } from './tasks.mjs';
+import { taskSet } from './sets.mjs';
 
 const WORK = join(REPO_ROOT, 'work', 'spider2');
 const CASE_TIMEOUT_MS = 300_000;
 
 function parseArgs(argv) {
-  const options = { run: null, model: 'gpt-6-luna', db: null, only: null };
+  const options = { run: null, model: 'gpt-6-luna', db: null, only: null, set: null };
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
     if (flag === '--run') options.run = argv[++index];
     else if (flag === '--model') options.model = argv[++index];
     else if (flag === '--db') options.db = argv[++index];
     else if (flag === '--only') options.only = new Set(argv[++index].split(',').map((item) => item.trim()));
+    else if (flag === '--set') options.set = argv[++index];
     else throw new Error(`unknown flag ${flag}`);
   }
   if (!options.run) throw new Error('--run <id> is required');
@@ -69,7 +71,8 @@ function sqlFrom(text) {
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const { tasks, missingDatabases } = readTasks();
-  const selected = tasks.filter((task) => (!options.db || task.db === options.db) && (!options.only || options.only.has(task.id)));
+  const inSet = taskSet(options.set);
+  const selected = tasks.filter((task) => (!options.db || task.db === options.db) && (!options.only || options.only.has(task.id)) && (!inSet || inSet.has(task.id)));
   const runDir = join(WORK, 'runs', options.run, 'baseline');
   mkdirSync(join(runDir, 'predictions'), { recursive: true });
   const byDb = new Map();

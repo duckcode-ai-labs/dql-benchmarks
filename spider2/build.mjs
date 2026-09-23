@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Build one DQL project per Spider 2.0-Lite SQLite database, for one condition.
 //
-//   node spider2/build.mjs --condition S0|S1a|E0|E1|E2 [--db <name>]
+//   node spider2/build.mjs --condition S0|S1a|E0|E1|E2 [--db <name>] [--set quick]
 //
 // S0:  the warehouse only. `dql init --warehouse-first` on a folder whose one
 //      connection is the task database (opened read-only), then `dql sync
@@ -13,6 +13,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { join, relative } from 'node:path';
 import { REPO_ROOT, buildIdentity, resolveDqlCli, runDql, dqlVersion } from '../lib/dql.mjs';
 import { LOCALDB, readTasks } from './tasks.mjs';
+import { taskSet } from './sets.mjs';
 
 export const CONDITIONS = {
   S0: { description: 'warehouse only: DQL warehouse-first, schema synced', draft: false },
@@ -30,11 +31,13 @@ export const CONDITIONS = {
 };
 const WORK = join(REPO_ROOT, 'work', 'spider2');
 
-export function build({ condition, only }) {
+export function build({ condition, only, set }) {
   if (!CONDITIONS[condition]) throw new Error(`--condition must be one of ${Object.keys(CONDITIONS).join(', ')}`);
   const cli = resolveDqlCli();
   const { tasks, missingDatabases } = readTasks();
-  const databases = [...new Set(tasks.map((task) => task.db))].filter((db) => !only || db === only).sort();
+  // A named set builds only the databases its tasks use.
+  const inSet = taskSet(set);
+  const databases = [...new Set(tasks.filter((task) => !inSet || inSet.has(task.id)).map((task) => task.db))].filter((db) => !only || db === only).sort();
   // The code that built the projects: a drafted model is as much a product of
   // DQL as an answer is, so a run on projects from another build is two
   // builds at once. run.mjs compares this with its own.
@@ -80,7 +83,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const args = process.argv.slice(2);
   const value = (flag) => (args.includes(flag) ? args[args.indexOf(flag) + 1] : undefined);
   try {
-    build({ condition: value('--condition') ?? 'S0', only: value('--db') });
+    build({ condition: value('--condition') ?? 'S0', only: value('--db'), set: value('--set') });
   } catch (error) {
     console.error(error.message);
     process.exitCode = 1;

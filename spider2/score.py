@@ -173,8 +173,10 @@ def bucket(task):
 
 def transitions(base, run):
     """The 3x3 table baseline -> run, and the ids that moved, on shared tasks."""
-    if set(base['tasks']) != set(run['tasks']):
+    if not set(run['tasks']) <= set(base['tasks']):
         raise SystemExit(f"refusing a transition table over different task sets: {base['run']}/{base['condition']} vs {run['run']}/{run['condition']}")
+    # A quick run is compared with the same tasks of a full baseline.
+    base = {**base, 'tasks': {task: base['tasks'][task] for task in run['tasks']}}
     table = collections.Counter((bucket(base['tasks'][t]), bucket(run['tasks'][t])) for t in base['tasks'])
     lost_stop = sorted(t for t in base['tasks'] if base['tasks'][t]['correct'] and not run['tasks'][t]['answered'])
     turned_wrong = sorted(t for t in base['tasks'] if base['tasks'][t]['correct'] and run['tasks'][t]['answered'] and not run['tasks'][t]['correct'])

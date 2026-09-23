@@ -2,7 +2,10 @@
 // Ask Spider 2.0-Lite's SQLite questions through DQL's Ask, one database at a
 // time, and keep each answer's final SQL for the official grader.
 //
-//   node spider2/run.mjs --condition S0|S1a|E0|E1|E2 --run <id> [--provider codex] [--model gpt-6-luna] [--db <name>] [--only id,id]
+//   node spider2/run.mjs --condition S0|S1a|E0|E1|E2 --run <id> [--provider codex] [--model <model>] [--db <name>] [--only id,id] [--set quick] [--jobs N]
+//
+// --set quick runs the 22 tasks of spider2/quick-set.json (minutes, not hours);
+// --jobs N answers N databases at once, each on its own runtime.
 //
 // Output: work/spider2/runs/<run>/<condition>/<db>/ (project copy, eval file,
 // DQL report, server log, recorded AI calls) and .../predictions/<id>.sql.
@@ -15,13 +18,14 @@ import { REPO_ROOT, buildIdentity, dqlVersion, resolveDqlCli } from '../lib/dql.
 import { startRuntime } from '../lib/runtime.mjs';
 import { CODEX_DIRS, RUN_ENV, providerOutages } from '../insurance/run.mjs';
 import { questionText, readTasks } from './tasks.mjs';
+import { taskSet } from './sets.mjs';
 
 const WORK = join(REPO_ROOT, 'work', 'spider2');
 const CASE_TIMEOUT_MS = 900_000;
 const codexPath = () => [...CODEX_DIRS, process.env.PATH ?? ''].join(':');
 
 function parseArgs(argv) {
-  const options = { condition: 'S0', run: null, provider: 'codex', model: 'gpt-6-luna', db: null, only: null };
+  const options = { condition: 'S0', run: null, provider: 'codex', model: 'gpt-6-luna', db: null, only: null, set: null, jobs: 1 };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     const next = () => argv[++index];
@@ -31,6 +35,8 @@ function parseArgs(argv) {
     else if (arg === '--model') options.model = next();
     else if (arg === '--db') options.db = next();
     else if (arg === '--only') options.only = next().split(',');
+    else if (arg === '--set') options.set = next();
+    else if (arg === '--jobs') options.jobs = Math.max(1, Number(next()) || 1);
     else throw new Error(`Unknown argument ${arg}`);
   }
   if (!options.run) throw new Error('--run <id> is required');
@@ -66,7 +72,8 @@ async function main() {
   const options = parseArgs(process.argv.slice(2));
   const cli = resolveDqlCli();
   const { tasks, missingDatabases } = readTasks();
-  const selected = tasks.filter((task) => (!options.db || task.db === options.db) && (!options.only || options.only.includes(task.id)));
+  const inSet = taskSet(options.set);
+  const selected = tasks.filter((task) => (!options.db || task.db === options.db) && (!options.only || options.only.includes(task.id)) && (!inSet || inSet.has(task.id)));
   const runDir = join(WORK, 'runs', options.run, options.condition);
   mkdirSync(join(runDir, 'predictions'), { recursive: true });
   const env = {
@@ -96,10 +103,12 @@ async function main() {
     writeFileSync(buildPath, `${JSON.stringify(build, null, 2)}\n`);
     if (patch && build.dirty) writeFileSync(join(runDir, 'build.patch'), patch);
   }
-  const summary = { run: options.run, condition: options.condition, provider: options.provider, model: options.model, dql: { version: dqlVersion(cli), source: cli.source, entry: cli.entry, build }, projects: { builtAt: projects?.builtAt ?? null, build: projectsBuild, sameBuild: sameCode(projectsBuild, build) }, startedAt: new Date().toISOString(), missingDatabases, tasks: selected.length, databases: {}, invalid: [] };
+  const summary = { run: options.run, condition: options.condition, provider: options.provider, model: options.model, dql: { version: dqlVersion(cli), source: cli.source, entry: cli.entry, build }, projects: { builtAt: projects?.builtAt ?? null, build: projectsBuild, sameBuild: sameCode(projectsBuild, build) }, set: options.set ?? 'full', startedAt: new Date().toISOString(), missingDatabases, tasks: selected.length, databases: {}, invalid: [] };
   const retried = new Set();
   const queue = [...byDb.entries()].sort(([a], [b]) => a.localeCompare(b));
-  while (queue.length) {
+  // One database per worker at a time; a worker takes the next from the queue.
+  let stopped = false;
+  const worker = async () => { while (queue.length && !stopped) {
     const [db, dbTasks] = queue.shift();
     const built = join(WORK, 'projects', options.condition, db);
     if (!existsSync(join(built, 'dql.config.json'))) throw new Error(`Build ${options.condition}/${db} first: node spider2/build.mjs --condition ${options.condition}`);
@@ -173,10 +182,15 @@ async function main() {
       console.error(`INVALID RUN: the provider refused calls on ${db}: ${outages[0]}`);
       writeFileSync(join(runDir, 'summary.json'), `${JSON.stringify(summary, null, 2)}\n`);
       process.exitCode = 3;
+      stopped = true;
       return;
     }
     console.error(`${options.condition}/${db}: ${answered.length}/${dbTasks.length} returned SQL`);
-  }
+  } };
+  // Workers start two seconds apart: each takes a free port for its runtime,
+  // and two asking at the same instant could be handed the same one.
+  await Promise.all(Array.from({ length: Math.min(options.jobs, queue.length) || 1 }, (_, index) => new Promise((done) => setTimeout(done, index * 2_000)).then(worker)));
+  if (stopped) return;
   summary.finishedAt = new Date().toISOString();
   writeFileSync(join(runDir, 'summary.json'), `${JSON.stringify(summary, null, 2)}\n`);
   console.log(`${options.condition}: ${Object.values(summary.databases).reduce((n, item) => n + item.answered.length, 0)}/${selected.length} returned SQL → ${relative(REPO_ROOT, runDir)}`);
