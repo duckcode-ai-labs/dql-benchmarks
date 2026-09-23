@@ -1,0 +1,415 @@
+# Seasons, races and circuits, and the drivers, constructors and status codes every fact table points to.
+domain: f1
+area:
+  id: calendar_and_participants
+  name: Calendar and participants
+  description: >-
+    The Formula 1 world championship from 1950 to 2024. A season (year) has races (Grands Prix),
+    each held at a circuit and numbered by round within the season. Drivers and constructors
+    (teams) take part in races. Status holds the finishing-status codes used by results.
+    The *_ext tables are derived copies of circuits, races, drivers and constructors with extra
+    precomputed columns; short-name lookups give display names.
+  intent_examples:
+    - races held at a circuit
+    - drivers by nationality
+    - races in a season
+    - constructor nationality
+entities:
+  - id: season
+    relation: main.seasons
+    business_name: Season
+    business_context: >-
+      One championship season (year, 1950 to 2024, 75 rows) with its Wikipedia url. Every race,
+      drive and team-driver rank belongs to a season through its year column. The 2024 season is
+      only partly played in this data: 24 races are scheduled but results, standings and laps
+      stop after round 12 (British Grand Prix, 2024-07-07).
+    analytical_role: dimension
+    grain: year
+    keys: [year]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: circuit
+    relation: main.circuits
+    business_name: Circuit
+    business_context: >-
+      One racing circuit (77 rows). circuit_ref is a unique lowercase text key (e.g. monza,
+      silverstone); name is the full circuit name; location is the town and country is the country
+      (e.g. UK, USA, Italy). lat/lng are decimal degrees and alt is altitude in metres; all filled.
+      Every circuit has hosted at least one race.
+    analytical_role: dimension
+    grain: circuit_id
+    keys: [circuit_id]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: circuits_ext
+    relation: main.circuits_ext
+    business_name: Circuit (extended)
+    business_context: >-
+      Derived copy of circuits (same 77 rows and identical columns) plus two precomputed columns:
+      last_race_year = the latest season with a race scheduled at the circuit, and number_of_races =
+      the count of races rows at the circuit, including the 2024 races that are scheduled but have
+      no results yet (for 12 circuits it differs from the count of races with results).
+    analytical_role: dimension
+    grain: circuit_id
+    keys: [circuit_id]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: race
+    relation: main.races
+    business_name: Race
+    business_context: >-
+      One Grand Prix (1,125 rows, 1950-05-13 to 2024-12-08). year + round is unique (round is the
+      race's order within the season). name is the Grand Prix name (e.g. "British Grand Prix"),
+      circuit_id the venue. date is text YYYY-MM-DD; time is text HH:MM:SS race start in UTC
+      (e.g. Australian GP 2023 at 05:00:00) and is filled for 394 races, NULL for older ones.
+      fp1..fp3, quali and sprint date/time columns are text and filled only from 2021 (90 races);
+      sprint_date is set only for sprint weekends. The 12 races of 2024 after 2024-07-07 are
+      scheduled only: they have no results, standings or laps.
+    analytical_role: dimension
+    grain: race_id
+    keys: [race_id]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: races_ext
+    relation: main.races_ext
+    business_name: Race (extended)
+    business_context: >-
+      Derived copy of races (same 1,125 rows, identical columns) plus: is_pit_data_available
+      (1 for the 273 races that have pit_stops rows, 2011 onward, else 0); short_name (short
+      Grand Prix name from short_grand_prix_names, e.g. "Britain", falling back to the full name
+      when the lookup has none); has_sprint (1 for the 15 races with sprint_results rows,
+      2021-2024); max_points (the most points one driver could score that weekend under that
+      season's system: 8, 9, 10, 25, 26, 29 or 34, winner's points plus any fastest-lap point and
+      sprint-winner points).
+    analytical_role: dimension
+    grain: race_id
+    keys: [race_id]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: short_grand_prix_name
+    relation: main.short_grand_prix_names
+    business_name: Short Grand Prix name
+    business_context: >-
+      Lookup from a full Grand Prix name (full_name, matches races.name) to a short display name
+      (short_name, e.g. "British Grand Prix" -> "Britain", "Mexico City Grand Prix" -> "Mexico").
+      40 rows; it does not cover every race name (e.g. Argentine, Swedish, Las Vegas GPs).
+    analytical_role: dimension
+    grain: full_name
+    keys: [full_name]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: driver
+    relation: main.drivers
+    business_name: Driver
+    business_context: >-
+      One Formula 1 driver (859 rows). driver_ref is a unique lowercase text key (e.g. hamilton);
+      forename and surname are filled and full_name is a generated column (forename || ' ' ||
+      surname). dob is the date of birth as text YYYY-MM-DD (1896 to 2005). nationality is a
+      demonym (British, American, Italian...). number (permanent car number) is filled for only 57
+      drivers and code (three-letter code, e.g. HAM) for 102; both are NULL for older drivers.
+    analytical_role: dimension
+    grain: driver_id
+    keys: [driver_id]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: drivers_ext
+    relation: main.drivers_ext
+    business_name: Driver (extended)
+    business_context: >-
+      Derived copy of drivers (same 859 rows). Identical to drivers except that code is filled for
+      every driver: where drivers.code is NULL a code is derived, mostly the first three letters of
+      the surname in upper case (738 of 757), so codes are not unique here (SCH is used by 15
+      drivers). full_name is stored, dob is text YYYY-MM-DD.
+    analytical_role: dimension
+    grain: driver_id
+    keys: [driver_id]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: constructor
+    relation: main.constructors
+    business_name: Constructor
+    business_context: >-
+      One constructor (team entry) (212 rows). constructor_ref is a unique lowercase text key
+      (e.g. mclaren, red_bull); name is the entrant name, which in the 1950s-70s often includes the
+      engine (e.g. "Cooper-Climax", "Lotus-Ford"); nationality is a demonym.
+    analytical_role: dimension
+    grain: constructor_id
+    keys: [constructor_id]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: constructors_ext
+    relation: main.constructors_ext
+    business_name: Constructor (extended)
+    business_context: >-
+      Derived copy of constructors (same 212 rows) plus short_name: the short team name from
+      short_constructor_names when listed (e.g. "Cooper-Climax" -> "Cooper", "Haas F1 Team" ->
+      "Haas"), otherwise the constructor name. Filled for all 212.
+    analytical_role: dimension
+    grain: constructor_id
+    keys: [constructor_id]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: short_constructor_name
+    relation: main.short_constructor_names
+    business_name: Short constructor name
+    business_context: >-
+      Lookup from constructor_ref to a short team name that groups engine variants (44 rows;
+      e.g. lotus-climax, lotus-ford, team_lotus -> Lotus). Note one value is spelled "Spkyer" for
+      spyker_mf1 in the source.
+    analytical_role: dimension
+    grain: constructor_ref
+    keys: [constructor_ref]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: livery
+    relation: main.liveries
+    business_name: Livery colour
+    business_context: >-
+      A constructor's primary livery colour over a span of seasons (64 rows): constructor_ref,
+      start_year, end_year (NULL = still current, 10 rows), primary_hex_code (e.g. #900000).
+      constructor_ref + start_year is unique. Three rows use constructor_ref "benneton", which is
+      not a constructors value (the team is "benetton").
+    analytical_role: dimension
+    grain: constructor_ref, start_year
+    keys: [constructor_ref, start_year]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: status
+    relation: main.status
+    business_name: Finishing status
+    business_context: >-
+      Lookup of finishing-status codes used by results, sprint_results and retirements (139 rows).
+      status_id 1 = "Finished"; "+1 Lap", "+2 Laps"... (ids 11-19 and others) = classified
+      finisher that many laps behind the winner; 2 = Disqualified, 54 = Withdrew, 62 = Not
+      classified, 81 = Did not qualify, 97 = Did not prequalify, 96 = Excluded; the rest are
+      retirement causes (Engine, Accident, Collision, Gearbox, Spun off, ...).
+    analytical_role: dimension
+    grain: status_id
+    keys: [status_id]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+relationships:
+  - id: race_to_season
+    from: race
+    to: season
+    verb: belongs to
+    keys: [{ from: year, to: year }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 1,125 from rows, 75 to rows, 1,125 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 24 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "race_id", keys: [race_id] }
+      to: { grain: "year", keys: [year] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:30.167Z'
+      query_fingerprint: 7cf764d107a97aee8fd977c093d21f009c53660b10cd70d18697373143b8c5c7
+      proof_fingerprint: 691b4c2e9b12ba1d2995fdb000a0103a7630e99dff2c0b785e272b49927307d5
+      from_rows: 1125
+      to_rows: 75
+      joined_rows: 1125
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 24
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: race_to_circuit
+    from: race
+    to: circuit
+    verb: is held at
+    keys: [{ from: circuit_id, to: circuit_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 1,125 from rows, 77 to rows, 1,125 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 74 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "race_id", keys: [race_id] }
+      to: { grain: "circuit_id", keys: [circuit_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:30.165Z'
+      query_fingerprint: d745d0dfb2b4e393b9a7afc0fa2c1aa46b20a031fce2db5aa1ce0161853beb6d
+      proof_fingerprint: 6cdec320a6f8e3ef0a179f05cc46932b3c5ced266944ac0cca8d980d4832fb6c
+      from_rows: 1125
+      to_rows: 77
+      joined_rows: 1125
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 74
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: races_ext_to_race
+    from: races_ext
+    to: race
+    verb: extends
+    keys: [{ from: race_id, to: race_id }]
+    cardinality: one_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 1,125 from rows, 1,125 to rows, 1,125 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 1 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "race_id", keys: [race_id] }
+      to: { grain: "race_id", keys: [race_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:30.167Z'
+      query_fingerprint: 91b887a4ed432dbbd7e10038cbe6d8489af9757d9bfb9837fcfd19c1a27148d4
+      proof_fingerprint: 87237a35208681530a08f61134f25a935adc08d827036052ec3cac7bab2bce8e
+      from_rows: 1125
+      to_rows: 1125
+      joined_rows: 1125
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: races_ext_to_short_grand_prix_name
+    from: races_ext
+    to: short_grand_prix_name
+    verb: is shortened by
+    keys: [{ from: name, to: full_name }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: draft
+    description: "Draft: many_to_one holds (full_name unique) and 1,033 of 1,125 races join, but the lookup has no row for 92 races (e.g. Argentine, Swedish, Las Vegas GPs), so an inner join drops races. races_ext.short_name already carries the short name with a fallback to the full name; use that column instead of this join."
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:30.168Z'
+      query_fingerprint: a6ac30adba58d8c924d6547f3a1cec635a9f6b1fe38a64a2f6da69a72e83021c
+      proof_fingerprint: 651bc502000712d13ccc759ab787bebe924de7c0782fd0909e53f7a48f4afef1
+      from_rows: 1125
+      to_rows: 40
+      joined_rows: 1033
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 92
+      max_from_per_key: 75
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: circuits_ext_to_circuit
+    from: circuits_ext
+    to: circuit
+    verb: extends
+    keys: [{ from: circuit_id, to: circuit_id }]
+    cardinality: one_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 77 from rows, 77 to rows, 77 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 1 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "circuit_id", keys: [circuit_id] }
+      to: { grain: "circuit_id", keys: [circuit_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:25.762Z'
+      query_fingerprint: 9e0098b9723ce04fdb1a0a8fdbdb3d5acd2388049e6f5e3c7fdcc55fa4c485e2
+      proof_fingerprint: 30a9d0e2d753ee8fcc8eac619c4dafeaa6951efd84d84dcdb03637d7b6ccbb86
+      from_rows: 77
+      to_rows: 77
+      joined_rows: 77
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: drivers_ext_to_driver
+    from: drivers_ext
+    to: driver
+    verb: extends
+    keys: [{ from: driver_id, to: driver_id }]
+    cardinality: one_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 859 from rows, 859 to rows, 859 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 1 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "driver_id", keys: [driver_id] }
+      to: { grain: "driver_id", keys: [driver_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:25.918Z'
+      query_fingerprint: 4d6c4e17853a04c834f44e76d1e509495bc5322cb64398a1d10bd54f3c67a78f
+      proof_fingerprint: d64fd634e0323154d60d9be1753257103bd53d30ae03a44c5716c295749314ce
+      from_rows: 859
+      to_rows: 859
+      joined_rows: 859
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: constructors_ext_to_constructor
+    from: constructors_ext
+    to: constructor
+    verb: extends
+    keys: [{ from: constructor_id, to: constructor_id }]
+    cardinality: one_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 212 from rows, 212 to rows, 212 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 1 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "constructor_id", keys: [constructor_id] }
+      to: { grain: "constructor_id", keys: [constructor_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:25.824Z'
+      query_fingerprint: 18080e0c8fb71c766d2c119e8fb7c395307896beaf4d2bce27a971fe5f6c6512
+      proof_fingerprint: e7f46b5177bc30f406d8e15622737569f56e6f9e65b66456704e1890c4715bcd
+      from_rows: 212
+      to_rows: 212
+      joined_rows: 212
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: short_constructor_name_to_constructor
+    from: short_constructor_name
+    to: constructor
+    verb: shortens
+    keys: [{ from: constructor_ref, to: constructor_ref }]
+    cardinality: one_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 44 from rows, 212 to rows, 44 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 1 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "constructor_ref", keys: [constructor_ref] }
+      to: { grain: "constructor_id", keys: [constructor_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:30.277Z'
+      query_fingerprint: c0bf23ea60c50390f3e6df749290a35c73321f965ff315104928646b2646886d
+      proof_fingerprint: efdca61ccc1b4cd7465daa46ee13f073c474f108b3cda3d1efa0195290c0facb
+      from_rows: 44
+      to_rows: 212
+      joined_rows: 44
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: livery_to_constructor
+    from: livery
+    to: constructor
+    verb: is worn by
+    keys: [{ from: constructor_ref, to: constructor_ref }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: draft
+    description: "Draft: 61 of 64 livery rows join constructors on constructor_ref and constructor_ref is unique in constructors, but 3 rows use \"benneton\", which is not a constructors value (the team is \"benetton\"). The keys do not all match, so this is not certified."
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:29.345Z'
+      query_fingerprint: f77bab60544283884f012d5d33055c0f717ba85ba154825c348e8557575e8622
+      proof_fingerprint: 94232c20da4769cf1069cafc0026fddeaee75ee07530e54a38fd06fe3ed66830
+      from_rows: 64
+      to_rows: 212
+      joined_rows: 61
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 3
+      max_from_per_key: 6
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."

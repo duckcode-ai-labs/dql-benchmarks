@@ -1,0 +1,280 @@
+# Drivers' and constructors' championship tables, recorded after every race.
+domain: f1
+area:
+  id: championship_standings
+  name: Championship standings
+  description: >-
+    Standings are cumulative championship tables snapshotted after each race of a season:
+    points, position and wins so far that season. The final standing of a season is the
+    snapshot at the season's last race with standings. driver_standings_ext completes the
+    drivers' table with the drivers who raced but were missing from the source standings.
+  references: [race, driver, constructor]
+  intent_examples:
+    - world champion of a season
+    - championship position after a race
+    - constructors' champion
+    - points gap in the championship
+entities:
+  - id: driver_standing
+    relation: main.driver_standings
+    business_name: Driver championship standing
+    business_context: >-
+      A driver's drivers'-championship standing after one race (34,595 rows, 1950 to
+      2024-07-07). points = cumulative championship points so far that season (race points plus
+      sprint points); wins = cumulative race wins so far that season; position = championship
+      position (position_text is the same as text; 'D' once = disqualified from the
+      1997 championship). race_id + driver_id is unique. Up to 1990 the points are the championship
+      points after dropped scores (best-N results rules), so for some drivers they are lower than
+      the sum of their race points. Not every driver who started a race has a row (see
+      driver_standings_ext).
+    analytical_role: snapshot
+    grain: driver_standings_id
+    keys: [driver_standings_id]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: driver_standings_ext
+    relation: main.driver_standings_ext
+    business_name: Driver championship standing (completed)
+    business_context: >-
+      Derived copy of driver_standings (all 34,595 rows unchanged) plus 417 added rows for drivers
+      who have a result in that race but no standings row in the source. Added rows have
+      driver_standings_id = 0, points 0, wins 0, position_text NULL and a position placed after
+      the recorded drivers. race_id + driver_id is unique (driver_standings_id is not: 0 repeats).
+    analytical_role: snapshot
+    grain: race_id, driver_id
+    keys: [race_id, driver_id]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: constructor_standing
+    relation: main.constructor_standings
+    business_name: Constructor championship standing
+    business_context: >-
+      A constructor's constructors'-championship standing after one race (13,271 rows, 1958 to
+      2024-07-07). points = cumulative constructor points so far that season; wins = cumulative
+      race wins; position = championship position; position_text 'E' = excluded (McLaren 2007,
+      whose position is stored as 11, last). race_id + constructor_id is unique.
+    analytical_role: snapshot
+    grain: constructor_standings_id
+    keys: [constructor_standings_id]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+relationships:
+  - id: driver_standing_to_race
+    from: driver_standing
+    to: race
+    verb: is the table after
+    keys: [{ from: race_id, to: race_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 34,595 from rows, 1,125 to rows, 34,595 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 108 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "driver_standings_id", keys: [driver_standings_id] }
+      to: { grain: "race_id", keys: [race_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:25.838Z'
+      query_fingerprint: 036d5afebcf833a539011655abf476eeec4d78d578cdd57fcdd1c32ee400e0d6
+      proof_fingerprint: ddcbf16c104494536fdf7309cc472c7707cf3c216a72969d14271f6db4e92119
+      from_rows: 34595
+      to_rows: 1125
+      joined_rows: 34595
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 108
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: driver_standing_to_driver
+    from: driver_standing
+    to: driver
+    verb: ranks
+    keys: [{ from: driver_id, to: driver_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 34,595 from rows, 859 to rows, 34,595 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 394 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "driver_standings_id", keys: [driver_standings_id] }
+      to: { grain: "driver_id", keys: [driver_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:25.829Z'
+      query_fingerprint: 1b0a97f5fd2aa8d7c27e2a545e5baf9f8d7d53bc0e9acf445a119ab3fac94581
+      proof_fingerprint: d2b6b793f29f3df92c793eb94bfc3c821f9a531539cdd8f680ffec99cc20e470
+      from_rows: 34595
+      to_rows: 859
+      joined_rows: 34595
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 394
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: driver_standings_ext_to_race
+    from: driver_standings_ext
+    to: race
+    verb: is the table after
+    keys: [{ from: race_id, to: race_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 35,012 from rows, 1,125 to rows, 35,012 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 108 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "race_id, driver_id", keys: [race_id, driver_id] }
+      to: { grain: "race_id", keys: [race_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:25.914Z'
+      query_fingerprint: 8a04ea0ec29116467c24024cb518234004edcb4c3861a8d4b04750bfab684098
+      proof_fingerprint: 21ab199b0e2a23706ae5bd1ce80f8f6b012b16af2d373ed47b707a1f47eb2320
+      from_rows: 35012
+      to_rows: 1125
+      joined_rows: 35012
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 108
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: driver_standings_ext_to_driver
+    from: driver_standings_ext
+    to: driver
+    verb: ranks
+    keys: [{ from: driver_id, to: driver_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 35,012 from rows, 859 to rows, 35,012 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 394 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "race_id, driver_id", keys: [race_id, driver_id] }
+      to: { grain: "driver_id", keys: [driver_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:25.843Z'
+      query_fingerprint: 6b273fb48e84eafd13133ceac54e5e0d18bd86a7722dff72229338e441c298a5
+      proof_fingerprint: 72a979f2c94153ccce39553bedfb59ad8acf93c4b47256f99b26ea588b8d287c
+      from_rows: 35012
+      to_rows: 859
+      joined_rows: 35012
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 394
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: driver_standings_ext_to_driver_standing
+    from: driver_standings_ext
+    to: driver_standing
+    verb: completes
+    keys:
+      - { from: race_id, to: race_id }
+      - { from: driver_id, to: driver_id }
+    cardinality: one_to_one
+    fanout: safe
+    optionality: { from: required, to: optional }
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 35,012 from rows, 34,595 to rows, 34,595 joined rows, 417 unmatched from rows, 0 null keys; at most 1 to row per key (at most 1 from rows per key), so the declared cardinality holds. The 417 unmatched rows are the rows the ext table adds (driver_standings_id = 0); every original standings row joins once."
+    certifiedAgainst:
+      from: { grain: "race_id, driver_id", keys: [race_id, driver_id] }
+      to: { grain: "driver_standings_id", keys: [driver_standings_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:25.850Z'
+      query_fingerprint: 7c4920d2d5086c6181bdd5dee5ecda6af8bf9a31ed21a72c121578ceb1c8502d
+      proof_fingerprint: 001a4f88ccc49decd286aae5010a114dd63772eb8e989f0ba7e588b270efe8c2
+      from_rows: 35012
+      to_rows: 34595
+      joined_rows: 34595
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 417
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: constructor_standing_to_race
+    from: constructor_standing
+    to: race
+    verb: is the table after
+    keys: [{ from: race_id, to: race_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 13,271 from rows, 1,125 to rows, 13,271 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 22 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "constructor_standings_id", keys: [constructor_standings_id] }
+      to: { grain: "race_id", keys: [race_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:25.822Z'
+      query_fingerprint: 2e9507a9b9fc9b1371729a5a04646d611195b9f03c900d09455692e553252f9f
+      proof_fingerprint: 5a5eb1dc677c06a5aac2e9b6d38aab95367e1fbed51ed07c54595a593c09dcca
+      from_rows: 13271
+      to_rows: 1125
+      joined_rows: 13271
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 22
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: constructor_standing_to_constructor
+    from: constructor_standing
+    to: constructor
+    verb: ranks
+    keys: [{ from: constructor_id, to: constructor_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 13,271 from rows, 212 to rows, 13,271 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 1046 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "constructor_standings_id", keys: [constructor_standings_id] }
+      to: { grain: "constructor_id", keys: [constructor_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:25.819Z'
+      query_fingerprint: c982393994e8a127dfc90eb9fa1160f27fb799dbce3bac383835e53f4e8cb3fd
+      proof_fingerprint: 21eac8e591264b35309a2d9580886916b5559d0205d1dac2bb48fe768843f2ad
+      from_rows: 13271
+      to_rows: 212
+      joined_rows: 13271
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1046
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: constructor_result_to_constructor_standing
+    from: constructor_result
+    to: constructor_standing
+    verb: adds to
+    keys:
+      - { from: race_id, to: race_id }
+      - { from: constructor_id, to: constructor_id }
+    cardinality: one_to_one
+    fanout: safe
+    optionality: { from: optional, to: optional }
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 12,505 from rows, 13,271 to rows, 12,377 joined rows, 128 unmatched from rows, 0 null keys; at most 1 to row per key (at most 1 from rows per key), so the declared cardinality holds. Optional on both sides: 128 constructor_results rows have no standings row (1959-2015) and 894 standings rows have no constructor_results row for that race; the rows that match pair one-to-one."
+    certifiedAgainst:
+      from: { grain: "constructor_results_id", keys: [constructor_results_id] }
+      to: { grain: "constructor_standings_id", keys: [constructor_standings_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:25.795Z'
+      query_fingerprint: b9f4ad232d382b6359d98e66ee11e5074f5f8f28366937485cd95890206a9ab9
+      proof_fingerprint: 0dae4af4fd3cb8dc95ed09eb62c1878fff80d60104ed0687e6e6a7cef8d3acea
+      from_rows: 12505
+      to_rows: 13271
+      joined_rows: 12377
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 128
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."

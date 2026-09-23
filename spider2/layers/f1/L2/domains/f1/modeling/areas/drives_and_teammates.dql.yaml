@@ -1,0 +1,249 @@
+# Which driver drove for which constructor in a season, and how teammates rank within a team.
+domain: f1
+area:
+  id: drives_and_teammates
+  name: Drives and teammates
+  description: >-
+    drives lists each driver's stints with a constructor within a season, by round. team_driver_ranks
+    orders the drivers of a constructor in a season (1 = lead driver); tdr_overrides holds the
+    manual corrections to that order.
+  references: [season, driver, constructor]
+  intent_examples:
+    - drivers who drove for a team in a season
+    - drivers who changed team mid-season
+    - teammates
+    - lead driver of a team
+entities:
+  - id: drive
+    relation: main.drives
+    business_name: Drive (stint)
+    business_context: >-
+      Derived: one continuous stint of a driver in a season (3,784 rows). A stint with a
+      constructor (drive_id 1, 2, ... in order within the season) covers rounds first_round to
+      last_round. Rows with drive_id = -1 and constructor_id = -1 (163) are gaps: rounds between
+      two stints in which the driver had no result. is_first_drive_of_season /
+      is_final_drive_of_season are 1/0 flags (both 0 on gap rows). A driver entered in two cars in
+      the same round (1950s) has two stints with the same drive_id, so the grain is year +
+      driver_id + constructor_id + first_round.
+    analytical_role: event
+    grain: year, driver_id, constructor_id, first_round
+    keys: [year, driver_id, constructor_id, first_round]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: team_driver_rank
+    relation: main.team_driver_ranks
+    business_name: Team driver rank
+    business_context: >-
+      One driver of one constructor in one season (3,530 rows) with team_driver_rank = the
+      driver's rank within that team that season (1 = lead driver; up to 29 for teams with many
+      entrants in the 1950s). Carries both ids and refs (constructor_ref, driver_ref). year +
+      constructor_id + driver_id is unique and so is year + constructor_id + team_driver_rank.
+      The rank is supplied with the data: it is not reproducible from points or races alone
+      (points order matches 2,062 of 3,530 rows) and includes the tdr_overrides corrections.
+    analytical_role: dimension
+    grain: year, constructor_id, driver_id
+    keys: [year, constructor_id, driver_id]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: tdr_override
+    relation: main.tdr_overrides
+    business_name: Team driver rank override
+    business_context: >-
+      Manual corrections of team_driver_rank (48 rows, 2004 to 2022) keyed by year,
+      constructor_ref and driver_ref. All 48 are already applied in team_driver_ranks.
+    analytical_role: dimension
+    grain: year, constructor_ref, driver_ref
+    keys: [year, constructor_ref, driver_ref]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+relationships:
+  - id: drive_to_season
+    from: drive
+    to: season
+    verb: is in
+    keys: [{ from: year, to: year }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 3,784 from rows, 75 to rows, 3,784 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 122 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "year, driver_id, constructor_id, first_round", keys: [year, driver_id, constructor_id, first_round] }
+      to: { grain: "year", keys: [year] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:25.828Z'
+      query_fingerprint: 911e940da61f1682220da98951c4b791bc42fa1fdd81497631767df5cabd8775
+      proof_fingerprint: 9e10f3993b02df3d1326cd5ebd63c0f60b7b231fe7d24589f8d407b777fd22c9
+      from_rows: 3784
+      to_rows: 75
+      joined_rows: 3784
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 122
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: drive_to_driver
+    from: drive
+    to: driver
+    verb: is driven by
+    keys: [{ from: driver_id, to: driver_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 3,784 from rows, 859 to rows, 3,784 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 30 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "year, driver_id, constructor_id, first_round", keys: [year, driver_id, constructor_id, first_round] }
+      to: { grain: "driver_id", keys: [driver_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:25.826Z'
+      query_fingerprint: f03002ce2c824cd28a7f266a7a3661d4e23ed83f40ed97dc5ba03d2a768bb318
+      proof_fingerprint: 91e276249e88986b88c129452305e60134c4d96b95e1868191e5e974d83e6938
+      from_rows: 3784
+      to_rows: 859
+      joined_rows: 3784
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 30
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: drive_to_constructor
+    from: drive
+    to: constructor
+    verb: is for
+    keys: [{ from: constructor_id, to: constructor_id }]
+    cardinality: many_to_one
+    fanout: safe
+    optionality: { from: optional, to: optional }
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 3,784 from rows, 212 to rows, 3,621 joined rows, 163 unmatched from rows, 0 null keys; at most 1 to row per key (at most 274 from rows per key), so the declared cardinality holds. The 163 unmatched rows are the gap rows (drive_id = -1, constructor_id = -1: rounds with no drive); every real stint joins."
+    certifiedAgainst:
+      from: { grain: "year, driver_id, constructor_id, first_round", keys: [year, driver_id, constructor_id, first_round] }
+      to: { grain: "constructor_id", keys: [constructor_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:25.825Z'
+      query_fingerprint: 142bf2ce8a149acd71beacc7dd90794addd5dad3d79932429ac4ea58d5078fac
+      proof_fingerprint: 8e4553f9e7d4125396a1c241d176c9c7ae5424fb36e3fa8bb83c3145d69b88fa
+      from_rows: 3784
+      to_rows: 212
+      joined_rows: 3621
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 163
+      max_from_per_key: 274
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: team_driver_rank_to_season
+    from: team_driver_rank
+    to: season
+    verb: is in
+    keys: [{ from: year, to: year }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 3,530 from rows, 75 to rows, 3,530 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 118 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "year, constructor_id, driver_id", keys: [year, constructor_id, driver_id] }
+      to: { grain: "year", keys: [year] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:30.318Z'
+      query_fingerprint: 74a21eb9be03a6e009ae55a3ebff49aefff278f27e79c45f4945fa2e0417a7a6
+      proof_fingerprint: 60d9421a0cc6d4072f7a1f1c61635eb4cd4c66cd76bababc865d3dbc94249d1f
+      from_rows: 3530
+      to_rows: 75
+      joined_rows: 3530
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 118
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: team_driver_rank_to_driver
+    from: team_driver_rank
+    to: driver
+    verb: ranks
+    keys: [{ from: driver_id, to: driver_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 3,530 from rows, 859 to rows, 3,530 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 23 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "year, constructor_id, driver_id", keys: [year, constructor_id, driver_id] }
+      to: { grain: "driver_id", keys: [driver_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:30.316Z'
+      query_fingerprint: 1d841c7b8c503949b500aa7fa2b3157d8c290390638476c27e509837949fc3ca
+      proof_fingerprint: b42d7a22e5ec66ba755091ce9a99de2571cf03f372cf291651edbeccd038b9f0
+      from_rows: 3530
+      to_rows: 859
+      joined_rows: 3530
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 23
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: team_driver_rank_to_constructor
+    from: team_driver_rank
+    to: constructor
+    verb: ranks drivers of
+    keys: [{ from: constructor_id, to: constructor_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 3,530 from rows, 212 to rows, 3,530 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 271 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "year, constructor_id, driver_id", keys: [year, constructor_id, driver_id] }
+      to: { grain: "constructor_id", keys: [constructor_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:30.315Z'
+      query_fingerprint: 330d1844927edbc8d29673e8de1037212041db1fa34d8c21f08de3bf5109d082
+      proof_fingerprint: 0bbe00ad72ad63e51373139286cb4801569539b9f7cf5967b720869103a2d9ae
+      from_rows: 3530
+      to_rows: 212
+      joined_rows: 3530
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 271
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: tdr_override_to_team_driver_rank
+    from: tdr_override
+    to: team_driver_rank
+    verb: corrects
+    keys:
+      - { from: year, to: year }
+      - { from: constructor_ref, to: constructor_ref }
+      - { from: driver_ref, to: driver_ref }
+    cardinality: one_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 48 from rows, 3,530 to rows, 48 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 1 from rows per key), so the declared cardinality holds. All 48 overrides join, and the joined team_driver_rank equals the override value on all 48 rows."
+    certifiedAgainst:
+      from: { grain: "year, constructor_ref, driver_ref", keys: [year, constructor_ref, driver_ref] }
+      to: { grain: "year, constructor_id, driver_id", keys: [year, constructor_id, driver_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:30.308Z'
+      query_fingerprint: 16bdbb5ec2ed95f521e55e1571535a3a85b93828fdc6daa4d96e2a669cc28f11
+      proof_fingerprint: 0b34cd9cb6b1b65cc00f00f67b14e76315c65a060e9faeaab7f2a93e3d53523f
+      from_rows: 48
+      to_rows: 3530
+      joined_rows: 48
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."

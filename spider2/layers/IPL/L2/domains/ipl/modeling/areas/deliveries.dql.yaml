@@ -1,0 +1,757 @@
+# Ball-by-ball facts: each delivery bowled and the runs, extras and dismissals recorded on it.
+domain: ipl
+area:
+  id: deliveries
+  name: 'Deliveries: runs, extras and wickets'
+  description: >-
+    ball_by_ball is the record of each delivery (who batted, who bowled); batsman_scored, extra_runs and wicket_taken hang off it one-to-one
+    on match_id + innings_no + over_id + ball_id and hold the runs off the bat, the extras and the dismissals. Innings runs = runs off the
+    bat + extras, summed from batsman_scored and extra_runs directly (not through ball_by_ball, which misses one delivery).
+  references:
+    - match
+    - player
+    - player_match
+    - team
+entities:
+  - id: ball_by_ball
+    relation: main.ball_by_ball
+    business_name: Delivery
+    analytical_role: event
+    grain: match_id, innings_no, over_id, ball_id
+    keys:
+      - match_id
+      - innings_no
+      - over_id
+      - ball_id
+    business_context: >-
+      One delivery bowled (134,703 rows over 568 matches; unique on match_id + innings_no + over_id + ball_id). innings_no is 1 or 2 only
+      (no super overs). over_id is 1-20 (the first over is 1). ball_id is the delivery sequence within the over, 1-9: wides and no-balls are
+      re-bowled, so an over with extras has more than 6 deliveries. team_batting and team_bowling are team ids; striker (batter on strike),
+      non_striker and bowler are player ids; striker_batting_position is 1-11. All columns are filled. This table holds who faced and who
+      bowled but no runs: runs off the bat are in batsman_scored, extras in extra_runs, dismissals in wicket_taken. Known defects: in
+      matches 392202, 392207 and 419119, 169 second-innings rows have team_batting and team_bowling swapped (player_match gives the right
+      team); the first delivery of match 335987 (a leg-bye) is missing here but present in extra_runs. An innings can end before over 20
+      (all out, target reached, or a rain-shortened match).
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: batsman_scored
+    relation: main.batsman_scored
+    business_name: Runs off the bat
+    analytical_role: event
+    grain: match_id, innings_no, over_id, ball_id
+    keys:
+      - match_id
+      - innings_no
+      - over_id
+      - ball_id
+    business_context: >-
+      Runs the striker scored off the bat on one delivery (131,259 rows; runs_scored 0-6: 0 = dot ball, 4 and 6 are boundaries). Every row
+      matches a delivery in ball_by_ball. Every delivery has a row except most wides. Extras are not included here: byes, leg-byes, wides,
+      no-ball and penalty runs are in extra_runs. The batter credited is ball_by_ball.striker on the same delivery.
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: extra_run
+    relation: main.extra_runs
+    business_name: Extras
+    analytical_role: event
+    grain: match_id, innings_no, over_id, ball_id
+    keys:
+      - match_id
+      - innings_no
+      - over_id
+      - ball_id
+    business_context: >-
+      Extras conceded on one delivery (7,349 rows; one row per delivery that had extras). extra_type is "wides", "legbyes", "noballs",
+      "byes" or "penalty". extra_runs (1-5) is the total extras on that delivery, e.g. a wide that ran to the boundary is 5. Runs the batter
+      hit off a no-ball are in batsman_scored, not here. One row (match 335987, innings 1, over 1, ball 1) has no delivery row in
+      ball_by_ball.
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: wicket_taken
+    relation: main.wicket_taken
+    business_name: Dismissal
+    analytical_role: event
+    grain: match_id, innings_no, over_id, ball_id
+    keys:
+      - match_id
+      - innings_no
+      - over_id
+      - ball_id
+    business_context: >-
+      One batter out on one delivery (6,618 rows; at most one per delivery). player_out is the dismissed player (usually the striker; a
+      non-striker is out only by run out). kind_out: caught, bowled, run out, lbw, stumped, caught and bowled, retired hurt, hit wicket,
+      obstructing the field. There is no bowler or fielder column: the bowler is ball_by_ball.bowler on the same delivery. Every row matches
+      a delivery in ball_by_ball.
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+relationships:
+  - id: batsman_scored_to_ball_by_ball
+    from: batsman_scored
+    to: ball_by_ball
+    verb: is scored on
+    description: >-
+      The runs-off-the-bat row of a delivery, joined on all four delivery key columns (match_id, innings_no, over_id, ball_id). Gives the
+      striker, bowler and batting team of the runs. Checked on the warehouse 2026-09-23: 131259 batsman_scored rows, 131259 join, 0
+      unmatched (0.00%), 0 null keys, at most 1 ball_by_ball row per key and at most 1 batsman_scored row per key.
+    keys:
+      - from: match_id
+        to: match_id
+      - from: innings_no
+        to: innings_no
+      - from: over_id
+        to: over_id
+      - from: ball_id
+        to: ball_id
+    cardinality: one_to_one
+    fanout: safe
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    certifiedAgainst:
+      from:
+        grain: match_id, innings_no, over_id, ball_id
+        keys:
+          - match_id
+          - innings_no
+          - over_id
+          - ball_id
+      to:
+        grain: match_id, innings_no, over_id, ball_id
+        keys:
+          - match_id
+          - innings_no
+          - over_id
+          - ball_id
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:02.117Z'
+      query_fingerprint: 367afadb8e9ecbec8cc3e0204adc7ce7b1d0a615f01540c1fd1a86139e0bb3b9
+      proof_fingerprint: f0e6548da8f8862c7963f475eb2c83dd96cc59fbe813dd5fbee592dd317dac3b
+      from_rows: 131259
+      to_rows: 134703
+      joined_rows: 131259
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: extra_run_to_ball_by_ball
+    from: extra_run
+    to: ball_by_ball
+    verb: is conceded on
+    description: >-
+      The extras row of a delivery, joined on all four delivery key columns. Gives the bowler charged with wides and no-balls. Checked on
+      the warehouse 2026-09-23: 7349 extra_run rows, 7348 join, 1 unmatched (0.01%), 0 null keys, at most 1 ball_by_ball row per key and at
+      most 1 extra_run row per key. The unmatched rows are all the first delivery of match 335987, missing from ball_by_ball; join LEFT so
+      they are kept.
+    keys:
+      - from: match_id
+        to: match_id
+      - from: innings_no
+        to: innings_no
+      - from: over_id
+        to: over_id
+      - from: ball_id
+        to: ball_id
+    cardinality: one_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    certifiedAgainst:
+      from:
+        grain: match_id, innings_no, over_id, ball_id
+        keys:
+          - match_id
+          - innings_no
+          - over_id
+          - ball_id
+      to:
+        grain: match_id, innings_no, over_id, ball_id
+        keys:
+          - match_id
+          - innings_no
+          - over_id
+          - ball_id
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:02.451Z'
+      query_fingerprint: 8517ea7a57763f52c913ae68a2f2456ce08014b3a6902cd9cb00be29d737f6ae
+      proof_fingerprint: 0baabcc46788892c2d2b882d96ccaef9ff3bd1eabc63cf3aafc52c86ae1a1333
+      from_rows: 7349
+      to_rows: 134703
+      joined_rows: 7348
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 1
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: wicket_taken_to_ball_by_ball
+    from: wicket_taken
+    to: ball_by_ball
+    verb: falls on
+    description: >-
+      The dismissal on a delivery, joined on all four delivery key columns. Gives the bowler (ball_by_ball.bowler) the wicket fell to.
+      Checked on the warehouse 2026-09-23: 6618 wicket_taken rows, 6618 join, 0 unmatched (0.00%), 0 null keys, at most 1 ball_by_ball row
+      per key and at most 1 wicket_taken row per key.
+    keys:
+      - from: match_id
+        to: match_id
+      - from: innings_no
+        to: innings_no
+      - from: over_id
+        to: over_id
+      - from: ball_id
+        to: ball_id
+    cardinality: one_to_one
+    fanout: safe
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    certifiedAgainst:
+      from:
+        grain: match_id, innings_no, over_id, ball_id
+        keys:
+          - match_id
+          - innings_no
+          - over_id
+          - ball_id
+      to:
+        grain: match_id, innings_no, over_id, ball_id
+        keys:
+          - match_id
+          - innings_no
+          - over_id
+          - ball_id
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:02.634Z'
+      query_fingerprint: c0b6064f3665f4a759869a6fc4426293628c62d57ac203e6291101c88a119cb6
+      proof_fingerprint: d2c3aaa56333edae160d1c9201e87ef278c47cf908a41ff51dbe5310bcca89c1
+      from_rows: 6618
+      to_rows: 134703
+      joined_rows: 6618
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: ball_by_ball_to_match
+    from: ball_by_ball
+    to: match
+    verb: is bowled in
+    description: >-
+      Each delivery belongs to one match (for season, date, venue, result). Checked on the warehouse 2026-09-23: 134703 ball_by_ball rows,
+      134453 join, 250 unmatched (0.19%), 0 null keys, at most 1 match row per key. The unmatched rows are all match 419136, which is not in
+      match; join LEFT so they are kept.
+    keys:
+      - from: match_id
+        to: match_id
+    cardinality: many_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    certifiedAgainst:
+      from:
+        grain: match_id, innings_no, over_id, ball_id
+        keys:
+          - match_id
+          - innings_no
+          - over_id
+          - ball_id
+      to:
+        grain: match_id
+        keys:
+          - match_id
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:02.813Z'
+      query_fingerprint: 898a267d5cd22cf56b34d19d2dd46733a328d5e0d0ca9659f438c82425b5a2a5
+      proof_fingerprint: 68cb2551fb657c0b9326902d3af9d6bfc884ac8a33bf8bd245d18f9bcf0dad93
+      from_rows: 134703
+      to_rows: 567
+      joined_rows: 134453
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 250
+      max_from_per_key: 261
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: batsman_scored_to_match
+    from: batsman_scored
+    to: match
+    verb: is scored in
+    description: >-
+      Runs off the bat belong to one match. Checked on the warehouse 2026-09-23: 131259 batsman_scored rows, 131017 join, 242 unmatched
+      (0.18%), 0 null keys, at most 1 match row per key. The unmatched rows are all match 419136, which is not in match; join LEFT so they
+      are kept.
+    keys:
+      - from: match_id
+        to: match_id
+    cardinality: many_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    certifiedAgainst:
+      from:
+        grain: match_id, innings_no, over_id, ball_id
+        keys:
+          - match_id
+          - innings_no
+          - over_id
+          - ball_id
+      to:
+        grain: match_id
+        keys:
+          - match_id
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:02.822Z'
+      query_fingerprint: 34b1a6992ca944fb560e400527f7ba36ff88d63ec7613c5cdcb460fe1ed59481
+      proof_fingerprint: 124896340091cea59d3019ffb1aacd428fb1038bb6b773fbb5e0c614e25bb348
+      from_rows: 131259
+      to_rows: 567
+      joined_rows: 131017
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 242
+      max_from_per_key: 255
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: extra_run_to_match
+    from: extra_run
+    to: match
+    verb: is conceded in
+    description: >-
+      Extras belong to one match. Checked on the warehouse 2026-09-23: 7349 extra_run rows, 7334 join, 15 unmatched (0.20%), 0 null keys, at
+      most 1 match row per key. The unmatched rows are all match 419136, which is not in match; join LEFT so they are kept.
+    keys:
+      - from: match_id
+        to: match_id
+    cardinality: many_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    certifiedAgainst:
+      from:
+        grain: match_id, innings_no, over_id, ball_id
+        keys:
+          - match_id
+          - innings_no
+          - over_id
+          - ball_id
+      to:
+        grain: match_id
+        keys:
+          - match_id
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:02.828Z'
+      query_fingerprint: fcf42377b08be29b77cca675caae31fc44d024293ed5f64fb38eec64758412f9
+      proof_fingerprint: f29fb06351ae0652c839210678f1bdd755fad5a4ffe49fabdf60d909f1ab0900
+      from_rows: 7349
+      to_rows: 567
+      joined_rows: 7334
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 15
+      max_from_per_key: 26
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: wicket_taken_to_match
+    from: wicket_taken
+    to: match
+    verb: falls in
+    description: >-
+      A dismissal belongs to one match. Checked on the warehouse 2026-09-23: 6618 wicket_taken rows, 6605 join, 13 unmatched (0.20%), 0 null
+      keys, at most 1 match row per key. The unmatched rows are all match 419136, which is not in match; join LEFT so they are kept.
+    keys:
+      - from: match_id
+        to: match_id
+    cardinality: many_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    certifiedAgainst:
+      from:
+        grain: match_id, innings_no, over_id, ball_id
+        keys:
+          - match_id
+          - innings_no
+          - over_id
+          - ball_id
+      to:
+        grain: match_id
+        keys:
+          - match_id
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:02.829Z'
+      query_fingerprint: a5c753b21237a18ecb749a6804e3f644fd327b41323f4d614dfcb042bf305671
+      proof_fingerprint: 628f854febd93b65e059c2e17c67e1a32094268312182fade3a55a2901247fab
+      from_rows: 6618
+      to_rows: 567
+      joined_rows: 6605
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 13
+      max_from_per_key: 20
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: ball_by_ball_striker_to_player
+    from: ball_by_ball
+    to: player
+    verb: is faced by
+    description: >-
+      The batter on strike for the delivery (the batter credited with batsman_scored runs and balls faced). Checked on the warehouse
+      2026-09-23: 134703 ball_by_ball rows, 133391 join, 1312 unmatched (0.97%), 0 null keys, at most 1 player row per key. The unmatched
+      rows are all player_id 35, which is not in player; join LEFT so they are kept.
+    roles:
+      from: delivery
+      to: striker
+    keys:
+      - from: striker
+        to: player_id
+    cardinality: many_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    certifiedAgainst:
+      from:
+        grain: match_id, innings_no, over_id, ball_id
+        keys:
+          - match_id
+          - innings_no
+          - over_id
+          - ball_id
+      to:
+        grain: player_id
+        keys:
+          - player_id
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:02.830Z'
+      query_fingerprint: 40502ff8126e0fc37926175d9b6c65723960959ecf5a3969daa6a50aaa8002e4
+      proof_fingerprint: c330bfeb782fd2b9383d104234653d2c47795cbc5968a371ab440f531c55a680
+      from_rows: 134703
+      to_rows: 468
+      joined_rows: 133391
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 1312
+      max_from_per_key: 3133
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: ball_by_ball_non_striker_to_player
+    from: ball_by_ball
+    to: player
+    verb: has at the non-striker end
+    description: >-
+      The batter at the non-striker end for the delivery. Checked on the warehouse 2026-09-23: 134703 ball_by_ball rows, 133317 join, 1386
+      unmatched (1.03%), 0 null keys, at most 1 player row per key. The unmatched rows are all player_id 35, which is not in player; join
+      LEFT so they are kept.
+    roles:
+      from: delivery
+      to: non_striker
+    keys:
+      - from: non_striker
+        to: player_id
+    cardinality: many_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    certifiedAgainst:
+      from:
+        grain: match_id, innings_no, over_id, ball_id
+        keys:
+          - match_id
+          - innings_no
+          - over_id
+          - ball_id
+      to:
+        grain: player_id
+        keys:
+          - player_id
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:02.854Z'
+      query_fingerprint: 4f0c74a9461de7ba20d9eec696bf430a1576c4d4b6b81bee5ec6d9413fca8cfb
+      proof_fingerprint: 2e4ee3cb0b51a217418fcd495ece8c92fa52b0aa715000a8b393520084eb249b
+      from_rows: 134703
+      to_rows: 468
+      joined_rows: 133317
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 1386
+      max_from_per_key: 3197
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: ball_by_ball_bowler_to_player
+    from: ball_by_ball
+    to: player
+    verb: is bowled by
+    description: >-
+      The bowler of the delivery. Checked on the warehouse 2026-09-23: 134703 ball_by_ball rows, 132976 join, 1727 unmatched (1.28%), 0 null
+      keys, at most 1 player row per key. The unmatched rows are all player_id 35, which is not in player; join LEFT so they are kept.
+    roles:
+      from: delivery
+      to: bowler
+    keys:
+      - from: bowler
+        to: player_id
+    cardinality: many_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    certifiedAgainst:
+      from:
+        grain: match_id, innings_no, over_id, ball_id
+        keys:
+          - match_id
+          - innings_no
+          - over_id
+          - ball_id
+      to:
+        grain: player_id
+        keys:
+          - player_id
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:02.878Z'
+      query_fingerprint: 1b235ca88926d71d0fbca550661066a50e2fc94fe3403976b6e38d1649318218
+      proof_fingerprint: e60be003fb7f87073bb06c184e68292f96d8645560e39696f16bd8702b602584
+      from_rows: 134703
+      to_rows: 468
+      joined_rows: 132976
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 1727
+      max_from_per_key: 2742
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: wicket_taken_player_out_to_player
+    from: wicket_taken
+    to: player
+    verb: dismisses
+    description: >-
+      The batter who was out. Checked on the warehouse 2026-09-23: 6618 wicket_taken rows, 6551 join, 67 unmatched (1.01%), 0 null keys, at
+      most 1 player row per key. The unmatched rows are all player_id 35, which is not in player; join LEFT so they are kept.
+    roles:
+      from: dismissal
+      to: player_out
+    keys:
+      - from: player_out
+        to: player_id
+    cardinality: many_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    certifiedAgainst:
+      from:
+        grain: match_id, innings_no, over_id, ball_id
+        keys:
+          - match_id
+          - innings_no
+          - over_id
+          - ball_id
+      to:
+        grain: player_id
+        keys:
+          - player_id
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:02.901Z'
+      query_fingerprint: 1a065d1a000a22e1d322682c79a5ff3b9f53f560399657d626e50987e921008c
+      proof_fingerprint: 0e9a487474ff3f683618dfd0dc2c87163140577acec154177240c6851693d533
+      from_rows: 6618
+      to_rows: 468
+      joined_rows: 6551
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 67
+      max_from_per_key: 121
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: ball_by_ball_striker_to_player_match
+    from: ball_by_ball
+    to: player_match
+    verb: is faced by (in this match)
+    description: >-
+      The striker's playing-XI row for that match (his team and role in the match), on match_id and striker = player_id. Use it instead of
+      team_batting where the three mislabelled matches matter. Checked on the warehouse 2026-09-23: 134703 ball_by_ball rows, 134694 join, 9
+      unmatched (0.01%), 0 null keys, at most 1 player_match row per key. The unmatched rows are all player 40 in match 501274, missing from
+      that match's playing XI; join LEFT so they are kept.
+    roles:
+      from: delivery
+      to: striker
+    keys:
+      - from: match_id
+        to: match_id
+      - from: striker
+        to: player_id
+    cardinality: many_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    certifiedAgainst:
+      from:
+        grain: match_id, innings_no, over_id, ball_id
+        keys:
+          - match_id
+          - innings_no
+          - over_id
+          - ball_id
+      to:
+        grain: match_id, player_id
+        keys:
+          - match_id
+          - player_id
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:02.903Z'
+      query_fingerprint: 66c7fbb6eff673f6b1ed9084719374b2909cc4e1610d470109ce15a2e25bc827
+      proof_fingerprint: ccc9fa818dd11c659bbc27efa4384da847ea9c9087e60f82197bd106c044b428
+      from_rows: 134703
+      to_rows: 12495
+      joined_rows: 134694
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 9
+      max_from_per_key: 77
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: ball_by_ball_bowler_to_player_match
+    from: ball_by_ball
+    to: player_match
+    verb: is bowled by (in this match)
+    description: >-
+      The bowler's playing-XI row for that match (his team and role in the match), on match_id and bowler = player_id. Checked on the
+      warehouse 2026-09-23: 134703 ball_by_ball rows, 134703 join, 0 unmatched (0.00%), 0 null keys, at most 1 player_match row per key.
+    roles:
+      from: delivery
+      to: bowler
+    keys:
+      - from: match_id
+        to: match_id
+      - from: bowler
+        to: player_id
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    certifiedAgainst:
+      from:
+        grain: match_id, innings_no, over_id, ball_id
+        keys:
+          - match_id
+          - innings_no
+          - over_id
+          - ball_id
+      to:
+        grain: match_id, player_id
+        keys:
+          - match_id
+          - player_id
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:02.958Z'
+      query_fingerprint: 2895b1ecebeb4e5f7abd97115093004e87aadd012cc2fb77ac1b82183232ecfa
+      proof_fingerprint: 6e3625415fd8d52b4e90fde3cb6f9bfc2f40c4abb7ea9715cb8eea8e20c1cd31
+      from_rows: 134703
+      to_rows: 12495
+      joined_rows: 134703
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 31
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: ball_by_ball_team_batting_to_team
+    from: ball_by_ball
+    to: team
+    verb: is batted by
+    description: >-
+      The batting team of the delivery. Checked on the warehouse 2026-09-23: 134703 ball_by_ball rows, 119558 join, 15145 unmatched
+      (11.24%), 0 null keys, at most 1 team row per key. Draft: team_id 1 has no row in team, so 15145 rows (11.24%) would lose their team;
+      keys and cardinality are otherwise proven. Join LEFT and show the id. Also 169 rows in three matches carry the wrong batting team.
+    roles:
+      from: delivery
+      to: batting_team
+    keys:
+      - from: team_batting
+        to: team_id
+    cardinality: many_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: draft
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:03.009Z'
+      query_fingerprint: 338a405a337650105ade90b70d693bd0de2c42d996624bc9662470acdc7a04bd
+      proof_fingerprint: 23314ce7eeeae56bb1c567b3c10a24a0493a5156ba5beaa54fe5681a43162ca8
+      from_rows: 134703
+      to_rows: 12
+      joined_rows: 119558
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 15145
+      max_from_per_key: 16988
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: ball_by_ball_team_bowling_to_team
+    from: ball_by_ball
+    to: team
+    verb: is bowled by team
+    description: >-
+      The fielding (bowling) team of the delivery. Checked on the warehouse 2026-09-23: 134703 ball_by_ball rows, 119377 join, 15326
+      unmatched (11.38%), 0 null keys, at most 1 team row per key. Draft: team_id 1 has no row in team, so 15326 rows (11.38%) would lose
+      their team; keys and cardinality are otherwise proven. Join LEFT and show the id. Also 169 rows in three matches carry the wrong
+      bowling team.
+    roles:
+      from: delivery
+      to: bowling_team
+    keys:
+      - from: team_bowling
+        to: team_id
+    cardinality: many_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: draft
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:03.026Z'
+      query_fingerprint: 52d48588896d3f77bd40957186d548511adc48a08167197e1a971c16395f59ab
+      proof_fingerprint: 6b14eb6c3efdcfb9e0e75e1be897de03ba3588a6e0dc8a819d7fbb15240aacef
+      from_rows: 134703
+      to_rows: 12
+      joined_rows: 119377
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 15326
+      max_from_per_key: 16704
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.

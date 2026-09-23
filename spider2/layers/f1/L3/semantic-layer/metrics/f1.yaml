@@ -1,0 +1,58 @@
+# Native metrics for the F1 warehouse. Only measures whose meaning the data settles:
+# plain row counts of an event table and sums of a points column. Business measures that need
+# a choice (wins, podiums, DNFs, championship points after dropped scores) are defined in the
+# skills instead, because the right filter depends on the question.
+metrics:
+  - name: race_entries
+    label: Race entries
+    description: >-
+      Number of race result rows (one per car per race, main.results). A driver who shared or
+      changed cars in a 1950s race counts once per car. Count distinct race_id for races and
+      distinct driver_id for drivers.
+    domain: f1
+    type: count
+    sql: "*"
+    table: results
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    tags: [results]
+  - name: race_points
+    label: Race points
+    description: >-
+      Sum of results.points: points scored in Grands Prix (REAL; half points exist; includes the
+      fastest-lap point where awarded; excludes sprint points). Not the same as championship
+      points before 1991, when dropped-score rules applied (use driver_standings for those).
+    domain: f1
+    type: sum
+    sql: points
+    table: results
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    tags: [results, points]
+  - name: sprint_points
+    label: Sprint points
+    description: Sum of sprint_results.points, points scored in sprint races (2021 onward).
+    domain: f1
+    type: sum
+    sql: points
+    table: sprint_results
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    tags: [sprint, points]
+  - name: pit_stop_count
+    label: Pit stops
+    description: >-
+      Number of pit stop rows (main.pit_stops, 2011 onward). Includes red-flag stoppages that the
+      source records as pit stops (durations of a minute or more).
+    domain: f1
+    type: count
+    sql: "*"
+    table: pit_stops
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    tags: [pit_stops]
+  - name: timed_laps
+    label: Timed laps
+    description: Number of lap_times rows (one per driver per lap with a recorded time, 1996 onward).
+    domain: f1
+    type: count
+    sql: "*"
+    table: lap_times
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    tags: [laps]

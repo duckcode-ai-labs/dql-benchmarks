@@ -1,0 +1,366 @@
+# Matches, teams, players and the playing XI of each match.
+domain: ipl
+area:
+  id: matches
+  name: Matches, teams and players
+  description: >-
+    match holds one row per match with season, date, venue, toss and result; team and player are the dimensions; player_match is the playing
+    XI of each match with the team each player represented and his role.
+  references:
+    - ball_by_ball
+entities:
+  - id: match
+    relation: main.match
+    business_name: Match
+    analytical_role: event
+    grain: match_id
+    keys:
+      - match_id
+    business_context: >-
+      One IPL match (567 rows; match_id unique). Seasons 2008-2016: season_id 1-9 where the season year = season_id + 2007 (checked on every
+      row against the year of match_date); there is no season table. match_date is TEXT in YYYY-MM-DD form. team_1 and team_2 are the two
+      team ids (listing order only; the data does not say which is home). venue is free text (35 names; the Mohali ground appears under two
+      names). toss_winner is a team id and toss_decision is the toss winner's choice, "bat" or "field" (checked: the toss winner bats first
+      exactly when the decision is "bat"). win_type is "runs" (the side batting first won by win_margin runs) or "wickets" (the chasing side
+      won with win_margin wickets in hand). outcome_type is always "Result"; match_winner (team id, always one of the two teams) and
+      man_of_the_match (player id) are always filled. Innings totals (runs off the bat + extras) reproduce the result exactly in 545 of 567
+      matches; the others are rain-shortened matches with revised targets or have small gaps in the ball data. There are no ties, no-results
+      or super overs in this table. Match 419136 (id between two 2010 matches) has deliveries and a playing XI in the other tables but no
+      row here.
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: team
+    relation: main.team
+    business_name: Team
+    analytical_role: dimension
+    grain: team_id
+    keys:
+      - team_id
+    business_context: >-
+      One IPL franchise: team_id and its name (12 rows, team_id 2-13). team_id 1 is used in match, player_match and ball_by_ball (129
+      matches, 51 of them at Eden Gardens) but has no row here, so its name is not in the data: join teams with LEFT JOIN and show the id
+      when the name is missing. Franchises that were renamed or replaced keep separate ids (for example Deccan Chargers 8 and Sunrisers
+      Hyderabad 11; Pune Warriors 10 and Rising Pune Supergiants 12).
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: player
+    relation: main.player
+    business_name: Player
+    analytical_role: dimension
+    grain: player_id
+    keys:
+      - player_id
+    business_context: >-
+      One player (468 rows, player_id 1-469; player_name is unique and in scorecard short form such as "V Kohli"). dob is TEXT YYYY-MM-DD,
+      always filled. batting_hand is "Right-hand bat" or "Left-hand bat". bowling_skill is a style label (14 values, e.g. "Right-arm
+      medium", "Right-arm offbreak", "Legbreak googly", "Slow left-arm orthodox"). country_name has 11 values (India 261; one value is
+      spelled "Zimbabwea"). player_id 35 has no row here although it appears in player_match (124 matches), ball_by_ball and wicket_taken
+      and has 7 man-of-the-match awards: join players with LEFT JOIN so that player is not dropped.
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: player_match
+    relation: main.player_match
+    business_name: Player in a match (playing XI)
+    analytical_role: bridge
+    grain: match_id, player_id
+    keys:
+      - match_id
+      - player_id
+    business_context: >-
+      One player selected in one match, with the team he played for (team_id) and his role (12,495 rows; unique on match_id + player_id).
+      role is "Player", "Captain", "Keeper" or "CaptainKeeper" (captain who also kept wicket); each team in a match has exactly one keeper.
+      Each of the 568 matches has two teams of 11, except match 501274 where team 1 lists 10 (player 40 batted but is not listed). This is
+      the table that says which team a player represented in a given match; a player can play for different teams in different seasons.
+      Covers match 419136, which is missing from match.
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+relationships:
+  - id: player_match_to_match
+    from: player_match
+    to: match
+    verb: plays in
+    description: >-
+      A playing-XI row belongs to one match. Checked on the warehouse 2026-09-23: 12495 player_match rows, 12473 join, 22 unmatched (0.18%),
+      0 null keys, at most 1 match row per key. The unmatched rows are all match 419136, which is not in match; join LEFT so they are kept.
+    keys:
+      - from: match_id
+        to: match_id
+    cardinality: many_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    certifiedAgainst:
+      from:
+        grain: match_id, player_id
+        keys:
+          - match_id
+          - player_id
+      to:
+        grain: match_id
+        keys:
+          - match_id
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:03.044Z'
+      query_fingerprint: d80c8b0a87fa3108b6687841c344a1f2872b85e0082f1700c9f1894188e35e98
+      proof_fingerprint: 1f97e0b3269b670e8c23549129120cc6b1a5e5daf718ee8e06059dc733b850fd
+      from_rows: 12495
+      to_rows: 567
+      joined_rows: 12473
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 22
+      max_from_per_key: 22
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: player_match_to_player
+    from: player_match
+    to: player
+    verb: is
+    description: >-
+      The player of a playing-XI row. Checked on the warehouse 2026-09-23: 12495 player_match rows, 12371 join, 124 unmatched (0.99%), 0
+      null keys, at most 1 player row per key. The unmatched rows are all player_id 35, which is not in player; join LEFT so they are kept.
+    keys:
+      - from: player_id
+        to: player_id
+    cardinality: many_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    certifiedAgainst:
+      from:
+        grain: match_id, player_id
+        keys:
+          - match_id
+          - player_id
+      to:
+        grain: player_id
+        keys:
+          - player_id
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:03.045Z'
+      query_fingerprint: df28382d792ad551d0fc589754fa98701a223fd77c83ade2ec2ba8ba1e4b787f
+      proof_fingerprint: e5b1b6343d5a4e7b0e187eba90b5b1388a73e955fe5495665cd5933f272e682c
+      from_rows: 12495
+      to_rows: 468
+      joined_rows: 12371
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 124
+      max_from_per_key: 145
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: player_match_to_team
+    from: player_match
+    to: team
+    verb: plays for
+    description: >-
+      The team a player represented in that match. Checked on the warehouse 2026-09-23: 12495 player_match rows, 11066 join, 1429 unmatched
+      (11.44%), 0 null keys, at most 1 team row per key. Draft: team_id 1 has no row in team, so 1429 rows (11.44%) would lose their team;
+      keys and cardinality are otherwise proven. Join LEFT and show the id.
+    keys:
+      - from: team_id
+        to: team_id
+    cardinality: many_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: draft
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:03.048Z'
+      query_fingerprint: a627ca2d08a33588d8fc54ab91f68978e36ce1f4d922a33866511d314353a2bb
+      proof_fingerprint: 041f211d9054e2bb60751774ef094966f711ddd5c2f2996eba35eee15b4aef03
+      from_rows: 12495
+      to_rows: 12
+      joined_rows: 11066
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 1429
+      max_from_per_key: 1540
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: match_man_of_the_match_to_player
+    from: match
+    to: player
+    verb: names as man of the match
+    description: >-
+      The player of the match award. Checked on the warehouse 2026-09-23: 567 match rows, 560 join, 7 unmatched (1.23%), 0 null keys, at
+      most 1 player row per key. The unmatched rows are all player_id 35, which is not in player; join LEFT so they are kept.
+    roles:
+      from: match
+      to: man_of_the_match
+    keys:
+      - from: man_of_the_match
+        to: player_id
+    cardinality: many_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: certified
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    certifiedAgainst:
+      from:
+        grain: match_id
+        keys:
+          - match_id
+      to:
+        grain: player_id
+        keys:
+          - player_id
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:03.050Z'
+      query_fingerprint: 3a3f73e25a56359c880bc2425d66ffb38f73f6db3d0bc3a026b4646194ddf6bd
+      proof_fingerprint: 9e4620b97539bdb55fcc8a5b71c12c7fa405bc13f5dee70e2366cbfecd725fd0
+      from_rows: 567
+      to_rows: 468
+      joined_rows: 560
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 7
+      max_from_per_key: 17
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: match_team_1_to_team
+    from: match
+    to: team
+    verb: is contested by
+    description: >-
+      The first-listed team of the match. Checked on the warehouse 2026-09-23: 567 match rows, 507 join, 60 unmatched (10.58%), 0 null keys,
+      at most 1 team row per key. Draft: team_id 1 has no row in team, so 60 rows (10.58%) would lose their team; keys and cardinality are
+      otherwise proven. Join LEFT and show the id.
+    roles:
+      from: match
+      to: team_1
+    keys:
+      - from: team_1
+        to: team_id
+    cardinality: many_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: draft
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:03.050Z'
+      query_fingerprint: e10008d1a8b54b151d08727a7431562a7953178b3f65f4998934bbe39573def7
+      proof_fingerprint: 6f2c9b008d02e7a5ed94ed635a3d37ad4c58d096f740e1430c03ed86b9e5b347
+      from_rows: 567
+      to_rows: 12
+      joined_rows: 507
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 60
+      max_from_per_key: 75
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: match_team_2_to_team
+    from: match
+    to: team
+    verb: is contested by
+    description: >-
+      The second-listed team of the match. Checked on the warehouse 2026-09-23: 567 match rows, 498 join, 69 unmatched (12.17%), 0 null
+      keys, at most 1 team row per key. Draft: team_id 1 has no row in team, so 69 rows (12.17%) would lose their team; keys and cardinality
+      are otherwise proven. Join LEFT and show the id.
+    roles:
+      from: match
+      to: team_2
+    keys:
+      - from: team_2
+        to: team_id
+    cardinality: many_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: draft
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:03.050Z'
+      query_fingerprint: 3594c47a9735520be7b7d4060ab68c24bb61594677d53bdea18914f7b6e147bd
+      proof_fingerprint: 0e87c12d67401f9e1dede31c70843eb36e9a571796de43559cfeb72e1d7cfda1
+      from_rows: 567
+      to_rows: 12
+      joined_rows: 498
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 69
+      max_from_per_key: 78
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: match_toss_winner_to_team
+    from: match
+    to: team
+    verb: has toss won by
+    description: >-
+      The team that won the toss. Checked on the warehouse 2026-09-23: 567 match rows, 499 join, 68 unmatched (11.99%), 0 null keys, at most
+      1 team row per key. Draft: team_id 1 has no row in team, so 68 rows (11.99%) would lose their team; keys and cardinality are otherwise
+      proven. Join LEFT and show the id.
+    roles:
+      from: match
+      to: toss_winner
+    keys:
+      - from: toss_winner
+        to: team_id
+    cardinality: many_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: draft
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:03.051Z'
+      query_fingerprint: 025e2b47a1e290b23ae6d2cf3024a656f214afd6807638731d1c9523ef2bfb1e
+      proof_fingerprint: 4d1ee2ab4c5894307ac5969dab6d8d6f89ba97fd6e70a8af8035043d3e676df4
+      from_rows: 567
+      to_rows: 12
+      joined_rows: 499
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 68
+      max_from_per_key: 74
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+  - id: match_winner_to_team
+    from: match
+    to: team
+    verb: is won by
+    description: >-
+      The team that won the match. Checked on the warehouse 2026-09-23: 567 match rows, 499 join, 68 unmatched (11.99%), 0 null keys, at
+      most 1 team row per key. Draft: team_id 1 has no row in team, so 68 rows (11.99%) would lose their team; keys and cardinality are
+      otherwise proven. Join LEFT and show the id.
+    roles:
+      from: match
+      to: match_winner
+    keys:
+      - from: match_winner
+        to: team_id
+    cardinality: many_to_one
+    fanout: safe
+    join_types:
+      - left
+    status: draft
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:57:03.051Z'
+      query_fingerprint: 305a5020d009ed58d73079abdb1440a0795c4cbcbc18cef2aea05e0668fa92e1
+      proof_fingerprint: d42076a08dcf4f8b52eaf5eb7b8b2f2462d102e1c142be6b8045ddae9bf234a0
+      from_rows: 567
+      to_rows: 12
+      joined_rows: 499
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 68
+      max_from_per_key: 80
+      max_to_per_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.

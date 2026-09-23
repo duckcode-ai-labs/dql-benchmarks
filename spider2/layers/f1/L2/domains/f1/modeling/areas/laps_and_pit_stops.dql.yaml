@@ -1,0 +1,576 @@
+# Lap-by-lap race data: lap times, positions per lap, pit stops and position changes (overtakes).
+domain: f1
+area:
+  id: laps_and_pit_stops
+  name: Laps, pit stops and overtakes
+  description: >-
+    lap_times holds every timed lap of a driver in a race (1996 onward). lap_times_ext adds the
+    running race time, lap_time_stats the per-driver average and standard deviation, and
+    lap_positions the running order per lap including the start (lap 0) and the lap of
+    retirement (1950 onward). pit_stops records each pit stop (2011 onward). overtakes records
+    each position change between two drivers from one lap to the next (2011 onward).
+  references: [race, driver]
+  intent_examples:
+    - fastest lap time
+    - average lap time of a driver
+    - number of pit stops
+    - pit stop duration
+    - overtakes on track
+    - position after lap 1
+entities:
+  - id: lap_time
+    relation: main.lap_times
+    business_name: Lap time
+    business_context: >-
+      One lap of one driver in one race (575,029 rows, 531 races, 1996 to 2024-06-30; the
+      2024-07-07 British GP has no lap data). lap = lap number from 1. position = running position
+      at the end of that lap. time = lap time as text m:ss.sss; milliseconds = the lap time in ms
+      (INT, always filled, 55,404 to 7,507,547: very long laps include safety-car and red-flag
+      laps); seconds = generated column milliseconds / 1000. race_id + driver_id + lap is unique.
+    analytical_role: event
+    grain: race_id, driver_id, lap
+    keys: [race_id, driver_id, lap]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: lap_times_ext
+    relation: main.lap_times_ext
+    business_name: Lap time (with running total)
+    business_context: >-
+      Derived copy of lap_times (same 575,029 rows and values) plus running_milliseconds = the
+      driver's cumulative race time at the end of the lap (running sum of milliseconds over laps
+      1..lap, verified on every row). seconds is stored here.
+    analytical_role: event
+    grain: race_id, driver_id, lap
+    keys: [race_id, driver_id, lap]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: lap_time_stat
+    relation: main.lap_time_stats
+    business_name: Lap time statistics
+    business_context: >-
+      Derived: one row per driver per race with lap times (10,789 rows). avg_milliseconds /
+      avg_seconds = mean of the driver's lap_times.milliseconds in that race (all laps, including
+      pit and safety-car laps); stdev_milliseconds / stdev_seconds = population standard
+      deviation of those laps. race_id + driver_id is unique.
+    analytical_role: event
+    grain: race_id, driver_id
+    keys: [race_id, driver_id]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: lap_position
+    relation: main.lap_positions
+    business_name: Position per lap
+    business_context: >-
+      Derived running order (613,112 rows, 1950 onward). lap_type says what a row is:
+      lap 0 rows are the starting position (results.grid) typed by how it compares with
+      qualifying: "Starting Position - Qualifying" (grid = qualifying position), "- Grid Drop"
+      (started behind the qualifying position), "- Grid Increase" (started ahead), "- Pit Lane
+      Start", "- No Qualification" (no qualifying data, mostly before 1994). "Race" rows (lap >= 1,
+      1996 onward) copy lap_times.position. "Retirement (Driver Error | Mechanical Problem |
+      Disqualification)" rows are on the lap the car retired, with position = its final
+      position_order. A driver with two cars in one race (1950-1978) can have two rows for one lap,
+      so the grain includes lap_type and position.
+    analytical_role: event
+    grain: race_id, driver_id, lap, lap_type, position
+    keys: [race_id, driver_id, lap, lap_type, position]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: pit_stop
+    relation: main.pit_stops
+    business_name: Pit stop
+    business_context: >-
+      One pit stop (10,990 rows, 273 races, 2011 to 2024-07-07). stop = the driver's stop number
+      in the race (1, 2, ...), lap = lap of the stop, time = local time of day of the stop
+      (HH:MM:SS text). duration = time in the pit lane as text (seconds like 24.682, or m:ss.sss
+      for 500 long stops); milliseconds = the same in ms; seconds = generated milliseconds / 1000.
+      Stops of a minute or more are mostly red-flag stoppages recorded as pit stops (e.g. 49 in
+      the 2023 Australian GP). In the 2024 Monaco GP stop numbers are not consecutive.
+      race_id + driver_id + stop is unique.
+    analytical_role: event
+    grain: race_id, driver_id, stop
+    keys: [race_id, driver_id, stop]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+  - id: overtake
+    relation: main.overtakes
+    business_name: Overtake (position change)
+    business_context: >-
+      Derived: one row per pair of drivers who swapped order between the previous lap and this lap
+      (59,306 rows, 272 races 2011 to 2024-06-30). overtaking_driver_id moved ahead of
+      overtaken_driver_id on lap; current_position / previous_position are the overtaking driver's
+      positions after / before the lap. overtake_type + overtake_desc say why: S "Start" (lap 1
+      versus the grid), T "Track" (an on-track pass), P "Pit Stop (Pit Entry)" (the overtaken
+      driver pitted on that lap) or "Pit Stop (Pit Exit)" (pitted on the previous lap), R
+      "Retirement (...)" (the overtaken driver retired). A pair can appear twice on one lap with
+      different types. Grain: race, both drivers, lap and overtake_desc.
+    analytical_role: event
+    grain: race_id, overtaking_driver_id, overtaken_driver_id, lap, overtake_desc
+    keys: [race_id, overtaking_driver_id, overtaken_driver_id, lap, overtake_desc]
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+relationships:
+  - id: lap_time_to_race
+    from: lap_time
+    to: race
+    verb: is a lap of
+    keys: [{ from: race_id, to: race_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 575,029 from rows, 1,125 to rows, 575,029 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 1649 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "race_id, driver_id, lap", keys: [race_id, driver_id, lap] }
+      to: { grain: "race_id", keys: [race_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:27.738Z'
+      query_fingerprint: 952348c8a4e68ff3706d3eb7211c28dfab6a42eaff218a8c4c52f35553ca5416
+      proof_fingerprint: c13534a33c7b780459b4f32b3e782acfa910296466ad0ac7b9042fbc1172312b
+      from_rows: 575029
+      to_rows: 1125
+      joined_rows: 575029
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1649
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: lap_time_to_driver
+    from: lap_time
+    to: driver
+    verb: is driven by
+    keys: [{ from: driver_id, to: driver_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 575,029 from rows, 859 to rows, 575,029 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 21123 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "race_id, driver_id, lap", keys: [race_id, driver_id, lap] }
+      to: { grain: "driver_id", keys: [driver_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:27.605Z'
+      query_fingerprint: f75420f22aa6dee2a0ad07c1aa5c4aa6303bc82249e17350b7ef9fa529cf19ea
+      proof_fingerprint: 33097f7de24807e626dd34fad8ff1bc3f9558ce4fe1bcf35ff969a831ce87995
+      from_rows: 575029
+      to_rows: 859
+      joined_rows: 575029
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 21123
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: lap_time_to_lap_time_stat
+    from: lap_time
+    to: lap_time_stat
+    verb: is summarised by
+    keys:
+      - { from: race_id, to: race_id }
+      - { from: driver_id, to: driver_id }
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 575,029 from rows, 10,789 to rows, 575,029 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 87 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "race_id, driver_id, lap", keys: [race_id, driver_id, lap] }
+      to: { grain: "race_id, driver_id", keys: [race_id, driver_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:27.684Z'
+      query_fingerprint: fc184ab32319198b3dbeb39d32ec0389009301190a6cb310e5f9eb78bddfe1ac
+      proof_fingerprint: ca430be3d5a44e65087b3b69dc322f978ac3273955fea65aae7e9ac47d9a2f87
+      from_rows: 575029
+      to_rows: 10789
+      joined_rows: 575029
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 87
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: lap_times_ext_to_lap_time
+    from: lap_times_ext
+    to: lap_time
+    verb: extends
+    keys:
+      - { from: race_id, to: race_id }
+      - { from: driver_id, to: driver_id }
+      - { from: lap, to: lap }
+    cardinality: one_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 575,029 from rows, 575,029 to rows, 575,029 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 1 from rows per key), so the declared cardinality holds. Values match on every row (milliseconds and position identical)."
+    certifiedAgainst:
+      from: { grain: "race_id, driver_id, lap", keys: [race_id, driver_id, lap] }
+      to: { grain: "race_id, driver_id, lap", keys: [race_id, driver_id, lap] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:27.855Z'
+      query_fingerprint: 4981c7a8fadb9e9463c75d5fa99e8bd7b32b89463342fe040d415c308f55757e
+      proof_fingerprint: 1985e427a5a0e5b53cc8b23e9fe0af5f1edaf5d339532d1a44a21e5a13e83250
+      from_rows: 575029
+      to_rows: 575029
+      joined_rows: 575029
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: lap_times_ext_to_race
+    from: lap_times_ext
+    to: race
+    verb: is a lap of
+    keys: [{ from: race_id, to: race_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 575,029 from rows, 1,125 to rows, 575,029 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 1649 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "race_id, driver_id, lap", keys: [race_id, driver_id, lap] }
+      to: { grain: "race_id", keys: [race_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:29.272Z'
+      query_fingerprint: 3c99a50feba7bd9beb1bd88c1d625e9bf545d34afbdf8493c8e1feb82be142b5
+      proof_fingerprint: 66ca7591ee4a39d37a2d3052f3f13cb783d2b8d7e3d92c8e87912ca30109655e
+      from_rows: 575029
+      to_rows: 1125
+      joined_rows: 575029
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1649
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: lap_times_ext_to_driver
+    from: lap_times_ext
+    to: driver
+    verb: is driven by
+    keys: [{ from: driver_id, to: driver_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 575,029 from rows, 859 to rows, 575,029 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 21123 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "race_id, driver_id, lap", keys: [race_id, driver_id, lap] }
+      to: { grain: "driver_id", keys: [driver_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:27.767Z'
+      query_fingerprint: 93f6aa4dbdf0f7ca536bfa66dd8d04231753fe78fcc73893dee132a513eddd42
+      proof_fingerprint: 3b1c37ae724813cd3b647c8bfd791491c4b3664888bf58538092d5df32795b4a
+      from_rows: 575029
+      to_rows: 859
+      joined_rows: 575029
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 21123
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: lap_time_stat_to_race
+    from: lap_time_stat
+    to: race
+    verb: summarises laps of
+    keys: [{ from: race_id, to: race_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 10,789 from rows, 1,125 to rows, 10,789 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 24 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "race_id, driver_id", keys: [race_id, driver_id] }
+      to: { grain: "race_id", keys: [race_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:27.603Z'
+      query_fingerprint: 9f27dcfa660f75b6047a835cc166056c35efb15400dbc1d77ce004144a9747ae
+      proof_fingerprint: 6962e3ccb8b0ef00018d73b1f58bb43a025552583bfb028fbd4e818644ebc23d
+      from_rows: 10789
+      to_rows: 1125
+      joined_rows: 10789
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 24
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: lap_time_stat_to_driver
+    from: lap_time_stat
+    to: driver
+    verb: summarises laps by
+    keys: [{ from: driver_id, to: driver_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 10,789 from rows, 859 to rows, 10,789 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 382 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "race_id, driver_id", keys: [race_id, driver_id] }
+      to: { grain: "driver_id", keys: [driver_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:27.599Z'
+      query_fingerprint: 5f098c30fc29c4a00bbd4b2ca4bf74594207e8394d3fd0aabe3ae6d4aa24424c
+      proof_fingerprint: c20ba2f26b546821b4f4218e6dce040cc06cb3ad009d4186e98a3c80b07c2a15
+      from_rows: 10789
+      to_rows: 859
+      joined_rows: 10789
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 382
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: lap_position_to_race
+    from: lap_position
+    to: race
+    verb: is a position in
+    keys: [{ from: race_id, to: race_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 613,112 from rows, 1,125 to rows, 613,112 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 1674 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "race_id, driver_id, lap, lap_type, position", keys: [race_id, driver_id, lap, lap_type, position] }
+      to: { grain: "race_id", keys: [race_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:27.529Z'
+      query_fingerprint: d0a1a99fc77b31a69b9fc89dac0e110b38a8ae41e2a7d6b843bb65c061f284a2
+      proof_fingerprint: 9d260c3d2d32b003c7b071dc37c866c1a43ba377eed615c52552c63447c6aca8
+      from_rows: 613112
+      to_rows: 1125
+      joined_rows: 613112
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1674
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: lap_position_to_driver
+    from: lap_position
+    to: driver
+    verb: is held by
+    keys: [{ from: driver_id, to: driver_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 613,112 from rows, 859 to rows, 613,112 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 21593 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "race_id, driver_id, lap, lap_type, position", keys: [race_id, driver_id, lap, lap_type, position] }
+      to: { grain: "driver_id", keys: [driver_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:25.920Z'
+      query_fingerprint: d2a0dfad35a6a1ca4dc6313e0404625e0aefc3b776f85089e51f817b187727cd
+      proof_fingerprint: d60fdacd462f827df32a0672caae0d6d1f9f5cb2b0c3e59ebce8bea19f8274e7
+      from_rows: 613112
+      to_rows: 859
+      joined_rows: 613112
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 21593
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: lap_position_to_lap_time
+    from: lap_position
+    to: lap_time
+    verb: is the position of
+    keys:
+      - { from: race_id, to: race_id }
+      - { from: driver_id, to: driver_id }
+      - { from: lap, to: lap }
+    cardinality: many_to_one
+    fanout: safe
+    optionality: { from: optional, to: optional }
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: draft
+    description: "Draft: cardinality holds (lap_times unique on race_id + driver_id + lap) and the 575,029 \"Race\" rows join one-to-one, but 38,071 rows (lap 0 starting positions, retirement rows and every pre-1996 row) have no lap time, and 12 retirement rows fall on a lap that also has a lap time (575,041 joined rows), so the join is only meaningful when filtered to lap_type = 'Race'."
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:26.004Z'
+      query_fingerprint: d6960f84a6409d927c6ad0c21e5d1373ec87f067b07ae10ee6249ea5fc78bac2
+      proof_fingerprint: 690c8b81016f59ed12ef924b95690e7de331a7a8d3a41954c2ec344428f904d2
+      from_rows: 613112
+      to_rows: 575029
+      joined_rows: 575041
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 38071
+      max_from_per_key: 3
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: pit_stop_to_race
+    from: pit_stop
+    to: race
+    verb: is made in
+    keys: [{ from: race_id, to: race_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 10,990 from rows, 1,125 to rows, 10,990 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 101 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "race_id, driver_id, stop", keys: [race_id, driver_id, stop] }
+      to: { grain: "race_id", keys: [race_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:30.156Z'
+      query_fingerprint: 14c8507541576bb003b3100a0e0bc4c9f6bc81fe08e3b42947b78c2a11774939
+      proof_fingerprint: 8427a14726d64345adff19daf7382fadfbea78f9d3005eee10d68153fbfc352e
+      from_rows: 10990
+      to_rows: 1125
+      joined_rows: 10990
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 101
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: pit_stop_to_driver
+    from: pit_stop
+    to: driver
+    verb: is made by
+    keys: [{ from: driver_id, to: driver_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 10,990 from rows, 859 to rows, 10,990 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 537 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "race_id, driver_id, stop", keys: [race_id, driver_id, stop] }
+      to: { grain: "driver_id", keys: [driver_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:29.376Z'
+      query_fingerprint: 2dddf8d7d457ec4b0fd7731bcaed0daf5a999937b9eb8ee72ce6913af0724d38
+      proof_fingerprint: 08cce0ce1599dcdd8d2ab95638b5932848272d1f1541e1173ff959eb89186950
+      from_rows: 10990
+      to_rows: 859
+      joined_rows: 10990
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 537
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: pit_stop_to_lap_time
+    from: pit_stop
+    to: lap_time
+    verb: is made on the lap
+    keys:
+      - { from: race_id, to: race_id }
+      - { from: driver_id, to: driver_id }
+      - { from: lap, to: lap }
+    cardinality: many_to_one
+    fanout: safe
+    optionality: { from: optional, to: optional }
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 10,990 from rows, 575,029 to rows, 10,945 joined rows, 45 unmatched from rows, 0 null keys; at most 1 to row per key (at most 1 from rows per key), so the declared cardinality holds. The 45 unmatched pit stops are all from the 2024 British Grand Prix, which has pit stops but no lap times."
+    certifiedAgainst:
+      from: { grain: "race_id, driver_id, stop", keys: [race_id, driver_id, stop] }
+      to: { grain: "race_id, driver_id, lap", keys: [race_id, driver_id, lap] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:29.380Z'
+      query_fingerprint: a4700dccd02c16b904677b629f81b07ee999db977c03c6d8d5eed4e1667c8bf6
+      proof_fingerprint: cc06dce2399083bf634e0a819f6571f6a4f842d77df40d4680a15a1a663f32c2
+      from_rows: 10990
+      to_rows: 575029
+      joined_rows: 10945
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 45
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: overtake_to_race
+    from: overtake
+    to: race
+    verb: happens in
+    keys: [{ from: race_id, to: race_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 59,306 from rows, 1,125 to rows, 59,306 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 536 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "race_id, overtaking_driver_id, overtaken_driver_id, lap, overtake_desc", keys: [race_id, overtaking_driver_id, overtaken_driver_id, lap, overtake_desc] }
+      to: { grain: "race_id", keys: [race_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:29.370Z'
+      query_fingerprint: 18ba8d8e98c1463e691428ad6063a46705d9bcd87c66d8fccd5fef43fa29e89c
+      proof_fingerprint: 5672af775ac3d80492eae929bf64b9246c111d484f5df8c9106c2e8b04d1ae1c
+      from_rows: 59306
+      to_rows: 1125
+      joined_rows: 59306
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 536
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: overtake_to_overtaking_driver
+    from: overtake
+    to: driver
+    verb: is made by
+    roles: { from: overtake, to: overtaking driver }
+    keys: [{ from: overtaking_driver_id, to: driver_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 59,306 from rows, 859 to rows, 59,306 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 3066 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "race_id, overtaking_driver_id, overtaken_driver_id, lap, overtake_desc", keys: [race_id, overtaking_driver_id, overtaken_driver_id, lap, overtake_desc] }
+      to: { grain: "driver_id", keys: [driver_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:29.360Z'
+      query_fingerprint: 07448de968599f0a7acd3993468cd4e479508fd57b96e67e447694348225bf92
+      proof_fingerprint: 11b788c6e657641cc91fc240e7adff9a594ffc810601e9cba555b3681cce2f5a
+      from_rows: 59306
+      to_rows: 859
+      joined_rows: 59306
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 3066
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: overtake_to_overtaken_driver
+    from: overtake
+    to: driver
+    verb: is made on
+    roles: { from: overtake, to: overtaken driver }
+    keys: [{ from: overtaken_driver_id, to: driver_id }]
+    cardinality: many_to_one
+    fanout: safe
+    owner: 43963011+KKranthi6881@users.noreply.github.com
+    status: certified
+    description: "Certified on the warehouse: 59,306 from rows, 859 to rows, 59,306 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 2864 from rows per key), so the declared cardinality holds."
+    certifiedAgainst:
+      from: { grain: "race_id, overtaking_driver_id, overtaken_driver_id, lap, overtake_desc", keys: [race_id, overtaking_driver_id, overtaken_driver_id, lap, overtake_desc] }
+      to: { grain: "driver_id", keys: [driver_id] }
+    validation:
+      status: passed
+      checked_at: '2026-09-23T15:58:29.346Z'
+      query_fingerprint: 720ae2d137976b9753f53411e7776c8e99e1cc1435aa0f7f5c27ea7cd4bf25be
+      proof_fingerprint: fb427b8f447e4b2e141da4cadf31b700e2875c25b778995b18a62e622ff989c2
+      from_rows: 59306
+      to_rows: 859
+      joined_rows: 59306
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 2864
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
