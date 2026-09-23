@@ -1,6 +1,6 @@
 // Spider 2.0-Lite, SQLite subset: the model on its own.
 //
-//   node spider2/baseline.mjs --run <id> [--model <model>] [--db <name>] [--set quick]
+//   node spider2/baseline.mjs --run <id> [--provider claude-code|codex] [--model <model>] [--effort high] [--db <name>] [--set quick]
 //
 // The control arm for the DQL conditions: the SAME questions, the SAME model,
 // the SAME scorer, with no DQL between them. The model is given the whole
@@ -13,7 +13,8 @@
 // both the same way.
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import { REPO_ROOT } from '../lib/dql.mjs';
 import { CODEX_DIRS } from '../insurance/run.mjs';
@@ -24,11 +25,16 @@ const WORK = join(REPO_ROOT, 'work', 'spider2');
 const CASE_TIMEOUT_MS = 300_000;
 
 function parseArgs(argv) {
-  const options = { run: null, model: 'gpt-5.6-sol', db: null, only: null, set: null };
+  // The baseline writes SQL at the effort DQL's own SQL drafter uses on the
+  // same provider (DQL drafts at "high", the sql_cell route effort), so the
+  // comparison differs in DQL alone, never in how hard the model thought.
+  const options = { run: null, provider: 'claude-code', model: 'claude-sonnet-5', effort: 'high', db: null, only: null, set: null };
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index];
     if (flag === '--run') options.run = argv[++index];
     else if (flag === '--model') options.model = argv[++index];
+    else if (flag === '--provider') options.provider = argv[++index];
+    else if (flag === '--effort') options.effort = argv[++index];
     else if (flag === '--db') options.db = argv[++index];
     else if (flag === '--only') options.only = new Set(argv[++index].split(',').map((item) => item.trim()));
     else if (flag === '--set') options.set = argv[++index];
@@ -60,6 +66,38 @@ function prompt(task, schema) {
   ].join('\n');
 }
 
+/** One Codex call: `codex exec` at the effort in ~/.codex/config.toml. */
+function askCodex(input, options) {
+  return spawnSync('codex', ['exec', '--ephemeral', '--model', options.model, '-'], {
+    input,
+    encoding: 'utf-8',
+    timeout: CASE_TIMEOUT_MS,
+    maxBuffer: 64 * 1024 * 1024,
+    env: { ...process.env, PATH: [...CODEX_DIRS, process.env.PATH ?? ''].join(':') },
+  });
+}
+
+/**
+ * One Claude call, with the flags DQL's own Claude provider uses: no tools,
+ * one turn, no session, no ambient MCP or project settings (isolated cwd).
+ * Returns the shape spawnSync gives, with the reply text as stdout.
+ */
+function askClaude(input, options) {
+  const cwd = mkdtempSync(join(tmpdir(), 'spider2-baseline-claude-'));
+  try {
+    const result = spawnSync('claude', ['-p', '--output-format', 'json', '--tools', '', '--max-turns', '1', '--permission-mode', 'dontAsk', '--strict-mcp-config', '--no-session-persistence', '--model', options.model, '--effort', options.effort], {
+      input, cwd, encoding: 'utf-8', timeout: CASE_TIMEOUT_MS, maxBuffer: 64 * 1024 * 1024,
+    });
+    let parsed = null;
+    try { parsed = JSON.parse(result.stdout ?? ''); } catch { /* reported as a failed call */ }
+    const text = typeof parsed?.result === 'string' ? parsed.result : '';
+    const failed = result.status !== 0 || !parsed || parsed.is_error === true;
+    return { status: failed ? (result.status || 1) : 0, stdout: failed ? `${result.stdout ?? ''}` : text, stderr: `${result.stderr ?? ''}${failed && parsed?.result ? `\n${parsed.result}` : ''}` };
+  } finally {
+    rmSync(cwd, { recursive: true, force: true });
+  }
+}
+
 /** The SQL out of a model answer: the fenced block when there is one, else the text. */
 function sqlFrom(text) {
   const fenced = /```(?:sql)?\s*([\s\S]*?)```/i.exec(text);
@@ -82,8 +120,9 @@ async function main() {
     run: options.run,
     condition: 'baseline',
     description: 'the model alone: full schema in the prompt, no DQL',
-    provider: 'codex',
+    provider: options.provider,
     model: options.model,
+    effort: options.provider === 'claude-code' ? options.effort : 'from ~/.codex/config.toml',
     // No DQL in this arm: that is the point of the control.
     dql: null,
     startedAt: new Date().toISOString(),
@@ -99,13 +138,7 @@ async function main() {
     const outcomes = {};
     for (const task of dbTasks) {
       const startedAt = Date.now();
-      const result = spawnSync('codex', ['exec', '--ephemeral', '--model', options.model, '-'], {
-        input: prompt(task, schema),
-        encoding: 'utf-8',
-        timeout: CASE_TIMEOUT_MS,
-        maxBuffer: 64 * 1024 * 1024,
-        env: { ...process.env, PATH: [...CODEX_DIRS, process.env.PATH ?? ''].join(':') },
-      });
+      const result = options.provider === 'codex' ? askCodex(prompt(task, schema), options) : askClaude(prompt(task, schema), options);
       const durationMs = Date.now() - startedAt;
       // A call the provider refused (usage limit, quota, sign-in) is not an
       // answer the model gave: scored as "no SQL" it counts as the model being
