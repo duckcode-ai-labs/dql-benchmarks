@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Build one DQL project per Spider 2.0-Lite SQLite database, for one condition.
 //
-//   node spider2/build.mjs --condition S0|S1a|E0|E1|E2|E3|E4|E5|E6 [--db <name>] [--set quick]
+//   node spider2/build.mjs --condition S0|S1a|E0|E1|E2|E3|E4|E5|E6|L2|L3 [--db <name>] [--set quick]
 //
 // S0:  the warehouse only. `dql init --warehouse-first` on a folder whose one
 //      connection is the task database (opened read-only), then `dql sync
@@ -9,7 +9,7 @@
 // S1a: S0 + the model DQL drafts on its own (`dql model apply-discovery
 //      --apply --validate`), unreviewed. Nothing is written by hand.
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { REPO_ROOT, buildIdentity, resolveDqlCli, runDql, dqlVersion } from '../lib/dql.mjs';
 import { LOCALDB, readTasks } from './tasks.mjs';
@@ -32,6 +32,11 @@ export const CONDITIONS = {
   E4: { description: 'E3 on the draft-first build (no governed vocabulary: SQL drafted from the question, the reading only as fallback)', draft: false, valueProfile: true },
   E5: { description: 'E4 on the SQLite-worker build (a slow query stops at its deadline instead of freezing the runtime)', draft: false, valueProfile: true },
   E6: { description: 'E5 on the review-everywhere build (the reviewer never guesses how many rows the data holds)', draft: false, valueProfile: true },
+  // The modeled rungs: E6 plus the layers a separate agent wrote from the
+  // warehouse alone (spider2/layers/AUTHORING.md). A database without
+  // authored layers is not built for these conditions.
+  L2: { description: 'E6 + modeling written from the warehouse by a blind author (entities, grains, relationships certified on data evidence)', draft: false, valueProfile: true, layers: ['L2'] },
+  L3: { description: 'L2 + skills and native metrics written from the warehouse by the same blind author', draft: false, valueProfile: true, layers: ['L2', 'L3'] },
 };
 const WORK = join(REPO_ROOT, 'work', 'spider2');
 
@@ -41,7 +46,10 @@ export function build({ condition, only, set }) {
   const { tasks, missingDatabases } = readTasks();
   // A named set builds only the databases its tasks use.
   const inSet = taskSet(set);
-  const databases = [...new Set(tasks.filter((task) => !inSet || inSet.has(task.id)).map((task) => task.db))].filter((db) => !only || db === only).sort();
+  const layered = CONDITIONS[condition].layers;
+  const hasLayers = (db) => !layered || layered.every((layer) => existsSync(join(REPO_ROOT, 'spider2', 'layers', db, layer)));
+  const databases = [...new Set(tasks.filter((task) => !inSet || inSet.has(task.id)).map((task) => task.db))].filter((db) => !only || db === only).filter(hasLayers).sort();
+  if (layered && databases.length === 0) throw new Error(`no database has authored ${layered.join(' + ')} layers under spider2/layers/`);
   // The code that built the projects: a drafted model is as much a product of
   // DQL as an answer is, so a run on projects from another build is two
   // builds at once. run.mjs compares this with its own.
@@ -67,6 +75,12 @@ export function build({ condition, only, set }) {
     if (CONDITIONS[condition].valueProfile) config.agent = { ...(config.agent ?? {}), valueProfile: { mode: 'sampled' } };
     writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
     run(['sync', 'warehouse', dir, '--schemas', 'main']);
+    // The authored layers go in after init and the schema sync, the order a
+    // team follows; the model must then validate as written.
+    for (const layer of layered ?? []) {
+      cpSync(join(REPO_ROOT, 'spider2', 'layers', db, layer), dir, { recursive: true, filter: (source) => !source.endsWith('AUTHORING-LOG.md') });
+    }
+    if (layered) run(['model', 'validate', dir]);
     let drafted = null;
     if (CONDITIONS[condition].draft) {
       run(['model', 'apply-discovery', dir, '--apply', '--validate']);
