@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Build one DQL project per Spider 2.0-Lite SQLite database, for one condition.
 //
-//   node spider2/build.mjs --condition S0|S1a|E0|E1|E2|E3|E4|E5 [--db <name>] [--set quick]
+//   node spider2/build.mjs --condition S0|S1a|E0|E1|E2|E3|E4|E5|E6 [--db <name>] [--set quick]
 //
 // S0:  the warehouse only. `dql init --warehouse-first` on a folder whose one
 //      connection is the task database (opened read-only), then `dql sync
@@ -31,6 +31,7 @@ export const CONDITIONS = {
   E3: { description: 'E2 on the assume-and-state build (open points over raw columns answered and stated, not asked)', draft: false, valueProfile: true },
   E4: { description: 'E3 on the draft-first build (no governed vocabulary: SQL drafted from the question, the reading only as fallback)', draft: false, valueProfile: true },
   E5: { description: 'E4 on the SQLite-worker build (a slow query stops at its deadline instead of freezing the runtime)', draft: false, valueProfile: true },
+  E6: { description: 'E5 on the review-everywhere build (the reviewer never guesses how many rows the data holds)', draft: false, valueProfile: true },
 };
 const WORK = join(REPO_ROOT, 'work', 'spider2');
 
