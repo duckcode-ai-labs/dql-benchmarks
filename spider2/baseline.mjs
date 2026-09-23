@@ -143,8 +143,11 @@ async function main() {
       // A call the provider refused (usage limit, quota, sign-in) is not an
       // answer the model gave: scored as "no SQL" it counts as the model being
       // wrong. The run stops and is marked invalid instead, as the DQL runner does.
-      const said = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
-      if (result.status !== 0 || /usage limit|rate limit|quota|unauthori[sz]ed|not logged in|login required/i.test(said)) {
+      // Only a failed call is examined, and only its error output: a model's
+      // SQL can name a column `total_quota`, which is not a quota error.
+      const said = `${result.stderr ?? ''}`;
+      const codexRefusal = options.provider === 'codex' && /^ERROR:.*(usage limit|rate limit|quota)/im.test(`${result.stdout ?? ''}\n${said}`);
+      if (result.status !== 0 || codexRefusal) {
         const reason = said.split('\n').filter((line) => /error|limit|quota|unauthori|login/i.test(line)).slice(-3).join(' ').slice(0, 400) || `exit ${result.status}`;
         summary.invalid.push({ db, task: task.id, reason });
         summary.databases[db] = { tasks: dbTasks.map((item) => item.id), answered, outcomes };
