@@ -1,0 +1,328 @@
+version: 2
+
+# Claim side: claims, the money on each claim (loss and expense, paid and reserved),
+# catastrophes and loss occurrences.
+#
+# Grain notes (see BUSINESS-BRIEF.md):
+# - claim_amount has one row per amount; a claim has several. The kind of an amount is
+#   known ONLY from which subtype table lists its Claim_Amount_Identifier (loss_payment,
+#   loss_reserve, expense_payment, expense_reserve; each amount is in exactly one). The
+#   measures test membership with `in (from "main"."<subtype>")`; the unfiltered sum of
+#   claim_amount mixes payments with reserves and is deliberately not a measure.
+# - Claim amounts carry no date (Event_Date is empty in every row). Slice them in time by
+#   the claim's dates (claim__claim_open_date) or the date of loss
+#   (occurrence__loss_date), not by metric_time.
+# - Claims reach their policy only through claim_coverage -> policy_coverage_detail ->
+#   policy. The claim-grain model claim_policy (claim_policy.sql) materializes that path with
+#   the policy's agent and holder, so claim money and claim counts reach policy, agent and
+#   holder in one join (claim_policy__policy_number, __agent_name, __policy_holder_name).
+
+semantic_models:
+  - name: insurance_claims
+    description: >-
+      One row per claim (OMG Claim). Company_Claim_Number is the business claim number. A
+      claim is closed when Claim_Close_Date is filled (status code is empty). Linked to a
+      catastrophe (peril), a loss occurrence (date of loss) and the damaged insurable object.
+    model: ref('claim')
+    defaults:
+      agg_time_dimension: claim_open_date
+    entities:
+      - name: claim
+        type: primary
+        expr: Claim_Identifier
+      - name: claim_policy
+        type: foreign
+        expr: Claim_Identifier
+      - name: catastrophe
+        type: foreign
+        expr: Catastrophe_Identifier
+      - name: occurrence
+        type: foreign
+        expr: Occurrence_Identifier
+    dimensions:
+      - name: claim_number
+        label: Claim number
+        description: Company_Claim_Number, the claim number people use.
+        type: categorical
+        expr: Company_Claim_Number
+      - name: claim_open_date
+        label: Claim open date
+        type: time
+        expr: Claim_Open_Date
+        type_params:
+          time_granularity: day
+      - name: claim_close_date
+        label: Claim close date
+        type: time
+        expr: Claim_Close_Date
+        type_params:
+          time_granularity: day
+      - name: claim_status
+        label: Claim status (today)
+        description: "'Closed' when a close date is filled, otherwise 'Open' (status code is empty in the data)."
+        type: categorical
+        expr: "case when Claim_Close_Date is null then 'Open' else 'Closed' end"
+      - name: damaged_object_id
+        label: Damaged object (claim record)
+        description: >-
+          The insurable object named on the claim (claim.Insurable_Object_Identifier). It can
+          differ from the object insured by the coverage the claim is recorded against, so losses
+          by this object and premium by coverage object are not the same scope.
+        type: categorical
+        expr: Insurable_Object_Identifier
+    measures:
+      - name: claims
+        label: Claims
+        agg: count_distinct
+        expr: Claim_Identifier
+      - name: closed_claims
+        label: Closed claims
+        agg: sum
+        expr: "case when Claim_Close_Date is not null then 1 else 0 end"
+      - name: open_claims
+        label: Open claims
+        agg: sum
+        expr: "case when Claim_Close_Date is null then 1 else 0 end"
+      - name: avg_days_to_close
+        label: Days to close
+        description: Claim_Close_Date - Claim_Open_Date in days; empty for open claims.
+        agg: average
+        expr: "date_diff('day', Claim_Open_Date, Claim_Close_Date)"
+
+  - name: claim_amounts
+    description: >-
+      One row per money amount on a claim (OMG Claim_Amount). What kind of amount a row is
+      comes only from the subtype tables loss_payment, loss_reserve, expense_payment and
+      expense_reserve. Amount_Type_Code, Event_Date and Insurance_Type_Code are empty.
+    model: ref('claim_amount')
+    defaults:
+      agg_time_dimension: amount_event_date
+    entities:
+      - name: claim_amount
+        type: primary
+        expr: Claim_Amount_Identifier
+      - name: claim
+        type: foreign
+        expr: Claim_Identifier
+      - name: claim_policy
+        type: foreign
+        expr: Claim_Identifier
+    dimensions:
+      - name: claim_amount_kind
+        label: Claim amount kind
+        description: Loss payment, Loss reserve, Expense payment or Expense reserve, from the subtype tables.
+        type: categorical
+        expr: >-
+          case
+          when Claim_Amount_Identifier in (from "main"."loss_payment") then 'Loss payment'
+          when Claim_Amount_Identifier in (from "main"."loss_reserve") then 'Loss reserve'
+          when Claim_Amount_Identifier in (from "main"."expense_payment") then 'Expense payment'
+          when Claim_Amount_Identifier in (from "main"."expense_reserve") then 'Expense reserve'
+          end
+      - name: amount_event_date
+        label: Amount event date
+        description: Empty in every row; claim amounts have no date of their own. Slice claim money by claim__claim_open_date or the date of loss instead.
+        type: time
+        expr: cast(Event_Date as date)
+        type_params:
+          time_granularity: day
+    measures:
+      - name: losses_paid
+        label: Losses paid
+        agg: sum
+        expr: 'case when Claim_Amount_Identifier in (from "main"."loss_payment") then Claim_Amount end'
+      - name: loss_reserves
+        label: Loss reserves
+        agg: sum
+        expr: 'case when Claim_Amount_Identifier in (from "main"."loss_reserve") then Claim_Amount end'
+      - name: expenses_paid
+        label: Expenses paid
+        agg: sum
+        expr: 'case when Claim_Amount_Identifier in (from "main"."expense_payment") then Claim_Amount end'
+      - name: expense_reserves
+        label: Expense reserves
+        agg: sum
+        expr: 'case when Claim_Amount_Identifier in (from "main"."expense_reserve") then Claim_Amount end'
+      - name: incurred_losses
+        label: Incurred losses
+        agg: sum
+        expr: 'case when Claim_Amount_Identifier in (from "main"."loss_payment") or Claim_Amount_Identifier in (from "main"."loss_reserve") then Claim_Amount end'
+      - name: incurred_expenses
+        label: Incurred expenses (LAE)
+        agg: sum
+        expr: 'case when Claim_Amount_Identifier in (from "main"."expense_payment") or Claim_Amount_Identifier in (from "main"."expense_reserve") then Claim_Amount end'
+      - name: total_paid
+        label: Total paid (loss + expense)
+        agg: sum
+        expr: 'case when Claim_Amount_Identifier in (from "main"."loss_payment") or Claim_Amount_Identifier in (from "main"."expense_payment") then Claim_Amount end'
+      - name: total_reserves
+        label: Total reserves (loss + expense)
+        agg: sum
+        expr: 'case when Claim_Amount_Identifier in (from "main"."loss_reserve") or Claim_Amount_Identifier in (from "main"."expense_reserve") then Claim_Amount end'
+      - name: claims_with_amounts
+        label: Claims with amounts
+        description: Distinct claims that have at least one claim amount.
+        agg: count_distinct
+        expr: Claim_Identifier
+      - name: incurred_loss_and_expense
+        label: Incurred loss and expense
+        agg: sum
+        expr: 'case when Claim_Amount_Identifier in (from "main"."loss_payment") or Claim_Amount_Identifier in (from "main"."loss_reserve") or Claim_Amount_Identifier in (from "main"."expense_payment") or Claim_Amount_Identifier in (from "main"."expense_reserve") then Claim_Amount end'
+
+  - name: catastrophes
+    description: >-
+      Catastrophe codes (OMG Catastrophe). Only the name is filled and the names are perils
+      not named events.
+    model: ref('catastrophe')
+    entities:
+      - name: catastrophe
+        type: primary
+        expr: Catastrophe_Identifier
+    dimensions:
+      - name: catastrophe_name
+        label: Catastrophe
+        type: categorical
+        expr: Catastrophe_Name
+
+  - name: loss_occurrences
+    description: The event that caused a loss (OMG Occurrence); only its begin and end dates are filled.
+    model: ref('occurrences')
+    entities:
+      - name: occurrence
+        type: primary
+        expr: Occurrence_Identifier
+    dimensions:
+      - name: loss_date
+        label: Date of loss
+        description: Occurrence_Begin_Date, the date the loss happened.
+        type: time
+        expr: Occurrence_Begin_Date
+        type_params:
+          time_granularity: day
+
+metrics:
+  - name: losses_paid
+    label: Losses paid
+    description: Paid losses - sum of claim amounts listed in loss_payment.
+    type: simple
+    type_params:
+      measure: losses_paid
+  - name: loss_reserves
+    label: Loss reserves
+    description: Case reserves for expected loss - sum of claim amounts listed in loss_reserve (current values; no reserve history).
+    type: simple
+    type_params:
+      measure: loss_reserves
+  - name: expenses_paid
+    label: Expenses paid (LAE paid)
+    description: Paid claim-handling (loss adjustment) expense - sum of claim amounts listed in expense_payment.
+    type: simple
+    type_params:
+      measure: expenses_paid
+  - name: expense_reserves
+    label: Expense reserves (LAE reserves)
+    description: Reserves for expected claim-handling expense - sum of claim amounts listed in expense_reserve.
+    type: simple
+    type_params:
+      measure: expense_reserves
+  - name: incurred_losses
+    label: Incurred losses
+    description: Losses paid + loss reserves.
+    type: simple
+    type_params:
+      measure: incurred_losses
+  - name: incurred_expenses
+    label: Incurred expenses (LAE)
+    description: Expenses paid + expense reserves.
+    type: simple
+    type_params:
+      measure: incurred_expenses
+  - name: total_paid
+    label: Total paid (loss + expense)
+    description: Losses paid + expenses paid.
+    type: simple
+    type_params:
+      measure: total_paid
+  - name: total_reserves
+    label: Total reserves (loss + expense)
+    description: Loss reserves + expense reserves (outstanding).
+    type: simple
+    type_params:
+      measure: total_reserves
+  - name: incurred_loss_and_expense
+    label: Incurred loss and expense
+    description: All four kinds - losses paid + loss reserves + expenses paid + expense reserves.
+    type: simple
+    type_params:
+      measure: incurred_loss_and_expense
+  - name: claims
+    label: Claims
+    description: Number of distinct claims. Zero (not empty) where it is combined with another metric that has rows, e.g. claim frequency in a year without claims.
+    type: simple
+    type_params:
+      measure:
+        name: claims
+        fill_nulls_with: 0
+  - name: closed_claims
+    label: Closed claims
+    description: Claims with a close date (closed as of today).
+    type: simple
+    type_params:
+      measure: closed_claims
+  - name: open_claims
+    label: Open claims
+    description: Claims without a close date (open as of today).
+    type: simple
+    type_params:
+      measure: open_claims
+  - name: avg_days_to_close
+    label: Average days to close
+    description: Average of claim close date - open date in days, over closed claims.
+    type: simple
+    type_params:
+      measure: avg_days_to_close
+  - name: claim_severity
+    label: Claim severity (incurred loss per claim)
+    description: >-
+      Incurred losses / distinct claims that have claim amounts (every claim in the data has
+      amounts). Both sides come from claim_amount, so the ratio is computed in one pass.
+    type: ratio
+    type_params:
+      numerator: incurred_losses
+      denominator: claims_with_amounts
+  - name: claim_frequency
+    label: Claim frequency (claims per policy-year)
+    description: Claims / coverage periods. Only meaningful for the same scope (book level or same period).
+    type: ratio
+    type_params:
+      numerator: claims
+      denominator: coverage_periods
+  - name: loss_ratio
+    label: Loss ratio
+    description: >-
+      Incurred losses / written premium. Written premium equals earned premium here because
+      every coverage period has expired. Use at book level or for a scope both sides share.
+    type: ratio
+    type_params:
+      numerator: incurred_losses
+      denominator: written_premium
+  - name: loss_and_lae_ratio
+    label: Loss and LAE ratio
+    description: (Incurred losses + incurred expenses) / written premium.
+    type: ratio
+    type_params:
+      numerator: incurred_loss_and_expense
+      denominator: written_premium
+  - name: paid_loss_ratio
+    label: Paid loss ratio
+    description: Losses paid / written premium.
+    type: ratio
+    type_params:
+      numerator: losses_paid
+      denominator: written_premium
+  - name: claims_with_amounts
+    label: Claims with amounts
+    description: Distinct claims that have at least one claim amount (every claim in the data has amounts).
+    type: simple
+    type_params:
+      measure: claims_with_amounts

@@ -1,0 +1,255 @@
+# Business concepts from the data.world insurance ontology (insurance.ttl) and its table
+# mapping (P&C Insurance Ontology r2rml), bound to the entities that carry them.
+domain: insurance
+concepts:
+  - id: policy
+    name: Policy
+    description: >-
+      An insurance policy (ontology class Policy): policy number, effective date and expiration
+      date. A policy is an agreement; the policy table is the canonical record.
+    synonyms: [insurance policy, contract]
+    bindings:
+      - entity: policy
+        role: canonical
+        grain: Policy_Identifier
+      - entity: agreement
+        role: conformed
+        grain: Agreement_Type_Code
+    rule: >-
+      policy.Policy_Identifier = agreement.Agreement_Type_Code (the agreement model's mislabeled
+      identifier column). Use policy for every policy attribute; agreement adds only
+      Agreement_Name.
+    equivalences:
+      - from: policy
+        to: agreement
+        keys: [{ from: Policy_Identifier, to: Agreement_Type_Code }]
+        cardinality: one_to_one
+        status: draft
+    status: reviewed
+    owner: insurance-analytics@acme-insurance.test
+    origin: manual
+  - id: party
+    name: Party
+    description: A person or organization. Person and organization are the named subtypes of party.
+    synonyms: [individual, company]
+    bindings:
+      - entity: party
+        role: canonical
+        grain: Party_Identifier
+      - entity: person
+        role: conformed
+        grain: Person_Identifier
+      - entity: organization
+        role: conformed
+        grain: Organization_Identifier
+    rule: person.Person_Identifier and organizations.Organization_Identifier are Party_Identifier values.
+    equivalences:
+      - from: person
+        to: party
+        keys: [{ from: Person_Identifier, to: Party_Identifier }]
+        cardinality: one_to_one
+        status: certified
+      - from: organization
+        to: party
+        keys: [{ from: Organization_Identifier, to: Party_Identifier }]
+        cardinality: one_to_one
+        status: certified
+    status: reviewed
+    owner: insurance-analytics@acme-insurance.test
+    origin: manual
+  - id: policy_holder
+    name: Policy holder
+    description: >-
+      The party who holds a policy (ontology: Policy hasPolicyHolder PolicyHolder). A party is a
+      policy holder when it has an agreement_party_role row with Party_Role_Code = 'PH' whose
+      Agreement_Identifier is a policy's Policy_Identifier. Policy Holder ID is the Party_Identifier.
+    synonyms: [policyholder, insured, named insured, customer]
+    bindings:
+      - entity: party
+        role: canonical
+        grain: Party_Identifier
+    status: reviewed
+    owner: insurance-analytics@acme-insurance.test
+    origin: manual
+  - id: agent
+    name: Agent
+    description: >-
+      The party who sold a policy (ontology: Policy soldByAgent Agent). A party is an agent when
+      it has an agreement_party_role row with Party_Role_Code = 'AG' on a policy. Agent ID is the
+      Party_Identifier.
+    synonyms: [insurance agent, producer, broker, seller]
+    bindings:
+      - entity: party
+        role: canonical
+        grain: Party_Identifier
+    status: reviewed
+    owner: insurance-analytics@acme-insurance.test
+    origin: manual
+  - id: underwriter
+    name: Underwriter
+    description: >-
+      The party who performed an underwriting assessment (mapping: UnderwritingAssessment
+      hasUnderwriter Underwriter). A party is an underwriter when it has an assesment_party_role
+      row with Party_Role_Code = 'UW'. Underwriter ID is the Party_Identifier. Underwriters are
+      linked to policies only through assessments, not through agreement_party_role.
+    synonyms: [underwriting officer]
+    bindings:
+      - entity: party
+        role: canonical
+        grain: Party_Identifier
+    status: reviewed
+    owner: insurance-analytics@acme-insurance.test
+    origin: manual
+  - id: underwriting_assessment
+    name: Underwriting assessment
+    description: >-
+      The underwriting of a policy (mapping: UnderwritingAssessment underwritesPolicy Policy),
+      with underwriting begin and end dates from assessment and the result code from
+      assessment_result.
+    synonyms: [underwriting, underwriting review]
+    bindings:
+      - entity: underwriting_assessment
+        role: canonical
+        grain: Assessment_Result_Identifier
+      - entity: assessment_result
+        role: conformed
+        grain: Assessment_Result_Identifier
+    rule: An assessment result is an underwriting assessment when its Assessment_Result_Identifier is in underwriting_assessment.
+    equivalences:
+      - from: underwriting_assessment
+        to: assessment_result
+        keys: [{ from: Assessment_Result_Identifier, to: Assessment_Result_Identifier }]
+        cardinality: one_to_one
+        status: certified
+    status: reviewed
+    owner: insurance-analytics@acme-insurance.test
+    origin: manual
+  - id: premium
+    name: Premium
+    description: >-
+      The price of coverage (ontology class Premium, attached to a policy coverage detail).
+      Premium Amount = policy_amount.Policy_Amount for rows in premium; Premium Period =
+      policy_amount.Amount_Type_Code ('Year'); Premium Amount Monthly = the yearly amount / 12
+      (only defined when the period is 'Year').
+    synonyms: [written premium, policy premium, annual premium]
+    bindings:
+      - entity: premium
+        role: canonical
+        grain: Policy_Amount_Identifier
+      - entity: policy_amount
+        role: conformed
+        grain: Policy_Amount_Identifier
+    rule: A policy amount is a premium when its Policy_Amount_Identifier is in premium; policy amounts not in premium are other policy amounts.
+    equivalences:
+      - from: premium
+        to: policy_amount
+        keys: [{ from: Policy_Amount_Identifier, to: Policy_Amount_Identifier }]
+        cardinality: one_to_one
+        status: certified
+    status: reviewed
+    owner: insurance-analytics@acme-insurance.test
+    origin: manual
+  - id: loss_payment
+    name: Loss payment
+    description: Money paid on a claim for the loss (ontology Claim hasLossPayment; Loss Payment Amount = claim_amount.Claim_Amount).
+    synonyms: [paid loss, claim payment, indemnity payment]
+    bindings:
+      - entity: loss_payment
+        role: canonical
+        grain: Claim_Amount_Identifier
+      - entity: claim_amount
+        role: conformed
+        grain: Claim_Amount_Identifier
+    rule: A claim amount is a loss payment when its Claim_Amount_Identifier is in loss_payment.
+    equivalences:
+      - from: loss_payment
+        to: claim_amount
+        keys: [{ from: Claim_Amount_Identifier, to: Claim_Amount_Identifier }]
+        cardinality: one_to_one
+        status: certified
+    status: reviewed
+    owner: insurance-analytics@acme-insurance.test
+    origin: manual
+  - id: loss_reserve
+    name: Loss reserve
+    description: Money reserved on a claim for the expected loss (ontology Claim hasLossReserve; Loss Reserve Amount = claim_amount.Claim_Amount).
+    synonyms: [case reserve, loss reserves]
+    bindings:
+      - entity: loss_reserve
+        role: canonical
+        grain: Claim_Amount_Identifier
+      - entity: claim_amount
+        role: conformed
+        grain: Claim_Amount_Identifier
+    rule: A claim amount is a loss reserve when its Claim_Amount_Identifier is in loss_reserve.
+    equivalences:
+      - from: loss_reserve
+        to: claim_amount
+        keys: [{ from: Claim_Amount_Identifier, to: Claim_Amount_Identifier }]
+        cardinality: one_to_one
+        status: certified
+    status: reviewed
+    owner: insurance-analytics@acme-insurance.test
+    origin: manual
+  - id: expense_payment
+    name: Expense payment
+    description: Money paid on a claim for claim-handling expenses (ontology Claim hasExpensePayment; Expense Payment Amount = claim_amount.Claim_Amount).
+    synonyms: [paid expense, adjustment expense payment, LAE payment]
+    bindings:
+      - entity: expense_payment
+        role: canonical
+        grain: Claim_Amount_Identifier
+      - entity: claim_amount
+        role: conformed
+        grain: Claim_Amount_Identifier
+    rule: A claim amount is an expense payment when its Claim_Amount_Identifier is in expense_payment.
+    equivalences:
+      - from: expense_payment
+        to: claim_amount
+        keys: [{ from: Claim_Amount_Identifier, to: Claim_Amount_Identifier }]
+        cardinality: one_to_one
+        status: certified
+    status: reviewed
+    owner: insurance-analytics@acme-insurance.test
+    origin: manual
+  - id: expense_reserve
+    name: Expense reserve
+    description: Money reserved on a claim for expected claim-handling expenses (ontology Claim hasExpenseReserve; Expense Reserve Amount = claim_amount.Claim_Amount).
+    synonyms: [LAE reserve, expense reserves]
+    bindings:
+      - entity: expense_reserve
+        role: canonical
+        grain: Claim_Amount_Identifier
+      - entity: claim_amount
+        role: conformed
+        grain: Claim_Amount_Identifier
+    rule: A claim amount is an expense reserve when its Claim_Amount_Identifier is in expense_reserve.
+    equivalences:
+      - from: expense_reserve
+        to: claim_amount
+        keys: [{ from: Claim_Amount_Identifier, to: Claim_Amount_Identifier }]
+        cardinality: one_to_one
+        status: certified
+    status: reviewed
+    owner: insurance-analytics@acme-insurance.test
+    origin: manual
+  - id: location
+    name: Location
+    description: >-
+      Where an insured object is (ontology/mapping class Location): geographic_location joined
+      to location_address (address line 1 and 2, city = Municipality_Name, state, zip code =
+      Postal_Code, country) and to pysical_location (latitude, longitude).
+    synonyms: [address, insured location, property location]
+    bindings:
+      - entity: geographic_location
+        role: canonical
+        grain: Geographic_Location_Identifier
+      - entity: location_address
+        role: conformed
+        grain: Location_Address_Identifier
+      - entity: physical_location
+        role: conformed
+        grain: Physical_Location_Identifier
+    status: reviewed
+    owner: insurance-analytics@acme-insurance.test
+    origin: manual

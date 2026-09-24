@@ -1,0 +1,17 @@
+block "Written Premium by Policy and Coverage Year" {
+    type = "semantic"
+    status = "certified"
+    domain = "insurance"
+    description = "Standard premium report: written premium, monthly premium and the number of premium-bearing coverage periods per policy and coverage year (the year the yearly coverage period starts). Premium = policy amounts listed in the premium table; every coverage period has expired, so written premium equals earned premium. Governed metrics: written_premium, monthly_premium, coverage_periods_with_premium."
+    tags = ["insurance", "premium", "standard-report", "ai-authored", "app-source"]
+    owner = "insurance-analytics@acme-insurance.test"
+    metrics = ["written_premium", "monthly_premium", "coverage_periods_with_premium"]
+    dimensions = ["policy__policy_number"]
+    time_dimension = "policy_amount__premium_period_start_date"
+    granularity = "year"
+    order_by = ["policy__policy_number asc"]
+
+    visualization {
+        chart = "table"
+    }
+}

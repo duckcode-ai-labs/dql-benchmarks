@@ -49,7 +49,18 @@ export const LAYERS = {
   // has no dbt project, manifest or MetricFlow.
   W2: { description: 'W1 + dbt Labs\' metrics as DQL native semantic YAML (dql semantic import; no dbt or MetricFlow at query time)', warehouse: true, semanticLayer: false, overlays: ['L1'], nativeMetrics: true },
   W4: { description: 'W2 + L3 skills: the no-dbt counterpart of L3', warehouse: true, semanticLayer: false, overlays: ['L1', 'L3'], nativeMetrics: true },
+  // The business layer B (layers/AUTHORING-B.md): KPIs as governed metrics,
+  // standard reports as blocks, rules as skills, and the model underneath,
+  // written from the business and the data by a separate author and checked
+  // by a separate verifier. dbt Labs' own semantic models are left out: the
+  // metrics are B's. LB keeps dbt (MetricFlow); WB has no dbt and runs B's
+  // metrics on DQL's native engine after `dql semantic import`.
+  LB: { description: 'dbt project + business layer B: its dbt metrics (MetricFlow), modeling, skills and report blocks', semanticLayer: true, business: true, overlays: [] },
+  WB: { description: 'warehouse only, no dbt + business layer B: its metrics as DQL native metrics, modeling, skills and report blocks; the warehouse also holds the tables B\'s transformation models build (claim_policy), with nothing of dbt in the project', warehouse: true, semanticLayer: false, business: true, overlays: [], nativeMetrics: true, metricsFrom: 'LB' },
 };
+
+/** Layer B: DQL files go on the project root; dbt files go into the dbt project. */
+const BUSINESS = join(REPO_ROOT, 'insurance', 'layers', 'B');
 
 /** The schema the dbt project builds its models into; the warehouse layers model it. */
 const WAREHOUSE_SCHEMA = 'main';
@@ -188,6 +199,12 @@ function applyOverlays(layer, dir) {
     cpSync(from, dir, { recursive: true });
     added.push(...listFiles(from).map((file) => relative(from, file)));
   }
+  if (LAYERS[layer].business) {
+    const from = join(BUSINESS, 'dql');
+    if (!existsSync(from)) throw new Error(`Layer ${layer} needs insurance/layers/B/dql/, which has not been written yet.`);
+    cpSync(from, dir, { recursive: true });
+    added.push(...listFiles(from).map((file) => relative(from, file)));
+  }
   return added.sort();
 }
 
@@ -205,8 +222,12 @@ function copyProject(layer, dir) {
     if (name.endsWith('.csv')) cpSync(join(SOURCE, SEED_DIR, name), join(dir, SEED_DIR, name));
   }
   widenIntegerSeedColumns(dir);
-  if (!LAYERS[layer].semanticLayer) rmSync(join(dir, SEMANTIC_DIR), { recursive: true, force: true });
-  if (LAYERS[layer].semanticLayer) portModelSql(dir);
+  if (!LAYERS[layer].semanticLayer || LAYERS[layer].business) rmSync(join(dir, SEMANTIC_DIR), { recursive: true, force: true });
+  if (LAYERS[layer].semanticLayer && !LAYERS[layer].business) portModelSql(dir);
+  if (LAYERS[layer].business && LAYERS[layer].semanticLayer) {
+    if (!existsSync(join(BUSINESS, 'dbt'))) throw new Error(`Layer ${layer} needs insurance/layers/B/dbt/, which has not been written yet.`);
+    cpSync(join(BUSINESS, 'dbt'), dir, { recursive: true });
+  }
   writeFileSync(
     join(dir, 'profiles.yml'),
     [
@@ -409,8 +430,11 @@ async function buildWarehouseLayer(layer, { skipGold }) {
     warehouseSchema: WAREHOUSE_SCHEMA,
   };
 
-  // 1. The warehouse: dbt Labs' project built into DuckDB, as for L0.
-  copyProject('L0', source);
+  // 1. The warehouse: dbt Labs' project built into DuckDB, as for L0. For the
+  // business layer, the tables B's dbt models define (claim_policy) are built
+  // too: a team without dbt at query time still has the tables its
+  // transformation job produced. Nothing of dbt reaches the WB project.
+  copyProject(LAYERS[layer].business ? 'LB' : 'L0', source);
   for (const args of [['seed'], ['run']]) {
     const step = dbt(args, source);
     record.steps.push(step);
@@ -441,21 +465,22 @@ async function buildWarehouseLayer(layer, { skipGold }) {
 
   // 3. The layer's modeling.
   record.layerFiles = applyOverlays(layer, dir);
-  if (LAYERS[layer].overlays.includes('L1')) {
+  if (LAYERS[layer].overlays.includes('L1') || LAYERS[layer].business) {
     record.portedBindings = portToRelations(dir);
     record.revalidated = await revalidateRelationships(dir, cli);
   }
   if (LAYERS[layer].nativeMetrics) {
     // The definitions come from L2's dbt project; only DQL's import reads it.
-    const l2 = join(WORK, 'projects', 'L2');
-    if (!existsSync(join(l2, 'target', 'semantic_manifest.json'))) throw new Error('Build L2 first: its dbt project holds the semantic definitions W2 imports.');
+    const from = LAYERS[layer].metricsFrom ?? 'L2';
+    const l2 = join(WORK, 'projects', from);
+    if (!existsSync(join(l2, 'target', 'semantic_manifest.json'))) throw new Error(`Build ${from} first: its dbt project holds the semantic definitions ${layer} imports.`);
     run(['semantic', 'import', 'dbt', dir, '--input', l2], 'dql semantic import dbt');
     const listed = runDql(['semantic', 'list', dir, '--format', 'json'], { cli, cwd: dir });
     const layerInfo = JSON.parse(listed.stdout);
     record.nativeSemanticLayer = { provider: layerInfo.provider, metrics: layerInfo.metrics.map((metric) => metric.name), dimensions: layerInfo.dimensions.length };
     // The import leaves no path back to dbt: the project must not name one.
     const config = JSON.parse(readFileSync(join(dir, 'dql.config.json'), 'utf-8'));
-    if (config.dbt || config.semanticLayer?.provider === 'dbt') throw new Error('W2 must not configure dbt.');
+    if (config.dbt || config.semanticLayer?.provider === 'dbt') throw new Error(`${layer} must not configure dbt.`);
   }
   if (LAYERS[layer].discover) {
     run(['model', 'apply-discovery', dir, '--apply', '--validate']);
@@ -477,6 +502,8 @@ async function buildWarehouseLayer(layer, { skipGold }) {
 
 export async function build({ layer = 'L0', skipGold = false } = {}) {
   if (!LAYERS[layer]) throw new Error(`Unknown layer ${layer}. Known: ${Object.keys(LAYERS).join(', ')}`);
+  // B's author and verifier build these arms; the answers are never computed here.
+  if (LAYERS[layer].business) skipGold = true;
   if (LAYERS[layer].warehouse) return buildWarehouseLayer(layer, { skipGold });
   if (!existsSync(SOURCE)) throw new Error('Insurance data is missing. Run: insurance/download.sh');
   const cli = resolveDqlCli();

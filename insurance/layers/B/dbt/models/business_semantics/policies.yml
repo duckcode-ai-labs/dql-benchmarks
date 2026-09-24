@@ -1,0 +1,358 @@
+version: 2
+
+# Policy side of the ACME P&C book: policies, their yearly coverage periods, the money
+# amounts on each coverage period (premium and one unlabeled amount), and the parties
+# (policy holder, agent) on each policy.
+#
+# Grain notes (see BUSINESS-BRIEF.md):
+# - policy_amount holds one row per amount per coverage period. Whether a row is a premium
+#   is decided ONLY by membership in the `premium` table (OMG subtype), so the premium
+#   measures test membership with `in (from "main"."premium")`. The FROM-first subquery is
+#   deliberate: it has no SELECT/WHERE keywords and quoted names, so DQL's native compiler
+#   (no-dbt arm) can qualify the outer column without touching the subquery.
+# - Premium and claims are never joined row to row; ratios combine separately aggregated
+#   metrics.
+
+semantic_models:
+  - name: insurance_policies
+    description: >-
+      One row per insurance policy (OMG Policy). Policy_Number is the business number;
+      Effective_Date / Expiration_Date bound the whole policy term (several yearly coverage
+      periods). Status_Code is empty in this data, so "in force" is decided from the dates.
+    model: ref('policy')
+    defaults:
+      agg_time_dimension: policy_effective_date
+    entities:
+      - name: policy
+        type: primary
+        expr: Policy_Identifier
+    dimensions:
+      - name: policy_number
+        label: Policy number
+        description: Business policy number shown to customers and staff.
+        type: categorical
+        expr: Policy_Number
+      - name: policy_effective_date
+        label: Policy effective date
+        description: Start of the policy term.
+        type: time
+        expr: Effective_Date
+        type_params:
+          time_granularity: day
+      - name: policy_expiration_date
+        label: Policy expiration date
+        description: End of the policy term (inclusive).
+        type: time
+        expr: Expiration_Date
+        type_params:
+          time_granularity: day
+    measures:
+      - name: policies
+        label: Policies
+        description: Distinct policies.
+        agg: count_distinct
+        expr: Policy_Identifier
+
+  - name: policy_coverage_periods
+    description: >-
+      One row per policy coverage detail: one yearly coverage period of a policy on one
+      insured object. This is the exposure unit (a policy-year) and the grain premium is
+      charged at. The OMG key is (Effective_Date, Policy_Coverage_Detail_Identifier); the
+      identifier alone is unique in this data and is used as the
+      entity key because DQL's native join compiler needs a single-column key.
+    model: ref('policy_coverage_detail')
+    defaults:
+      agg_time_dimension: coverage_start_date
+    entities:
+      - name: policy_coverage_detail
+        type: primary
+        expr: Policy_Coverage_Detail_Identifier
+      - name: policy
+        type: foreign
+        expr: Policy_Identifier
+    dimensions:
+      - name: coverage_start_date
+        label: Coverage period start date
+        description: Start (effective date) of the yearly coverage period.
+        type: time
+        expr: Effective_Date
+        type_params:
+          time_granularity: day
+      - name: coverage_end_date
+        label: Coverage period end date
+        description: End (expiration date) of the yearly coverage period.
+        type: time
+        expr: Expiration_Date
+        type_params:
+          time_granularity: day
+      - name: insured_object_id
+        label: Insured object (coverage)
+        description: The insurable object this coverage period insures (policy_coverage_detail.Insurable_Object_Identifier).
+        type: categorical
+        expr: Insurable_Object_Identifier
+    measures:
+      - name: coverage_periods
+        label: Coverage periods (policy-years)
+        description: Distinct coverage periods; the exposure base for claim frequency.
+        agg: count_distinct
+        expr: Policy_Coverage_Detail_Identifier
+
+  - name: policy_amounts
+    description: >-
+      One row per money amount on a coverage period (OMG Policy_Amount). A row is a premium
+      only when its Policy_Amount_Identifier is listed in `premium`; premium rows carry
+      Amount_Type_Code 'Year' (annual premium for that coverage period). The other rows have
+      no type code and are not labeled by the data (they may be coverage limits, but this is not
+      recorded). Never add them to premium.
+    model: ref('policy_amount')
+    defaults:
+      agg_time_dimension: premium_period_start_date
+    entities:
+      - name: policy_amount
+        type: primary
+        expr: Policy_Amount_Identifier
+      - name: policy
+        type: foreign
+        expr: Policy_Identifier
+      - name: policy_coverage_detail
+        type: foreign
+        expr: Policy_Coverage_Detail_Identifier
+    dimensions:
+      - name: premium_period_start_date
+        label: Coverage period start date (of the amount)
+        description: >-
+          Effective date of the coverage period the amount belongs to. Written premium is
+          assigned to the coverage period's start date (coverage year).
+        type: time
+        expr: Effective_Date
+        type_params:
+          time_granularity: day
+      - name: policy_amount_kind
+        label: Policy amount kind
+        description: "'Premium' when the amount is listed in the premium table, otherwise 'Other policy amount (unlabeled)'."
+        type: categorical
+        expr: 'case when Policy_Amount_Identifier in (from "main"."premium") then ''Premium'' else ''Other policy amount (unlabeled)'' end'
+      - name: premium_period
+        label: Premium period
+        description: Amount_Type_Code of the amount; 'Year' (annual) on every premium row, empty on other amounts.
+        type: categorical
+        expr: Amount_Type_Code
+    measures:
+      - name: written_premium
+        label: Written premium
+        description: Sum of premium amounts (policy amounts listed in premium).
+        agg: sum
+        expr: 'case when Policy_Amount_Identifier in (from "main"."premium") then Policy_Amount end'
+      - name: monthly_premium
+        label: Monthly premium
+        description: Annual premium / 12, only for premiums whose period is 'Year'. A monthly equivalent per coverage period; summed over several periods it is not a monthly amount.
+        agg: sum
+        expr: 'case when Policy_Amount_Identifier in (from "main"."premium") and Amount_Type_Code = ''Year'' then Policy_Amount / 12.0 end'
+      - name: premium_records
+        label: Premium records
+        description: Number of premium amounts (one per coverage period that has a premium).
+        agg: sum
+        expr: 'case when Policy_Amount_Identifier in (from "main"."premium") then 1 else 0 end'
+      - name: policies_with_premium
+        label: Policies with premium
+        description: Distinct policies that have at least one premium amount in scope.
+        agg: count_distinct
+        expr: 'case when Policy_Amount_Identifier in (from "main"."premium") then Policy_Identifier end'
+      - name: coverage_periods_with_premium
+        label: Coverage periods with premium
+        description: Distinct coverage periods (policy-years) that have a premium amount in scope.
+        agg: count_distinct
+        expr: 'case when Policy_Amount_Identifier in (from "main"."premium") then Policy_Coverage_Detail_Identifier end'
+      - name: other_policy_amount
+        label: Other policy amount (unlabeled)
+        description: Sum of policy amounts that are NOT premiums. The data does not say what they are.
+        agg: sum
+        expr: 'case when Policy_Amount_Identifier in (from "main"."premium") then null else Policy_Amount end'
+
+  - name: policy_party_role
+    description: >-
+      One row per policy, party and role (OMG Agreement_Party_Role). Party_Role_Code 'PH' is
+      the policy holder, 'AG' the agent who sold the policy. Every policy has one row per
+      role, so policy-level measures must never be summed across this table.
+    model: ref('agreement_party_role')
+    primary_entity: policy_party_role
+    defaults:
+      agg_time_dimension: role_effective_date
+    entities:
+      - name: policy
+        type: foreign
+        expr: Agreement_Identifier
+      - name: person
+        type: foreign
+        expr: Party_Identifier
+    dimensions:
+      - name: party_role_code
+        label: Party role code
+        description: PH = policy holder, AG = agent.
+        type: categorical
+        expr: Party_Role_Code
+      - name: party_role
+        label: Party role
+        type: categorical
+        expr: "case Party_Role_Code when 'PH' then 'Policy holder' when 'AG' then 'Agent' when 'UW' then 'Underwriter' else Party_Role_Code end"
+      - name: party_id
+        label: Party ID
+        description: Party_Identifier of the party playing the role (Policy Holder ID, Agent ID).
+        type: categorical
+        expr: Party_Identifier
+      - name: role_effective_date
+        label: Role effective date
+        description: Empty in this data (no role history).
+        type: time
+        expr: cast(Effective_Date as date)
+        type_params:
+          time_granularity: day
+    measures:
+      - name: policies_sold_measure
+        label: Policies sold (by agent)
+        description: Building block of the policies_sold metric (use the metric, which also keeps only role AG rows). Distinct policies with an agent role (AG).
+        agg: count_distinct
+        expr: "case when Party_Role_Code = 'AG' then Agreement_Identifier end"
+      - name: policies_held_measure
+        label: Policies held (by policy holder)
+        description: Building block of the policies_held metric (use the metric, which also keeps only role PH rows). Distinct policies with a policy holder role (PH).
+        agg: count_distinct
+        expr: "case when Party_Role_Code = 'PH' then Agreement_Identifier end"
+      - name: agents_measure
+        label: Agents
+        description: Building block of the agents metric (use the metric). Distinct parties in the agent role (AG).
+        agg: count_distinct
+        expr: "case when Party_Role_Code = 'AG' then Party_Identifier end"
+      - name: policy_holders_measure
+        label: Policy holders
+        description: Building block of the policy_holders metric (use the metric). Distinct parties in the policy holder role (PH).
+        agg: count_distinct
+        expr: "case when Party_Role_Code = 'PH' then Party_Identifier end"
+
+  - name: people
+    description: >-
+      Persons (a person is a party: Person_Identifier = Party_Identifier). Only persons that
+      play a role have names; birth date, gender and other attributes are empty.
+    model: ref('person')
+    entities:
+      - name: person
+        type: primary
+        expr: Person_Identifier
+    dimensions:
+      - name: full_name
+        label: Name
+        description: First name + ' ' + last name.
+        type: categorical
+        expr: "First_Name || ' ' || Last_Name"
+      - name: first_name
+        label: First name
+        type: categorical
+        expr: First_Name
+      - name: last_name
+        label: Last name
+        type: categorical
+        expr: Last_Name
+
+metrics:
+  - name: written_premium
+    label: Written premium
+    description: >-
+      Premium charged for coverage periods: sum of policy_amount.Policy_Amount for amounts
+      listed in premium (annual premium per yearly coverage period). Every coverage period in
+      the data has expired, so written premium equals earned premium for all periods.
+    type: simple
+    type_params:
+      measure: written_premium
+  - name: monthly_premium
+    label: Monthly premium
+    description: >-
+      Annual ('Year') premium / 12 (ontology Premium Amount Monthly). Meaningful per coverage
+      period (cut by policy and coverage year); a total over several coverage periods adds up
+      monthly equivalents of different years and is not a monthly premium.
+    type: simple
+    type_params:
+      measure: monthly_premium
+  - name: premium_records
+    label: Premium records
+    description: Number of premium amounts (one per coverage period with a premium).
+    type: simple
+    type_params:
+      measure: premium_records
+  - name: other_policy_amount
+    label: Other policy amount (unlabeled)
+    description: >-
+      Sum of policy amounts that are not premiums. Unlabeled in the data (likely coverage
+      limits); never report it as premium, limit or deductible without saying it is unlabeled.
+    type: simple
+    type_params:
+      measure: other_policy_amount
+  - name: policies
+    label: Policies
+    description: Number of distinct policies (policy table). In force on a date = effective <= date <= expiration.
+    type: simple
+    type_params:
+      measure: policies
+  - name: coverage_periods
+    label: Coverage periods (policy-years)
+    description: Number of yearly coverage periods (policy coverage details); the exposure base.
+    type: simple
+    type_params:
+      measure: coverage_periods
+  - name: avg_premium_per_policy
+    label: Average premium per policy
+    description: >-
+      Written premium / distinct policies that carry that premium (over the coverage periods
+      in scope). Both sides come from policy_amount, so the ratio is computed in one pass.
+    type: ratio
+    type_params:
+      numerator: written_premium
+      denominator: policies_with_premium
+  - name: avg_premium_per_coverage_period
+    label: Average premium per coverage period
+    description: >-
+      Written premium / distinct coverage periods that carry a premium: the average annual
+      premium per policy-year.
+    type: ratio
+    type_params:
+      numerator: written_premium
+      denominator: coverage_periods_with_premium
+  - name: policies_sold
+    label: Policies sold (by agent)
+    description: Distinct policies that have an agent (role AG). Only role AG rows are counted, so grouped by person__full_name it lists agents only (people without the role do not appear).
+    type: simple
+    type_params:
+      measure: policies_sold_measure
+    filter: "{{ Dimension('policy_party_role__party_role_code') }} = 'AG'"
+  - name: policies_held
+    label: Policies held (by policy holder)
+    description: Distinct policies that have a policy holder (role PH). Only role PH rows are counted, so grouped by person__full_name it lists policy holders only.
+    type: simple
+    type_params:
+      measure: policies_held_measure
+    filter: "{{ Dimension('policy_party_role__party_role_code') }} = 'PH'"
+  - name: agents
+    label: Agents
+    description: Distinct parties that sold at least one policy (role AG); only role AG rows are counted.
+    type: simple
+    type_params:
+      measure: agents_measure
+    filter: "{{ Dimension('policy_party_role__party_role_code') }} = 'AG'"
+  - name: policy_holders
+    label: Policy holders
+    description: Distinct parties that hold at least one policy (role PH); only role PH rows are counted.
+    type: simple
+    type_params:
+      measure: policy_holders_measure
+    filter: "{{ Dimension('policy_party_role__party_role_code') }} = 'PH'"
+  - name: policies_with_premium
+    label: Policies with premium
+    description: Distinct policies that carry a premium amount in scope (denominator of average premium per policy).
+    type: simple
+    type_params:
+      measure: policies_with_premium
+  - name: coverage_periods_with_premium
+    label: Coverage periods with premium
+    description: Distinct coverage periods (policy-years) that carry a premium amount in scope.
+    type: simple
+    type_params:
+      measure: coverage_periods_with_premium

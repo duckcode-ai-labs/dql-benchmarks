@@ -1,0 +1,43 @@
+// dql-format: 1
+
+block "Underwriting Activity" {
+    domain = "insurance"
+    type = "custom"
+    status = "certified"
+    description = "Underwriting report, one row per underwriting assessment: the policy it assessed (agreement_assessment), the underwriter (assesment_party_role with role UW) and name, the underwriting begin and end dates, underwriting days (end - begin) and the result code. An assessment result is an underwriting assessment only when it is listed in underwriting_assessment."
+    owner = "insurance-analytics@acme-insurance.test"
+    tags = ["insurance", "underwriting", "underwriter", "standard-report", "ai-authored", "app-source"]
+    grain = "underwriting assessment x policy x underwriter"
+    outputs = ["assessment_id", "policy_number", "underwriter_id", "underwriter_name", "underwriting_begin_date", "underwriting_end_date", "underwriting_days", "result_code"]
+    reviewCadence = "quarterly"
+
+    query = """
+        SELECT
+            a.Assessment_Identifier AS assessment_id,
+            pol.Policy_Number AS policy_number,
+            apr.Party_Identifier AS underwriter_id,
+            TRIM(pe.First_Name || ' ' || pe.Last_Name) AS underwriter_name,
+            a.Begin_Date AS underwriting_begin_date,
+            a.End_Date AS underwriting_end_date,
+            DATE_DIFF('day', a.Begin_Date, a.End_Date) AS underwriting_days,
+            ar.Assessment_Result_Type_Code AS result_code
+        FROM main.assessment_result AS ar
+        JOIN main.underwriting_assessment AS ua ON ua.Assessment_Result_Identifier = ar.Assessment_Result_Identifier
+        JOIN main.assessment AS a ON a.Assessment_Identifier = ar.Assessment_Identifier
+        LEFT JOIN main.agreement_assessment AS aa ON aa.Assessment_Identifier = a.Assessment_Identifier
+        LEFT JOIN main.policy AS pol ON pol.Policy_Identifier = aa.Agreement_Identifier
+        LEFT JOIN main.assesment_party_role AS apr
+            ON apr.Assessment_Identifier = a.Assessment_Identifier
+           AND apr.Party_Role_Code = 'UW'
+        LEFT JOIN main.person AS pe ON pe.Person_Identifier = apr.Party_Identifier
+        ORDER BY underwriting_begin_date, assessment_id
+    """
+
+    visualization {
+        chart = "table"
+    }
+
+    tests {
+        assert row_count > 0
+    }
+}

@@ -1,0 +1,135 @@
+version: 2
+
+semantic_models:
+  - name: underwriting_result
+    description: >-
+      One row per assessment result (OMG Assessment_Result). A result is an underwriting
+      assessment only when its Assessment_Result_Identifier is listed in
+      underwriting_assessment.
+    model: ref('assessment_result')
+    primary_entity: underwriting_result
+    defaults:
+      agg_time_dimension: underwriting_result_date
+    entities:
+      - name: assessment
+        type: foreign
+        expr: Assessment_Identifier
+    dimensions:
+      - name: result_code
+        label: Assessment result
+        type: categorical
+        expr: Assessment_Result_Type_Code
+      - name: underwriting_result_date
+        label: Result date
+        description: Assessment results have no date of their own; use assessment__assessment_start_date.
+        type: time
+        expr: cast(null as date)
+        type_params:
+          time_granularity: day
+    measures:
+      - name: underwriting_assessments
+        label: Underwriting assessments
+        agg: sum
+        expr: 'case when Assessment_Result_Identifier in (from "main"."underwriting_assessment") then 1 else 0 end'
+
+  - name: assessments
+    description: >-
+      One row per assessment (OMG Assessment) with begin and end dates. In this data every
+      assessment is an underwriting assessment of one policy.
+    model: ref('assessment')
+    defaults:
+      agg_time_dimension: assessment_start_date
+    entities:
+      - name: assessment
+        type: primary
+        expr: Assessment_Identifier
+    dimensions:
+      - name: assessment_start_date
+        label: Assessment begin date
+        type: time
+        expr: Begin_Date
+        type_params:
+          time_granularity: day
+      - name: assessment_end_date
+        label: Assessment end date
+        type: time
+        expr: End_Date
+        type_params:
+          time_granularity: day
+    measures:
+      - name: avg_assessment_days
+        label: Assessment duration (days)
+        description: End_Date - Begin_Date in days.
+        agg: average
+        expr: "date_diff('day', Begin_Date, End_Date)"
+
+  - name: fire_risk_record
+    description: >-
+      fire_claim: a stand-alone sample of fire-risk records with a precomputed loss ratio.
+      Its policy, claim, premium and location columns are empty in every row, so it cannot be
+      linked to the policy or claim tables and has no date.
+    model: ref('fire_claim')
+    primary_entity: fire_risk_record
+    defaults:
+      agg_time_dimension: fire_record_date
+    dimensions:
+      - name: fireplace
+        label: Fireplace
+        description: "'yes' or 'no'."
+        type: categorical
+        expr: Fireplace
+      - name: year_built
+        label: Year built
+        type: categorical
+        expr: Year_Built
+      - name: nearest_firestation_miles
+        label: Distance to nearest fire station (miles)
+        type: categorical
+        expr: Nearest_Firestation_miles
+      - name: number_of_firefighters
+        label: Number of firefighters
+        type: categorical
+        expr: Number_of_Firefighters
+      - name: fire_record_date
+        label: Record date
+        description: The sample has no date; always empty.
+        type: time
+        expr: cast(null as date)
+        type_params:
+          time_granularity: day
+    measures:
+      - name: fire_risk_records
+        label: Fire risk records
+        agg: sum
+        expr: "1"
+      - name: fire_sample_avg_loss_ratio
+        label: Average fire-sample loss ratio
+        description: Unweighted average of the precomputed Loss_Ratio.
+        agg: average
+        expr: Loss_Ratio
+
+metrics:
+  - name: underwriting_assessments
+    label: Underwriting assessments
+    description: Number of assessment results that are underwriting assessments.
+    type: simple
+    type_params:
+      measure: underwriting_assessments
+  - name: avg_assessment_days
+    label: Average assessment duration (days)
+    description: Average End_Date - Begin_Date of assessments; every assessment in the data is an underwriting assessment.
+    type: simple
+    type_params:
+      measure: avg_assessment_days
+  - name: fire_risk_records
+    label: Fire risk records (sample)
+    description: Rows of the separate fire_claim sample. Not claims of the policy book.
+    type: simple
+    type_params:
+      measure: fire_risk_records
+  - name: fire_sample_avg_loss_ratio
+    label: Average loss ratio (fire risk sample)
+    description: Unweighted average of fire_claim.Loss_Ratio. A separate sample; never combine with the book's loss ratio.
+    type: simple
+    type_params:
+      measure: fire_sample_avg_loss_ratio

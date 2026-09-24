@@ -1,0 +1,65 @@
+// dql-format: 1
+
+block "Loss Ratio Summary" {
+    domain = "insurance"
+    type = "custom"
+    status = "certified"
+    description = "Book-level profitability report: written premium, losses paid, loss reserves, incurred losses, incurred loss adjustment expense (LAE), and the loss ratio (incurred losses / written premium), loss and LAE ratio and paid loss ratio, with claim and exposure counts. Same definitions as the governed metrics written_premium, losses_paid, loss_reserves, incurred_losses, incurred_loss_and_expense, loss_ratio, loss_and_lae_ratio and paid_loss_ratio; written as SQL because the cross-fact ratios are MetricFlow-only and cannot run on DQL's native engine. Premium and claim money are aggregated separately before dividing (no fan-out). All coverage periods have expired, so written premium equals earned premium."
+    owner = "insurance-analytics@acme-insurance.test"
+    tags = ["insurance", "loss-ratio", "profitability", "standard-report", "ai-authored", "app-source"]
+    grain = "book (one row)"
+    outputs = ["written_premium", "policies", "coverage_periods", "claims", "losses_paid", "loss_reserves", "expenses_paid", "expense_reserves", "incurred_losses", "incurred_loss_and_expense", "loss_ratio", "loss_and_lae_ratio", "paid_loss_ratio", "claim_frequency"]
+    reviewCadence = "quarterly"
+
+    query = """
+        WITH premium AS (
+            SELECT
+                SUM(pa.Policy_Amount) AS written_premium,
+                COUNT(DISTINCT pa.Policy_Identifier) AS policies,
+                COUNT(DISTINCT pa.Policy_Coverage_Detail_Identifier) AS coverage_periods
+            FROM main.policy_amount AS pa
+            JOIN main.premium AS pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier
+        ),
+        claim_money AS (
+            SELECT
+                SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END) AS losses_paid,
+                SUM(CASE WHEN lr.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END) AS loss_reserves,
+                SUM(CASE WHEN ep.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END) AS expenses_paid,
+                SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END) AS expense_reserves
+            FROM main.claim_amount AS ca
+            LEFT JOIN main.loss_payment AS lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+            LEFT JOIN main.loss_reserve AS lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+            LEFT JOIN main.expense_payment AS ep ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+            LEFT JOIN main.expense_reserve AS er ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+        ),
+        claim_counts AS (
+            SELECT COUNT(DISTINCT Claim_Identifier) AS claims FROM main.claim
+        )
+        SELECT
+            p.written_premium,
+            p.policies,
+            p.coverage_periods,
+            cc.claims,
+            COALESCE(m.losses_paid, 0) AS losses_paid,
+            COALESCE(m.loss_reserves, 0) AS loss_reserves,
+            COALESCE(m.expenses_paid, 0) AS expenses_paid,
+            COALESCE(m.expense_reserves, 0) AS expense_reserves,
+            COALESCE(m.losses_paid, 0) + COALESCE(m.loss_reserves, 0) AS incurred_losses,
+            COALESCE(m.losses_paid, 0) + COALESCE(m.loss_reserves, 0) + COALESCE(m.expenses_paid, 0) + COALESCE(m.expense_reserves, 0) AS incurred_loss_and_expense,
+            (COALESCE(m.losses_paid, 0) + COALESCE(m.loss_reserves, 0)) / NULLIF(p.written_premium, 0) AS loss_ratio,
+            (COALESCE(m.losses_paid, 0) + COALESCE(m.loss_reserves, 0) + COALESCE(m.expenses_paid, 0) + COALESCE(m.expense_reserves, 0)) / NULLIF(p.written_premium, 0) AS loss_and_lae_ratio,
+            COALESCE(m.losses_paid, 0) / NULLIF(p.written_premium, 0) AS paid_loss_ratio,
+            cc.claims / NULLIF(p.coverage_periods, 0) AS claim_frequency
+        FROM premium AS p
+        CROSS JOIN claim_money AS m
+        CROSS JOIN claim_counts AS cc
+    """
+
+    visualization {
+        chart = "table"
+    }
+
+    tests {
+        assert row_count == 1
+    }
+}

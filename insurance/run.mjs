@@ -15,6 +15,7 @@
 // the eval file, DQL's JSON report, the recorded AI calls and the server log.
 
 import { spawn, spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { REPO_ROOT, dqlVersion, resolveDqlCli } from '../lib/dql.mjs';
@@ -131,12 +132,55 @@ export function providerOutages(projectDir) {
   const rows = result.stdout.trim() ? JSON.parse(result.stdout) : [];
   // A refusal is the provider's message, never a word the question used
   // ("…the sales quota for each year" is a question, not an outage).
-  const REFUSAL = /(usage limit[^".]*|rate limit[^".]*|exceeded your (?:current )?quota[^".]*|quota exceeded[^".]*|insufficient_quota[^".]*|not logged in[^".]*)/i;
+  const REFUSAL = /(usage limit[^".]*|session limit[^".]*|weekly limit[^".]*|rate limit[^".]*|exceeded your (?:current )?quota[^".]*|quota exceeded[^".]*|insufficient_quota[^".]*|not logged in[^".]*)/i;
   return rows.flatMap((row) => {
     const text = String(row.payload_json ?? '').split(String(row.question ?? '')).join(' ');
     const found = REFUSAL.exec(text);
     return found ? [found[1]] : [];
   });
+}
+
+/**
+ * What each question's run did, read from DQL's own run store: the certified
+ * blocks the SQL drafter was given, why the run stopped, and the tiers it
+ * tried. Keyed by question text; the caller maps it to case ids.
+ */
+export function runCapture(projectDir) {
+  const store = join(projectDir, '.dql', 'local', 'agent-runs.sqlite');
+  if (!existsSync(store)) return new Map();
+  const result = spawnSync('sqlite3', ['-json', store, 'select question, payload_json from agent_runs'], { encoding: 'utf-8', maxBuffer: 1024 * 1024 * 1024 });
+  if (result.status !== 0) return new Map();
+  const rows = result.stdout.trim() ? JSON.parse(result.stdout) : [];
+  const out = new Map();
+  for (const row of rows) {
+    let payload;
+    try { payload = JSON.parse(row.payload_json); } catch { continue; }
+    const receipt = payload.diagnosticReceiptV9 ?? {};
+    const blocks = [...new Set((receipt.dispatches ?? []).flatMap((dispatch) => dispatch.blocks ?? []))];
+    const stops = [...new Set(JSON.stringify(payload).match(/"stopReason":\s*"([^"]+)"/g) ?? [])].map((match) => match.replace(/^"stopReason":\s*"|"$/g, ''));
+    const tiers = (receipt.tiers ?? []).map((tier) => `${tier.tier}:${tier.outcome}`);
+    const prior = out.get(row.question);
+    out.set(row.question, { draftBlocks: [...new Set([...(prior?.draftBlocks ?? []), ...blocks])], stopReasons: [...new Set([...(prior?.stopReasons ?? []), ...stops])], tiers: tiers.length ? tiers : prior?.tiers ?? [] });
+  }
+  return out;
+}
+
+/** The authored layer a project was built from: B's frozen version and hash, or a hash of the overlay files. */
+export function layerIdentity(layer) {
+  const frozen = join(REPO_ROOT, 'insurance', 'layers', 'B', 'FROZEN.json');
+  if (/^[LW]B$/.test(layer) && existsSync(frozen)) {
+    const record = JSON.parse(readFileSync(frozen, 'utf-8'));
+    return { layer: 'B', version: record.version, contentSha256: record.contentSha256, blocksCertifiedByAHuman: record.blocksCertifiedByAHuman ?? 0, label: record.label };
+  }
+  const hash = createHash('sha256');
+  const overlays = ['L1', 'L3'].filter((name) => existsSync(join(REPO_ROOT, 'insurance', 'layers', name)));
+  for (const name of overlays) {
+    const root = join(REPO_ROOT, 'insurance', 'layers', name);
+    for (const file of readdirSync(root, { recursive: true, withFileTypes: true }).filter((entry) => entry.isFile()).map((entry) => join(entry.parentPath ?? entry.path, entry.name)).sort()) {
+      hash.update(relative(root, file)); hash.update(readFileSync(file));
+    }
+  }
+  return { overlays, contentSha256: hash.digest('hex') };
 }
 
 /** The eval file DQL reads. The correct rows sit here, outside the project. */
@@ -301,6 +345,7 @@ async function main() {
       codexCli: options.provider === 'codex' ? `${spawnSync('codex', ['--version'], { encoding: 'utf-8', env: { ...process.env, PATH: codexPath() } }).stdout.trim()}; ${codexEffort()}` : null,
     },
   });
+  identity.authoredLayer = layerIdentity(options.layer);
   identity.settings = { ...RUN_ENV, ...LOCAL_ENV(options.provider), caseTimeoutMs: CASE_TIMEOUT_MS, debugCli: options.debugCli, readingEffort: options.readingEffort ?? 'default (route effort)' };
 
   writeProviderSettings(projectDir, options.provider, options.model);
@@ -338,6 +383,11 @@ async function main() {
     throw new Error(`dql agent eval exited ${result.code} without a JSON report; see ${relative(REPO_ROOT, outDir)}`);
   }
   const outages = providerOutages(projectDir);
+  // Per question: the certified blocks the drafter read, stop reasons, tiers tried.
+  const captured = runCapture(projectDir);
+  const idByQuestion = new Map(cases.map((c) => [c.question, c.id]));
+  const captureById = new Map([...captured].map(([question, value]) => [idByQuestion.get(question), value]).filter(([id]) => id));
+  if (Array.isArray(report.results)) report.results = report.results.map((item) => (captureById.has(item.name) ? { ...item, capture: captureById.get(item.name) } : item));
   // Tokens and cost per question, from DQL's usage ledger (API providers only).
   const ledger = readLedger(join(outDir, 'usage.jsonl'));
   const usage = ledger.length ? attributeUsage(ledger, runSpans(projectDir), loadPricing()) : null;

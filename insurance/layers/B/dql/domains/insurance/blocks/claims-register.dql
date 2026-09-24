@@ -1,0 +1,86 @@
+// dql-format: 1
+
+block "Claims Register" {
+    domain = "insurance"
+    type = "custom"
+    status = "certified"
+    description = "Claims register, one row per claim: claim number, the policy and coverage period it is recorded against (claim_coverage), catastrophe, date of loss, open and close dates, status (closed when a close date is filled), days to close, report lag (open date - date of loss; reported date is empty), the damaged insured object and its address, and the four claim amounts with incurred totals. Both the claim's own (damaged) object and the coverage period's insured object are shown because they can disagree: for one claim the coverage it is recorded against insures a different object, which belongs to another policy."
+    owner = "insurance-analytics@acme-insurance.test"
+    tags = ["insurance", "claims", "register", "location", "standard-report", "ai-authored", "app-source"]
+    grain = "claim"
+    outputs = ["claim_number", "policy_number", "coverage_start_date", "coverage_end_date", "catastrophe", "date_of_loss", "claim_open_date", "claim_close_date", "claim_status", "days_to_close", "report_lag_days", "claim_insured_object_id", "coverage_insured_object_id", "insured_address", "insured_city", "insured_state", "insured_zip_code", "losses_paid", "loss_reserves", "expenses_paid", "expense_reserves", "incurred_losses", "incurred_loss_and_expense"]
+    reviewCadence = "monthly"
+
+    query = """
+        WITH money AS (
+            SELECT
+                ca.Claim_Identifier,
+                SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END) AS losses_paid,
+                SUM(CASE WHEN lr.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END) AS loss_reserves,
+                SUM(CASE WHEN ep.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END) AS expenses_paid,
+                SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END) AS expense_reserves
+            FROM main.claim_amount AS ca
+            LEFT JOIN main.loss_payment AS lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+            LEFT JOIN main.loss_reserve AS lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+            LEFT JOIN main.expense_payment AS ep ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+            LEFT JOIN main.expense_reserve AS er ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+            GROUP BY ca.Claim_Identifier
+        ),
+        coverage AS (
+            SELECT
+                cc.Claim_Identifier,
+                COUNT(*) AS coverage_rows,
+                MIN(pol.Policy_Number) AS policy_number,
+                MIN(pcd.Effective_Date) AS coverage_start_date,
+                MAX(pcd.Expiration_Date) AS coverage_end_date,
+                MIN(pcd.Insurable_Object_Identifier) AS coverage_insured_object_id
+            FROM main.claim_coverage AS cc
+            JOIN main.policy_coverage_detail AS pcd
+                ON pcd.Effective_Date = cc.Effective_Date
+               AND pcd.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier
+            JOIN main.policy AS pol ON pol.Policy_Identifier = pcd.Policy_Identifier
+            GROUP BY cc.Claim_Identifier
+        )
+        SELECT
+            c.Company_Claim_Number AS claim_number,
+            cv.policy_number,
+            cv.coverage_start_date,
+            cv.coverage_end_date,
+            cat.Catastrophe_Name AS catastrophe,
+            o.Occurrence_Begin_Date AS date_of_loss,
+            c.Claim_Open_Date AS claim_open_date,
+            c.Claim_Close_Date AS claim_close_date,
+            CASE WHEN c.Claim_Close_Date IS NULL THEN 'Open' ELSE 'Closed' END AS claim_status,
+            DATE_DIFF('day', c.Claim_Open_Date, c.Claim_Close_Date) AS days_to_close,
+            DATE_DIFF('day', o.Occurrence_Begin_Date, c.Claim_Open_Date) AS report_lag_days,
+            c.Insurable_Object_Identifier AS claim_insured_object_id,
+            cv.coverage_insured_object_id,
+            la.Line_1_Address AS insured_address,
+            la.Municipality_Name AS insured_city,
+            la.State_Code AS insured_state,
+            la.Postal_Code AS insured_zip_code,
+            COALESCE(m.losses_paid, 0) AS losses_paid,
+            COALESCE(m.loss_reserves, 0) AS loss_reserves,
+            COALESCE(m.expenses_paid, 0) AS expenses_paid,
+            COALESCE(m.expense_reserves, 0) AS expense_reserves,
+            COALESCE(m.losses_paid, 0) + COALESCE(m.loss_reserves, 0) AS incurred_losses,
+            COALESCE(m.losses_paid, 0) + COALESCE(m.loss_reserves, 0) + COALESCE(m.expenses_paid, 0) + COALESCE(m.expense_reserves, 0) AS incurred_loss_and_expense
+        FROM main.claim AS c
+        LEFT JOIN coverage AS cv ON cv.Claim_Identifier = c.Claim_Identifier
+        LEFT JOIN main.catastrophe AS cat ON cat.Catastrophe_Identifier = c.Catastrophe_Identifier
+        LEFT JOIN main.occurrences AS o ON o.Occurrence_Identifier = c.Occurrence_Identifier
+        LEFT JOIN main.insurable_object AS io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier
+        LEFT JOIN main.geographic_location AS gl ON gl.Geographic_Location_Identifier = io.Geographic_Location_Identifier
+        LEFT JOIN main.location_address AS la ON la.Location_Address_Identifier = gl.Location_Address_Identifier
+        LEFT JOIN money AS m ON m.Claim_Identifier = c.Claim_Identifier
+        ORDER BY claim_number
+    """
+
+    visualization {
+        chart = "table"
+    }
+
+    tests {
+        assert row_count > 0
+    }
+}

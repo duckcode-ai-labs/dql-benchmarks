@@ -1,0 +1,255 @@
+# Underwriting assessments of policies and the underwriters who performed them.
+domain: insurance
+area:
+  id: underwriting
+  name: Underwriting assessments
+  description: >-
+    An assessment is an evaluation with a begin and end date. agreement_assessment links an
+    assessment to the policy it evaluated; assessment_result holds its outcome, and
+    underwriting_assessment marks results that are underwriting assessments. Parties take part
+    in an assessment through assesment_party_role (UW = underwriter).
+  references: [policy, party, party_role]
+entities:
+  - id: assessment
+    dbt_model: model.cwd_benchmark_data.assessment
+    business_name: Assessment
+    business_context: >-
+      An evaluation (here, underwriting of a policy) with Begin_Date and End_Date. Description
+      and reason are empty.
+    analytical_role: event
+    grain: Assessment_Identifier
+    keys: [Assessment_Identifier]
+    owner: insurance-analytics@acme-insurance.test
+  - id: assessment_result
+    dbt_model: model.cwd_benchmark_data.assessment_result
+    business_name: Assessment result
+    business_context: The outcome of an assessment; Assessment_Result_Type_Code holds the result.
+    analytical_role: event
+    grain: Assessment_Result_Identifier
+    keys: [Assessment_Result_Identifier]
+    owner: insurance-analytics@acme-insurance.test
+  - id: underwriting_assessment
+    dbt_model: model.cwd_benchmark_data.underwriting_assessment
+    business_name: Underwriting assessment
+    business_context: >-
+      Subtype marker of assessment_result: an assessment result that is an underwriting
+      assessment. Its dates, description and result code come from assessment_result and
+      assessment.
+    analytical_role: event
+    grain: Assessment_Result_Identifier
+    keys: [Assessment_Result_Identifier]
+    concept_refs: [underwriting_assessment]
+    owner: insurance-analytics@acme-insurance.test
+  - id: agreement_assessment
+    dbt_model: model.cwd_benchmark_data.agreement_assessment
+    business_name: Policy assessment link
+    business_context: Bridge between agreements (policies) and assessments; Agreement_Identifier is the Policy_Identifier.
+    analytical_role: bridge
+    grain: Agreement_Identifier, Assessment_Identifier
+    keys: [Agreement_Identifier, Assessment_Identifier]
+    owner: insurance-analytics@acme-insurance.test
+  - id: assessment_party_role
+    dbt_model: model.cwd_benchmark_data.assesment_party_role
+    business_name: Assessment party role
+    business_context: >-
+      Bridge between assessments and parties: one row per party, assessment and role.
+      Party_Role_Code UW marks the underwriter. (The dbt model name is spelled
+      'assesment_party_role'.) Begin and end dates are empty.
+    analytical_role: bridge
+    grain: Party_Identifier, Assessment_Identifier, Party_Role_Code
+    keys: [Party_Identifier, Assessment_Identifier, Party_Role_Code]
+    owner: insurance-analytics@acme-insurance.test
+relationships:
+  - id: agreement_assessment_to_policy
+    from: agreement_assessment
+    to: policy
+    verb: assesses
+    description: Each policy assessment link names one policy (Agreement_Identifier = Policy_Identifier).
+    keys: [{ from: Agreement_Identifier, to: Policy_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: "Agreement_Identifier, Assessment_Identifier", keys: [Agreement_Identifier, Assessment_Identifier] }
+      to: { grain: Policy_Identifier, keys: [Policy_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:56.052Z"
+      query_fingerprint: 90cb1f841636beb5a79dabb73db1fa72e18b515d0fb40c80ea7a0424d6e5d4fa
+      proof_fingerprint: 9be5ebbd9c86d16a541eec5e6dd4ec254b13b115e85aa1c6ce77bebdd6bd109c
+      from_rows: 2
+      to_rows: 2
+      joined_rows: 2
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: agreement_assessment_to_assessment
+    from: agreement_assessment
+    to: assessment
+    verb: links
+    description: Each policy assessment link names one assessment.
+    keys: [{ from: Assessment_Identifier, to: Assessment_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: "Agreement_Identifier, Assessment_Identifier", keys: [Agreement_Identifier, Assessment_Identifier] }
+      to: { grain: Assessment_Identifier, keys: [Assessment_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:55.972Z"
+      query_fingerprint: 42e9e39da1dfa1dc8b1133fbd57ae7b3f07fdff66b8ea51f899b8002d9db9b59
+      proof_fingerprint: e38810e55b74d5157c942b7f1f060e96583af2d48f5f5aa9ef2278f361875ff3
+      from_rows: 2
+      to_rows: 2
+      joined_rows: 2
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: assessment_result_to_assessment
+    from: assessment_result
+    to: assessment
+    verb: is the result of
+    description: Each assessment result belongs to one assessment.
+    keys: [{ from: Assessment_Identifier, to: Assessment_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: Assessment_Result_Identifier, keys: [Assessment_Result_Identifier] }
+      to: { grain: Assessment_Identifier, keys: [Assessment_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:56.598Z"
+      query_fingerprint: eeae122ab489a2603384ca6fab36f0cc50d24f43e0698b846c3d83f3f927ca82
+      proof_fingerprint: ced7711f50f476b40b7d9352b58ea6e69519188b3d27de715464aa04e756d15b
+      from_rows: 2
+      to_rows: 2
+      joined_rows: 2
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: underwriting_assessment_is_assessment_result
+    from: underwriting_assessment
+    to: assessment_result
+    verb: is a
+    description: >-
+      Specialization - an underwriting assessment is an assessment result. Inner join on
+      Assessment_Result_Identifier keeps only underwriting results; continue to assessment for
+      the dates.
+    keys: [{ from: Assessment_Result_Identifier, to: Assessment_Result_Identifier }]
+    cardinality: one_to_one
+    fanout: safe
+    join_types: [inner]
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: Assessment_Result_Identifier, keys: [Assessment_Result_Identifier] }
+      to: { grain: Assessment_Result_Identifier, keys: [Assessment_Result_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:58.680Z"
+      query_fingerprint: 050a073e264350253bb648ac5641578c4dff01e4e1a691accf1cb941dfb30972
+      proof_fingerprint: 6f706863b6dbb44a39d2a31fe939170def93807abc6169e4fba599df043e7933
+      from_rows: 2
+      to_rows: 2
+      joined_rows: 2
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: assessment_party_role_to_assessment
+    from: assessment_party_role
+    to: assessment
+    verb: is a role on
+    description: Each assessment party role belongs to one assessment. Filter Party_Role_Code = 'UW' for the underwriter.
+    keys: [{ from: Assessment_Identifier, to: Assessment_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: "Party_Identifier, Assessment_Identifier, Party_Role_Code", keys: [Party_Identifier, Assessment_Identifier, Party_Role_Code] }
+      to: { grain: Assessment_Identifier, keys: [Assessment_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:56.364Z"
+      query_fingerprint: 66b7427f89eadcad65acfc16e981b3a1db19682a07e90fe78db9a65d51a5a715
+      proof_fingerprint: 7c23fbc14d4c4b3577ab3ceb6e1d4cc44a28b6b83d68ae8f9615da8a1eff57e9
+      from_rows: 2
+      to_rows: 2
+      joined_rows: 2
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: assessment_party_role_to_party
+    from: assessment_party_role
+    to: party
+    verb: is played by
+    description: Each assessment party role is played by one party.
+    keys: [{ from: Party_Identifier, to: Party_Identifier }]
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: "Party_Identifier, Assessment_Identifier, Party_Role_Code", keys: [Party_Identifier, Assessment_Identifier, Party_Role_Code] }
+      to: { grain: Party_Identifier, keys: [Party_Identifier] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:56.443Z"
+      query_fingerprint: 74be3646b7046b050013a7a01d235e5b97c8c9d1dd05245f4b3c619982d5f2f9
+      proof_fingerprint: 64660f15bdbe6991d9974655146771ce1b50f19949fd08bc1f0f428d6e6c5fdd
+      from_rows: 2
+      to_rows: 30
+      joined_rows: 2
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 2
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."
+  - id: assessment_party_role_to_party_role
+    from: assessment_party_role
+    to: party_role
+    verb: has role
+    description: Each assessment party role row has one role code (UW).
+    keys: [{ from: Party_Role_Code, to: Party_Role_Code }]
+    cardinality: many_to_one
+    fanout: safe
+    status: certified
+    owner: insurance-analytics@acme-insurance.test
+    certifiedAgainst:
+      from: { grain: "Party_Identifier, Assessment_Identifier, Party_Role_Code", keys: [Party_Identifier, Assessment_Identifier, Party_Role_Code] }
+      to: { grain: Party_Role_Code, keys: [Party_Role_Code] }
+    validation:
+      status: passed
+      checked_at: "2026-09-17T01:59:56.521Z"
+      query_fingerprint: 07182c2d9ead01a840d7d36480414db035ba0a08bef407a1270e133b2aafff7e
+      proof_fingerprint: fdc0773158e7dc1d9a6e136516c8cf9cd6533d4a66bbe04eb78cec1971c233bf
+      from_rows: 2
+      to_rows: 3
+      joined_rows: 2
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 2
+      max_to_per_key: 1
+      message: "Warehouse evidence matches the declared cardinality and safe fanout policy."

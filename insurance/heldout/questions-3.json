@@ -1,0 +1,246 @@
+{
+  "questions": [
+    {
+      "question": "How many different catastrophes do we have on record?",
+      "quadrant": "LQLS",
+      "goldSql": "SELECT COUNT(*) AS catastrophe_count FROM main.catastrophe"
+    },
+    {
+      "question": "List the names of all catastrophes we track, in alphabetical order.",
+      "quadrant": "LQLS",
+      "goldSql": "SELECT Catastrophe_Name FROM main.catastrophe ORDER BY Catastrophe_Name"
+    },
+    {
+      "question": "For each policy, show the policy number and how many days its policy term runs from effective date to expiration date.",
+      "quadrant": "LQLS",
+      "goldSql": "SELECT Policy_Number, date_diff('day', Effective_Date, Expiration_Date) AS term_days FROM main.policy ORDER BY Policy_Number"
+    },
+    {
+      "question": "What is the total premium we have charged across all policies and all coverage periods?",
+      "quadrant": "LQLS",
+      "goldSql": "SELECT SUM(p.Policy_Amount) AS total_premium FROM (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) p"
+    },
+    {
+      "question": "On average, how many days does it take to close a claim, measured from the date the claim was opened to the date it was closed?",
+      "quadrant": "LQLS",
+      "goldSql": "SELECT AVG(date_diff('day', Claim_Open_Date, Claim_Close_Date)) AS avg_days_to_close FROM main.claim WHERE Claim_Close_Date IS NOT NULL"
+    },
+    {
+      "question": "In our fire claims history, how many claims involved a home that has a fireplace?",
+      "quadrant": "LQLS",
+      "goldSql": "SELECT COUNT(*) AS claims_with_fireplace FROM main.fire_claim WHERE Fireplace = 'yes'"
+    },
+    {
+      "question": "What is the average loss ratio on fire claims for homes built before 1970?",
+      "quadrant": "LQLS",
+      "goldSql": "SELECT AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim WHERE Year_Built < 1970"
+    },
+    {
+      "question": "How many distinct ZIP codes appear across our recorded location addresses?",
+      "quadrant": "LQLS",
+      "goldSql": "SELECT COUNT(DISTINCT Postal_Code) AS zip_code_count FROM main.location_address"
+    },
+    {
+      "question": "Which claim number took the longest to close, counting days from when it was opened to when it was closed, and how many days was that?",
+      "quadrant": "LQLS",
+      "goldSql": "SELECT Company_Claim_Number, date_diff('day', Claim_Open_Date, Claim_Close_Date) AS days_to_close FROM main.claim WHERE Claim_Close_Date IS NOT NULL ORDER BY days_to_close DESC LIMIT 1"
+    },
+    {
+      "question": "What is the total amount currently set aside in loss reserves across all claims?",
+      "quadrant": "LQLS",
+      "goldSql": "SELECT SUM(amt) AS total_loss_reserves FROM (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) r"
+    },
+    {
+      "question": "What is the full name (first, middle and last) of the agent who sold policy number 31003000336?",
+      "quadrant": "LQHS",
+      "goldSql": "SELECT pe.First_Name, pe.Middle_Name, pe.Last_Name FROM main.policy p JOIN main.agreement_party_role apr ON apr.Agreement_Identifier = p.Policy_Identifier JOIN main.party_role r ON r.Party_Role_Code = apr.Party_Role_Code JOIN main.person pe ON pe.Person_Identifier = apr.Party_Identifier WHERE p.Policy_Number = 31003000336 AND r.Party_Role_Name = 'Agent'"
+    },
+    {
+      "question": "Who is the policy holder (first, middle and last name) on the policy that covers the property at 13017 Zen Gardens Way?",
+      "quadrant": "LQHS",
+      "goldSql": "SELECT DISTINCT pe.First_Name, pe.Middle_Name, pe.Last_Name FROM main.location_address la JOIN main.geographic_location g ON g.Location_Address_Identifier = la.Location_Address_Identifier JOIN main.insurable_object io ON io.Geographic_Location_Identifier = g.Geographic_Location_Identifier JOIN main.policy_coverage_detail pcd ON pcd.Insurable_Object_Identifier = io.Insurable_Object_Identifier JOIN main.agreement_party_role apr ON apr.Agreement_Identifier = pcd.Policy_Identifier JOIN main.party_role r ON r.Party_Role_Code = apr.Party_Role_Code JOIN main.person pe ON pe.Person_Identifier = apr.Party_Identifier WHERE la.Line_1_Address = '13017 Zen Gardens Way' AND r.Party_Role_Name = 'PolicyHolder'"
+    },
+    {
+      "question": "Which underwriter (first, middle and last name) performed the underwriting assessment for policy number 31003000337, and what was the assessment result?",
+      "quadrant": "LQHS",
+      "goldSql": "SELECT pe.First_Name, pe.Middle_Name, pe.Last_Name, ar.Assessment_Result_Type_Code FROM main.policy p JOIN main.agreement_assessment aa ON aa.Agreement_Identifier = p.Policy_Identifier JOIN main.assessment_result ar ON ar.Assessment_Identifier = aa.Assessment_Identifier JOIN main.underwriting_assessment ua ON ua.Assessment_Result_Identifier = ar.Assessment_Result_Identifier JOIN main.assesment_party_role apr ON apr.Assessment_Identifier = aa.Assessment_Identifier JOIN main.party_role r ON r.Party_Role_Code = apr.Party_Role_Code JOIN main.person pe ON pe.Person_Identifier = apr.Party_Identifier WHERE p.Policy_Number = 31003000337 AND r.Party_Role_Name = 'Underwriter'"
+    },
+    {
+      "question": "Which catastrophe caused the claim on the insured property at 5315 Martin Ave?",
+      "quadrant": "LQHS",
+      "goldSql": "SELECT cat.Catastrophe_Name FROM main.location_address la JOIN main.geographic_location g ON g.Location_Address_Identifier = la.Location_Address_Identifier JOIN main.insurable_object io ON io.Geographic_Location_Identifier = g.Geographic_Location_Identifier JOIN main.claim c ON c.Insurable_Object_Identifier = io.Insurable_Object_Identifier JOIN main.catastrophe cat ON cat.Catastrophe_Identifier = c.Catastrophe_Identifier WHERE la.Line_1_Address = '5315 Martin Ave'"
+    },
+    {
+      "question": "For every claim, what is the street address, city and ZIP code of the insured property it was made on?",
+      "quadrant": "LQHS",
+      "goldSql": "SELECT c.Company_Claim_Number, la.Line_1_Address, la.Municipality_Name, la.Postal_Code FROM main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address la ON la.Location_Address_Identifier = g.Location_Address_Identifier ORDER BY c.Company_Claim_Number"
+    },
+    {
+      "question": "What are the latitude and longitude of the insured properties that had a claim caused by a fire catastrophe?",
+      "quadrant": "LQHS",
+      "goldSql": "SELECT DISTINCT pl.Latitude_Value, pl.Longitude_Value FROM main.claim c JOIN main.catastrophe cat ON cat.Catastrophe_Identifier = c.Catastrophe_Identifier JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.pysical_location pl ON pl.Physical_Location_Identifier = g.Physical_Location_Identifier WHERE cat.Catastrophe_Name = 'Fire' ORDER BY pl.Latitude_Value"
+    },
+    {
+      "question": "How much have we paid out in loss payments on claims caused by the fire catastrophe?",
+      "quadrant": "LQHS",
+      "goldSql": "SELECT SUM(ca.Claim_Amount) AS fire_loss_payments FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier JOIN main.claim c ON c.Claim_Identifier = ca.Claim_Identifier JOIN main.catastrophe cat ON cat.Catastrophe_Identifier = c.Catastrophe_Identifier WHERE cat.Catastrophe_Name = 'Fire'"
+    },
+    {
+      "question": "Based on the policy coverage each claim was filed against, which policy number does each claim fall under?",
+      "quadrant": "LQHS",
+      "goldSql": "SELECT c.Company_Claim_Number, p.Policy_Number FROM main.claim c JOIN main.claim_coverage cc ON cc.Claim_Identifier = c.Claim_Identifier JOIN main.policy_coverage_detail pcd ON pcd.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier AND pcd.Effective_Date = cc.Effective_Date JOIN main.policy p ON p.Policy_Identifier = pcd.Policy_Identifier ORDER BY c.Company_Claim_Number"
+    },
+    {
+      "question": "What premium was charged for the policy coverage that claim 12312701 was filed against?",
+      "quadrant": "LQHS",
+      "goldSql": "SELECT SUM(p.Policy_Amount) AS premium FROM main.claim c JOIN main.claim_coverage cc ON cc.Claim_Identifier = c.Claim_Identifier JOIN (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) p ON p.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier AND p.Effective_Date = cc.Effective_Date WHERE c.Company_Claim_Number = 12312701"
+    },
+    {
+      "question": "In which ZIP codes are the properties covered by policy number 31003000336 located?",
+      "quadrant": "LQHS",
+      "goldSql": "SELECT DISTINCT la.Postal_Code FROM main.policy p JOIN main.policy_coverage_detail pcd ON pcd.Policy_Identifier = p.Policy_Identifier JOIN main.insurable_object io ON io.Insurable_Object_Identifier = pcd.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address la ON la.Location_Address_Identifier = g.Location_Address_Identifier WHERE p.Policy_Number = 31003000336"
+    },
+    {
+      "question": "For policy number 31003000336, show the annual premium for each coverage period by its start date, and the percentage change in premium from the previous coverage period.",
+      "quadrant": "HQLS",
+      "goldSql": "SELECT pr.Effective_Date, pr.Policy_Amount AS premium, 100.0 * (pr.Policy_Amount - LAG(pr.Policy_Amount) OVER (ORDER BY pr.Effective_Date)) / LAG(pr.Policy_Amount) OVER (ORDER BY pr.Effective_Date) AS pct_change FROM (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) pr JOIN main.policy p ON p.Policy_Identifier = pr.Policy_Identifier WHERE p.Policy_Number = 31003000336 ORDER BY pr.Effective_Date"
+    },
+    {
+      "question": "Group our fire claims by the distance to the nearest fire station into bands of 0-5 miles, 6-10 miles, 11-15 miles and more than 15 miles; for each band show the number of claims and the average loss ratio.",
+      "quadrant": "HQLS",
+      "goldSql": "SELECT CASE WHEN Nearest_Firestation_miles <= 5 THEN '0-5 miles' WHEN Nearest_Firestation_miles <= 10 THEN '6-10 miles' WHEN Nearest_Firestation_miles <= 15 THEN '11-15 miles' ELSE 'more than 15 miles' END AS distance_band, COUNT(*) AS claims, AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim GROUP BY 1 ORDER BY MIN(Nearest_Firestation_miles)"
+    },
+    {
+      "question": "What is the average loss ratio on fire claims by the decade in which the home was built (1960s, 1970s, and so on), from oldest to newest decade, along with the number of claims in each decade?",
+      "quadrant": "HQLS",
+      "goldSql": "SELECT (Year_Built // 10) * 10 AS decade_built, COUNT(*) AS claims, AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim GROUP BY 1 ORDER BY 1"
+    },
+    {
+      "question": "What percentage of our fire claims had a loss ratio of 1.0 or higher, meaning losses at least equalled the premium?",
+      "quadrant": "HQLS",
+      "goldSql": "SELECT 100.0 * COUNT(*) FILTER (WHERE Loss_Ratio >= 1.0) / COUNT(*) AS pct_at_or_above_1 FROM main.fire_claim"
+    },
+    {
+      "question": "On fire claims, how much higher or lower is the average loss ratio for homes with a fireplace than for homes without one (fireplace average minus no-fireplace average)?",
+      "quadrant": "HQLS",
+      "goldSql": "SELECT AVG(Loss_Ratio) FILTER (WHERE Fireplace = 'yes') - AVG(Loss_Ratio) FILTER (WHERE Fireplace = 'no') AS loss_ratio_difference FROM main.fire_claim"
+    },
+    {
+      "question": "Across our fire claims, what is the correlation coefficient between the number of firefighters available and the loss ratio?",
+      "quadrant": "HQLS",
+      "goldSql": "SELECT corr(Number_of_Firefighters, Loss_Ratio) AS correlation FROM main.fire_claim"
+    },
+    {
+      "question": "What was the compound annual growth rate of the annual premium on policy number 31003000336, from its first coverage period to its most recent one, measured over the number of years between those two periods' start dates?",
+      "quadrant": "HQLS",
+      "goldSql": "WITH p AS ( SELECT pr.Effective_Date, pr.Policy_Amount FROM (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) pr JOIN main.policy pol ON pol.Policy_Identifier = pr.Policy_Identifier WHERE pol.Policy_Number = 31003000336), ends AS ( SELECT arg_min(Policy_Amount, Effective_Date) AS first_premium, arg_max(Policy_Amount, Effective_Date) AS last_premium, date_diff('year', MIN(Effective_Date), MAX(Effective_Date)) AS years FROM p) SELECT power(last_premium * 1.0 / first_premium, 1.0 / years) - 1 AS cagr FROM ends"
+    },
+    {
+      "question": "Among fire claims, which number of firefighters has the lowest average loss ratio, and what is that average?",
+      "quadrant": "HQLS",
+      "goldSql": "SELECT Number_of_Firefighters, AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim GROUP BY 1 ORDER BY avg_loss_ratio ASC LIMIT 1"
+    },
+    {
+      "question": "What is the median loss ratio on fire claims for homes built in 2000 or later, compared with the median for homes built before 2000?",
+      "quadrant": "HQLS",
+      "goldSql": "SELECT median(Loss_Ratio) FILTER (WHERE Year_Built >= 2000) AS median_2000_or_later, median(Loss_Ratio) FILTER (WHERE Year_Built < 2000) AS median_before_2000 FROM main.fire_claim"
+    },
+    {
+      "question": "For each claim, how many days passed from the incident (occurrence start date) to the claim being opened, how many days from opening to closing, and what percentage of the total time from incident to closing was spent with the claim open?",
+      "quadrant": "HQLS",
+      "goldSql": "SELECT c.Company_Claim_Number, date_diff('day', o.Occurrence_Begin_Date, c.Claim_Open_Date) AS days_incident_to_open, date_diff('day', c.Claim_Open_Date, c.Claim_Close_Date) AS days_open_to_close, 100.0 * date_diff('day', c.Claim_Open_Date, c.Claim_Close_Date) / date_diff('day', o.Occurrence_Begin_Date, c.Claim_Close_Date) AS pct_time_open FROM main.claim c JOIN main.occurrences o ON o.Occurrence_Identifier = c.Occurrence_Identifier ORDER BY c.Company_Claim_Number"
+    },
+    {
+      "question": "What was our 2019 loss ratio, defined as incurred losses (loss payments plus loss reserves) on claims opened in 2019 divided by premium on coverage periods that started in 2019?",
+      "quadrant": "HQHS",
+      "goldSql": "WITH loss AS ( SELECT SUM(ca.Claim_Amount) AS incurred FROM main.claim_amount ca JOIN main.claim c ON c.Claim_Identifier = ca.Claim_Identifier WHERE year(c.Claim_Open_Date) = 2019 AND (ca.Claim_Amount_Identifier IN (SELECT Claim_Amount_Identifier FROM main.loss_payment) OR ca.Claim_Amount_Identifier IN (SELECT Claim_Amount_Identifier FROM main.loss_reserve))), prem AS (SELECT SUM(Policy_Amount) AS premium FROM (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) p WHERE year(p.Effective_Date) = 2019) SELECT loss.incurred, prem.premium, loss.incurred * 1.0 / prem.premium AS loss_ratio FROM loss, prem"
+    },
+    {
+      "question": "For each claim, show the claim number, the catastrophe that caused it, total loss (loss payments plus loss reserves), total expense (expense payments plus expense reserves), and expense as a percentage of loss.",
+      "quadrant": "HQHS",
+      "goldSql": "SELECT c.Company_Claim_Number, cat.Catastrophe_Name, COALESCE(lp.amt,0) + COALESCE(lr.amt,0) AS total_loss, COALESCE(ep.amt,0) + COALESCE(er.amt,0) AS total_expense, 100.0 * (COALESCE(ep.amt,0) + COALESCE(er.amt,0)) / (COALESCE(lp.amt,0) + COALESCE(lr.amt,0)) AS expense_pct_of_loss FROM main.claim c LEFT JOIN main.catastrophe cat ON cat.Catastrophe_Identifier = c.Catastrophe_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lp ON lp.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lr ON lr.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) ep ON ep.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.expense_reserve er ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) er ON er.Claim_Identifier = c.Claim_Identifier ORDER BY c.Company_Claim_Number"
+    },
+    {
+      "question": "For each claim, what is the ratio of total amounts paid (loss payments plus expense payments) to total amounts reserved (loss reserves plus expense reserves)?",
+      "quadrant": "HQHS",
+      "goldSql": "SELECT c.Company_Claim_Number, (COALESCE(lp.amt,0) + COALESCE(ep.amt,0)) * 1.0 / (COALESCE(lr.amt,0) + COALESCE(er.amt,0)) AS paid_to_reserved_ratio FROM main.claim c LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lp ON lp.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lr ON lr.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) ep ON ep.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.expense_reserve er ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) er ON er.Claim_Identifier = c.Claim_Identifier ORDER BY c.Company_Claim_Number"
+    },
+    {
+      "question": "For each policy coverage period that has at least one claim filed against it, show the policy number, the coverage start date, the premium for that coverage, the incurred loss (loss payments plus loss reserves) on claims filed against it, and the resulting loss ratio.",
+      "quadrant": "HQHS",
+      "goldSql": "WITH cov_loss AS ( SELECT cc.Policy_Coverage_Detail_Identifier, cc.Effective_Date, SUM(COALESCE(lp.amt,0) + COALESCE(lr.amt,0)) AS incurred_loss FROM main.claim_coverage cc LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lp ON lp.Claim_Identifier = cc.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lr ON lr.Claim_Identifier = cc.Claim_Identifier GROUP BY 1, 2), cov_prem AS ( SELECT Policy_Coverage_Detail_Identifier, Effective_Date, SUM(Policy_Amount) AS premium FROM (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) x GROUP BY 1, 2) SELECT p.Policy_Number, pcd.Effective_Date AS coverage_start, cp.premium, cl.incurred_loss, cl.incurred_loss * 1.0 / cp.premium AS loss_ratio FROM cov_loss cl JOIN main.policy_coverage_detail pcd ON pcd.Policy_Coverage_Detail_Identifier = cl.Policy_Coverage_Detail_Identifier AND pcd.Effective_Date = cl.Effective_Date JOIN main.policy p ON p.Policy_Identifier = pcd.Policy_Identifier JOIN cov_prem cp ON cp.Policy_Coverage_Detail_Identifier = cl.Policy_Coverage_Detail_Identifier AND cp.Effective_Date = cl.Effective_Date ORDER BY p.Policy_Number, coverage_start"
+    },
+    {
+      "question": "For each agent (first and last name), how many distinct policies did they sell, what is the total premium across all coverage periods of those policies, and what is the total loss paid on claims filed against those policies' coverages?",
+      "quadrant": "HQHS",
+      "goldSql": "WITH agent_pol AS ( SELECT DISTINCT pe.First_Name, pe.Last_Name, apr.Party_Identifier, apr.Agreement_Identifier AS Policy_Identifier FROM main.agreement_party_role apr JOIN main.party_role r ON r.Party_Role_Code = apr.Party_Role_Code JOIN main.person pe ON pe.Person_Identifier = apr.Party_Identifier WHERE r.Party_Role_Name = 'Agent'), pol_prem AS (SELECT Policy_Identifier, SUM(Policy_Amount) AS premium FROM (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) x GROUP BY 1), pol_loss AS ( SELECT pcd.Policy_Identifier, SUM(lp.amt) AS loss_paid FROM main.claim_coverage cc JOIN main.policy_coverage_detail pcd ON pcd.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier AND pcd.Effective_Date = cc.Effective_Date JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lp ON lp.Claim_Identifier = cc.Claim_Identifier GROUP BY 1) SELECT ap.First_Name, ap.Last_Name, COUNT(DISTINCT ap.Policy_Identifier) AS policies, SUM(COALESCE(pp.premium,0)) AS total_premium, SUM(COALESCE(pl.loss_paid,0)) AS total_loss_paid FROM agent_pol ap LEFT JOIN pol_prem pp ON pp.Policy_Identifier = ap.Policy_Identifier LEFT JOIN pol_loss pl ON pl.Policy_Identifier = ap.Policy_Identifier GROUP BY ap.Party_Identifier, ap.First_Name, ap.Last_Name ORDER BY total_premium DESC"
+    },
+    {
+      "question": "For each ZIP code where an insured property had a claim, what is the total claim cost (all loss and expense payments and reserves combined) and the average number of days from opening to closing those claims?",
+      "quadrant": "HQHS",
+      "goldSql": "WITH claim_cost AS (SELECT Claim_Identifier, SUM(Claim_Amount) AS cost FROM main.claim_amount GROUP BY 1) SELECT la.Postal_Code, SUM(COALESCE(cc.cost,0)) AS total_claim_cost, AVG(date_diff('day', c.Claim_Open_Date, c.Claim_Close_Date)) AS avg_days_to_close FROM main.claim c LEFT JOIN claim_cost cc ON cc.Claim_Identifier = c.Claim_Identifier JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address la ON la.Location_Address_Identifier = g.Location_Address_Identifier GROUP BY la.Postal_Code ORDER BY total_claim_cost DESC"
+    },
+    {
+      "question": "For each policy holder (first and last name), what is the total premium across all their policies and coverage periods, the number of coverage periods, and the average premium per coverage period?",
+      "quadrant": "HQHS",
+      "goldSql": "WITH holder_pol AS ( SELECT DISTINCT apr.Party_Identifier, pe.First_Name, pe.Last_Name, apr.Agreement_Identifier AS Policy_Identifier FROM main.agreement_party_role apr JOIN main.party_role r ON r.Party_Role_Code = apr.Party_Role_Code JOIN main.person pe ON pe.Person_Identifier = apr.Party_Identifier WHERE r.Party_Role_Name = 'PolicyHolder') SELECT hp.First_Name, hp.Last_Name, SUM(pr.Policy_Amount) AS total_premium, COUNT(DISTINCT pr.Policy_Amount_Identifier) AS coverage_periods, SUM(pr.Policy_Amount) * 1.0 / COUNT(DISTINCT pr.Policy_Amount_Identifier) AS avg_premium_per_period FROM holder_pol hp JOIN (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) pr ON pr.Policy_Identifier = hp.Policy_Identifier GROUP BY hp.Party_Identifier, hp.First_Name, hp.Last_Name ORDER BY total_premium DESC"
+    },
+    {
+      "question": "For each policy, how many days passed between the end of its underwriting assessment and the policy's effective date, and who was the underwriter (first and last name) and what was the assessment result?",
+      "quadrant": "HQHS",
+      "goldSql": "SELECT p.Policy_Number, pe.First_Name, pe.Last_Name, ar.Assessment_Result_Type_Code, date_diff('day', a.End_Date, p.Effective_Date) AS days_assessment_end_to_effective FROM main.policy p JOIN main.agreement_assessment aa ON aa.Agreement_Identifier = p.Policy_Identifier JOIN main.assessment a ON a.Assessment_Identifier = aa.Assessment_Identifier JOIN main.assessment_result ar ON ar.Assessment_Identifier = a.Assessment_Identifier JOIN main.underwriting_assessment ua ON ua.Assessment_Result_Identifier = ar.Assessment_Result_Identifier JOIN main.assesment_party_role apr ON apr.Assessment_Identifier = a.Assessment_Identifier JOIN main.party_role r ON r.Party_Role_Code = apr.Party_Role_Code JOIN main.person pe ON pe.Person_Identifier = apr.Party_Identifier WHERE r.Party_Role_Name = 'Underwriter' ORDER BY p.Policy_Number"
+    },
+    {
+      "question": "For each catastrophe that has claims, show the number of claims, total loss paid, total loss reserved, and the paid share of incurred loss as a percentage (loss paid divided by loss paid plus loss reserved).",
+      "quadrant": "HQHS",
+      "goldSql": "SELECT cat.Catastrophe_Name, COUNT(DISTINCT c.Claim_Identifier) AS claims, SUM(COALESCE(lp.amt,0)) AS loss_paid, SUM(COALESCE(lr.amt,0)) AS loss_reserved, 100.0 * SUM(COALESCE(lp.amt,0)) / (SUM(COALESCE(lp.amt,0)) + SUM(COALESCE(lr.amt,0))) AS paid_share_pct FROM main.catastrophe cat JOIN main.claim c ON c.Catastrophe_Identifier = cat.Catastrophe_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lp ON lp.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lr ON lr.Claim_Identifier = c.Claim_Identifier GROUP BY cat.Catastrophe_Name ORDER BY claims DESC"
+    },
+    {
+      "question": "For each insured property with a claim, identified by street address, what is the incurred loss (loss payments plus loss reserves) on its claims divided by all the premium ever charged for coverage on that property? Rank the properties from highest to lowest ratio.",
+      "quadrant": "HQHS",
+      "goldSql": "WITH prop_loss AS ( SELECT c.Insurable_Object_Identifier, SUM(COALESCE(lp.amt,0) + COALESCE(lr.amt,0)) AS incurred_loss FROM main.claim c LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lp ON lp.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lr ON lr.Claim_Identifier = c.Claim_Identifier GROUP BY 1), prop_prem AS ( SELECT pcd.Insurable_Object_Identifier, SUM(pr.Policy_Amount) AS premium FROM (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) pr JOIN main.policy_coverage_detail pcd ON pcd.Policy_Coverage_Detail_Identifier = pr.Policy_Coverage_Detail_Identifier AND pcd.Effective_Date = pr.Effective_Date GROUP BY 1) SELECT la.Line_1_Address, pl.incurred_loss, pp.premium, pl.incurred_loss * 1.0 / pp.premium AS loss_to_premium FROM prop_loss pl JOIN prop_prem pp ON pp.Insurable_Object_Identifier = pl.Insurable_Object_Identifier JOIN main.insurable_object io ON io.Insurable_Object_Identifier = pl.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address la ON la.Location_Address_Identifier = g.Location_Address_Identifier ORDER BY loss_to_premium DESC"
+    }
+  ],
+  "unanswerable": [
+    {
+      "question": "Which agent earned the most commission last year?",
+      "why": "No commission amounts or commission rates are recorded anywhere; only the agent role on a policy exists."
+    },
+    {
+      "question": "How much did we recover from reinsurers on the fire catastrophe claims?",
+      "why": "There is no reinsurance treaty, cession or recovery data in the warehouse."
+    },
+    {
+      "question": "What is the average credit score of our policy holders?",
+      "why": "No credit or insurance score is stored for any party or person."
+    },
+    {
+      "question": "What deductible applies to each policy, and how often do claims fall below it?",
+      "why": "Deductibles are not recorded on policies, coverages or claims."
+    },
+    {
+      "question": "How much have we collected through subrogation against at-fault third parties?",
+      "why": "There is no subrogation or salvage recovery data."
+    },
+    {
+      "question": "Which claims were referred to the special investigations unit for suspected fraud?",
+      "why": "No fraud flags, referrals or investigation records exist."
+    },
+    {
+      "question": "Which claims adjuster handled each claim, and what is each adjuster's open caseload?",
+      "why": "The only party roles recorded are agent, underwriter and policy holder; no adjuster is assigned to claims."
+    },
+    {
+      "question": "What share of quotes we issued last year converted into bound policies?",
+      "why": "Quotes and submissions are not stored; only issued policies exist."
+    },
+    {
+      "question": "What was the maximum wind speed of the hurricane, and how did claim severity vary with it?",
+      "why": "Catastrophes carry only a name; no hazard intensity measures such as wind speed are recorded."
+    },
+    {
+      "question": "How satisfied were policy holders with the claims experience, by net promoter score?",
+      "why": "No customer satisfaction or survey data exists."
+    }
+  ]
+}

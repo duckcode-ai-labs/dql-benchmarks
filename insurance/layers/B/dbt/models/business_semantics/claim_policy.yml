@@ -1,0 +1,64 @@
+version: 2
+
+models:
+  - name: claim_policy
+    description: >-
+      Claim-grain bridge from a claim to the policy it is made against (claim_coverage ->
+      policy_coverage_detail -> policy), with that policy's number, agent and policy holder.
+      Lets claim counts and claim money reach policy, agent and policy holder in one join.
+    columns:
+      - name: Claim_Identifier
+        tests: [unique, not_null]
+      - name: Policy_Identifier
+        description: Policy the claim is recorded against in claim_coverage.
+
+semantic_models:
+  - name: claim_policies
+    description: >-
+      One row per claim with the policy it is made against (claim_coverage rule), the policy
+      number, and the policy's agent and policy holder. claim_amounts and insurance_claims
+      join here through the claim_policy entity, so claim money and claim counts can be cut
+      by policy, agent or policy holder without fan-out.
+    model: ref('claim_policy')
+    entities:
+      - name: claim_policy
+        type: primary
+        expr: Claim_Identifier
+      - name: policy
+        type: foreign
+        expr: Policy_Identifier
+    dimensions:
+      - name: policy_number
+        label: Policy number (of the claim)
+        description: Number of the policy the claim is made against (through claim_coverage).
+        type: categorical
+        expr: Policy_Number
+      - name: policy_id
+        label: Policy ID (of the claim)
+        type: categorical
+        expr: Policy_Identifier
+      - name: agent_party_id
+        label: Agent ID (of the claim's policy)
+        description: Party_Identifier of the agent (role AG) on the claim's policy.
+        type: categorical
+        expr: Agent_Party_Identifier
+      - name: agent_name
+        label: Agent (of the claim's policy)
+        type: categorical
+        expr: Agent_Name
+      - name: policy_holder_party_id
+        label: Policy holder ID (of the claim's policy)
+        description: Party_Identifier of the policy holder (role PH) on the claim's policy.
+        type: categorical
+        expr: Policy_Holder_Party_Identifier
+      - name: policy_holder_name
+        label: Policy holder (of the claim's policy)
+        type: categorical
+        expr: Policy_Holder_Name
+      - name: coverage_start_date
+        label: Coverage period start date (of the claim)
+        description: Start of the coverage period the claim is made against.
+        type: time
+        expr: Coverage_Effective_Date
+        type_params:
+          time_granularity: day

@@ -1,0 +1,81 @@
+// dql-format: 1
+
+block "Book of Business by Agent and Policy Holder" {
+    domain = "insurance"
+    type = "custom"
+    status = "certified"
+    description = "Distribution and customer report, one row per policy: the agent who sold it (role AG) and the policy holder (role PH) with their party IDs and names, the policy term, coverage periods, written premium, claims, incurred losses, incurred loss and expense and loss ratio. Roles are pivoted to one row per policy before joining, and premium and claims are aggregated per policy first, so nothing is double counted; sum the rows for agent or holder totals, but never sum or average the loss_ratio column: recompute it as summed incurred_losses / summed written_premium. Claims reach the policy through claim_coverage (see the claims register for the one data conflict)."
+    owner = "insurance-analytics@acme-insurance.test"
+    tags = ["insurance", "agent", "policy-holder", "premium", "claims", "standard-report", "ai-authored", "app-source"]
+    grain = "policy"
+    outputs = ["agent_id", "agent_name", "policy_holder_id", "policy_holder_name", "policy_number", "policy_effective_date", "policy_expiration_date", "coverage_periods", "written_premium", "claims", "incurred_losses", "incurred_loss_and_expense", "loss_ratio"]
+    reviewCadence = "quarterly"
+
+    query = """
+        WITH roles AS (
+            SELECT
+                r.Agreement_Identifier AS Policy_Identifier,
+                STRING_AGG(DISTINCT CASE WHEN r.Party_Role_Code = 'AG' THEN CAST(r.Party_Identifier AS VARCHAR) END, ', ') AS agent_id,
+                STRING_AGG(DISTINCT CASE WHEN r.Party_Role_Code = 'AG' THEN TRIM(pe.First_Name || ' ' || pe.Last_Name) END, ', ') AS agent_name,
+                STRING_AGG(DISTINCT CASE WHEN r.Party_Role_Code = 'PH' THEN CAST(r.Party_Identifier AS VARCHAR) END, ', ') AS policy_holder_id,
+                STRING_AGG(DISTINCT CASE WHEN r.Party_Role_Code = 'PH' THEN TRIM(pe.First_Name || ' ' || pe.Last_Name) END, ', ') AS policy_holder_name
+            FROM main.agreement_party_role AS r
+            LEFT JOIN main.person AS pe ON pe.Person_Identifier = r.Party_Identifier
+            GROUP BY r.Agreement_Identifier
+        ),
+        premium AS (
+            SELECT
+                pa.Policy_Identifier,
+                COUNT(DISTINCT pa.Policy_Coverage_Detail_Identifier) AS coverage_periods,
+                SUM(pa.Policy_Amount) AS written_premium
+            FROM main.policy_amount AS pa
+            JOIN main.premium AS pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier
+            GROUP BY pa.Policy_Identifier
+        ),
+        claim_losses AS (
+            SELECT
+                pcd.Policy_Identifier,
+                COUNT(DISTINCT cc.Claim_Identifier) AS claims,
+                SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL OR lr.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END) AS incurred_losses,
+                SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL OR lr.Claim_Amount_Identifier IS NOT NULL
+                          OR ep.Claim_Amount_Identifier IS NOT NULL OR er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END) AS incurred_loss_and_expense
+            FROM main.claim_coverage AS cc
+            JOIN main.policy_coverage_detail AS pcd
+                ON pcd.Effective_Date = cc.Effective_Date
+               AND pcd.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier
+            LEFT JOIN main.claim_amount AS ca ON ca.Claim_Identifier = cc.Claim_Identifier
+            LEFT JOIN main.loss_payment AS lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+            LEFT JOIN main.loss_reserve AS lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+            LEFT JOIN main.expense_payment AS ep ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+            LEFT JOIN main.expense_reserve AS er ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+            GROUP BY pcd.Policy_Identifier
+        )
+        SELECT
+            ro.agent_id,
+            ro.agent_name,
+            ro.policy_holder_id,
+            ro.policy_holder_name,
+            pol.Policy_Number AS policy_number,
+            pol.Effective_Date AS policy_effective_date,
+            pol.Expiration_Date AS policy_expiration_date,
+            COALESCE(p.coverage_periods, 0) AS coverage_periods,
+            COALESCE(p.written_premium, 0) AS written_premium,
+            COALESCE(cl.claims, 0) AS claims,
+            COALESCE(cl.incurred_losses, 0) AS incurred_losses,
+            COALESCE(cl.incurred_loss_and_expense, 0) AS incurred_loss_and_expense,
+            COALESCE(cl.incurred_losses, 0) / NULLIF(p.written_premium, 0) AS loss_ratio
+        FROM main.policy AS pol
+        LEFT JOIN roles AS ro ON ro.Policy_Identifier = pol.Policy_Identifier
+        LEFT JOIN premium AS p ON p.Policy_Identifier = pol.Policy_Identifier
+        LEFT JOIN claim_losses AS cl ON cl.Policy_Identifier = pol.Policy_Identifier
+        ORDER BY agent_name, policy_holder_name, policy_number
+    """
+
+    visualization {
+        chart = "table"
+    }
+
+    tests {
+        assert row_count > 0
+    }
+}

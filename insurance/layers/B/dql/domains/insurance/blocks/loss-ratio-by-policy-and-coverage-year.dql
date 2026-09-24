@@ -1,0 +1,68 @@
+// dql-format: 1
+
+block "Loss Ratio by Policy and Coverage Year" {
+    domain = "insurance"
+    type = "custom"
+    status = "certified"
+    description = "Loss ratio for each policy coverage period (policy-year): written premium, claims, incurred losses, incurred loss and expense and loss ratio. Claims are attributed to the coverage period they are recorded against in claim_coverage (claim -> claim_coverage -> policy_coverage_detail -> policy), matched on both Effective_Date and Policy_Coverage_Detail_Identifier. Known data conflict: one claim's claim_coverage row names a different policy than the policy insuring the claim's damaged object; this report follows claim_coverage (see the Claims Register). Do not add loss ratios across rows; recompute from summed losses and premium. Premium and claim money are aggregated per coverage period before joining (no fan-out)."
+    owner = "insurance-analytics@acme-insurance.test"
+    tags = ["insurance", "loss-ratio", "premium", "claims", "standard-report", "ai-authored", "app-source"]
+    grain = "policy coverage period (policy x coverage year)"
+    outputs = ["policy_number", "coverage_year", "coverage_start_date", "coverage_end_date", "written_premium", "claims", "incurred_losses", "incurred_loss_and_expense", "loss_ratio"]
+    reviewCadence = "quarterly"
+
+    query = """
+        WITH premium AS (
+            SELECT
+                pa.Effective_Date,
+                pa.Policy_Coverage_Detail_Identifier,
+                SUM(pa.Policy_Amount) AS written_premium
+            FROM main.policy_amount AS pa
+            JOIN main.premium AS pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier
+            GROUP BY pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier
+        ),
+        claim_losses AS (
+            SELECT
+                cc.Effective_Date,
+                cc.Policy_Coverage_Detail_Identifier,
+                COUNT(DISTINCT cc.Claim_Identifier) AS claims,
+                SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL OR lr.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END) AS incurred_losses,
+                SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL OR lr.Claim_Amount_Identifier IS NOT NULL
+                          OR ep.Claim_Amount_Identifier IS NOT NULL OR er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END) AS incurred_loss_and_expense
+            FROM main.claim_coverage AS cc
+            LEFT JOIN main.claim_amount AS ca ON ca.Claim_Identifier = cc.Claim_Identifier
+            LEFT JOIN main.loss_payment AS lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+            LEFT JOIN main.loss_reserve AS lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+            LEFT JOIN main.expense_payment AS ep ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+            LEFT JOIN main.expense_reserve AS er ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+            GROUP BY cc.Effective_Date, cc.Policy_Coverage_Detail_Identifier
+        )
+        SELECT
+            pol.Policy_Number AS policy_number,
+            YEAR(pcd.Effective_Date) AS coverage_year,
+            pcd.Effective_Date AS coverage_start_date,
+            pcd.Expiration_Date AS coverage_end_date,
+            COALESCE(p.written_premium, 0) AS written_premium,
+            COALESCE(cl.claims, 0) AS claims,
+            COALESCE(cl.incurred_losses, 0) AS incurred_losses,
+            COALESCE(cl.incurred_loss_and_expense, 0) AS incurred_loss_and_expense,
+            COALESCE(cl.incurred_losses, 0) / NULLIF(p.written_premium, 0) AS loss_ratio
+        FROM main.policy_coverage_detail AS pcd
+        JOIN main.policy AS pol ON pol.Policy_Identifier = pcd.Policy_Identifier
+        LEFT JOIN premium AS p
+            ON p.Effective_Date = pcd.Effective_Date
+           AND p.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier
+        LEFT JOIN claim_losses AS cl
+            ON cl.Effective_Date = pcd.Effective_Date
+           AND cl.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier
+        ORDER BY policy_number, coverage_start_date
+    """
+
+    visualization {
+        chart = "table"
+    }
+
+    tests {
+        assert row_count > 0
+    }
+}

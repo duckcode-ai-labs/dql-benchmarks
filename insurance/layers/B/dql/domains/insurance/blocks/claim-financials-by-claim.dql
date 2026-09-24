@@ -1,0 +1,15 @@
+block "Claim Financials by Claim" {
+    type = "semantic"
+    status = "certified"
+    domain = "insurance"
+    description = "Standard claims financial report, one row per claim number: losses paid, loss reserves, expenses paid (LAE), expense reserves, incurred losses (paid + reserved loss), incurred expenses and incurred loss and expense. Amount kinds come only from the loss_payment, loss_reserve, expense_payment and expense_reserve tables. Reserves are current values (no reserve history)."
+    tags = ["insurance", "claims", "losses", "reserves", "standard-report", "ai-authored", "app-source"]
+    owner = "insurance-analytics@acme-insurance.test"
+    metrics = ["losses_paid", "loss_reserves", "expenses_paid", "expense_reserves", "incurred_losses", "incurred_expenses", "incurred_loss_and_expense"]
+    dimensions = ["claim__claim_number"]
+    order_by = ["claim__claim_number asc"]
+
+    visualization {
+        chart = "table"
+    }
+}

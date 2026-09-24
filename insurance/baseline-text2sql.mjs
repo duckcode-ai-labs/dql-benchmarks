@@ -197,7 +197,7 @@ function askClaude(prompt, { model, effort }) {
         isError: parsed ? Boolean(parsed.is_error) : true,
         usage: parsed?.usage ? { input: parsed.usage.input_tokens, cacheRead: parsed.usage.cache_read_input_tokens, cacheWrite: parsed.usage.cache_creation_input_tokens, output: parsed.usage.output_tokens } : null,
         apiMs: parsed?.duration_api_ms ?? null,
-        error: parsed ? null : (stderr || stdout).slice(0, 300),
+        error: parsed ? (parsed.is_error ? String(parsed.result ?? 'error').slice(0, 300) : null) : (stderr || stdout).slice(0, 300),
       });
     });
     child.stdin.end(prompt);
@@ -236,10 +236,20 @@ async function main() {
   for (let round = 1; round <= options.repeat; round += 1) {
     for (const c of cases) {
       const key = `${c.id}#${round}`;
-      if (replies[key]) continue;
+      // A failed call recorded earlier (a usage limit) is asked again, never scored.
+      if (replies[key] && !replies[key].isError) continue;
       if (options.replay) throw new Error(`No recorded reply for ${key}`);
       const ask = options.provider === 'anthropic' ? askAnthropic : options.provider === 'codex' ? askCodex : options.provider === 'ollama' ? askOllama : askClaude;
       const reply = await ask(baselinePrompt(ddl, c.question), options);
+      // A call the provider refused (usage limit, quota, sign-in) is not an
+      // answer the model gave: scored, it counts as the model being wrong. The
+      // run stops, marked invalid, as the Spider baseline and the DQL runner do;
+      // the answers so far are kept and the rerun asks only what is missing.
+      if (reply.isError) {
+        console.error(`INVALID RUN: the provider refused the call for ${key}: ${String(reply.error ?? reply.text ?? 'error').slice(0, 300)}`);
+        process.exitCode = 3;
+        return;
+      }
       replies[key] = reply;
       writeFileSync(repliesFile, `${JSON.stringify(replies, null, 2)}\n`);
       console.error(`${key}: ${Math.round(reply.ms / 1000)}s${reply.isError ? ' (error)' : ''}`);
