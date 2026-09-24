@@ -16,7 +16,7 @@
 
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { REPO_ROOT, dqlVersion, resolveDqlCli } from '../lib/dql.mjs';
 import { buildIdentity } from '../lib/build-identity.mjs';
@@ -72,7 +72,7 @@ function codexEffort() {
 }
 
 function parseArgs(argv) {
-  const options = { layer: 'L0', set: 'dbt-labs', run: null, cassette: 'record', provider: 'claude-code', model: 'claude-sonnet-5', only: null, debugCli: false, readingEffort: null };
+  const options = { layer: 'L0', set: 'dbt-labs', run: null, cassette: 'record', provider: 'claude-code', model: 'claude-sonnet-5', only: null, debugCli: false, readingEffort: null, resume: false };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     const next = () => argv[++index];
@@ -83,6 +83,7 @@ function parseArgs(argv) {
     else if (arg === '--provider') options.provider = next();
     else if (arg === '--model') options.model = next();
     else if (arg === '--only') options.only = next().split(',');
+    else if (arg === '--resume') options.resume = true;
     else if (arg === '--debug-cli') options.debugCli = true;
     else if (arg === '--reading-effort') options.readingEffort = next();
     else throw new Error(`Unknown argument ${arg}`);
@@ -136,7 +137,7 @@ export function providerOutages(projectDir) {
   return rows.flatMap((row) => {
     const text = String(row.payload_json ?? '').split(String(row.question ?? '')).join(' ');
     const found = REFUSAL.exec(text);
-    return found ? [found[1]] : [];
+    return found ? [{ question: String(row.question ?? ''), message: found[1] }] : [];
   });
 }
 
@@ -313,6 +314,26 @@ async function main() {
   if (cases.length === 0) throw new Error('No questions selected.');
 
   const outDir = join(WORK, 'runs', options.run, options.layer, options.set);
+  // RESUME AFTER A REFUSED CALL. An attempt the provider cut off (a usage or
+  // session limit) keeps every question it answered; only the refused and the
+  // never-asked questions are asked again, each on a fresh agent as always,
+  // and the two sets of answers are merged. The cut-off attempt is kept beside
+  // the result as evidence. A valid report is never resumed or overwritten.
+  let kept = [];
+  let resumedFrom = null;
+  if (options.resume && existsSync(join(outDir, 'report.json'))) {
+    const prior = JSON.parse(readFileSync(join(outDir, 'report.json'), 'utf-8'));
+    if (!prior.invalid) throw new Error(`${relative(REPO_ROOT, outDir)} already has a valid report; nothing to resume.`);
+    const refused = new Set(prior.invalid.refusedQuestions ?? (prior.results ?? []).map((item) => item.name));
+    kept = [...(prior.keptFromEarlierAttempts ?? []), ...(prior.results ?? [])].filter((item) => !refused.has(item.name) && cases.some((c) => c.id === item.name));
+    let attempt = 1;
+    while (existsSync(`${outDir}.attempt-${attempt}`)) attempt += 1;
+    renameSync(outDir, `${outDir}.attempt-${attempt}`);
+    resumedFrom = { attempt: relative(REPO_ROOT, `${outDir}.attempt-${attempt}`), kept: kept.length };
+    const keptIds = new Set(kept.map((item) => item.name));
+    cases = cases.filter((c) => !keptIds.has(c.id));
+    console.error(`resuming ${options.layer}/${options.set}: ${kept.length} answered question(s) kept, ${cases.length} to ask`);
+  }
   if (options.cassette === 'record' && existsSync(join(outDir, 'report.json'))) {
     throw new Error(`Run ${options.run} already has ${options.layer}/${options.set}; pick a new run id or replay it.`);
   }
@@ -394,15 +415,23 @@ async function main() {
   const idByQuestion = new Map(cases.map((c) => [String(c.question).trim(), c.id]));
   const captureById = new Map([...captured].map(([question, value]) => [idByQuestion.get(String(question).trim()), value]).filter(([id]) => id));
   if (Array.isArray(report.results)) report.results = report.results.map((item) => (captureById.has(item.name) ? { ...item, capture: captureById.get(item.name) } : item));
+  // A resumed set reports every question: the answers kept from the cut-off
+  // attempt, then the ones asked now.
+  if (kept.length) {
+    report.results = [...kept, ...(report.results ?? [])];
+    report.total = report.results.length;
+    report.passed = report.results.filter((item) => item.passed).length;
+  }
   // Tokens and cost per question, from DQL's usage ledger (API providers only).
   const ledger = readLedger(join(outDir, 'usage.jsonl'));
   const usage = ledger.length ? attributeUsage(ledger, runSpans(projectDir), loadPricing()) : null;
   const out = {
     identity,
     provenance: cassetteEvidence(join(outDir, 'cassettes'), options.cassette),
-    ...(outages.length ? { invalid: { reason: 'the AI provider refused calls during the run', questions: outages.length, messages: [...new Set(outages)].slice(0, 3) } } : {}),
+    ...(outages.length ? { invalid: { reason: 'the AI provider refused calls during the run', questions: outages.length, messages: [...new Set(outages.map((item) => item.message))].slice(0, 3), refusedQuestions: [...new Set(outages.map((item) => idByQuestion.get(item.question.trim())).filter(Boolean))] } } : {}),
+    ...(resumedFrom ? { resumedFrom } : {}),
     run: { id: options.run, layer: options.layer, set: options.set, startedAt, finishedAt: new Date().toISOString(), evalExitCode: result.code },
-    questions: cases.length,
+    questions: cases.length + kept.length,
     ...report,
     ...(usage ? { usage } : {}),
   };
