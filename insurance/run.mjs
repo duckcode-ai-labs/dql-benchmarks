@@ -373,6 +373,8 @@ async function main() {
     },
   });
   identity.authoredLayer = layerIdentity(options.layer);
+  // Every DQL_ASK_* experiment switch in effect is part of the result.
+  identity.askSwitches = Object.fromEntries(Object.entries(process.env).filter(([name]) => name.startsWith('DQL_ASK_')));
   identity.settings = { ...RUN_ENV, ...LOCAL_ENV(options.provider), caseTimeoutMs: CASE_TIMEOUT_MS, debugCli: options.debugCli, readingEffort: options.readingEffort ?? 'default (route effort)' };
 
   writeProviderSettings(projectDir, options.provider, options.model);
