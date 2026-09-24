@@ -140,6 +140,11 @@ export function providerOutages(projectDir) {
   });
 }
 
+// Which authored overlays and metrics each level carries (mirrors build.mjs LAYERS).
+const OVERLAYS_BY_LAYER = { L0: [], L1: ['L1'], L2: ['L1'], L3: ['L1', 'L3'], W0: [], W1a: [], W1: ['L1'], W2: ['L1'], W3: ['L1', 'L3'], W4: ['L1', 'L3'] };
+const SEMANTIC_LAYERS = new Set(['L2', 'L3']);
+const NATIVE_METRICS_LAYERS = new Set(['W2', 'W4']);
+
 /**
  * What each question's run did, read from DQL's own run store: the certified
  * blocks the SQL drafter was given, why the run stopped, and the tiers it
@@ -173,14 +178,15 @@ export function layerIdentity(layer) {
     return { layer: 'B', version: record.version, contentSha256: record.contentSha256, blocksCertifiedByAHuman: record.blocksCertifiedByAHuman ?? 0, label: record.label };
   }
   const hash = createHash('sha256');
-  const overlays = ['L1', 'L3'].filter((name) => existsSync(join(REPO_ROOT, 'insurance', 'layers', name)));
+  // The overlays this level adds, as build.mjs defines them (L0 and W0 add none).
+  const overlays = OVERLAYS_BY_LAYER[layer] ?? [];
   for (const name of overlays) {
     const root = join(REPO_ROOT, 'insurance', 'layers', name);
     for (const file of readdirSync(root, { recursive: true, withFileTypes: true }).filter((entry) => entry.isFile()).map((entry) => join(entry.parentPath ?? entry.path, entry.name)).sort()) {
       hash.update(relative(root, file)); hash.update(readFileSync(file));
     }
   }
-  return { overlays, contentSha256: hash.digest('hex') };
+  return { overlays, ...(NATIVE_METRICS_LAYERS.has(layer) ? { metrics: 'dbt Labs semantic models (native import)' } : SEMANTIC_LAYERS.has(layer) ? { metrics: 'dbt Labs semantic models (MetricFlow)' } : {}), contentSha256: overlays.length ? hash.digest('hex') : null };
 }
 
 /** The eval file DQL reads. The correct rows sit here, outside the project. */
@@ -385,8 +391,8 @@ async function main() {
   const outages = providerOutages(projectDir);
   // Per question: the certified blocks the drafter read, stop reasons, tiers tried.
   const captured = runCapture(projectDir);
-  const idByQuestion = new Map(cases.map((c) => [c.question, c.id]));
-  const captureById = new Map([...captured].map(([question, value]) => [idByQuestion.get(question), value]).filter(([id]) => id));
+  const idByQuestion = new Map(cases.map((c) => [String(c.question).trim(), c.id]));
+  const captureById = new Map([...captured].map(([question, value]) => [idByQuestion.get(String(question).trim()), value]).filter(([id]) => id));
   if (Array.isArray(report.results)) report.results = report.results.map((item) => (captureById.has(item.name) ? { ...item, capture: captureById.get(item.name) } : item));
   // Tokens and cost per question, from DQL's usage ledger (API providers only).
   const ledger = readLedger(join(outDir, 'usage.jsonl'));
