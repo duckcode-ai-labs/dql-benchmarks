@@ -65,6 +65,23 @@ function LOCAL_ENV(provider) {
   return provider === 'ollama' ? { DQL_AGENT_DEADLINE_SCALE: '20' } : {};
 }
 
+/**
+ * A benchmark's Codex calls must not carry the operator's own Codex setup:
+ * the default home adds their AGENTS.md, plugin skills and memories to every
+ * prompt (measured: 23.8k input tokens for a one-line question). A separate
+ * home, signed in once, holds none of it. Refuses a home that would bring
+ * personal instructions or memories back.
+ */
+export function useIsolatedCodexHome(home) {
+  if (!home || !existsSync(join(home, 'auth.json'))) throw new Error(`--codex-home ${home} is not signed in: run \`CODEX_HOME=${home} codex login\` once.`);
+  if (existsSync(join(home, 'AGENTS.md'))) throw new Error(`--codex-home ${home} has an AGENTS.md: a benchmark home holds no personal instructions.`);
+  const config = existsSync(join(home, 'config.toml')) ? readFileSync(join(home, 'config.toml'), 'utf-8') : '';
+  if (!/^\s*memories\s*=\s*false/m.test(config)) throw new Error(`--codex-home ${home}: config.toml must turn memories off ([features] memories = false).`);
+  if (/^\s*\[(plugins|mcp_servers)\b/m.test(config)) throw new Error(`--codex-home ${home}: config.toml must not enable plugins or MCP servers.`);
+  process.env.CODEX_HOME = home;
+  return `CODEX_HOME=${home} (isolated: no AGENTS.md, plugins, MCP or memories)`;
+}
+
 function codexVersion() {
   const result = spawnSync('codex', ['--version'], { encoding: 'utf-8', env: { ...process.env, PATH: codexPath() } });
   if (result.status !== 0 || !result.stdout) throw new Error(`The codex command was not found (looked in ${CODEX_DIRS.join(', ')} and PATH).`);
@@ -82,7 +99,7 @@ function codexEffort(pinned = process.env.DQL_CODEX_REASONING_EFFORT) {
 }
 
 function parseArgs(argv) {
-  const options = { layer: 'L0', set: 'dbt-labs', run: null, cassette: 'record', provider: 'claude-code', model: 'claude-sonnet-5', only: null, debugCli: false, readingEffort: null, codexEffort: null, resume: false };
+  const options = { layer: 'L0', set: 'dbt-labs', run: null, cassette: 'record', provider: 'claude-code', model: 'claude-sonnet-5', only: null, debugCli: false, readingEffort: null, codexEffort: null, codexHome: null, resume: false };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     const next = () => argv[++index];
@@ -97,6 +114,7 @@ function parseArgs(argv) {
     else if (arg === '--debug-cli') options.debugCli = true;
     else if (arg === '--reading-effort') options.readingEffort = next();
     else if (arg === '--codex-effort') options.codexEffort = next();
+    else if (arg === '--codex-home') options.codexHome = next();
     else throw new Error(`Unknown argument ${arg}`);
   }
   if (!options.run) throw new Error('--run <run-id> is required');
@@ -302,6 +320,8 @@ export function cassetteEvidence(dir, mode) {
 
 async function main() {
   const options = parseArgs(process.argv.slice(2));
+  // Set before any child process starts, so every Codex call inherits it.
+  const codexHomeNote = options.codexHome ? useIsolatedCodexHome(options.codexHome) : `CODEX_HOME=${process.env.CODEX_HOME ?? '~/.codex'} (the operator's own)`;
   if (!existsSync(RUN_ENV.DQL_METRICFLOW_BIN)) throw new Error('MetricFlow for the benchmark is not installed. Run: ./scripts/setup-python.sh');
   const builtDir = join(WORK, 'projects', options.layer);
   if (!existsSync(join(builtDir, 'dql.config.json'))) throw new Error(`Build the ${options.layer} project first: node insurance/build.mjs --layer ${options.layer}`);
@@ -380,7 +400,7 @@ async function main() {
       metricflow: spawnSync(RUN_ENV.DQL_METRICFLOW_BIN, ['--version'], { encoding: 'utf-8' }).stdout.trim(),
       claudeCli: options.provider === 'claude-code' ? spawnSync('claude', ['--version'], { encoding: 'utf-8' }).stdout.trim() : null,
       // Codex takes its reasoning effort from ~/.codex/config.toml; DQL passes none.
-      codexCli: options.provider === 'codex' ? `${codexVersion()}; ${codexEffort(options.codexEffort ?? undefined)}` : null,
+      codexCli: options.provider === 'codex' ? `${codexVersion()}; ${codexEffort(options.codexEffort ?? undefined)}; ${codexHomeNote}` : null,
     },
   });
   identity.authoredLayer = layerIdentity(options.layer);

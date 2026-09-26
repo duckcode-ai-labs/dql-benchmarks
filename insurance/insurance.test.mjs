@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { portGoldSql } from './build.mjs';
 import { caseId } from './questions.mjs';
-import { cassetteEvidence, evalFile, selectCases } from './run.mjs';
+import { cassetteEvidence, evalFile, selectCases, useIsolatedCodexHome } from './run.mjs';
 import { parseAudit } from '../lib/gold-audit.mjs';
 
 test('the dialect port changes only the Snowflake date-part spelling', () => {
@@ -166,4 +166,23 @@ test('grading the same answers strictly and leniently', () => {
   ]);
   assert.equal(rows[1].tables.same, true);
   assert.equal(rows[0].rerunAgrees, true);
+});
+
+test('a benchmark Codex home is signed in and holds no personal instructions, plugins or memories', () => {
+  const previous = process.env.CODEX_HOME;
+  const home = mkdtempSync(join(tmpdir(), 'codex-home-'));
+  assert.throws(() => useIsolatedCodexHome(home), /not signed in/);
+  writeFileSync(join(home, 'auth.json'), '{}');
+  assert.throws(() => useIsolatedCodexHome(home), /memories off/);
+  writeFileSync(join(home, 'config.toml'), '[features]\nmemories = false\n[plugins."browser@openai-bundled"]\nenabled = true\n');
+  assert.throws(() => useIsolatedCodexHome(home), /plugins or MCP/);
+  writeFileSync(join(home, 'config.toml'), '[features]\nmemories = false\n');
+  writeFileSync(join(home, 'AGENTS.md'), '# personal');
+  assert.throws(() => useIsolatedCodexHome(home), /AGENTS\.md/);
+  const clean = mkdtempSync(join(tmpdir(), 'codex-home-'));
+  writeFileSync(join(clean, 'auth.json'), '{}');
+  writeFileSync(join(clean, 'config.toml'), '[features]\nmemories = false\n');
+  assert.match(useIsolatedCodexHome(clean), /isolated/);
+  assert.equal(process.env.CODEX_HOME, clean);
+  if (previous === undefined) delete process.env.CODEX_HOME; else process.env.CODEX_HOME = previous;
 });

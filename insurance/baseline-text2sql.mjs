@@ -24,7 +24,7 @@ import { REPO_ROOT } from '../lib/dql.mjs';
 import { rowsMatch } from '../lib/row-match.mjs';
 import { loadAudit } from '../lib/gold-audit.mjs';
 import { buildIdentity } from '../lib/build-identity.mjs';
-import { CODEX_DIRS, selectCases } from './run.mjs';
+import { CODEX_DIRS, selectCases, useIsolatedCodexHome } from './run.mjs';
 import { heldoutPaths, heldoutSetOf } from './heldout.mjs';
 import { loadPricing, priceUsage } from '../lib/usage.mjs';
 
@@ -74,7 +74,7 @@ export function stripFence(text) {
 }
 
 function parseArgs(argv) {
-  const options = { run: null, set: 'all', ddl: 'small', model: 'claude-sonnet-5', effort: 'medium', repeat: 1, replay: false, provider: 'claude-code' };
+  const options = { run: null, set: 'all', ddl: 'small', model: 'claude-sonnet-5', effort: 'medium', repeat: 1, replay: false, provider: 'claude-code', codexHome: null };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     const next = () => argv[++index];
@@ -87,6 +87,7 @@ function parseArgs(argv) {
     else if (arg === '--replay') options.replay = true;
     else if (arg === '--provider') options.provider = next();
     else if (arg === '--only') options.only = next().split(',');
+    else if (arg === '--codex-home') options.codexHome = next();
     else throw new Error(`Unknown argument ${arg}`);
   }
   if (!options.run) throw new Error('--run <id> is required');
@@ -214,6 +215,7 @@ function runSql(database, queries) {
 
 async function main() {
   const options = parseArgs(process.argv.slice(2));
+  const codexHomeNote = options.codexHome ? useIsolatedCodexHome(options.codexHome) : `CODEX_HOME=${process.env.CODEX_HOME ?? '~/.codex'} (the operator's own)`;
   let cases;
   if (heldoutSetOf(options.set)) {
     cases = JSON.parse(readFileSync(heldoutPaths(heldoutSetOf(options.set).number).gold, 'utf-8')).cases;
@@ -287,7 +289,7 @@ async function main() {
   const identity = buildIdentity({
     cli, dqlVersion: 'none (plain text-to-SQL)', benchmark: 'insurance', condition: `baseline-${options.ddl}`,
     provider: options.provider, model: options.model, cassetteMode: 'record',
-    tools: { ...(options.provider === 'claude-code' ? { claudeCli: spawnSync('claude', ['--version'], { encoding: 'utf-8' }).stdout.trim() } : options.provider === 'codex' ? { codexCli: 'codex exec (ChatGPT subscription)' } : { api: 'Anthropic Messages API' }), effort: options.effort },
+    tools: { ...(options.provider === 'claude-code' ? { claudeCli: spawnSync('claude', ['--version'], { encoding: 'utf-8' }).stdout.trim() } : options.provider === 'codex' ? { codexCli: `codex exec (ChatGPT subscription); ${codexHomeNote}` } : { api: 'Anthropic Messages API' }), effort: options.effort },
   });
   identity.notPublishableBecause = identity.notPublishableBecause.filter((reason) => !/DQL/.test(reason));
   identity.publishable = identity.notPublishableBecause.length === 0;
