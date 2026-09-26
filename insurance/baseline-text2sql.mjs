@@ -24,7 +24,7 @@ import { REPO_ROOT } from '../lib/dql.mjs';
 import { rowsMatch } from '../lib/row-match.mjs';
 import { loadAudit } from '../lib/gold-audit.mjs';
 import { buildIdentity } from '../lib/build-identity.mjs';
-import { selectCases } from './run.mjs';
+import { CODEX_DIRS, selectCases } from './run.mjs';
 import { heldoutPaths, heldoutSetOf } from './heldout.mjs';
 import { loadPricing, priceUsage } from '../lib/usage.mjs';
 
@@ -138,7 +138,7 @@ function askCodex(prompt, { model, effort }) {
     const child = spawn('codex', [
       'exec', '-', '--sandbox', 'read-only', '--skip-git-repo-check', '--cd', cwd, '--ephemeral',
       '--output-last-message', outFile, '--model', model, '-c', `model_reasoning_effort="${effort}"`,
-    ], { cwd, stdio: ['pipe', 'pipe', 'pipe'], env: { ...process.env, PATH: ['/Applications/ChatGPT.app/Contents/Resources', process.env.PATH ?? ''].join(':') } });
+    ], { cwd, stdio: ['pipe', 'pipe', 'pipe'], env: { ...process.env, PATH: [...CODEX_DIRS, process.env.PATH ?? ''].join(':') } });
     let stderr = '';
     child.stdout.on('data', () => {});
     child.stderr.on('data', (chunk) => { stderr += chunk; });

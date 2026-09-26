@@ -33,9 +33,10 @@ const stopsAreRight = (set) => set.endsWith('unanswerable');
 const PROVIDERS = ['claude-code', 'anthropic', 'codex', 'ollama'];
 /**
  * Where the Codex command lives when it is not on PATH: the ChatGPT desktop app
- * bundles it. Prepended to PATH for codex runs only.
+ * bundles it (codex-cli/bin since app version 0.158; Resources before).
+ * Prepended to PATH for codex runs only.
  */
-export const CODEX_DIRS = ['/Applications/ChatGPT.app/Contents/Resources'];
+export const CODEX_DIRS = ['/Applications/ChatGPT.app/Contents/Resources/codex-cli/bin', '/Applications/ChatGPT.app/Contents/Resources'];
 const codexPath = () => [...CODEX_DIRS, process.env.PATH ?? ''].join(':');
 /** How long one question may take before the harness records it as unanswered. Ask's own limits apply first. */
 const CASE_TIMEOUT_MS = 900_000;
@@ -62,6 +63,12 @@ export const RUN_ENV = {
  */
 function LOCAL_ENV(provider) {
   return provider === 'ollama' ? { DQL_AGENT_DEADLINE_SCALE: '20' } : {};
+}
+
+function codexVersion() {
+  const result = spawnSync('codex', ['--version'], { encoding: 'utf-8', env: { ...process.env, PATH: codexPath() } });
+  if (result.status !== 0 || !result.stdout) throw new Error(`The codex command was not found (looked in ${CODEX_DIRS.join(', ')} and PATH).`);
+  return result.stdout.trim();
 }
 
 // DQL pins every Codex call to this level when set (DQL_CODEX_REASONING_EFFORT,
@@ -373,7 +380,7 @@ async function main() {
       metricflow: spawnSync(RUN_ENV.DQL_METRICFLOW_BIN, ['--version'], { encoding: 'utf-8' }).stdout.trim(),
       claudeCli: options.provider === 'claude-code' ? spawnSync('claude', ['--version'], { encoding: 'utf-8' }).stdout.trim() : null,
       // Codex takes its reasoning effort from ~/.codex/config.toml; DQL passes none.
-      codexCli: options.provider === 'codex' ? `${spawnSync('codex', ['--version'], { encoding: 'utf-8', env: { ...process.env, PATH: codexPath() } }).stdout.trim()}; ${codexEffort(options.codexEffort ?? undefined)}` : null,
+      codexCli: options.provider === 'codex' ? `${codexVersion()}; ${codexEffort(options.codexEffort ?? undefined)}` : null,
     },
   });
   identity.authoredLayer = layerIdentity(options.layer);
