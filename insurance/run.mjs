@@ -64,7 +64,10 @@ function LOCAL_ENV(provider) {
   return provider === 'ollama' ? { DQL_AGENT_DEADLINE_SCALE: '20' } : {};
 }
 
-function codexEffort() {
+// DQL pins every Codex call to this level when set (DQL_CODEX_REASONING_EFFORT,
+// DQL 52d9dd0d and later); otherwise Codex reads its own config file.
+function codexEffort(pinned = process.env.DQL_CODEX_REASONING_EFFORT) {
+  if (pinned) return `model_reasoning_effort=${pinned} (DQL_CODEX_REASONING_EFFORT)`;
   try {
     const text = readFileSync(join(process.env.HOME ?? '', '.codex', 'config.toml'), 'utf-8');
     return `model_reasoning_effort=${/^model_reasoning_effort\s*=\s*"?([a-z]+)/m.exec(text)?.[1] ?? 'unset'} (~/.codex/config.toml)`;
@@ -72,7 +75,7 @@ function codexEffort() {
 }
 
 function parseArgs(argv) {
-  const options = { layer: 'L0', set: 'dbt-labs', run: null, cassette: 'record', provider: 'claude-code', model: 'claude-sonnet-5', only: null, debugCli: false, readingEffort: null, resume: false };
+  const options = { layer: 'L0', set: 'dbt-labs', run: null, cassette: 'record', provider: 'claude-code', model: 'claude-sonnet-5', only: null, debugCli: false, readingEffort: null, codexEffort: null, resume: false };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     const next = () => argv[++index];
@@ -86,6 +89,7 @@ function parseArgs(argv) {
     else if (arg === '--resume') options.resume = true;
     else if (arg === '--debug-cli') options.debugCli = true;
     else if (arg === '--reading-effort') options.readingEffort = next();
+    else if (arg === '--codex-effort') options.codexEffort = next();
     else throw new Error(`Unknown argument ${arg}`);
   }
   if (!options.run) throw new Error('--run <run-id> is required');
@@ -369,7 +373,7 @@ async function main() {
       metricflow: spawnSync(RUN_ENV.DQL_METRICFLOW_BIN, ['--version'], { encoding: 'utf-8' }).stdout.trim(),
       claudeCli: options.provider === 'claude-code' ? spawnSync('claude', ['--version'], { encoding: 'utf-8' }).stdout.trim() : null,
       // Codex takes its reasoning effort from ~/.codex/config.toml; DQL passes none.
-      codexCli: options.provider === 'codex' ? `${spawnSync('codex', ['--version'], { encoding: 'utf-8', env: { ...process.env, PATH: codexPath() } }).stdout.trim()}; ${codexEffort()}` : null,
+      codexCli: options.provider === 'codex' ? `${spawnSync('codex', ['--version'], { encoding: 'utf-8', env: { ...process.env, PATH: codexPath() } }).stdout.trim()}; ${codexEffort(options.codexEffort ?? undefined)}` : null,
     },
   });
   identity.authoredLayer = layerIdentity(options.layer);
@@ -380,7 +384,7 @@ async function main() {
   writeProviderSettings(projectDir, options.provider, options.model);
   const runtime = await startRuntime(projectDir, {
     cli,
-    env: { ...RUN_ENV, ...(options.provider === 'codex' ? { PATH: codexPath() } : {}), ...LOCAL_ENV(options.provider), DQL_PROVIDER_USAGE_LEDGER: join(outDir, 'usage.jsonl'), ...(options.readingEffort ? { DQL_ASK_READING_EFFORT: options.readingEffort } : {}), ...(options.debugCli ? { DQL_DEBUG_PROVIDER_CLI: '1' } : {}) },
+    env: { ...RUN_ENV, ...(options.provider === 'codex' ? { PATH: codexPath() } : {}), ...LOCAL_ENV(options.provider), DQL_PROVIDER_USAGE_LEDGER: join(outDir, 'usage.jsonl'), ...(options.readingEffort ? { DQL_ASK_READING_EFFORT: options.readingEffort } : {}), ...(options.codexEffort ? { DQL_CODEX_REASONING_EFFORT: options.codexEffort } : {}), ...(options.debugCli ? { DQL_DEBUG_PROVIDER_CLI: '1' } : {}) },
     cassetteMode: options.cassette,
     cassetteDir: join(outDir, 'cassettes'),
     startupTimeoutMs: 180_000,
