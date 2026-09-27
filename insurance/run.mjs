@@ -157,12 +157,12 @@ export function unanswerableCases(file = join(REPO_ROOT, 'insurance', 'unanswera
 export function providerOutages(projectDir) {
   const store = join(projectDir, '.dql', 'local', 'agent-runs.sqlite');
   if (!existsSync(store)) return [];
-  const result = spawnSync('sqlite3', ['-json', store, "select question, payload_json from agent_runs where payload_json like '%limit%' or payload_json like '%quota%' or payload_json like '%not logged in%'"], { encoding: 'utf-8', maxBuffer: 512 * 1024 * 1024 });
+  const result = spawnSync('sqlite3', ['-json', store, "select question, payload_json from agent_runs where payload_json like '%limit%' or payload_json like '%quota%' or payload_json like '%not logged in%' or payload_json like '%capacity%' or payload_json like '%too many requests%'"], { encoding: 'utf-8', maxBuffer: 512 * 1024 * 1024 });
   if (result.status !== 0) throw new Error(`could not read the run store: ${result.stderr}`);
   const rows = result.stdout.trim() ? JSON.parse(result.stdout) : [];
   // A refusal is the provider's message, never a word the question used
   // ("…the sales quota for each year" is a question, not an outage).
-  const REFUSAL = /(usage limit[^".]*|session limit[^".]*|weekly limit[^".]*|rate limit[^".]*|exceeded your (?:current )?quota[^".]*|quota exceeded[^".]*|insufficient_quota[^".]*|not logged in[^".]*)/i;
+  const REFUSAL = /(usage limit[^".]*|session limit[^".]*|weekly limit[^".]*|rate limit[^".]*|exceeded your (?:current )?quota[^".]*|quota exceeded[^".]*|insufficient_quota[^".]*|not logged in[^".]*|model is at capacity[^".]*|too many requests[^".]*|rate_limit_exceeded[^".]*)/i;
   return rows.flatMap((row) => {
     const text = String(row.payload_json ?? '').split(String(row.question ?? '')).join(' ');
     const found = REFUSAL.exec(text);
