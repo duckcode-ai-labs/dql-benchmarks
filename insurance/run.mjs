@@ -63,11 +63,11 @@ export const RUN_ENV = {
  */
 function LOCAL_ENV(provider, codexEffort) {
   if (provider === 'ollama') return { DQL_AGENT_DEADLINE_SCALE: '20' };
-  // Deep Codex reasoning (xhigh, max) takes minutes per call: measured on
+  // A Codex call at a pinned reasoning level can take minutes: measured on
   // gpt-6-luna at max, DQL's 90-second call limit turned 10 of 12 L1 stops
-  // into timeouts, not decisions. Such runs get the local-model budget and
-  // DQL's longest call limit (300 s), so a stop is DQL's, never the clock's.
-  if (provider === 'codex' && codexEffort && !['low', 'medium', 'high'].includes(codexEffort)) {
+  // into timeouts, not decisions. Pinned Codex runs get the local-model budget
+  // and DQL's longest call limit (300 s), so a stop is DQL's, never the clock's.
+  if (provider === 'codex' && codexEffort) {
     return { DQL_AGENT_DEADLINE_SCALE: '20', DQL_SUBSCRIPTION_CLI_TIMEOUT_MS: '300000' };
   }
   return {};
