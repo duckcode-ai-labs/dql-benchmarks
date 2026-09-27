@@ -61,8 +61,21 @@ export const RUN_ENV = {
  * largest deadline (20 × the Ask budget) so a slow machine does not turn a
  * reading into a stop. Recorded in the report's settings.
  */
-function LOCAL_ENV(provider) {
-  return provider === 'ollama' ? { DQL_AGENT_DEADLINE_SCALE: '20' } : {};
+function LOCAL_ENV(provider, codexEffort) {
+  if (provider === 'ollama') return { DQL_AGENT_DEADLINE_SCALE: '20' };
+  // Deep Codex reasoning (xhigh, max) takes minutes per call: measured on
+  // gpt-6-luna at max, DQL's 90-second call limit turned 10 of 12 L1 stops
+  // into timeouts, not decisions. Such runs get the local-model budget and
+  // DQL's longest call limit (300 s), so a stop is DQL's, never the clock's.
+  if (provider === 'codex' && codexEffort && !['low', 'medium', 'high'].includes(codexEffort)) {
+    return { DQL_AGENT_DEADLINE_SCALE: '20', DQL_SUBSCRIPTION_CLI_TIMEOUT_MS: '300000' };
+  }
+  return {};
+}
+
+/** A question's harness limit: longer when DQL's own deadlines are stretched. */
+function caseTimeoutMs(env) {
+  return env.DQL_AGENT_DEADLINE_SCALE ? 3_600_000 : CASE_TIMEOUT_MS;
 }
 
 /**
@@ -274,12 +287,12 @@ function freshProject(layer, outDir) {
   return target;
 }
 
-function runEval(cli, projectDir, evalPath, runtimeBase, logPath, cassetteDir) {
+function runEval(cli, projectDir, evalPath, runtimeBase, logPath, cassetteDir, caseTimeout = CASE_TIMEOUT_MS) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [
       cli.entry, 'agent', 'eval', relative(projectDir, evalPath),
       '--via', 'runtime', '--runtime-url', runtimeBase, '--format', 'json',
-      '--case-timeout-ms', String(CASE_TIMEOUT_MS),
+      '--case-timeout-ms', String(caseTimeout),
     ], {
       cwd: projectDir,
       // The CLI reads the server's cassette folder to report provenance.
@@ -406,12 +419,13 @@ async function main() {
   identity.authoredLayer = layerIdentity(options.layer);
   // Every DQL_ASK_* experiment switch in effect is part of the result.
   identity.askSwitches = Object.fromEntries(Object.entries(process.env).filter(([name]) => name.startsWith('DQL_ASK_')));
-  identity.settings = { ...RUN_ENV, ...LOCAL_ENV(options.provider), caseTimeoutMs: CASE_TIMEOUT_MS, debugCli: options.debugCli, readingEffort: options.readingEffort ?? 'default (route effort)' };
+  const localEnv = LOCAL_ENV(options.provider, options.codexEffort);
+  identity.settings = { ...RUN_ENV, ...localEnv, caseTimeoutMs: caseTimeoutMs(localEnv), debugCli: options.debugCli, readingEffort: options.readingEffort ?? 'default (route effort)' };
 
   writeProviderSettings(projectDir, options.provider, options.model);
   const runtime = await startRuntime(projectDir, {
     cli,
-    env: { ...RUN_ENV, ...(options.provider === 'codex' ? { PATH: codexPath() } : {}), ...LOCAL_ENV(options.provider), DQL_PROVIDER_USAGE_LEDGER: join(outDir, 'usage.jsonl'), ...(options.readingEffort ? { DQL_ASK_READING_EFFORT: options.readingEffort } : {}), ...(options.codexEffort ? { DQL_CODEX_REASONING_EFFORT: options.codexEffort } : {}), ...(options.debugCli ? { DQL_DEBUG_PROVIDER_CLI: '1' } : {}) },
+    env: { ...RUN_ENV, ...(options.provider === 'codex' ? { PATH: codexPath() } : {}), ...localEnv, DQL_PROVIDER_USAGE_LEDGER: join(outDir, 'usage.jsonl'), ...(options.readingEffort ? { DQL_ASK_READING_EFFORT: options.readingEffort } : {}), ...(options.codexEffort ? { DQL_CODEX_REASONING_EFFORT: options.codexEffort } : {}), ...(options.debugCli ? { DQL_DEBUG_PROVIDER_CLI: '1' } : {}) },
     cassetteMode: options.cassette,
     cassetteDir: join(outDir, 'cassettes'),
     startupTimeoutMs: 180_000,
@@ -430,7 +444,7 @@ async function main() {
       identity.settings.warehouseSync = { relations: body.status?.relationCount, catalogRelations: body.warehouseCatalog?.relations };
     }
     console.error(`${options.layer}/${options.set}: ${cases.length} question(s) on ${runtime.base}`);
-    result = await runEval(cli, projectDir, evalPath, runtime.base, join(outDir, 'eval.stderr.log'), join(outDir, 'cassettes'));
+    result = await runEval(cli, projectDir, evalPath, runtime.base, join(outDir, 'eval.stderr.log'), join(outDir, 'cassettes'), caseTimeoutMs(localEnv));
   } finally {
     writeFileSync(join(outDir, 'server.log'), runtime.logs());
     await runtime.close();
