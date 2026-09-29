@@ -1,0 +1,23 @@
+{
+  "note": "Scripted replies for `baseline-agent.mjs --provider fake` (insurance/baseline-agent.test.mjs). One reply per turn, keyed by case id. No model wrote these; they exercise the loop, the tools, the transcript, grading and the report on two development questions and one unanswerable question.",
+  "scripts": {
+    "what-are-the-expense-payment-amount-of-all-claim-aec397": [
+      "{\"action\": \"run_sql\", \"sql\": \"select * from expense_payments\"}",
+      "{\"action\": \"list_tables\"}",
+      "```json\n{\"action\": \"describe_table\", \"table\": \"expense_payment\"}\n```",
+      "{\"action\": \"describe_table\", \"table\": \"claim_amount\"}",
+      "I think the claim amounts need a join to claims first.",
+      "{\"action\": \"final_sql\", \"sql\": \"select nope from claim\"}",
+      "{\"action\": \"final_sql\", \"sql\": \"select c.company_claim_number, ca.claim_amount from claim c join claim_amount ca on ca.claim_identifier = c.claim_identifier join expense_payment ep on ep.claim_amount_identifier = ca.claim_amount_identifier\"}"
+    ],
+    "return-all-the-policies-we-have-by-policy-number-dacb83": [
+      "{\"action\": \"list_tables\"}",
+      "{\"action\": \"sample_rows\", \"table\": \"Policy\", \"n\": 9}",
+      "Here is the query:\n{\"action\": \"final_sql\", \"sql\": \"```sql\\nselect policy_number, effective_date, expiration_date from policy\\n```\"}"
+    ],
+    "unanswerable-what-is-the-average-credit-score-of-our-policy-h-d340e7": [
+      "{\"action\": \"describe_table\", \"table\": \"person\"}",
+      "CANNOT_ANSWER: no table or column records a credit score"
+    ]
+  }
+}

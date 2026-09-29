@@ -25,6 +25,7 @@ Each layer is a copy of dbt Labs' dbt project with one more DQL layer (see [../d
 | `build.mjs` | builds one layer's project and warehouse, verifies row counts, computes correct answers |
 | `checks/publisher-answers.mjs` | checks our warehouse against dbt Labs' published graded answers |
 | `run.mjs` | asks a question set through Ask and scores it |
+| `baseline-agent.mjs` | agentic text-to-SQL baseline: the model explores the warehouse with tools before answering ([design](AGENT-BASELINE.md)) |
 | `gold-audit.jsonl` | answer-key audit, one line per question |
 | `dev-questions.json` | questions looked at while building; reported separately |
 | `layers/` | files written for L1 and L3 (not yet written) |
