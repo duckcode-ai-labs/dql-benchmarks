@@ -3,7 +3,7 @@
 // answers. The strongest reasonable opponent without DQL (see AGENT-BASELINE.md).
 //
 //   node insurance/baseline-agent.mjs --run <id> [--set all|dbt-labs|dev|unanswerable|heldout-N[-unanswerable]]
-//        [--context none|ddl|dbt-docs] [--level L0|W0]
+//        [--context none|ddl|dbt-docs|modeling] [--level L0|W0|W2]
 //        [--provider claude-code|codex|ollama|anthropic|fake] [--model <id>] [--effort <level>]
 //        [--max-turns 12] [--max-tool-calls 20] [--max-wall-s 900] [--call-timeout-s 300]
 //        [--codex-home <dir>] [--only id,id] [--replay] [--out <dir>]
@@ -45,8 +45,8 @@ const PYTHON = join(REPO_ROOT, '.venv', 'bin', 'python');
 const TOOLS_PY = join(REPO_ROOT, 'insurance', 'agent_tools.py');
 const QUERY_PY = join(REPO_ROOT, 'lib', 'duckdb_query.py');
 
-export const CONTEXTS = ['none', 'ddl', 'dbt-docs'];
-export const LEVELS = ['L0', 'W0'];
+export const CONTEXTS = ['none', 'ddl', 'dbt-docs', 'modeling'];
+export const LEVELS = ['L0', 'W0', 'W2'];
 export const PROVIDERS = ['claude-code', 'codex', 'ollama', 'anthropic', 'fake'];
 const SETS = ['all', 'dbt-labs', 'dev', 'unanswerable'];
 export const TOOL_ACTIONS = ['list_tables', 'describe_table', 'sample_rows', 'run_sql'];
@@ -286,6 +286,17 @@ export function dbtDocsContext(projectDir = join(WORK, 'projects', 'L0')) {
     ].join('\n');
   });
   return `dbt project ${manifest.metadata?.project_name ?? ''} — ${models.length} models in schema main\n\n${blocks.join('\n\n')}\n`;
+}
+
+/**
+ * The fair comparison with DQL's W2 level: the same table definitions P gets, plus the business
+ * model and approved metric definitions DQL has at W2 (entities, keys, certified relationships,
+ * measures, metrics and the computed dimensions their filters use), rendered once into
+ * insurance/contexts/w2-modeling.txt by insurance/contexts/render-modeling.cjs.
+ */
+export function modelingContext(database, file = join(REPO_ROOT, 'insurance', 'contexts', 'w2-modeling.txt')) {
+  if (!existsSync(file)) throw new Error(`--context modeling needs ${relative(REPO_ROOT, file)}`);
+  return `${ddlContext(database).trim()}\n\n${readFileSync(file, 'utf-8')}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -643,6 +654,7 @@ function parseArgs(argv) {
   if (!CONTEXTS.includes(options.context)) throw new Error(`--context must be one of ${CONTEXTS.join(', ')}`);
   if (!LEVELS.includes(options.level)) throw new Error(`--level must be one of ${LEVELS.join(', ')}`);
   if (options.context === 'dbt-docs' && options.level !== 'L0') throw new Error('--context dbt-docs reads the dbt project, which only L0 has');
+  if (options.context === 'modeling' && options.level !== 'W2') throw new Error('--context modeling is the knowledge DQL has at W2: use --level W2');
   if (!PROVIDERS.includes(options.provider)) throw new Error(`--provider must be one of ${PROVIDERS.join(', ')}`);
   if (!SETS.includes(options.set) && !heldoutSetOf(options.set)) throw new Error(`--set must be one of ${SETS.join(', ')}, heldout[-N][-unanswerable]`);
   if ((options.fixture || options.fakeRefuse) && options.provider !== 'fake') throw new Error('--fixture and --fake-refuse are for --provider fake only');
@@ -692,7 +704,7 @@ export async function main(argv = process.argv.slice(2)) {
     const provider = options.provider === 'fake' || !options.replay ? makeProvider(options) : { protocol: options.provider === 'anthropic' ? 'native' : 'text' };
     const system = systemPrompt(options.limits, provider.protocol);
     const promptSha256 = createHash('sha256').update(system).digest('hex');
-    const contextText = options.context === 'ddl' ? ddlContext(database) : options.context === 'dbt-docs' ? dbtDocsContext() : '';
+    const contextText = options.context === 'ddl' ? ddlContext(database) : options.context === 'dbt-docs' ? dbtDocsContext() : options.context === 'modeling' ? modelingContext(database) : '';
     const settings = runSettings(options, promptSha256);
 
     const transcriptsFile = join(outDir, 'transcripts.json');

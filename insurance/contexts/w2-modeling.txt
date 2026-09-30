@@ -1,0 +1,136 @@
+# Business model of this warehouse (entities, keys, relationships) and the approved metric definitions
+
+## Area: Claims, reserves and payments
+A claim is made against a policy coverage detail (through claim_coverage), is linked to a loss occurrence, an insured object and optionally a catastrophe. Claim money lives in claim_amount; loss_payment, loss_reserve, expense_payment and expense_reserve mark which claim amounts are of each kind.
+- entity claim = main.claim; grain Claim_Identifier; keys Claim_Identifier
+  One insurance claim. Company_Claim_Number is the business claim number. Claim_Open_Date and Claim_Close_Date are filled; reported, claims-made, reopen dates, status code and description are empty. Catastrophe_Identifier links the claim to a catastrophe type, Occurrence_Identifier to the loss event, Insurable_Object_Identifier to what was damaged.
+- entity claim_amount = main.claim_amount; grain Claim_Amount_Identifier; keys Claim_Amount_Identifier
+  A money amount on a claim (Claim_Amount). Generic parent of loss payment, loss reserve, expense payment and expense reserve: what kind of amount a row is comes only from which of those four tables holds its Claim_Amount_Identifier. Amount_Type_Code, Event_Date, offer and insurance type are empty, so an amount has no date of its own.
+- entity loss_payment = main.loss_payment; grain Claim_Amount_Identifier; keys Claim_Amount_Identifier
+  Subtype marker of claim_amount. A claim amount paid to settle the loss itself. The amount is claim_amount.Claim_Amount.
+- entity loss_reserve = main.loss_reserve; grain Claim_Amount_Identifier; keys Claim_Amount_Identifier
+  Subtype marker of claim_amount. An amount set aside for the expected loss on a claim. The amount is claim_amount.Claim_Amount.
+- entity expense_payment = main.expense_payment; grain Claim_Amount_Identifier; keys Claim_Amount_Identifier
+  Subtype marker of claim_amount. A claim amount paid for the cost of handling the claim (not the loss). The amount is claim_amount.Claim_Amount.
+- entity expense_reserve = main.expense_reserve; grain Claim_Amount_Identifier; keys Claim_Amount_Identifier
+  Subtype marker of claim_amount. An amount set aside for the expected cost of handling a claim. The amount is claim_amount.Claim_Amount.
+- entity claim_coverage = main.claim_coverage; grain Claim_Identifier, Effective_Date, Policy_Coverage_Detail_Identifier; keys Claim_Identifier, Effective_Date, Policy_Coverage_Detail_Identifier
+  Bridge saying which policy coverage detail a claim is made against: one row per claim and coverage detail (Effective_Date + Policy_Coverage_Detail_Identifier). This is the path from a claim to its policy.
+- entity catastrophe = main.catastrophe; grain Catastrophe_Identifier; keys Catastrophe_Identifier
+  A catastrophe (a large, many-claim event). Only Catastrophe_Name is filled, and the names are peril types (Hurricane, Tornado, Flood, Fire), not named events; type and industry codes are empty.
+- entity occurrence = main.occurrences; grain Occurrence_Identifier; keys Occurrence_Identifier
+  The event that caused a loss, with its begin and end date (the date of loss). Name, times, location and catastrophic-event indicator are empty.
+- relationship claim_coverage → claim (many_to_one, certified): claim_coverage.Claim_Identifier = claim.Claim_Identifier — Each claim coverage row belongs to one claim.
+- relationship claim_coverage → policy_coverage_detail (many_to_one, certified): claim_coverage.Effective_Date = policy_coverage_detail.Effective_Date AND claim_coverage.Policy_Coverage_Detail_Identifier = policy_coverage_detail.Policy_Coverage_Detail_Identifier — Each claim coverage row points to one policy coverage detail, matched on both Effective_Date and Policy_Coverage_Detail_Identifier. claim -> claim_coverage -> policy_coverage_detail -> policy is the path from a claim to its policy.
+- relationship claim → catastrophe (many_to_one, certified): claim.Catastrophe_Identifier = catastrophe.Catastrophe_Identifier — A claim may be linked to one catastrophe.
+- relationship claim → occurrence (many_to_one, certified): claim.Occurrence_Identifier = occurrence.Occurrence_Identifier — A claim results from one loss occurrence.
+- relationship claim → insurable_object (many_to_one, certified): claim.Insurable_Object_Identifier = insurable_object.Insurable_Object_Identifier — A claim involves one insurable object (the damaged property).
+- relationship claim_amount → claim (many_to_one, certified): claim_amount.Claim_Identifier = claim.Claim_Identifier — Each claim amount belongs to one claim; a claim has several amounts (reserves and payments).
+- relationship loss_payment → claim_amount (one_to_one, certified): loss_payment.Claim_Amount_Identifier = claim_amount.Claim_Amount_Identifier — Specialization - a loss payment is a claim amount. Inner join on Claim_Amount_Identifier keeps only loss payments; the amount is claim_amount.Claim_Amount.
+- relationship loss_reserve → claim_amount (one_to_one, certified): loss_reserve.Claim_Amount_Identifier = claim_amount.Claim_Amount_Identifier — Specialization - a loss reserve is a claim amount. Inner join on Claim_Amount_Identifier keeps only loss reserves; the amount is claim_amount.Claim_Amount.
+- relationship expense_payment → claim_amount (one_to_one, certified): expense_payment.Claim_Amount_Identifier = claim_amount.Claim_Amount_Identifier — Specialization - an expense payment is a claim amount. Inner join on Claim_Amount_Identifier keeps only expense payments; the amount is claim_amount.Claim_Amount.
+- relationship expense_reserve → claim_amount (one_to_one, certified): expense_reserve.Claim_Amount_Identifier = claim_amount.Claim_Amount_Identifier — Specialization - an expense reserve is a claim amount. Inner join on Claim_Amount_Identifier keeps only expense reserves; the amount is claim_amount.Claim_Amount.
+
+## Area: Fire claim risk sample
+fire_claim is a stand-alone table of 820 fire-claim risk records (loss ratio, distance to the nearest fire station, number of firefighters, fireplace yes/no, year built). It is not connected to the policy or claim tables.
+- entity fire_claim = main.fire_claim; grain undefined; keys 
+  One fire-claim risk record. Loss_Ratio (0.1 to 1.1), Nearest_Firestation_miles, Number_of_Firefighters, Fireplace ('yes'/'no') and Year_Built (1960 to 2020) are filled. PolicyNo, ClaimNumber, Premium and InsuredLocation are empty in every row, so the table has no key and cannot be joined to policies, claims or locations. Rows are not unique records of any named business object; count rows only as records of this sample.
+
+## Area: Insured objects and locations
+An insurable object (the insured property) sits at a geographic location. A geographic location points to a postal address (location_address) and to a physical location with latitude and longitude (pysical_location). All locations in this data are in Austin, Texas.
+- entity insurable_object = main.insurable_object; grain Insurable_Object_Identifier; keys Insurable_Object_Identifier
+  The thing that is insured (here, a property) and its geographic location. The object type code is empty, so the kind of object (house, vehicle) is not recorded.
+- entity geographic_location = main.geographic_location; grain Geographic_Location_Identifier; keys Geographic_Location_Identifier
+  A location, with its State_Code, its postal address (Location_Address_Identifier) and its physical coordinates (Physical_Location_Identifier). Parent location, type, code, name and number are empty.
+- entity location_address = main.location_address; grain Location_Address_Identifier; keys Location_Address_Identifier
+  A postal address: Line_1_Address (street), Municipality_Name (city), State_Code, Postal_Code (zip code), Country_Code. Line 2 and validity dates are empty.
+- entity physical_location = main.pysical_location; grain Physical_Location_Identifier; keys Physical_Location_Identifier
+  The coordinates of a location (Latitude_Value, Longitude_Value). The dbt model name is spelled 'pysical_location'. Altitude, accuracy and name are empty.
+- relationship insurable_object → geographic_location (many_to_one, certified): insurable_object.Geographic_Location_Identifier = geographic_location.Geographic_Location_Identifier — Each insurable object is at one geographic location.
+- relationship geographic_location → location_address (many_to_one, certified): geographic_location.Location_Address_Identifier = location_address.Location_Address_Identifier — Each geographic location has one postal address.
+- relationship geographic_location → physical_location (many_to_one, certified): geographic_location.Physical_Location_Identifier = physical_location.Physical_Location_Identifier — Each geographic location has one physical location (latitude and longitude).
+- relationship physical_location → location_address (many_to_one, certified): physical_location.Location_Address_Identifier = location_address.Location_Address_Identifier — Each physical location also names its postal address.
+- relationship policy → geographic_location (many_to_one, draft): policy.Geographic_Location_Identifier = geographic_location.Geographic_Location_Identifier — Declared in the DDL; policy.Geographic_Location_Identifier is empty for every policy.
+- relationship policy_amount → geographic_location (many_to_one, draft): policy_amount.Geographic_Location_Identifier = geographic_location.Geographic_Location_Identifier — Declared in the DDL; policy_amount.Geographic_Location_Identifier is empty for every row.
+- relationship policy_amount → insurable_object (many_to_one, draft): policy_amount.Insurable_Object_Identifier = insurable_object.Insurable_Object_Identifier — Declared in the DDL; policy_amount.Insurable_Object_Identifier is empty for every row. Use policy_coverage_detail for the insured object.
+- relationship occurrence → geographic_location (many_to_one, draft): occurrence.Geographic_Location_Identifier = geographic_location.Geographic_Location_Identifier — occurrences.Geographic_Location_Identifier is empty for every row; use the claim's insurable object for the loss location.
+
+## Area: Policies, parties and premiums
+A policy is an insurance agreement. Parties (people and organizations) play roles on a policy through agreement_party_role (PH = policy holder, AG = agent). A policy is split into policy coverage details (one per coverage period / insured object), and each coverage detail carries policy amounts; the premium table marks which policy amounts are premiums.
+- entity policy = main.policy; grain Policy_Identifier; keys Policy_Identifier
+  One insurance policy (an agreement of type policy). Policy_Number is the business policy number; Effective_Date and Expiration_Date bound the whole policy term. Policy_Identifier is the same identifier as Agreement_Identifier in agreement_party_role and agreement_assessment. Status_Code and Geographic_Location_Identifier are empty in this data.
+- entity agreement = main.agreement; grain Agreement_Type_Code; keys Agreement_Type_Code
+  The generic agreement record that a policy specializes. The dbt model has no column named Agreement_Identifier: the seed file's header labels its first column Agreement_Type_Code, but that column holds the agreement identifier (1, 2), matching policy.Policy_Identifier (Agreement_Name is 'Policy ' followed by the policy number). Do not read Agreement_Type_Code as a type code. Product_Identifier and inception date are empty.
+- entity agreement_party_role = main.agreement_party_role; grain Agreement_Identifier, Party_Identifier, Party_Role_Code; keys Agreement_Identifier, Party_Identifier, Party_Role_Code
+  Bridge between agreements (policies) and parties: one row per agreement, party and role. Party_Role_Code PH marks the policy holder, AG the agent who sold the policy. The DDL key also includes Effective_Date, which is empty in this data, so role history is not available.
+- entity party = main.party; grain Party_Identifier; keys Party_Identifier
+  Any person or organization the company deals with. Party has only its identifier in this data (name, type and dates are empty); names come from person (Person_Identifier = Party_Identifier) or organizations (Organization_Identifier = Party_Identifier).
+- entity person = main.person; grain Person_Identifier; keys Person_Identifier
+  A party who is a human being; Person_Identifier is the Party_Identifier. Only first, middle and last names are filled (and only for persons 1 to 3); birth date, gender and other attributes are empty.
+- entity organization = main.organizations; grain Organization_Identifier; keys Organization_Identifier
+  A party that is an organization; Organization_Identifier is the Party_Identifier. The only organization is the insurer itself, Mesa Underwriters Specialty Insurance Company (MUSIC).
+- entity party_role = main.party_role; grain Party_Role_Code; keys Party_Role_Code
+  Code list of party roles. AG = Agent, UW = Underwriter, PH = PolicyHolder.
+- entity policy_coverage_detail = main.policy_coverage_detail; grain Effective_Date, Policy_Coverage_Detail_Identifier; keys Effective_Date, Policy_Coverage_Detail_Identifier
+  One coverage period of a policy on one insurable object. Identified by Effective_Date plus Policy_Coverage_Detail_Identifier; Effective_Date and Expiration_Date bound the coverage period (yearly periods here), which is narrower than the policy term. Coverage, coverage part and description codes are empty.
+- entity policy_amount = main.policy_amount; grain Policy_Amount_Identifier; keys Policy_Amount_Identifier
+  A money amount attached to a policy coverage detail (Policy_Amount, with the policy and coverage effective date). Generic parent of premium: a row is a premium only when its Policy_Amount_Identifier is in premium. Premium rows carry Amount_Type_Code 'Year' (annual amount); the other rows have an empty Amount_Type_Code and are not labeled in the data. Earning dates, location, insurable object and insurance type are empty.
+- entity premium = main.premium; grain Policy_Amount_Identifier; keys Policy_Amount_Identifier
+  Subtype marker of policy_amount: one row per policy amount that is a premium. It has no columns of its own; the premium amount, period and dates come from policy_amount through Policy_Amount_Identifier.
+- relationship policy → agreement (one_to_one, draft): policy.Policy_Identifier = agreement.Agreement_Type_Code — A policy is an agreement. The agreement side of the key is the column the dbt model calls Agreement_Type_Code (it holds the agreement identifier).
+- relationship agreement_party_role → policy (many_to_one, certified): agreement_party_role.Agreement_Identifier = policy.Policy_Identifier — Each party role row belongs to one policy (Agreement_Identifier = Policy_Identifier). To find a policy's holder or agent, join policy to agreement_party_role and filter Party_Role_Code ('PH' holder, 'AG' agent); a policy has one row per role, so filter the role before aggregating policy measures.
+- relationship agreement_party_role → party (many_to_one, certified): agreement_party_role.Party_Identifier = party.Party_Identifier — Each policy party role is played by one party.
+- relationship agreement_party_role → party_role (many_to_one, certified): agreement_party_role.Party_Role_Code = party_role.Party_Role_Code — Each policy party role row has one role code (PH, AG).
+- relationship person → party (one_to_one, certified): person.Person_Identifier = party.Party_Identifier — A person is a party; Person_Identifier is the Party_Identifier. Use it to get a policy holder's, agent's or underwriter's name.
+- relationship organization → party (one_to_one, certified): organization.Organization_Identifier = party.Party_Identifier — An organization is a party; Organization_Identifier is the Party_Identifier.
+- relationship policy_coverage_detail → policy (many_to_one, certified): policy_coverage_detail.Policy_Identifier = policy.Policy_Identifier — Each coverage detail belongs to one policy; a policy has one coverage detail per coverage period.
+- relationship policy_coverage_detail → insurable_object (many_to_one, certified): policy_coverage_detail.Insurable_Object_Identifier = insurable_object.Insurable_Object_Identifier — Each coverage detail insures one insurable object.
+- relationship policy_amount → policy_coverage_detail (many_to_one, certified): policy_amount.Effective_Date = policy_coverage_detail.Effective_Date AND policy_amount.Policy_Coverage_Detail_Identifier = policy_coverage_detail.Policy_Coverage_Detail_Identifier — Each policy amount belongs to one coverage detail, matched on both Effective_Date and Policy_Coverage_Detail_Identifier (the coverage detail's full key).
+- relationship policy_amount → policy (many_to_one, certified): policy_amount.Policy_Identifier = policy.Policy_Identifier — Each policy amount names its policy directly (Policy_Identifier).
+- relationship premium → policy_amount (one_to_one, certified): premium.Policy_Amount_Identifier = policy_amount.Policy_Amount_Identifier — Specialization: a premium is a policy amount. Join premium to policy_amount on Policy_Amount_Identifier to get the premium amount (policy_amount.Policy_Amount), its period (Amount_Type_Code) and dates. An inner join keeps only premiums.
+
+## Area: Underwriting assessments
+An assessment is an evaluation with a begin and end date. agreement_assessment links an assessment to the policy it evaluated; assessment_result holds its outcome, and underwriting_assessment marks results that are underwriting assessments. Parties take part in an assessment through assesment_party_role (UW = underwriter).
+- entity assessment = main.assessment; grain Assessment_Identifier; keys Assessment_Identifier
+  An evaluation (here, underwriting of a policy) with Begin_Date and End_Date. Description and reason are empty.
+- entity assessment_result = main.assessment_result; grain Assessment_Result_Identifier; keys Assessment_Result_Identifier
+  The outcome of an assessment; Assessment_Result_Type_Code holds the result (value 'OK' in this data).
+- entity underwriting_assessment = main.underwriting_assessment; grain Assessment_Result_Identifier; keys Assessment_Result_Identifier
+  Subtype marker of assessment_result: an assessment result that is an underwriting assessment. Its dates, description and result code come from assessment_result and assessment.
+- entity agreement_assessment = main.agreement_assessment; grain Agreement_Identifier, Assessment_Identifier; keys Agreement_Identifier, Assessment_Identifier
+  Bridge between agreements (policies) and assessments; Agreement_Identifier is the Policy_Identifier.
+- entity assessment_party_role = main.assesment_party_role; grain Party_Identifier, Assessment_Identifier, Party_Role_Code; keys Party_Identifier, Assessment_Identifier, Party_Role_Code
+  Bridge between assessments and parties: one row per party, assessment and role. Party_Role_Code UW marks the underwriter. (The dbt model name is spelled 'assesment_party_role'.) Begin and end dates are empty.
+- relationship agreement_assessment → policy (many_to_one, certified): agreement_assessment.Agreement_Identifier = policy.Policy_Identifier — Each policy assessment link names one policy (Agreement_Identifier = Policy_Identifier).
+- relationship agreement_assessment → assessment (many_to_one, certified): agreement_assessment.Assessment_Identifier = assessment.Assessment_Identifier — Each policy assessment link names one assessment.
+- relationship assessment_result → assessment (many_to_one, certified): assessment_result.Assessment_Identifier = assessment.Assessment_Identifier — Each assessment result belongs to one assessment.
+- relationship underwriting_assessment → assessment_result (one_to_one, certified): underwriting_assessment.Assessment_Result_Identifier = assessment_result.Assessment_Result_Identifier — Specialization - an underwriting assessment is an assessment result. Inner join on Assessment_Result_Identifier keeps only underwriting results; continue to assessment for the dates.
+- relationship assessment_party_role → assessment (many_to_one, certified): assessment_party_role.Assessment_Identifier = assessment.Assessment_Identifier — Each assessment party role belongs to one assessment. Filter Party_Role_Code = 'UW' for the underwriter.
+- relationship assessment_party_role → party (many_to_one, certified): assessment_party_role.Party_Identifier = party.Party_Identifier — Each assessment party role is played by one party.
+- relationship assessment_party_role → party_role (many_to_one, certified): assessment_party_role.Party_Role_Code = party_role.Party_Role_Code — Each assessment party role row has one role code (UW).
+
+## Approved measures
+- avg_time_to_settle_claim: average(DATEDIFF('day', claim_open_date, claim_close_date)) over "acme_insurance"."main"."claim"
+- claims: count(company_claim_number) over "acme_insurance"."main"."claim"
+- number_of_policies: sum(1) over "acme_insurance"."main"."policy" — The total number of policies.
+- premium: sum(Premium) over "acme_insurance"."main"."fire_claim" — The total premium amount for the policy.
+- total_claim_amount: sum(claim_amount) over "acme_insurance"."main"."claim_amount"
+- total_policy_amount: sum(Policy_Amount) over "acme_insurance"."main"."policy_amount" — The total amount associated with the policy.
+
+## Approved dimensions (computed ones, as used by metric filters)
+- expense_payment__has_expense_payment: 1 over "acme_insurance"."main"."expense_payment"
+- expense_reserve__has_expense_reserve: 1 over "acme_insurance"."main"."expense_reserve"
+- loss_payment__has_loss_payment: 1 over "acme_insurance"."main"."loss_payment"
+- loss_reserve__has_loss_reserve: 1 over "acme_insurance"."main"."loss_reserve"
+- premium__has_premium: 1 over "acme_insurance"."main"."premium"
+
+## Approved metrics
+- avg_time_to_settle_claim (simple): AVG(DATEDIFF('day', claim_open_date, claim_close_date)) over "acme_insurance"."main"."claim" — Metric created from measure avg_time_to_settle_claim
+- claims (simple): COUNT(company_claim_number) over "acme_insurance"."main"."claim" — Metric created from measure claims
+- loss_payment_amount (simple): SUM(claim_amount) where {{Dimension('claim_amount__has_loss_payment')}} = 1 over "acme_insurance"."main"."claim_amount"
+- loss_reserve_amount (simple): SUM(claim_amount) where {{Dimension('claim_amount__has_loss_reserve')}} = 1 over "acme_insurance"."main"."claim_amount"
+- total_loss_amount (derived): loss_payment_amount + loss_reserve_amount — Sum of loss_payment_amount and loss_reserve_amount
+- number_of_policies (simple): SUM(1) over "acme_insurance"."main"."policy" — The total number of policies.
+- total_policy_amount (simple): SUM(Policy_Amount) over "acme_insurance"."main"."policy_amount" — The total amount associated with the policy.
+- premium (sum): SUM(Premium) over "acme_insurance"."main"."fire_claim" — The total premium amount for the policy.
+- total_claim_amount (sum): SUM(claim_amount) over "acme_insurance"."main"."claim_amount"
