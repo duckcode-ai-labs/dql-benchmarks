@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "name": "heldout-for-each-insured-property-with-a-claim-identifie-571300",
+      "question": "For each insured property with a claim, identified by street address, what is the incurred loss (loss payments plus loss reserves) on its claims divided by all the premium ever charged for coverage on that property? Rank the properties from highest to lowest ratio.",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            "13017 Zen Gardens Way",
+            4400,
+            12000,
+            0.36666666666666664
+          ],
+          [
+            "5315 Martin Ave",
+            2200,
+            86000,
+            0.02558139534883721
+          ]
+        ],
+        "goldSql": "WITH prop_loss AS ( SELECT c.Insurable_Object_Identifier, SUM(COALESCE(lp.amt,0) + COALESCE(lr.amt,0)) AS incurred_loss FROM main.claim c LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lp ON lp.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lr ON lr.Claim_Identifier = c.Claim_Identifier GROUP BY 1), prop_prem AS ( SELECT pcd.Insurable_Object_Identifier, SUM(pr.Policy_Amount) AS premium FROM (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) pr JOIN main.policy_coverage_detail pcd ON pcd.Policy_Coverage_Detail_Identifier = pr.Policy_Coverage_Detail_Identifier AND pcd.Effective_Date = pr.Effective_Date GROUP BY 1) SELECT la.Line_1_Address, pl.incurred_loss, pp.premium, pl.incurred_loss * 1.0 / pp.premium AS loss_to_premium FROM prop_loss pl JOIN prop_prem pp ON pp.Insurable_Object_Identifier = pl.Insurable_Object_Identifier JOIN main.insurable_object io ON io.Insurable_Object_Identifier = pl.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address la ON la.Location_Address_Identifier = g.Location_Address_Identifier ORDER BY loss_to_premium DESC",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    }
+  ]
+}

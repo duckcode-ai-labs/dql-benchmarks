@@ -1,0 +1,67 @@
+{
+  "cases": [
+    {
+      "name": "how-many-policies-do-we-have-3b3521",
+      "question": "How many policies do we have?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            2
+          ]
+        ],
+        "goldSql": "SELECT COUNT(*) AS NoOfPolicy\nFROM policy",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "return-agents-and-the-policy-they-have-sold-that-f72b3d",
+      "question": "Return agents and the policy they have sold that have had a claim and the corresponding loss reserve amount by agent id, policy number and claim number",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            2,
+            31003000336,
+            12312702,
+            2100
+          ],
+          [
+            2,
+            31003000336,
+            12312701,
+            1000
+          ]
+        ],
+        "goldSql": "SELECT\n    party_identifier as AgentID, \n    policy_number,\n    company_claim_number,\n    claim_amount.claim_amount as Loss_Reserve_Amount\nFROM\n    Claim\n    inner join claim_amount  on claim.claim_identifier = claim_amount.claim_identifier\n    inner JOIN loss_reserve ON claim_amount.claim_amount_identifier = loss_reserve.claim_amount_identifier\n    inner join claim_coverage on claim.claim_identifier = claim_coverage.claim_identifier\n    inner join policy_coverage_detail on claim_coverage.policy_coverage_detail_identifier = policy_coverage_detail.policy_coverage_detail_identifier\n    inner join policy on policy.policy_identifier = policy_coverage_detail.policy_identifier\n    inner join  agreement_party_role  on agreement_party_role.agreement_identifier = policy.policy_identifier\n \nwhere agreement_party_role.party_role_code = 'AG'",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "return-agents-and-the-policy-they-have-sold-that-607eff",
+      "question": "Return agents and the policy they have sold that have had a claim and the corresponding expense reserve amount by agent id, policy number and claim number ",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            2,
+            31003000336,
+            12312702,
+            2200
+          ],
+          [
+            2,
+            31003000336,
+            12312701,
+            1100
+          ]
+        ],
+        "goldSql": "SELECT\n    party_identifier as AgentID, \n    policy_number,\n    company_claim_number,\n    claim_amount.claim_amount as Expense_Reserve_Amount\nFROM\n    Claim\n    inner join claim_amount  on claim.claim_identifier = claim_amount.claim_identifier\n    inner JOIN expense_reserve ON claim_amount.claim_amount_identifier = expense_reserve.claim_amount_identifier\n    inner join claim_coverage on claim.claim_identifier = claim_coverage.claim_identifier\n    inner join policy_coverage_detail on claim_coverage.policy_coverage_detail_identifier = policy_coverage_detail.policy_coverage_detail_identifier\n    inner join policy on policy.policy_identifier = policy_coverage_detail.policy_identifier\n    inner join  agreement_party_role  on agreement_party_role.agreement_identifier = policy.policy_identifier\n \nwhere agreement_party_role.party_role_code = 'AG'",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    }
+  ]
+}

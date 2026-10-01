@@ -1,0 +1,152 @@
+{
+  "cases": [
+    {
+      "name": "heldout-for-each-policy-coverage-period-that-has-at-leas-2b6c02",
+      "question": "For each policy coverage period that has at least one claim filed against it, show the policy number, the coverage start date, the premium for that coverage, the incurred loss (loss payments plus loss reserves) on claims filed against it, and the resulting loss ratio.",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            31003000336,
+            "2019-01-01",
+            20000,
+            6600,
+            0.33
+          ]
+        ],
+        "goldSql": "WITH cov_loss AS ( SELECT cc.Policy_Coverage_Detail_Identifier, cc.Effective_Date, SUM(COALESCE(lp.amt,0) + COALESCE(lr.amt,0)) AS incurred_loss FROM main.claim_coverage cc LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lp ON lp.Claim_Identifier = cc.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lr ON lr.Claim_Identifier = cc.Claim_Identifier GROUP BY 1, 2), cov_prem AS ( SELECT Policy_Coverage_Detail_Identifier, Effective_Date, SUM(Policy_Amount) AS premium FROM (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) x GROUP BY 1, 2) SELECT p.Policy_Number, pcd.Effective_Date AS coverage_start, cp.premium, cl.incurred_loss, cl.incurred_loss * 1.0 / cp.premium AS loss_ratio FROM cov_loss cl JOIN main.policy_coverage_detail pcd ON pcd.Policy_Coverage_Detail_Identifier = cl.Policy_Coverage_Detail_Identifier AND pcd.Effective_Date = cl.Effective_Date JOIN main.policy p ON p.Policy_Identifier = pcd.Policy_Identifier JOIN cov_prem cp ON cp.Policy_Coverage_Detail_Identifier = cl.Policy_Coverage_Detail_Identifier AND cp.Effective_Date = cl.Effective_Date ORDER BY p.Policy_Number, coverage_start",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-for-each-agent-first-and-last-name-how-many-dist-4dbd49",
+      "question": "For each agent (first and last name), how many distinct policies did they sell, what is the total premium across all coverage periods of those policies, and what is the total loss paid on claims filed against those policies' coverages?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            "Bob",
+            "Agent",
+            2,
+            98000,
+            3500
+          ]
+        ],
+        "goldSql": "WITH agent_pol AS ( SELECT DISTINCT pe.First_Name, pe.Last_Name, apr.Party_Identifier, apr.Agreement_Identifier AS Policy_Identifier FROM main.agreement_party_role apr JOIN main.party_role r ON r.Party_Role_Code = apr.Party_Role_Code JOIN main.person pe ON pe.Person_Identifier = apr.Party_Identifier WHERE r.Party_Role_Name = 'Agent'), pol_prem AS (SELECT Policy_Identifier, SUM(Policy_Amount) AS premium FROM (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) x GROUP BY 1), pol_loss AS ( SELECT pcd.Policy_Identifier, SUM(lp.amt) AS loss_paid FROM main.claim_coverage cc JOIN main.policy_coverage_detail pcd ON pcd.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier AND pcd.Effective_Date = cc.Effective_Date JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lp ON lp.Claim_Identifier = cc.Claim_Identifier GROUP BY 1) SELECT ap.First_Name, ap.Last_Name, COUNT(DISTINCT ap.Policy_Identifier) AS policies, SUM(COALESCE(pp.premium,0)) AS total_premium, SUM(COALESCE(pl.loss_paid,0)) AS total_loss_paid FROM agent_pol ap LEFT JOIN pol_prem pp ON pp.Policy_Identifier = ap.Policy_Identifier LEFT JOIN pol_loss pl ON pl.Policy_Identifier = ap.Policy_Identifier GROUP BY ap.Party_Identifier, ap.First_Name, ap.Last_Name ORDER BY total_premium DESC",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-for-each-zip-code-where-an-insured-property-had-0b0b87",
+      "question": "For each ZIP code where an insured property had a claim, what is the total claim cost (all loss and expense payments and reserves combined) and the average number of days from opening to closing those claims?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            78732,
+            9000,
+            25
+          ],
+          [
+            78751,
+            4600,
+            16
+          ]
+        ],
+        "goldSql": "WITH claim_cost AS (SELECT Claim_Identifier, SUM(Claim_Amount) AS cost FROM main.claim_amount GROUP BY 1) SELECT la.Postal_Code, SUM(COALESCE(cc.cost,0)) AS total_claim_cost, AVG(date_diff('day', c.Claim_Open_Date, c.Claim_Close_Date)) AS avg_days_to_close FROM main.claim c LEFT JOIN claim_cost cc ON cc.Claim_Identifier = c.Claim_Identifier JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address la ON la.Location_Address_Identifier = g.Location_Address_Identifier GROUP BY la.Postal_Code ORDER BY total_claim_cost DESC",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-for-each-policy-holder-first-and-last-name-what-5390de",
+      "question": "For each policy holder (first and last name), what is the total premium across all their policies and coverage periods, the number of coverage periods, and the average premium per coverage period?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            "Mary",
+            "Holder",
+            98000,
+            6,
+            16333.333333333334
+          ]
+        ],
+        "goldSql": "WITH holder_pol AS ( SELECT DISTINCT apr.Party_Identifier, pe.First_Name, pe.Last_Name, apr.Agreement_Identifier AS Policy_Identifier FROM main.agreement_party_role apr JOIN main.party_role r ON r.Party_Role_Code = apr.Party_Role_Code JOIN main.person pe ON pe.Person_Identifier = apr.Party_Identifier WHERE r.Party_Role_Name = 'PolicyHolder') SELECT hp.First_Name, hp.Last_Name, SUM(pr.Policy_Amount) AS total_premium, COUNT(DISTINCT pr.Policy_Amount_Identifier) AS coverage_periods, SUM(pr.Policy_Amount) * 1.0 / COUNT(DISTINCT pr.Policy_Amount_Identifier) AS avg_premium_per_period FROM holder_pol hp JOIN (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) pr ON pr.Policy_Identifier = hp.Policy_Identifier GROUP BY hp.Party_Identifier, hp.First_Name, hp.Last_Name ORDER BY total_premium DESC",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-for-each-policy-how-many-days-passed-between-the-a92504",
+      "question": "For each policy, how many days passed between the end of its underwriting assessment and the policy's effective date, and who was the underwriter (first and last name) and what was the assessment result?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            31003000336,
+            "Alice",
+            "Writer",
+            "OK",
+            17
+          ],
+          [
+            31003000337,
+            "Alice",
+            "Writer",
+            "OK",
+            5
+          ]
+        ],
+        "goldSql": "SELECT p.Policy_Number, pe.First_Name, pe.Last_Name, ar.Assessment_Result_Type_Code, date_diff('day', a.End_Date, p.Effective_Date) AS days_assessment_end_to_effective FROM main.policy p JOIN main.agreement_assessment aa ON aa.Agreement_Identifier = p.Policy_Identifier JOIN main.assessment a ON a.Assessment_Identifier = aa.Assessment_Identifier JOIN main.assessment_result ar ON ar.Assessment_Identifier = a.Assessment_Identifier JOIN main.underwriting_assessment ua ON ua.Assessment_Result_Identifier = ar.Assessment_Result_Identifier JOIN main.assesment_party_role apr ON apr.Assessment_Identifier = a.Assessment_Identifier JOIN main.party_role r ON r.Party_Role_Code = apr.Party_Role_Code JOIN main.person pe ON pe.Person_Identifier = apr.Party_Identifier WHERE r.Party_Role_Name = 'Underwriter' ORDER BY p.Policy_Number",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-for-each-catastrophe-that-has-claims-show-the-nu-e01f4f",
+      "question": "For each catastrophe that has claims, show the number of claims, total loss paid, total loss reserved, and the paid share of incurred loss as a percentage (loss paid divided by loss paid plus loss reserved).",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            "Fire",
+            2,
+            3500,
+            3100,
+            53.03030303030303
+          ]
+        ],
+        "goldSql": "SELECT cat.Catastrophe_Name, COUNT(DISTINCT c.Claim_Identifier) AS claims, SUM(COALESCE(lp.amt,0)) AS loss_paid, SUM(COALESCE(lr.amt,0)) AS loss_reserved, 100.0 * SUM(COALESCE(lp.amt,0)) / (SUM(COALESCE(lp.amt,0)) + SUM(COALESCE(lr.amt,0))) AS paid_share_pct FROM main.catastrophe cat JOIN main.claim c ON c.Catastrophe_Identifier = cat.Catastrophe_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lp ON lp.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lr ON lr.Claim_Identifier = c.Claim_Identifier GROUP BY cat.Catastrophe_Name ORDER BY claims DESC",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-for-each-insured-property-with-a-claim-identifie-571300",
+      "question": "For each insured property with a claim, identified by street address, what is the incurred loss (loss payments plus loss reserves) on its claims divided by all the premium ever charged for coverage on that property? Rank the properties from highest to lowest ratio.",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            "13017 Zen Gardens Way",
+            4400,
+            12000,
+            0.36666666666666664
+          ],
+          [
+            "5315 Martin Ave",
+            2200,
+            86000,
+            0.02558139534883721
+          ]
+        ],
+        "goldSql": "WITH prop_loss AS ( SELECT c.Insurable_Object_Identifier, SUM(COALESCE(lp.amt,0) + COALESCE(lr.amt,0)) AS incurred_loss FROM main.claim c LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lp ON lp.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lr ON lr.Claim_Identifier = c.Claim_Identifier GROUP BY 1), prop_prem AS ( SELECT pcd.Insurable_Object_Identifier, SUM(pr.Policy_Amount) AS premium FROM (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) pr JOIN main.policy_coverage_detail pcd ON pcd.Policy_Coverage_Detail_Identifier = pr.Policy_Coverage_Detail_Identifier AND pcd.Effective_Date = pr.Effective_Date GROUP BY 1) SELECT la.Line_1_Address, pl.incurred_loss, pp.premium, pl.incurred_loss * 1.0 / pp.premium AS loss_to_premium FROM prop_loss pl JOIN prop_prem pp ON pp.Insurable_Object_Identifier = pl.Insurable_Object_Identifier JOIN main.insurable_object io ON io.Insurable_Object_Identifier = pl.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address la ON la.Location_Address_Identifier = g.Location_Address_Identifier ORDER BY loss_to_premium DESC",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    }
+  ]
+}

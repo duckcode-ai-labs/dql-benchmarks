@@ -1,0 +1,726 @@
+{
+  "identity": {
+    "benchmark": "insurance",
+    "condition": "baseline-full",
+    "repoCommit": "2a2c09f0cde2b265ead13021d5a76c16df6976b0",
+    "repoDirty": false,
+    "contentFingerprint": "91340d4b3b68b067",
+    "dql": {
+      "version": "none (plain text-to-SQL)",
+      "source": "none",
+      "commit": "2a2c09f0cde2b265ead13021d5a76c16df6976b0",
+      "dirty": false
+    },
+    "provider": "codex",
+    "model": "gpt-5.6-terra",
+    "cassetteMode": "record",
+    "dataHash": null,
+    "tools": {
+      "codexCli": "codex exec (ChatGPT subscription); CODEX_HOME=/Users/Kranthi_1/.codex-bench (isolated: no AGENTS.md, plugins, MCP or memories)",
+      "effort": "high"
+    },
+    "node": "v22.18.0",
+    "createdAt": "2026-09-27T06:40:12.907Z",
+    "publishable": true,
+    "notPublishableBecause": []
+  },
+  "provenance": {
+    "source": "saved model replies",
+    "recordings": 41,
+    "realProviderQualityEligible": true,
+    "reasons": []
+  },
+  "run": {
+    "id": "fl-terra",
+    "layer": "baseline-full",
+    "set": "all",
+    "startedAt": "2026-09-27T06:40:12.910Z",
+    "repeat": 1
+  },
+  "method": {
+    "prompt": "dbt Labs' SQLStrategy prompt with one added line, 'The database is DuckDB.'",
+    "extraction": "a Markdown code fence around the reply is removed",
+    "schema": "work/insurance/ACME_full.ddl"
+  },
+  "results": [
+    {
+      "name": "how-many-claims-do-we-have-9c9fce",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 4626,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT COUNT(*) AS claim_count\nFROM claim;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "return-agents-and-the-policy-they-have-sold-that-4e8737",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "row count 0 does not match gold 2",
+      "durationMs": 17938,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT DISTINCT\n  COALESCE(\n    CONCAT_WS(' ', pe.First_Name, pe.Middle_Name, pe.Last_Name),\n    org.Organization_Name\n  ) AS agent_name,\n  p.Policy_Number,\n  c.Claim_Identifier,\n  ca.Catastrophe_Name\nFROM policy p\nJOIN policy_coverage_detail pcd\n  ON pcd.Policy_Identifier = p.Policy_Identifier\nJOIN claim_coverage cc\n  ON cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier\nJOIN claim c\n  ON c.Claim_Identifier = cc.Claim_Identifier\nJOIN catastrophe ca\n  ON ca.Catastrophe_Identifier = c.Catastrophe_Identifier\nJOIN agreement a\n  ON a.Product_Identifier = p.Policy_Identifier\nJOIN agreement_party_role apr\n  ON apr.Agreement_Identifier = a.Product_Identifier\nJOIN party_role pr\n  ON pr.Party_Role_Code = apr.Party_Role_Code\nJOIN party pa\n  ON pa.Party_Identifier = apr.Party_Identifier\nLEFT JOIN person pe\n  ON pe.Person_Identifier = pa.Party_Identifier\nLEFT JOIN organizations org\n  ON org.Organization_Identifier = pa.Party_Identifier\nWHERE LOWER(pr.Party_Role_Name) = 'agent';",
+        "rowCount": 0
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-is-the-total-loss-amounts-which-is-the-sum-6bd41a",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 8616,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  c.Company_Claim_Number,\n  SUM(ca.Claim_Amount) AS Total_Loss_Amount\nFROM claim AS c\nJOIN claim_amount AS ca\n  ON c.Claim_Identifier = ca.Claim_Identifier\nWHERE EXISTS (\n  SELECT 1\n  FROM loss_payment AS lp\n  WHERE lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n)\nOR EXISTS (\n  SELECT 1\n  FROM loss_reserve AS lr\n  WHERE lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n)\nGROUP BY c.Company_Claim_Number;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-are-the-loss-payment-loss-reserve-expense-p-3b76ae",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "the SQL did not run: BinderException: Binder Error: Values list \"pp\" does not have a column named \"policy_holder\"\n\nLINE 70:   pp.policy_holder,\n           ^",
+      "durationMs": 26336,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "WITH claim_policy AS (\n  SELECT DISTINCT\n    cc.Claim_Identifier,\n    p.Policy_Identifier,\n    p.Policy_Number\n  FROM claim_coverage cc\n  JOIN policy_coverage_detail pcd\n    ON pcd.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier\n  JOIN policy p\n    ON p.Policy_Identifier = pcd.Policy_Identifier\n),\nclaim_amounts AS (\n  SELECT\n    ca.Claim_Identifier,\n    SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS loss_payment_amount,\n    SUM(CASE WHEN lr.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS loss_reserve_amount,\n    SUM(CASE WHEN ep.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS expense_payment_amount,\n    SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS expense_reserve_amount\n  FROM claim_amount ca\n  LEFT JOIN loss_payment lp\n    ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  LEFT JOIN loss_reserve lr\n    ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  LEFT JOIN expense_payment ep\n    ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  LEFT JOIN expense_reserve er\n    ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  GROUP BY ca.Claim_Identifier\n),\npolicy_premiums AS (\n  SELECT\n    pa.Policy_Identifier,\n    SUM(pa.Policy_Amount) AS premium_amount_paid\n  FROM policy_amount pa\n  JOIN premium pr\n    ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier\n  GROUP BY pa.Policy_Identifier\n),\npolicy_parties AS (\n  SELECT\n    a.Product_Identifier AS Policy_Identifier,\n    MAX(\n      CASE\n        WHEN LOWER(pr.Party_Role_Name) LIKE '%policy holder%'\n        THEN COALESCE(o.Organization_Name, CONCAT_WS(' ', pe.First_Name, pe.Middle_Name, pe.Last_Name), CAST(pt.Party_Name AS VARCHAR))\n      END\n    ) AS policy_holder,\n    MAX(\n      CASE\n        WHEN LOWER(pr.Party_Role_Name) LIKE '%agent%'\n        THEN COALESCE(o.Organization_Name, CONCAT_WS(' ', pe.First_Name, pe.Middle_Name, pe.Last_Name), CAST(pt.Party_Name AS VARCHAR))\n      END\n    ) AS agent_who_sold_it\n  FROM agreement a\n  JOIN agreement_party_role apr\n    ON apr.Agreement_Identifier = a.Product_Identifier\n  JOIN party_role pr\n    ON pr.Party_Role_Code = apr.Party_Role_Code\n  LEFT JOIN party pt\n    ON pt.Party_Identifier = apr.Party_Identifier\n  LEFT JOIN person pe\n    ON pe.Person_Identifier = apr.Party_Identifier\n  LEFT JOIN organizations o\n    ON o.Organization_Identifier = apr.Party_Identifier\n  GROUP BY a.Product_Identifier\n)\nSELECT\n  c.Company_Claim_Number AS claim_number,\n  cp.Policy_Number AS policy_number,\n  pp.policy_holder,\n  pp.premium_amount_paid,\n  pp.agent_who_sold_it,\n  ca.loss_payment_amount,\n  ca.loss_reserve_amount,\n  ca.expense_payment_amount,\n  ca.expense_reserve_amount\nFROM claim c\nJOIN claim_policy cp\n  ON cp.Claim_Identifier = c.Claim_Identifier\nLEFT JOIN claim_amounts ca\n  ON ca.Claim_Identifier = c.Claim_Identifier\nLEFT JOIN policy_premiums pp\n  ON pp.Policy_Identifier = cp.Policy_Identifier\nLEFT JOIN policy_parties ppr\n  ON ppr.Policy_Identifier = cp.Policy_Identifier\nORDER BY c.Company_Claim_Number, cp.Policy_Number;"
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "return-all-the-policies-and-the-agents-that-sold-1b4a6e",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "row count 0 does not match gold 2",
+      "durationMs": 8709,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  p.Policy_Number,\n  apr.Party_Identifier AS Agent_Id\nFROM policy AS p\nJOIN agreement_party_role AS apr\n  ON apr.Agreement_Identifier = p.Policy_Identifier\nWHERE LOWER(apr.Party_Role_Code) = 'agent';",
+        "rowCount": 0
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-is-the-average-time-to-settle-a-claim-by-po-924410",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 8967,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  p.Policy_Number,\n  AVG(date_diff('day', c.Claim_Open_Date, c.Claim_Close_Date)) AS average_days_to_settle\nFROM claim AS c\nJOIN claim_coverage AS cc\n  ON cc.Claim_Identifier = c.Claim_Identifier\nJOIN policy_coverage_detail AS pcd\n  ON pcd.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier\n AND pcd.Effective_Date = cc.Effective_Date\nJOIN policy AS p\n  ON p.Policy_Identifier = pcd.Policy_Identifier\nWHERE c.Claim_Open_Date IS NOT NULL\n  AND c.Claim_Close_Date IS NOT NULL\nGROUP BY p.Policy_Number;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-is-the-total-loss-of-each-claim-by-claim-nu-786db2",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 9768,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  c.Company_Claim_Number AS claim_number,\n  COALESCE(SUM(ca.Claim_Amount), 0) AS total_loss\nFROM claim AS c\nLEFT JOIN claim_amount AS ca\n  ON ca.Claim_Identifier = c.Claim_Identifier\n AND (\n   EXISTS (\n     SELECT 1\n     FROM loss_payment AS lp\n     WHERE lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n   )\n   OR EXISTS (\n     SELECT 1\n     FROM loss_reserve AS lr\n     WHERE lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n   )\n   OR EXISTS (\n     SELECT 1\n     FROM expense_payment AS ep\n     WHERE ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n   )\n   OR EXISTS (\n     SELECT 1\n     FROM expense_reserve AS er\n     WHERE er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n   )\n )\nGROUP BY c.Company_Claim_Number;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-is-the-average-policy-size-which-is-the-the-bd6c95",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 6300,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT SUM(pa.Policy_Amount) / COUNT(DISTINCT pa.Policy_Identifier) AS average_policy_size\nFROM policy_amount AS pa\nJOIN premium AS p\n  ON p.Policy_Amount_Identifier = pa.Policy_Amount_Identifier;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-are-all-our-policies-that-have-a-claim-asso-6bdbbd",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "row count 0 does not match gold 2",
+      "durationMs": 7185,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT p.*\nFROM policy AS p\nJOIN fire_claim AS fc\n  ON p.Policy_Number = fc.PolicyNo\nJOIN claim AS c\n  ON c.Company_Claim_Number = fc.ClaimNumber;",
+        "rowCount": 0
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "how-many-policies-have-agents-sold-by-agent-id-792e79",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "row count 0 does not match gold 1",
+      "durationMs": 7878,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  apr.Party_Identifier AS agent_id,\n  COUNT(DISTINCT p.Policy_Identifier) AS policies_sold\nFROM policy AS p\nJOIN agreement AS a\n  ON a.Product_Identifier = p.Policy_Identifier\nJOIN agreement_party_role AS apr\n  ON apr.Agreement_Identifier = a.Product_Identifier\nWHERE apr.Party_Role_Code = 'AGENT'\nGROUP BY apr.Party_Identifier;",
+        "rowCount": 0
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-is-the-average-loss-of-each-policy-by-polic-859638",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 13036,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "WITH policy_claims AS (\n  SELECT DISTINCT\n    p.Policy_Identifier,\n    p.Policy_Number,\n    cc.Claim_Identifier\n  FROM policy p\n  JOIN policy_coverage_detail pcd\n    ON pcd.Policy_Identifier = p.Policy_Identifier\n  JOIN claim_coverage cc\n    ON cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier\n),\nclaim_losses AS (\n  SELECT\n    ca.Claim_Identifier,\n    SUM(ca.Claim_Amount) AS loss\n  FROM claim_amount ca\n  WHERE EXISTS (SELECT 1 FROM loss_payment lp WHERE lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier)\n     OR EXISTS (SELECT 1 FROM loss_reserve lr WHERE lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier)\n     OR EXISTS (SELECT 1 FROM expense_payment ep WHERE ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier)\n     OR EXISTS (SELECT 1 FROM expense_reserve er WHERE er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier)\n  GROUP BY ca.Claim_Identifier\n)\nSELECT\n  pc.Policy_Number,\n  AVG(cl.loss) AS average_loss\nFROM policy_claims pc\nJOIN claim_losses cl\n  ON cl.Claim_Identifier = pc.Claim_Identifier\nGROUP BY pc.Policy_Number\nORDER BY pc.Policy_Number;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-is-the-premium-amount-of-all-policies-by-po-8a3e98",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "row count 2 does not match gold 6",
+      "durationMs": 6149,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  p.Policy_Number,\n  SUM(pa.Policy_Amount) AS Premium_Amount\nFROM policy AS p\nJOIN policy_amount AS pa\n  ON p.Policy_Identifier = pa.Policy_Identifier\nJOIN premium AS pr\n  ON pa.Policy_Amount_Identifier = pr.Policy_Amount_Identifier\nGROUP BY p.Policy_Number\nORDER BY p.Policy_Number;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "return-all-the-policies-and-their-policy-holder-e78512",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "row count 0 does not match gold 2",
+      "durationMs": 10492,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  p.Policy_Identifier,\n  apr.Party_Identifier AS Policy_Holder_Identifier\nFROM policy AS p\nJOIN agreement_party_role AS apr\n  ON apr.Agreement_Identifier = p.Policy_Identifier\nWHERE apr.Party_Role_Code = 'Policy Holder';",
+        "rowCount": 0
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-are-the-total-loss-which-is-the-sum-of-loss-561f55",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 18032,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  c.Company_Claim_Number AS claim_number,\n  cat.Catastrophe_Name AS catastrophe,\n  p.Policy_Number AS policy_number,\n  SUM(ca.Claim_Amount) AS total_loss\nFROM claim AS c\nJOIN claim_amount AS ca\n  ON ca.Claim_Identifier = c.Claim_Identifier\nJOIN (\n  SELECT Claim_Amount_Identifier FROM loss_payment\n  UNION\n  SELECT Claim_Amount_Identifier FROM loss_reserve\n  UNION\n  SELECT Claim_Amount_Identifier FROM expense_payment\n  UNION\n  SELECT Claim_Amount_Identifier FROM expense_reserve\n) AS loss_amount\n  ON loss_amount.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\nLEFT JOIN catastrophe AS cat\n  ON cat.Catastrophe_Identifier = c.Catastrophe_Identifier\nLEFT JOIN claim_coverage AS cc\n  ON cc.Claim_Identifier = c.Claim_Identifier\nLEFT JOIN policy_coverage_detail AS pcd\n  ON pcd.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier\n AND pcd.Effective_Date = cc.Effective_Date\nLEFT JOIN policy AS p\n  ON p.Policy_Identifier = pcd.Policy_Identifier\nGROUP BY\n  c.Company_Claim_Number,\n  cat.Catastrophe_Name,\n  p.Policy_Number;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-is-the-total-amount-of-premiums-that-a-poli-8f378a",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "result has 1 columns, gold needs 2",
+      "durationMs": 7654,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT SUM(pa.Policy_Amount) AS total_premiums_paid\nFROM premium p\nJOIN policy_amount pa\n  ON p.Policy_Amount_Identifier = pa.Policy_Amount_Identifier;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-are-the-total-loss-which-is-the-sum-of-loss-56c35a",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 15740,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "WITH loss_amounts AS (\n  SELECT ca.Claim_Identifier, ca.Claim_Amount\n  FROM claim_amount ca\n  JOIN loss_payment lp\n    ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n\n  UNION ALL\n\n  SELECT ca.Claim_Identifier, ca.Claim_Amount\n  FROM claim_amount ca\n  JOIN loss_reserve lr\n    ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n\n  UNION ALL\n\n  SELECT ca.Claim_Identifier, ca.Claim_Amount\n  FROM claim_amount ca\n  JOIN expense_payment ep\n    ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n\n  UNION ALL\n\n  SELECT ca.Claim_Identifier, ca.Claim_Amount\n  FROM claim_amount ca\n  JOIN expense_reserve er\n    ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n),\nclaim_policies AS (\n  SELECT DISTINCT cc.Claim_Identifier, p.Policy_Number\n  FROM claim_coverage cc\n  JOIN policy_coverage_detail pcd\n    ON pcd.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier\n  JOIN policy p\n    ON p.Policy_Identifier = pcd.Policy_Identifier\n)\nSELECT\n  c.Catastrophe_Identifier,\n  c.Catastrophe_Name,\n  cp.Policy_Number,\n  SUM(la.Claim_Amount) AS Total_Loss\nFROM loss_amounts la\nJOIN claim cl\n  ON cl.Claim_Identifier = la.Claim_Identifier\nJOIN catastrophe c\n  ON c.Catastrophe_Identifier = cl.Catastrophe_Identifier\nJOIN claim_policies cp\n  ON cp.Claim_Identifier = cl.Claim_Identifier\nGROUP BY\n  c.Catastrophe_Identifier,\n  c.Catastrophe_Name,\n  cp.Policy_Number\nORDER BY\n  c.Catastrophe_Identifier,\n  cp.Policy_Number;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-is-the-total-amount-of-premiums-that-a-poli-6ba963",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 7549,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  p.Policy_Number,\n  SUM(pa.Policy_Amount) AS Total_Premium_Amount\nFROM policy AS p\nJOIN policy_amount AS pa\n  ON pa.Policy_Identifier = p.Policy_Identifier\nJOIN premium AS pr\n  ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier\nGROUP BY p.Policy_Number;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-is-the-total-loss-of-each-policy-that-an-ag-b0f277",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "row count 0 does not match gold 1",
+      "durationMs": 30055,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "WITH agent_policies AS (\n  SELECT DISTINCT\n    apr.Party_Identifier AS agent_id,\n    p.Policy_Identifier\n  FROM agreement a\n  JOIN agreement_party_role apr\n    ON apr.Agreement_Identifier = a.Product_Identifier\n  JOIN policy p\n    ON p.Policy_Identifier = a.Product_Identifier\n  WHERE UPPER(apr.Party_Role_Code) = 'AGENT'\n),\npolicy_claims AS (\n  SELECT DISTINCT\n    pcd.Policy_Identifier,\n    c.Claim_Identifier\n  FROM policy_coverage_detail pcd\n  JOIN claim_coverage cc\n    ON cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier\n  JOIN claim c\n    ON c.Claim_Identifier = cc.Claim_Identifier\n)\nSELECT\n  ap.agent_id,\n  ap.Policy_Identifier,\n  COALESCE(SUM(ca.Claim_Amount), 0) AS total_loss\nFROM agent_policies ap\nLEFT JOIN policy_claims pc\n  ON pc.Policy_Identifier = ap.Policy_Identifier\nLEFT JOIN claim_amount ca\n  ON ca.Claim_Identifier = pc.Claim_Identifier\n AND (\n   EXISTS (\n     SELECT 1\n     FROM loss_payment lp\n     WHERE lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n   )\n   OR EXISTS (\n     SELECT 1\n     FROM loss_reserve lr\n     WHERE lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n   )\n   OR EXISTS (\n     SELECT 1\n     FROM expense_payment ep\n     WHERE ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n   )\n   OR EXISTS (\n     SELECT 1\n     FROM expense_reserve er\n     WHERE er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n   )\n )\nGROUP BY\n  ap.agent_id,\n  ap.Policy_Identifier\nORDER BY\n  ap.agent_id,\n  ap.Policy_Identifier;",
+        "rowCount": 0
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-is-the-loss-ratio-of-each-policy-and-agent-9f2304",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "a gold column has no matching result column",
+      "durationMs": 16716,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  p.Policy_Number,\n  apr.Party_Identifier AS agent_id,\n  SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END)\n    / NULLIF(SUM(pa.Policy_Amount), 0) AS loss_ratio\nFROM policy AS p\nJOIN agreement_party_role AS apr\n  ON apr.Agreement_Identifier = p.Policy_Identifier\nJOIN policy_amount AS pa\n  ON pa.Policy_Identifier = p.Policy_Identifier\nJOIN claim_coverage AS cc\n  ON cc.Policy_Coverage_Detail_Identifier = pa.Policy_Coverage_Detail_Identifier\nJOIN claim_amount AS ca\n  ON ca.Claim_Identifier = cc.Claim_Identifier\nLEFT JOIN loss_payment AS lp\n  ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\nJOIN party_role AS pr\n  ON pr.Party_Role_Code = apr.Party_Role_Code\nWHERE LOWER(pr.Party_Role_Name) = 'agent'\nGROUP BY p.Policy_Number, apr.Party_Identifier;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "return-policy-holders-and-the-claims-they-have-m-daf6d8",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "a gold column has no matching result column",
+      "durationMs": 16170,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  p.Policy_Number,\n  c.Claim_Identifier,\n  c.Company_Claim_Number,\n  cat.Catastrophe_Identifier,\n  cat.Catastrophe_Name,\n  cat.Catastrophe_Type_Code\nFROM policy AS p\nJOIN policy_coverage_detail AS pcd\n  ON pcd.Policy_Identifier = p.Policy_Identifier\nJOIN claim_coverage AS cc\n  ON cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier\nJOIN claim AS c\n  ON c.Claim_Identifier = cc.Claim_Identifier\nLEFT JOIN catastrophe AS cat\n  ON cat.Catastrophe_Identifier = c.Catastrophe_Identifier;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-are-the-loss-payment-loss-reserve-expense-p-b28feb",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "a gold column has no matching result column",
+      "durationMs": 22836,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "WITH claim_amounts AS (\n  SELECT\n    ca.Claim_Identifier,\n    SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS Loss_Payment_Amount,\n    SUM(CASE WHEN lr.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS Loss_Reserve_Amount,\n    SUM(CASE WHEN ep.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS Expense_Payment_Amount,\n    SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS Expense_Reserve_Amount\n  FROM claim_amount ca\n  LEFT JOIN loss_payment lp\n    ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  LEFT JOIN loss_reserve lr\n    ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  LEFT JOIN expense_payment ep\n    ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  LEFT JOIN expense_reserve er\n    ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  GROUP BY ca.Claim_Identifier\n),\npremium_amounts AS (\n  SELECT\n    pa.Policy_Identifier,\n    SUM(pa.Policy_Amount) AS Premium_Amount_Paid\n  FROM policy_amount pa\n  JOIN premium pr\n    ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier\n  GROUP BY pa.Policy_Identifier\n)\nSELECT\n  c.Company_Claim_Number AS Claim_Number,\n  p.Policy_Number,\n  ca.Loss_Payment_Amount,\n  ca.Loss_Reserve_Amount,\n  ca.Expense_Payment_Amount,\n  ca.Expense_Reserve_Amount,\n  pa.Premium_Amount_Paid,\n  ct.Catastrophe_Name,\n  ct.Industry_Catastrophe_Code,\n  ct.Company_Catastrophe_Code\nFROM claim c\nLEFT JOIN claim_coverage cc\n  ON cc.Claim_Identifier = c.Claim_Identifier\nLEFT JOIN policy_coverage_detail pcd\n  ON pcd.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier\nLEFT JOIN policy p\n  ON p.Policy_Identifier = pcd.Policy_Identifier\nLEFT JOIN claim_amounts ca\n  ON ca.Claim_Identifier = c.Claim_Identifier\nLEFT JOIN premium_amounts pa\n  ON pa.Policy_Identifier = p.Policy_Identifier\nLEFT JOIN catastrophe ct\n  ON ct.Catastrophe_Identifier = c.Catastrophe_Identifier;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "how-many-policies-does-each-policy-holder-have-b-b0ccc5",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "row count 0 does not match gold 1",
+      "durationMs": 12473,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  Party_Identifier AS policy_holder_id,\n  COUNT(DISTINCT Agreement_Identifier) AS policy_count\nFROM agreement_party_role\nWHERE Party_Role_Code = 'Policy Holder'\nGROUP BY Party_Identifier;",
+        "rowCount": 0
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "how-many-claims-have-been-placed-by-policy-numbe-0252c1",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "row count 2 does not match gold 1",
+      "durationMs": 6283,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  p.Policy_Number,\n  COUNT(DISTINCT c.Claim_Identifier) AS claim_count\nFROM policy AS p\nJOIN policy_coverage_detail AS pcd\n  ON pcd.Policy_Identifier = p.Policy_Identifier\nJOIN claim AS c\n  ON c.Insurable_Object_Identifier = pcd.Insurable_Object_Identifier\nGROUP BY p.Policy_Number;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-is-the-average-loss-of-each-policy-by-polic-1391b3",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "row count 2 does not match gold 1",
+      "durationMs": 16649,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "WITH policy_claims AS (\n  SELECT DISTINCT\n    p.Policy_Identifier,\n    p.Policy_Number,\n    cc.Claim_Identifier\n  FROM policy p\n  LEFT JOIN policy_coverage_detail pcd\n    ON pcd.Policy_Identifier = p.Policy_Identifier\n  LEFT JOIN claim_coverage cc\n    ON cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier\n),\nclaim_losses AS (\n  SELECT\n    ca.Claim_Identifier,\n    SUM(ca.Claim_Amount) AS loss\n  FROM claim_amount ca\n  WHERE EXISTS (\n    SELECT 1 FROM loss_payment lp\n    WHERE lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  )\n  OR EXISTS (\n    SELECT 1 FROM loss_reserve lr\n    WHERE lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  )\n  OR EXISTS (\n    SELECT 1 FROM expense_payment ep\n    WHERE ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  )\n  OR EXISTS (\n    SELECT 1 FROM expense_reserve er\n    WHERE er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  )\n  GROUP BY ca.Claim_Identifier\n)\nSELECT\n  pc.Policy_Number,\n  COALESCE(AVG(COALESCE(cl.loss, 0)), 0) AS average_loss,\n  COUNT(pc.Claim_Identifier) AS number_of_claims\nFROM policy_claims pc\nLEFT JOIN claim_losses cl\n  ON cl.Claim_Identifier = pc.Claim_Identifier\nGROUP BY pc.Policy_Number\nORDER BY pc.Policy_Number;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-is-the-total-amount-of-premiums-paid-by-pol-1540b6",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 7098,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  p.Policy_Number,\n  SUM(pa.Policy_Amount) AS Total_Premiums_Paid\nFROM premium pr\nJOIN policy_amount pa\n  ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier\nJOIN policy p\n  ON pa.Policy_Identifier = p.Policy_Identifier\nGROUP BY p.Policy_Number;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-are-all-the-premiums-that-have-been-paid-by-fe6797",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "a gold column has no matching result column",
+      "durationMs": 5290,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT pa.*\nFROM policy_amount AS pa\nJOIN premium AS p\n  ON p.Policy_Amount_Identifier = pa.Policy_Amount_Identifier;",
+        "rowCount": 6
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-are-the-loss-payment-loss-reserve-expense-p-2af913",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 11178,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  c.Company_Claim_Number AS claim_number,\n  SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS loss_payment_amount,\n  SUM(CASE WHEN lr.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS loss_reserve_amount,\n  SUM(CASE WHEN ep.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS expense_payment_amount,\n  SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS expense_reserve_amount\nFROM claim AS c\nJOIN claim_amount AS ca\n  ON ca.Claim_Identifier = c.Claim_Identifier\nLEFT JOIN loss_payment AS lp\n  ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\nLEFT JOIN loss_reserve AS lr\n  ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\nLEFT JOIN expense_payment AS ep\n  ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\nLEFT JOIN expense_reserve AS er\n  ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\nGROUP BY c.Company_Claim_Number;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-are-the-expense-reserve-amount-of-all-claim-23295a",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "a gold column has no matching result column",
+      "durationMs": 8595,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  c.Company_Claim_Number AS claim_number,\n  COALESCE(SUM(ca.Claim_Amount), 0) AS expense_reserve_amount\nFROM claim AS c\nLEFT JOIN claim_amount AS ca\n  ON c.Claim_Identifier = ca.Claim_Identifier\nLEFT JOIN expense_reserve AS er\n  ON ca.Claim_Amount_Identifier = er.Claim_Amount_Identifier\nGROUP BY c.Company_Claim_Number;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-are-the-loss-reserve-amount-of-all-claims-b-6973de",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 7726,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  c.Company_Claim_Number AS claim_number,\n  SUM(ca.Claim_Amount) AS loss_reserve_amount\nFROM claim AS c\nJOIN claim_amount AS ca\n  ON ca.Claim_Identifier = c.Claim_Identifier\nJOIN loss_reserve AS lr\n  ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\nGROUP BY c.Company_Claim_Number;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "return-agents-and-the-policy-they-have-sold-that-bade1c",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "row count 0 does not match gold 2",
+      "durationMs": 17236,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  apr.Party_Identifier AS agent_id,\n  p.Policy_Number AS policy_number,\n  c.Company_Claim_Number AS claim_number,\n  SUM(ca.Claim_Amount) AS expense_payment_amount\nFROM agreement a\nJOIN agreement_party_role apr\n  ON apr.Agreement_Identifier = a.Product_Identifier\nJOIN policy p\n  ON p.Policy_Identifier = a.Product_Identifier\nJOIN policy_coverage_detail pcd\n  ON pcd.Policy_Identifier = p.Policy_Identifier\nJOIN claim_coverage cc\n  ON cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier\nJOIN claim c\n  ON c.Claim_Identifier = cc.Claim_Identifier\nJOIN claim_amount ca\n  ON ca.Claim_Identifier = c.Claim_Identifier\nJOIN expense_payment ep\n  ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\nWHERE apr.Party_Role_Code = 'AGENT'\nGROUP BY\n  apr.Party_Identifier,\n  p.Policy_Number,\n  c.Company_Claim_Number;",
+        "rowCount": 0
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "return-all-the-claims-we-have-by-claim-number-op-6d280f",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 4102,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  Company_Claim_Number AS claim_number,\n  Claim_Open_Date AS open_date,\n  Claim_Close_Date AS close_date\nFROM claim;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-are-the-total-loss-which-is-the-sum-of-loss-03fb7f",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "a gold column has no matching result column",
+      "durationMs": 21886,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "WITH claim_totals AS (\n  SELECT\n    ca.Claim_Identifier,\n    SUM(ca.Claim_Amount) AS total_loss\n  FROM claim_amount ca\n  WHERE EXISTS (\n    SELECT 1 FROM loss_payment lp\n    WHERE lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  )\n     OR EXISTS (\n    SELECT 1 FROM loss_reserve lr\n    WHERE lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  )\n     OR EXISTS (\n    SELECT 1 FROM expense_payment ep\n    WHERE ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  )\n     OR EXISTS (\n    SELECT 1 FROM expense_reserve er\n    WHERE er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  )\n  GROUP BY ca.Claim_Identifier\n),\npolicy_premiums AS (\n  SELECT\n    pa.Policy_Identifier,\n    SUM(pa.Policy_Amount) AS premium_amount_paid\n  FROM policy_amount pa\n  JOIN premium pr\n    ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier\n  GROUP BY pa.Policy_Identifier\n)\nSELECT\n  c.Company_Claim_Number AS claim_number,\n  p.Policy_Number AS policy_number,\n  NULL AS policy_holder,\n  ct.total_loss,\n  COALESCE(pp.premium_amount_paid, 0) AS premium_amount_paid\nFROM claim c\nJOIN claim_totals ct\n  ON ct.Claim_Identifier = c.Claim_Identifier\nJOIN claim_coverage cc\n  ON cc.Claim_Identifier = c.Claim_Identifier\nJOIN policy_coverage_detail pcd\n  ON pcd.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier\n AND pcd.Effective_Date = cc.Effective_Date\nJOIN policy p\n  ON p.Policy_Identifier = pcd.Policy_Identifier\nLEFT JOIN policy_premiums pp\n  ON pp.Policy_Identifier = p.Policy_Identifier\nGROUP BY\n  c.Company_Claim_Number,\n  p.Policy_Number,\n  ct.total_loss,\n  pp.premium_amount_paid;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-are-the-loss-payment-loss-reserve-expense-p-4e6017",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "result has 7 columns, gold needs 8",
+      "durationMs": 21300,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "WITH claim_amounts AS (\n  SELECT\n    ca.Claim_Identifier,\n    SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS Loss_Payment_Amount,\n    SUM(CASE WHEN lr.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS Loss_Reserve_Amount,\n    SUM(CASE WHEN ep.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS Expense_Payment_Amount,\n    SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS Expense_Reserve_Amount\n  FROM claim_amount ca\n  LEFT JOIN loss_payment lp\n    ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  LEFT JOIN loss_reserve lr\n    ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  LEFT JOIN expense_payment ep\n    ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  LEFT JOIN expense_reserve er\n    ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  GROUP BY ca.Claim_Identifier\n),\npremium_amounts AS (\n  SELECT\n    pa.Policy_Identifier,\n    SUM(pa.Policy_Amount) AS Premium_Amount_Paid\n  FROM policy_amount pa\n  JOIN premium pr\n    ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier\n  GROUP BY pa.Policy_Identifier\n)\nSELECT DISTINCT\n  c.Company_Claim_Number AS Claim_Number,\n  p.Policy_Number,\n  ca.Loss_Payment_Amount,\n  ca.Loss_Reserve_Amount,\n  ca.Expense_Payment_Amount,\n  ca.Expense_Reserve_Amount,\n  pm.Premium_Amount_Paid\nFROM claim c\nLEFT JOIN claim_amounts ca\n  ON ca.Claim_Identifier = c.Claim_Identifier\nLEFT JOIN claim_coverage cc\n  ON cc.Claim_Identifier = c.Claim_Identifier\nLEFT JOIN policy_coverage_detail pcd\n  ON pcd.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier\nLEFT JOIN policy p\n  ON p.Policy_Identifier = pcd.Policy_Identifier\nLEFT JOIN premium_amounts pm\n  ON pm.Policy_Identifier = p.Policy_Identifier;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "return-agents-and-the-policies-they-have-sold-th-751aac",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "row count 0 does not match gold 2",
+      "durationMs": 16756,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  apr.Party_Identifier AS agent_id,\n  p.Policy_Number AS policy_number,\n  c.Company_Claim_Number AS claim_number,\n  ca.Claim_Amount AS loss_payment_amount\nFROM agreement_party_role AS apr\nJOIN agreement AS a\n  ON apr.Agreement_Identifier = a.Product_Identifier\nJOIN policy AS p\n  ON a.Product_Identifier = p.Policy_Identifier\nJOIN policy_coverage_detail AS pcd\n  ON pcd.Policy_Identifier = p.Policy_Identifier\nJOIN claim AS c\n  ON c.Insurable_Object_Identifier = pcd.Insurable_Object_Identifier\nJOIN claim_amount AS ca\n  ON ca.Claim_Identifier = c.Claim_Identifier\nJOIN loss_payment AS lp\n  ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\nWHERE apr.Party_Role_Code = 'AGENT';",
+        "rowCount": 0
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-is-the-premium-amount-of-all-policies-by-po-ff7e17",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 8521,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  p.Policy_Number,\n  pcd.Effective_Date AS Coverage_Effective_Date,\n  pcd.Expiration_Date AS Coverage_Expiration_Date,\n  pa.Policy_Amount AS Premium_Amount\nFROM policy p\nJOIN policy_amount pa\n  ON pa.Policy_Identifier = p.Policy_Identifier\nJOIN premium pr\n  ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier\nJOIN policy_coverage_detail pcd\n  ON pcd.Policy_Coverage_Detail_Identifier = pa.Policy_Coverage_Detail_Identifier\n AND pcd.Policy_Identifier = p.Policy_Identifier;",
+        "rowCount": 6
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-is-the-total-loss-of-each-policy-by-policy-e1de2a",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "row count 2 does not match gold 1",
+      "durationMs": 18324,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "WITH policy_claims AS (\n  SELECT DISTINCT\n    p.Policy_Identifier,\n    p.Policy_Number,\n    cc.Claim_Identifier\n  FROM policy p\n  LEFT JOIN policy_coverage_detail pcd\n    ON pcd.Policy_Identifier = p.Policy_Identifier\n  LEFT JOIN claim_coverage cc\n    ON cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier\n),\nloss_amounts AS (\n  SELECT ca.Claim_Identifier, ca.Claim_Amount\n  FROM claim_amount ca\n  WHERE EXISTS (\n    SELECT 1 FROM loss_payment lp\n    WHERE lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  )\n  OR EXISTS (\n    SELECT 1 FROM loss_reserve lr\n    WHERE lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  )\n  OR EXISTS (\n    SELECT 1 FROM expense_payment ep\n    WHERE ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  )\n  OR EXISTS (\n    SELECT 1 FROM expense_reserve er\n    WHERE er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n  )\n)\nSELECT\n  pc.Policy_Number,\n  COALESCE(SUM(la.Claim_Amount), 0) AS total_loss\nFROM policy_claims pc\nLEFT JOIN loss_amounts la\n  ON la.Claim_Identifier = pc.Claim_Identifier\nGROUP BY pc.Policy_Number;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-is-the-loss-ratio-number-of-claims-total-lo-ba4b46",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "row count 5 does not match gold 1",
+      "durationMs": 20515,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  p.Policy_Number,\n  pa.Policy_Amount AS Premium,\n  COUNT(DISTINCT c.Claim_Identifier) AS Number_Of_Claims,\n  SUM(\n    CASE\n      WHEN lp.Claim_Amount_Identifier IS NOT NULL\n        OR lr.Claim_Amount_Identifier IS NOT NULL\n        OR ep.Claim_Amount_Identifier IS NOT NULL\n        OR er.Claim_Amount_Identifier IS NOT NULL\n      THEN ca.Claim_Amount\n      ELSE 0\n    END\n  ) AS Total_Loss,\n  SUM(\n    CASE\n      WHEN lp.Claim_Amount_Identifier IS NOT NULL\n        OR lr.Claim_Amount_Identifier IS NOT NULL\n        OR ep.Claim_Amount_Identifier IS NOT NULL\n        OR er.Claim_Amount_Identifier IS NOT NULL\n      THEN ca.Claim_Amount\n      ELSE 0\n    END\n  ) / NULLIF(pa.Policy_Amount, 0) AS Loss_Ratio\nFROM policy p\nJOIN policy_amount pa\n  ON pa.Policy_Identifier = p.Policy_Identifier\nJOIN premium pr\n  ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier\nJOIN policy_coverage_detail pcd\n  ON pcd.Policy_Identifier = p.Policy_Identifier\nJOIN claim_coverage cc\n  ON cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier\nJOIN claim c\n  ON c.Claim_Identifier = cc.Claim_Identifier\nJOIN claim_amount ca\n  ON ca.Claim_Identifier = c.Claim_Identifier\nLEFT JOIN loss_payment lp\n  ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\nLEFT JOIN loss_reserve lr\n  ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\nLEFT JOIN expense_payment ep\n  ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\nLEFT JOIN expense_reserve er\n  ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\nGROUP BY p.Policy_Number, pa.Policy_Amount;",
+        "rowCount": 5
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "what-are-the-loss-payment-amount-of-all-claims-b-485b91",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 6355,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  c.Company_Claim_Number AS claim_number,\n  ca.Claim_Amount AS loss_payment_amount\nFROM claim AS c\nJOIN claim_amount AS ca\n  ON ca.Claim_Identifier = c.Claim_Identifier\nJOIN loss_payment AS lp\n  ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "how-many-policies-do-we-have-3b3521",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 4300,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT COUNT(*) AS policy_count\nFROM policy;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "return-agents-and-the-policy-they-have-sold-that-f72b3d",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 17820,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  apr.Party_Identifier AS agent_id,\n  p.Policy_Number AS policy_number,\n  c.Company_Claim_Number AS claim_number,\n  ca.Claim_Amount AS loss_reserve_amount\nFROM policy AS p\nJOIN agreement_party_role AS apr\n  ON apr.Agreement_Identifier = p.Policy_Identifier\nJOIN party_role AS pr\n  ON pr.Party_Role_Code = apr.Party_Role_Code\nJOIN policy_coverage_detail AS pcd\n  ON pcd.Policy_Identifier = p.Policy_Identifier\nJOIN claim_coverage AS cc\n  ON cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier\nJOIN claim AS c\n  ON c.Claim_Identifier = cc.Claim_Identifier\nJOIN claim_amount AS ca\n  ON ca.Claim_Identifier = c.Claim_Identifier\nJOIN loss_reserve AS lr\n  ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\nWHERE UPPER(pr.Party_Role_Name) = 'AGENT';",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "return-agents-and-the-policy-they-have-sold-that-607eff",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "row count 0 does not match gold 2",
+      "durationMs": 11626,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  apr.Party_Identifier AS agent_id,\n  p.Policy_Number,\n  c.Company_Claim_Number AS claim_number,\n  ca.Claim_Amount AS expense_reserve_amount\nFROM policy AS p\nJOIN agreement_party_role AS apr\n  ON apr.Agreement_Identifier = p.Policy_Identifier\nJOIN policy_coverage_detail AS pcd\n  ON pcd.Policy_Identifier = p.Policy_Identifier\nJOIN claim_coverage AS cc\n  ON cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier\nJOIN claim AS c\n  ON c.Claim_Identifier = cc.Claim_Identifier\nJOIN claim_amount AS ca\n  ON ca.Claim_Identifier = c.Claim_Identifier\nJOIN expense_reserve AS er\n  ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\nWHERE apr.Party_Role_Code = 'AGENT';",
+        "rowCount": 0
+      },
+      "usage": null,
+      "costUsd": null
+    }
+  ]
+}

@@ -1,0 +1,226 @@
+{
+  "cases": [
+    {
+      "name": "what-are-the-loss-payment-loss-reserve-expense-p-4e6017",
+      "question": "What are the loss payment, loss reserve, expense payment, expense reserve amount by claim number and corresponding policy number, policy holder and premium amount paid?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            1,
+            31003000336,
+            20000,
+            12312701,
+            1200,
+            1000,
+            1300,
+            1100
+          ],
+          [
+            1,
+            31003000336,
+            20000,
+            12312702,
+            2300,
+            2100,
+            2400,
+            2200
+          ]
+        ],
+        "goldSql": "SELECT\n    party_identifier as PolicyHolderID, \n    policy_number,\n    policy_amount as premium, \n    company_claim_number,\n    ca_lp.claim_amount as Loss_Payment_Amount,  \n    ca_lr.claim_amount as Loss_Reserve_Amount,\n    ca_ep.claim_amount as Expense_Payment_Amount,\n    ca_er.claim_amount as Expense_Reserve_Amount\nFROM\n    Claim\n    inner join claim_amount ca_lp on claim.claim_identifier = ca_lp.claim_identifier\n    inner JOIN loss_payment ON ca_lp.claim_amount_identifier = loss_payment.claim_amount_identifier\n    inner join claim_amount ca_lr on claim.claim_identifier = ca_lr.claim_identifier\n    inner JOIN loss_reserve ON ca_lr.claim_amount_identifier = loss_reserve.claim_amount_identifier\n    inner join claim_amount ca_ep on claim.claim_identifier = ca_ep.claim_identifier\n    inner JOIN expense_payment ON ca_ep.claim_amount_identifier = expense_payment.claim_amount_identifier\n    inner join claim_amount ca_er on claim.claim_identifier = ca_er.claim_identifier\n    inner JOIN expense_reserve ON ca_er.claim_amount_identifier = expense_reserve.claim_amount_identifier\n    inner join claim_coverage on claim.claim_identifier = claim_coverage.claim_identifier\n    inner join policy_coverage_detail on claim_coverage.policy_coverage_detail_identifier = policy_coverage_detail.policy_coverage_detail_identifier\n    inner join policy on policy.policy_identifier = policy_coverage_detail.policy_identifier\n    inner join policy_amount on policy_coverage_detail.policy_coverage_detail_identifier = policy_amount.policy_coverage_detail_identifier\n    inner join  agreement_party_role on agreement_party_role.agreement_identifier = policy.policy_identifier\n    inner join premium on premium.policy_amount_identifier = policy_amount.policy_amount_identifier\nwhere agreement_party_role.party_role_code = 'PH'",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "return-agents-and-the-policies-they-have-sold-th-751aac",
+      "question": "Return agents and the policies they have sold that have had a claim and the corresponding loss payment amount by agent id, policy number and claim number",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            2,
+            31003000336,
+            12312702,
+            2300
+          ],
+          [
+            2,
+            31003000336,
+            12312701,
+            1200
+          ]
+        ],
+        "goldSql": "SELECT\n    party_identifier as AgentID, \n    policy_number,\n    company_claim_number,\n    claim_amount.claim_amount as Loss_Payment_Amount\nFROM\n    Claim\n    inner join claim_amount  on claim.claim_identifier = claim_amount.claim_identifier\n    inner JOIN loss_payment ON claim_amount.claim_amount_identifier = loss_payment.claim_amount_identifier\n    inner join claim_coverage on claim.claim_identifier = claim_coverage.claim_identifier\n    inner join policy_coverage_detail on claim_coverage.policy_coverage_detail_identifier = policy_coverage_detail.policy_coverage_detail_identifier\n    inner join policy on policy.policy_identifier = policy_coverage_detail.policy_identifier\n    inner join  agreement_party_role  on agreement_party_role.agreement_identifier = policy.policy_identifier\n \nwhere agreement_party_role.party_role_code = 'AG'",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "what-is-the-premium-amount-of-all-policies-by-po-ff7e17",
+      "question": "What is the premium amount of all policies by policy number, coverage effective date and coverage expiration date",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            31003000336,
+            "2015-01-01",
+            "2015-12-31",
+            15000
+          ],
+          [
+            31003000336,
+            "2016-01-01",
+            "2016-12-31",
+            16000
+          ],
+          [
+            31003000336,
+            "2017-01-01",
+            "2017-12-31",
+            17000
+          ],
+          [
+            31003000336,
+            "2018-01-01",
+            "2018-12-31",
+            18000
+          ],
+          [
+            31003000336,
+            "2019-01-01",
+            "2019-12-31",
+            20000
+          ],
+          [
+            31003000337,
+            "2019-06-01",
+            "2020-05-31",
+            12000
+          ]
+        ],
+        "goldSql": "select policy_number, policy_coverage_detail.effective_date, policy_coverage_detail.expiration_date, policy_amount\nfrom \n    policy \n    inner join policy_coverage_detail on policy.policy_identifier = policy_coverage_detail.policy_identifier\n    inner join policy_amount on policy_coverage_detail.policy_coverage_detail_identifier = policy_amount.policy_coverage_detail_identifier\n    inner join premium on premium.policy_amount_identifier = policy_amount.policy_amount_identifier",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "what-is-the-total-loss-of-each-policy-by-policy-e1de2a",
+      "question": "What is the total loss of each policy by policy number where total loss is the sum of loss payment, loss reserve, expense payment, expense reserve amounts?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            31003000336,
+            13600
+          ]
+        ],
+        "goldSql": "SELECT\n    policy_number,\n    sum(ca_lp.claim_amount +  ca_lr.claim_amount +  ca_ep.claim_amount +  ca_er.claim_amount) as Total_Loss\nFROM\n    Claim\n    inner join claim_amount ca_lp on claim.claim_identifier = ca_lp.claim_identifier\n    inner JOIN loss_payment ON ca_lp.claim_amount_identifier = loss_payment.claim_amount_identifier\n    inner join claim_amount ca_lr on claim.claim_identifier = ca_lr.claim_identifier\n    inner JOIN loss_reserve ON ca_lr.claim_amount_identifier = loss_reserve.claim_amount_identifier\n    inner join claim_amount ca_ep on claim.claim_identifier = ca_ep.claim_identifier\n    inner JOIN expense_payment ON ca_ep.claim_amount_identifier = expense_payment.claim_amount_identifier\n    inner join claim_amount ca_er on claim.claim_identifier = ca_er.claim_identifier\n    inner JOIN expense_reserve ON ca_er.claim_amount_identifier = expense_reserve.claim_amount_identifier\n    inner join claim_coverage on claim.claim_identifier = claim_coverage.claim_identifier\n    inner join policy_coverage_detail on claim_coverage.policy_coverage_detail_identifier = policy_coverage_detail.policy_coverage_detail_identifier\n    inner join policy on policy.policy_identifier = policy_coverage_detail.policy_identifier\ngroup by policy_number",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "what-is-the-loss-ratio-number-of-claims-total-lo-ba4b46",
+      "question": " What is the loss ratio, number of claims, total loss by policy number and premium where total loss is the sum of loss payment, loss reserve, expense payment, expense reserve amount and loss ratio is total loss divided by premium?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            31003000336,
+            20000,
+            2,
+            13600,
+            0.68
+          ]
+        ],
+        "goldSql": "SELECT\n   policy_number,\n    policy_amount as premium, \n    count(company_claim_number) as NoOfClaims,\n    sum(ca_lp.claim_amount + ca_lr.claim_amount + ca_ep.claim_amount + ca_er.claim_amount) as TotalLoss, \n    sum(ca_lp.claim_amount + ca_lr.claim_amount + ca_ep.claim_amount + ca_er.claim_amount)/policy_amount as LossRatio\nFROM\n    Claim\n    inner join claim_amount ca_lp on claim.claim_identifier = ca_lp.claim_identifier\n    inner JOIN loss_payment ON ca_lp.claim_amount_identifier = loss_payment.claim_amount_identifier\n    inner join claim_amount ca_lr on claim.claim_identifier = ca_lr.claim_identifier\n    inner JOIN loss_reserve ON ca_lr.claim_amount_identifier = loss_reserve.claim_amount_identifier\n    inner join claim_amount ca_ep on claim.claim_identifier = ca_ep.claim_identifier\n    inner JOIN expense_payment ON ca_ep.claim_amount_identifier = expense_payment.claim_amount_identifier\n    inner join claim_amount ca_er on claim.claim_identifier = ca_er.claim_identifier\n    inner JOIN expense_reserve ON ca_er.claim_amount_identifier = expense_reserve.claim_amount_identifier\n    inner join claim_coverage on claim.claim_identifier = claim_coverage.claim_identifier\n    inner join policy_coverage_detail on claim_coverage.policy_coverage_detail_identifier = policy_coverage_detail.policy_coverage_detail_identifier\n    inner join policy on policy.policy_identifier = policy_coverage_detail.policy_identifier\n    inner join policy_amount on policy_coverage_detail.policy_coverage_detail_identifier = policy_amount.policy_coverage_detail_identifier\n    inner join premium on premium.policy_amount_identifier = policy_amount.policy_amount_identifier\ngroup by policy_number, policy_amount",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "what-are-the-loss-payment-amount-of-all-claims-b-485b91",
+      "question": "What are the loss payment amount of all claims by claim number?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            12312701,
+            1200
+          ],
+          [
+            12312702,
+            2300
+          ]
+        ],
+        "goldSql": "SELECT\n    company_claim_number,\n    claim_amount as Loss_Payment_Amount\nFROM\n    Claim\n    inner join claim_amount on claim.claim_identifier = claim_amount.claim_identifier\n    inner JOIN loss_payment ON claim_amount.claim_amount_identifier = loss_payment.claim_amount_identifier\n",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "how-many-policies-do-we-have-3b3521",
+      "question": "How many policies do we have?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            2
+          ]
+        ],
+        "goldSql": "SELECT COUNT(*) AS NoOfPolicy\nFROM policy",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "return-agents-and-the-policy-they-have-sold-that-f72b3d",
+      "question": "Return agents and the policy they have sold that have had a claim and the corresponding loss reserve amount by agent id, policy number and claim number",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            2,
+            31003000336,
+            12312702,
+            2100
+          ],
+          [
+            2,
+            31003000336,
+            12312701,
+            1000
+          ]
+        ],
+        "goldSql": "SELECT\n    party_identifier as AgentID, \n    policy_number,\n    company_claim_number,\n    claim_amount.claim_amount as Loss_Reserve_Amount\nFROM\n    Claim\n    inner join claim_amount  on claim.claim_identifier = claim_amount.claim_identifier\n    inner JOIN loss_reserve ON claim_amount.claim_amount_identifier = loss_reserve.claim_amount_identifier\n    inner join claim_coverage on claim.claim_identifier = claim_coverage.claim_identifier\n    inner join policy_coverage_detail on claim_coverage.policy_coverage_detail_identifier = policy_coverage_detail.policy_coverage_detail_identifier\n    inner join policy on policy.policy_identifier = policy_coverage_detail.policy_identifier\n    inner join  agreement_party_role  on agreement_party_role.agreement_identifier = policy.policy_identifier\n \nwhere agreement_party_role.party_role_code = 'AG'",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "return-agents-and-the-policy-they-have-sold-that-607eff",
+      "question": "Return agents and the policy they have sold that have had a claim and the corresponding expense reserve amount by agent id, policy number and claim number ",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            2,
+            31003000336,
+            12312702,
+            2200
+          ],
+          [
+            2,
+            31003000336,
+            12312701,
+            1100
+          ]
+        ],
+        "goldSql": "SELECT\n    party_identifier as AgentID, \n    policy_number,\n    company_claim_number,\n    claim_amount.claim_amount as Expense_Reserve_Amount\nFROM\n    Claim\n    inner join claim_amount  on claim.claim_identifier = claim_amount.claim_identifier\n    inner JOIN expense_reserve ON claim_amount.claim_amount_identifier = expense_reserve.claim_amount_identifier\n    inner join claim_coverage on claim.claim_identifier = claim_coverage.claim_identifier\n    inner join policy_coverage_detail on claim_coverage.policy_coverage_detail_identifier = policy_coverage_detail.policy_coverage_detail_identifier\n    inner join policy on policy.policy_identifier = policy_coverage_detail.policy_identifier\n    inner join  agreement_party_role  on agreement_party_role.agreement_identifier = policy.policy_identifier\n \nwhere agreement_party_role.party_role_code = 'AG'",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    }
+  ]
+}

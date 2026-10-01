@@ -1,0 +1,451 @@
+<title>The DQL Trust Benchmark</title>
+<meta name="description" content="Accuracy, trust labels and stops of the DQL governed analytics layer, measured on a sealed insurance question set across seven models.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+/* Layout: one reading column (~70ch) with wide figures and tables that scroll inside their own frame. */
+:root {
+  --paper: #f6f7f9;
+  --sheet: #ffffff;
+  --ink: #18202e;
+  --muted: #586173;
+  --rule: #d8dde6;
+  --accent: #0d6b66;
+  --accent-soft: #e2f0ee;
+  --governed: #2d7a4c;
+  --review: #a66b14;
+  --blocked: #6f7888;
+  --wrong: #b23a34;
+  --chart-p: #8a93a3;
+  --chart-a: #7a5aa6;
+  --font-body: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+  --font-head: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #11151c; --sheet: #161b24; --ink: #e5e8ee; --muted: #9aa3b3; --rule: #2c3442;
+    --accent: #4fc2b8; --accent-soft: #173331; --governed: #5fbf86; --review: #e0a64b; --blocked: #8e97a7; --wrong: #ef7d76;
+    --chart-p: #7d8697; --chart-a: #b39ae0; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #11151c; --sheet: #161b24; --ink: #e5e8ee; --muted: #9aa3b3; --rule: #2c3442;
+  --accent: #4fc2b8; --accent-soft: #173331; --governed: #5fbf86; --review: #e0a64b; --blocked: #8e97a7; --wrong: #ef7d76;
+  --chart-p: #7d8697; --chart-a: #b39ae0; color-scheme: dark;
+}
+body { background: var(--paper); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.62; }
+.page { max-width: 980px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 80px; }
+.column { max-width: 70ch; }
+h1, h2, h3, h4 { font-family: var(--font-head); line-height: 1.2; text-wrap: balance; color: var(--ink); }
+h1 { font-size: clamp(2rem, 4.6vw, 3.1rem); font-weight: 700; letter-spacing: -0.01em; margin: 0.2em 0 0.3em; }
+h2 { font-size: 1.5rem; font-weight: 600; margin: 2.6em 0 0.6em; padding-top: 0.9em; border-top: 1px solid var(--rule); }
+h3 { font-size: 1.12rem; font-weight: 600; margin: 1.8em 0 0.4em; }
+p, li { max-width: 70ch; }
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.eyebrow { font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.byline { font-family: var(--font-head); color: var(--muted); font-size: 0.95rem; }
+.status { display: flex; gap: 12px; align-items: flex-start; background: var(--accent-soft); border-left: 3px solid var(--accent); padding: 12px 16px; margin: 24px 0; font-size: 0.95rem; max-width: 70ch; }
+.status strong { font-family: var(--font-head); }
+.abstract { font-size: 1.05rem; max-width: 70ch; }
+.abstract p { margin: 0.6em 0; }
+nav.toc { font-family: var(--font-head); font-size: 0.92rem; margin: 28px 0 8px; }
+nav.toc ol { columns: 2; column-gap: 32px; padding-left: 1.2em; margin: 0; }
+nav.toc li { margin: 2px 0; break-inside: avoid; }
+@media (max-width: 640px) { nav.toc ol { columns: 1; } }
+.keyfigs { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 26px 0; }
+.keyfig { background: var(--sheet); border: 1px solid var(--rule); padding: 14px 16px; min-width: 0; }
+.keyfig .num { font-family: var(--font-head); font-size: 1.9rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--accent); line-height: 1.1; }
+.keyfig .what { font-size: 0.9rem; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+.frame { overflow-x: auto; margin: 16px 0 6px; background: var(--sheet); border: 1px solid var(--rule); }
+table { border-collapse: collapse; width: 100%; font-family: var(--font-head); font-size: 0.86rem; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 10px; text-align: right; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+thead th { font-weight: 600; color: var(--muted); font-size: 0.78rem; letter-spacing: 0.03em; text-transform: uppercase; background: var(--paper); }
+tbody tr:last-child td { border-bottom: 0; }
+td.best { font-weight: 700; color: var(--accent); }
+td .ci { display: block; font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); font-weight: 400; }
+td .sig { color: var(--governed); font-weight: 700; }
+td .sigdown { color: var(--wrong); font-weight: 700; }
+td.pending { color: var(--muted); font-style: italic; font-weight: 400; }
+.caption { font-family: var(--font-head); font-size: 0.85rem; color: var(--muted); max-width: 80ch; margin: 4px 0 20px; }
+.caption b { color: var(--ink); }
+.pill { display: inline-block; font-family: var(--font-mono); font-size: 0.74rem; padding: 1px 7px; border-radius: 3px; border: 1px solid currentColor; }
+.pill.gov { color: var(--governed); } .pill.cert { color: var(--accent); } .pill.rev { color: var(--review); } .pill.blk { color: var(--blocked); }
+.math { overflow-x: auto; margin: 10px 0 14px; padding: 6px 0; }
+code, .mono { font-family: var(--font-mono); font-size: 0.86em; }
+pre.cmd { font-family: var(--font-mono); font-size: 0.82rem; background: var(--sheet); border: 1px solid var(--rule); padding: 12px 14px; overflow-x: auto; line-height: 1.5; }
+figure { margin: 22px 0; }
+figure svg { display: block; width: 100%; height: auto; background: var(--sheet); border: 1px solid var(--rule); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-family: var(--font-head); font-size: 0.82rem; color: var(--muted); margin-top: 8px; }
+.legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; background: var(--c); border-radius: 50%; }
+.ladder { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin: 16px 0; }
+.ladder > div { background: var(--sheet); border: 1px solid var(--rule); padding: 12px 14px; font-size: 0.93rem; min-width: 0; }
+.ladder h4 { margin: 0 0 6px; font-size: 0.95rem; }
+.ladder ul { margin: 0; padding-left: 1.1em; }
+.refs li { margin: 6px 0; font-size: 0.93rem; }
+.note { color: var(--muted); font-size: 0.93rem; }
+ol.findings > li { margin: 8px 0; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="page">
+<header class="column">
+  <div class="eyebrow">DuckCode AI Labs · Technical white paper · Draft 0.1 · 30 September 2026</div>
+  <h1>The DQL Trust Benchmark</h1>
+  <p class="byline">Measuring whether a governed analytics layer answers correctly, says when an answer is backed by approved definitions, and stops when the data cannot answer.</p>
+  <div class="status" role="note"><div><strong>Draft status.</strong> Four models are complete. The three GPT models are still running (their unfinished cells read <em>pending</em>), and a 200-question sealed set (set 4) is being run on Claude Sonnet 5.5. Every number on this page is generated from the saved benchmark reports; none is typed by hand.</div></div>
+</header>
+
+<section class="abstract column" aria-label="Abstract">
+  <h2 style="border-top:0;margin-top:0.8em;padding-top:0">Abstract</h2>
+  <p>Text-to-SQL accuracy numbers say how often a model's query returns the right rows. They do not say which answers a business can act on without checking. DQL is an open-source analytics layer that answers questions from governed definitions where they exist (certified query blocks and semantic metrics), drafts SQL where they do not, labels every answer with how much it can be trusted, and refuses when the data cannot answer.</p>
+  <p>We measure DQL on a property-and-casualty insurance warehouse published by data.world and used by dbt Labs, with a sealed question set written by an independent agent, a ladder of nine context levels (with and without dbt), two baselines (plain one-shot SQL and a free agent that explores the database), and seven language models. On the sealed set, Claude Sonnet 5.5 through DQL answered <b data-f="s55.W2"></b> questions correctly without dbt, against <b data-f="s55.P"></b> for the same model writing SQL alone and <b data-f="s55.A"></b> for the same model as an agent. Across all seven models, governed dbt metrics were right every time DQL labelled them trusted (<b data-f="trust.L2L3"></b>), and DQL stopped correctly on <b data-f="stops"></b> questions the data could not answer. The business layer we authored is the exception: its trusted answers were wrong <b data-f="trust.LB"></b> of the time. We report every result with 95% confidence intervals and paired exact tests, disclose three defects found and fixed during the study, and state the limits of a small warehouse.</p>
+</section>
+
+<section class="column" aria-label="Key figures">
+  <div class="keyfigs">
+    <div class="keyfig"><div class="num" data-f="s55.W2pct"></div><div class="what">Sonnet 5.5 through DQL on a plain warehouse (W2), sealed held-out set</div></div>
+    <div class="keyfig"><div class="num" data-f="trust.L2L3short"></div><div class="what">trusted answers from governed dbt metrics that were wrong, all seven models</div></div>
+    <div class="keyfig"><div class="num" data-f="stopsshort"></div><div class="what">correct stops on questions the data cannot answer</div></div>
+    <div class="keyfig"><div class="num" data-f="qwenlift"></div><div class="what">a local 27B model through DQL (WB) vs the same model alone</div></div>
+  </div>
+</section>
+
+<nav class="toc column" aria-label="Contents">
+  <ol>
+    <li><a href="#why">Why trust, not only accuracy</a></li>
+    <li><a href="#dql">How DQL answers</a></li>
+    <li><a href="#design">Benchmark design</a></li>
+    <li><a href="#metrics">Metrics and statistics</a></li>
+    <li><a href="#accuracy">Accuracy</a></li>
+    <li><a href="#agent">DQL against an agent</a></li>
+    <li><a href="#trust">Trust labels</a></li>
+    <li><a href="#stops">Stopping</a></li>
+    <li><a href="#errors">Why answers were wrong</a></li>
+    <li><a href="#fixes">Defects found during the study</a></li>
+    <li><a href="#limits">Limitations</a></li>
+    <li><a href="#repro">Reproducing the results</a></li>
+    <li><a href="#refs">References</a></li>
+  </ol>
+</nav>
+
+<section id="why" class="column">
+  <h2>1. Why trust, not only accuracy</h2>
+  <p>Public text-to-SQL leaderboards such as BIRD <a href="#r-bird">[6]</a> and Spider 2.0 <a href="#r-spider2">[7]</a> score a system by the share of questions whose query returns the reference rows. That number is useful and incomplete. An analyst who receives a wrong revenue figure without a warning makes a worse decision than one who receives no figure at all. What an organization needs to know is which answers it can act on, which ones someone must check, and when the system should decline.</p>
+  <p>Earlier work already shows that describing the business improves accuracy. On the insurance data used here, data.world found that GPT-4 answered 16.7% of questions from the SQL schema and 54.2% with a knowledge graph of the same schema <a href="#r-dw">[1]</a>. dbt Labs reported that answering through a modeled semantic layer lifted accuracy by 8 to 16 points over text-to-SQL, and that the semantic layer returned errors rather than wrong numbers on questions outside its scope <a href="#r-dbt">[3]</a>. Cube found gains of 17 to 23 points from a semantic description across three models <a href="#r-cube">[4]</a>.</p>
+  <p>Two further facts shape how we report. Reference answers are often wrong: an audit of BIRD mini-dev and Spider 2.0-Snow found errors in 52.8% and 62.8% of annotations, and re-scoring moved agent rankings by up to nine places <a href="#r-annot">[5]</a>. And a single percentage from one run of a few dozen questions carries an uncertainty of about ±14 points. We therefore publish our own answer-key audit, compare conditions question by question with exact tests, and give every rate an interval.</p>
+</section>
+
+<section id="dql" class="column">
+  <h2>2. How DQL answers</h2>
+  <p>DQL reads a project's models, relationships and metric definitions (from dbt, or directly from the warehouse when there is no dbt project) and answers a question through the most governed route that fits it. Every answer carries one of four labels:</p>
+  <div class="frame"><table>
+    <thead><tr><th>Label</th><th style="text-align:left">Meaning</th><th style="text-align:left">Produced by</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill cert">certified</span></td><td style="text-align:left;white-space:normal">A query block a person reviewed and certified answers this exact question.</td><td style="text-align:left;white-space:normal">Certified blocks</td></tr>
+      <tr><td><span class="pill gov">governed</span></td><td style="text-align:left;white-space:normal">Computed from approved metric definitions, and the reading uses everything the question names.</td><td style="text-align:left;white-space:normal">Semantic metrics (dbt MetricFlow or DQL's native engine), certified blocks used as evidence</td></tr>
+      <tr><td><span class="pill rev">review required</span></td><td style="text-align:left;white-space:normal">SQL the AI drafted from the modeled schema; checked against the catalog before it runs, but not governed.</td><td style="text-align:left;white-space:normal">Drafted SQL</td></tr>
+      <tr><td><span class="pill blk">blocked</span></td><td style="text-align:left;white-space:normal">No answer: the data does not hold what the question asks for, or no safe query exists.</td><td style="text-align:left;white-space:normal">A stop, with the reason</td></tr>
+    </tbody>
+  </table></div>
+  <pre class="mermaid">flowchart LR
+  Q[Question] --> R[Read into a structured intent]
+  R --> C{Certified block<br/>names it?}
+  C -- yes --> CE[certified]
+  C -- no --> S{Governed metrics<br/>cover the whole reading?}
+  S -- yes --> GV[governed]
+  S -- no --> D{Draftable from<br/>the modeled schema?}
+  D -- yes --> V[Check SQL against the catalog, run] --> RR[review required]
+  D -- no --> B[blocked, with the reason]</pre>
+  <p>Two properties matter for this paper. First, the label is decided by rules over the reading and the result, not by the model's confidence: a governed answer loses its label when the reading leaves a question word unaccounted for, cannot carry a requested label, or merges records the question asked to see separately. Second, DQL stops when the question needs something the data does not hold, instead of approximating with a nearby column.</p>
+</section>
+
+<section id="design" class="column">
+  <h2>3. Benchmark design</h2>
+  <h3>3.1 Data</h3>
+  <p>The warehouse is the ACME property-and-casualty insurance database from the data.world benchmark <a href="#r-dw">[1]</a><a href="#r-dwdata">[2]</a>, as packaged by dbt Labs with a dbt project and MetricFlow metrics <a href="#r-dbt">[3]</a>, loaded into DuckDB. It holds 29 relations with 161 columns and about 980 rows. The schema follows an industry data model: money is split across separate claim-amount tables, policies reach people through a party-role bridge, and several names are misspelled in the source. The data is small: 2 policies, 2 claims and one named policy holder and agent. We return to what that means in <a href="#limits">section 11</a>.</p>
+  <h3>3.2 Question sets</h3>
+  <ul>
+    <li><b>Development set</b> (41 questions): the published data.world questions. We used them to diagnose problems, so we do not report headline numbers on them.</li>
+    <li><b>Sealed held-out set 3</b> (40 answerable, 10 unanswerable): written by a separate agent that saw only the warehouse schema and data, never the published questions, any results or DQL. It has 10 questions in each cell of data.world's 2×2 grid of question complexity × schema complexity. Its correct SQL was executed to produce the reference rows. The author of this paper has not read it.</li>
+    <li><b>Sealed held-out set 4</b> (200 answerable, 50 unanswerable, 50 per cell): written the same way for this study; results are being collected.</li>
+  </ul>
+  <p>Earlier held-out sets 1 and 2 were used during development and are not reported. Set 3 is the publication set for this draft.</p>
+  <h3>3.3 The context ladder</h3>
+  <p>Each rung adds one thing a data team writes. Rungs with and without dbt use the same warehouse.</p>
+  <div class="ladder">
+    <div><h4>Baselines</h4><ul><li><b>P</b>: the model writes one SQL statement from the full table definitions.</li><li><b>A</b>: the model as an agent: it lists tables, inspects them, samples rows and runs read-only queries (12 turns, 20 tool calls), then gives final SQL or declines.</li></ul></div>
+    <div><h4>With dbt</h4><ul><li><b>L0</b> dbt project only</li><li><b>L1</b> + DQL modeling (entities, relationships)</li><li><b>L2</b> + dbt Labs' MetricFlow metrics</li><li><b>L3</b> + skills (business rules)</li><li><b>LB</b> + our business layer</li></ul></div>
+    <div><h4>Without dbt</h4><ul><li><b>W0</b> warehouse only, catalog synced</li><li><b>W1</b> + modeling</li><li><b>W2</b> + the same metrics as native DQL definitions</li><li><b>WB</b> + our business layer</li></ul></div>
+  </div>
+  <p>The business layer (governed metrics, skills and 9 certified blocks) was written from a business brief by a separate agent, checked by another, and certified by a person. It was never written from the questions.</p>
+  <h3>3.4 Models and settings</h3>
+  <div class="frame"><table>
+    <thead><tr><th>Model</th><th style="text-align:left">Access</th><th style="text-align:left">Reasoning</th></tr></thead>
+    <tbody>
+      <tr><td>Claude Opus 5.5</td><td style="text-align:left">Claude Code CLI 2.1.282 (subscription)</td><td style="text-align:left">DQL per-step effort (medium reading, high drafting)</td></tr>
+      <tr><td>Claude Sonnet 5.5</td><td style="text-align:left">Claude Code CLI 2.1.285</td><td style="text-align:left">same</td></tr>
+      <tr><td>Claude Sonnet 5</td><td style="text-align:left">Claude Code CLI 2.1.282</td><td style="text-align:left">same</td></tr>
+      <tr><td>Qwen 3.8 27B</td><td style="text-align:left">Ollama, on a laptop (M2 Max, 32 GB)</td><td style="text-align:left">model default; longer deadlines</td></tr>
+      <tr><td>GPT-6 Luna / Sol, GPT-5.6 Terra</td><td style="text-align:left">Codex CLI 0.158 (subscription), isolated home</td><td style="text-align:left">fixed: max / medium / high; longer deadlines</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Plain baselines for Claude used high effort. Local and fixed-high-reasoning runs get a 20× longer answer deadline and a 300-second limit per model call, so that a stop is DQL's decision and not the clock's.</p>
+  <h3>3.5 Isolation</h3>
+  <p>Every run asks each question as a new conversation on a fresh copy of the project, with DQL's caches, memory and run history removed. Claude calls replace the tool's system prompt, disable its tools and ignore ambient MCP configuration. Codex calls run from a separate home folder with no personal instructions, plugins, MCP servers or memories (we found the default home added 23,800 tokens of the operator's own setup to every call, and discarded all runs made with it). A provider's usage limit never counts as an answer: the affected questions are asked again after the limit resets.</p>
+  <h3>3.6 Builds</h3>
+  <p>All levels ran on DQL build <span class="mono">49c0e1cb</span>; LB and WB ran on <span class="mono">627009a1</span>, which adds one fix to how a DuckDB table name is checked (<a href="#fixes">section 10</a>). Each report records its build, model, CLI version and settings.</p>
+  <h3>3.7 Answer-key audit</h3>
+  <p>We kept a per-question audit of the development set. Three reference answers are marked <em>disputed</em>: a loss ratio the question does not define, a column the question does not ask for, and a list where a total per policy is a fair reading. Headline numbers use the full sets with the strict rule; <a href="#errors">section 9</a> gives a lenient re-score.</p>
+</section>
+
+<section id="metrics" class="column">
+  <h2>4. Metrics and statistics</h2>
+  <p><b>Accuracy.</b> For a condition answering \(n\) questions, of which \(k\) return the reference rows (compared as multisets, ignoring column names and order), accuracy is \(\hat p = k/n\). We give a 95% Wilson score interval <a href="#r-wilson">[10]</a>, which behaves well near 0 and 1 and at small \(n\):</p>
+  <div class="math">\[ \hat p_{\pm} \;=\; \frac{\hat p + \dfrac{z^2}{2n} \;\pm\; z\sqrt{\dfrac{\hat p(1-\hat p)}{n} + \dfrac{z^2}{4n^2}}}{1 + \dfrac{z^2}{n}}, \qquad z = 1.96 . \]</div>
+  <p><b>Paired comparison.</b> Two conditions answer the same questions, so we compare them question by question. Let \(b\) be the number of questions condition X answered correctly and Y did not, and \(c\) the reverse. Under the null hypothesis that X and Y are equally accurate, each discordant question is equally likely to fall either way, and the exact two-sided McNemar test <a href="#r-mcnemar">[9]</a> gives</p>
+  <div class="math">\[ p \;=\; \min\!\Bigl(1,\; 2\sum_{i=0}^{\min(b,c)} \binom{b+c}{i}\, 2^{-(b+c)}\Bigr). \]</div>
+  <p>Tables show the discordant counts as <span class="mono">+b/−c</span>. We call a difference significant at \(p &lt; 0.05\) and do not correct for multiple comparisons; with 40 questions the test is conservative.</p>
+  <p><b>Trust.</b> Let \(T\) be the number of answers labelled certified or governed and \(W_T\) the number of those that are wrong. Trust precision is \(\pi = (T - W_T)/T\). When no trusted answer is wrong, the one-sided 95% upper bound on the wrong-trusted rate is approximately</p>
+  <div class="math">\[ W_T = 0 \;\Rightarrow\; \Pr(\text{wrong}\mid\text{trusted}) \;\lesssim\; \frac{3}{T}, \]</div>
+  <p>the rule of three <a href="#r-three">[11]</a>. We also report trusted coverage \(\kappa = T/n\), the share of all answers that arrive trusted. A system is only as useful as its trusted answers are both right and common.</p>
+  <p><b>Silent errors.</b> An answer that is wrong and carries no warning is the costly case. For a system without labels, every wrong answer is silent. For DQL, answers labelled <em>review required</em> carry a warning and stops are declared, so only wrong trusted answers are silent:</p>
+  <div class="math">\[ \sigma_{\text{unlabelled}} = \frac{n-k}{n}, \qquad \sigma_{\text{DQL}} = \frac{W_T}{n}. \]</div>
+  <p><b>Stopping.</b> On unanswerable sets, a correct stop is a refusal that names what is missing; the rate is \(s = S_u / n_u\). On answerable sets a stop counts as wrong.</p>
+  <p><b>Lenient match.</b> The strict rule requires the returned rows \(R\) to equal the reference rows \(G\). The lenient rule also accepts \(R\) when \(|R| = |G|\), \(G\) has at least one numeric column, and every numeric column of \(G\) matches a column of \(R\) row by row, so a missing or renamed label column is forgiven but a different row count or different numbers are not.</p>
+</section>
+
+<section id="accuracy">
+  <div class="column"><h2>5. Accuracy</h2>
+  <p>Table 1 gives every condition on the sealed held-out set. Each cell is correct answers out of 40 with the 95% Wilson interval; a coloured marker shows a significant paired difference from the same model's plain baseline P.</p></div>
+  <div class="frame"><table id="t-acc"></table></div>
+  <p class="caption"><b>Table 1.</b> Correct answers out of 40 on sealed held-out set 3 (95% Wilson interval). <span class="sig">▲</span> significantly better than P, <span class="sigdown">▼</span> significantly worse (exact McNemar, p &lt; 0.05). Best DQL level per model in bold. A = agent baseline (run for two models). Pending cells are still running.</p>
+  <figure id="f-acc" aria-label="Accuracy by condition with confidence intervals"></figure>
+  <p class="caption"><b>Figure 1.</b> Accuracy with 95% intervals for the complete models: plain SQL (P), the agent (A) where run, and the nine DQL levels.</p>
+  <div class="column">
+  <h3>What the table shows</h3>
+  <ol class="findings">
+    <li><b>Modeling is the most reliable single step.</b> Adding DQL modeling to a dbt project (L0 → L1) improved every model, by <span data-f="l1gain"></span> questions.</li>
+    <li><b>Without dbt, DQL does best.</b> For Sonnet 5.5 the warehouse levels W0–WB reach <span data-f="s55.Wrange"></span> of 40 and never lose a question that plain SQL answered correctly (W0, W1 and W2 lose none).</li>
+    <li><b>The weaker the model, the larger the lift.</b> Qwen 27B running locally rises from <span data-f="qwen.P"></span> to <span data-f="qwen.WB"></span> through DQL; six of its levels are significantly above its plain baseline. Opus, the strongest plain model, gains less and no level is significant at n = 40.</li>
+    <li><b>The dbt-only level trails.</b> L0 is the weakest level for every model and stops most often, because DQL gives dbt projects a more conservative drafter than warehouse projects. This is a known gap (<a href="#limits">section 11</a>).</li>
+  </ol>
+  </div>
+</section>
+
+<section id="agent" class="column">
+  <h2>6. DQL against an agent</h2>
+  <p>A one-shot SQL baseline is easy to beat. The stronger opponent is the same model working as an agent that explores the database and retries. We ran it for Opus 5.5 and Sonnet 5.5, with the same table definitions P receives.</p>
+  <div class="frame"><table id="t-agent"></table></div>
+  <p class="caption"><b>Table 2.</b> Agent vs DQL levels on the same 40 questions: correct answers, discordant counts (+DQL better / −agent better) and exact McNemar p. The agent labels nothing, so none of its answers is trusted.</p>
+  <p>On this warehouse a capable agent is as accurate as DQL's middle levels. DQL's best levels are ahead (Sonnet 5.5 W2 by <span data-f="s55.W2vsA"></span>), but at 40 questions the difference is not yet significant. Set 4 has five times as many questions and will settle it. Both agents also stopped correctly on all 10 unanswerable questions. The difference that does hold today is in what the answers carry: the agent's wrong answers are indistinguishable from its right ones, while DQL marks which answers rest on governed definitions (<a href="#trust">section 7</a>).</p>
+  <div class="frame"><table id="t-silent"></table></div>
+  <p class="caption"><b>Table 3.</b> Silent errors \(\sigma\) (wrong answers that carry no warning) and trusted coverage \(\kappa\), Sonnet 5.5 and Opus 5.5, held-out set 3.</p>
+</section>
+
+<section id="trust" class="column">
+  <h2>7. Trust labels</h2>
+  <p>Table 4 pools the trusted answers of every model with results at each level.</p>
+  <div class="frame"><table id="t-trust"></table></div>
+  <p class="caption"><b>Table 4.</b> Trusted (certified or governed) answers on sealed held-out set 3, pooled across models, with the 95% interval for the wrong-trusted rate.</p>
+  <ol class="findings">
+    <li><b>Governed dbt metrics were never wrong when trusted.</b> At L2 and L3 DQL labelled <span data-f="trust.L2L3T"></span> answers as governed and all were right; by the rule of three the wrong-trusted rate is below <span data-f="trust.L2L3bound"></span> at 95% confidence.</li>
+    <li><b>Our business layer is not yet trustworthy.</b> At LB, <span data-f="trust.LBw"></span> trusted answers were wrong. A lenient re-score shows about half of these were disagreements about shape (a list or a total, a missing column) and half had wrong numbers. We diagnosed the development-set cases: most were lists answered with a count metric nobody asked for, labelled governed. A fix exists (<a href="#fixes">section 10</a>) and is not in the measured build.</li>
+    <li><b>Trusted coverage is modest.</b> Even at the governed levels, most answers arrive as <em>review required</em>. The labels make DQL safe to use, not yet hands-off.</li>
+  </ol>
+</section>
+
+<section id="stops" class="column">
+  <h2>8. Stopping</h2>
+  <p>Across every model and level with results, DQL's levels stopped correctly on <b data-f="stops"></b> of the unanswerable held-out questions (95% interval <span data-f="stopsci"></span>). The one failure was Claude Sonnet 5 at L3, which answered a question it should have declined. Stops on answerable questions are counted as wrong; they are most common at L0 and for the smaller model, and they make up the largest single share of wrong answers (<a href="#errors">section 9</a>).</p>
+</section>
+
+<section id="errors" class="column">
+  <h2>9. Why answers were wrong</h2>
+  <p>We re-graded 2,240 held-out answers (Opus 5.5, Sonnet 5 and Qwen, plus the partial GPT runs available on 29 September, before Sonnet 5.5 ran) by the lenient rule of <a href="#metrics">section 4</a>. Lenient accuracy is only 2.5 points above strict (1,612 → 1,667), so the strict scores are not an artifact of pedantic grading. Of the strict-wrong answers:</p>
+  <div class="frame"><table>
+    <thead><tr><th>Reason</th><th>Share</th></tr></thead>
+    <tbody>
+      <tr><td>DQL stopped on an answerable question</td><td>39%</td></tr>
+      <tr><td>Wrong numbers</td><td>38%</td></tr>
+      <tr><td>Different number of rows (a list for a total, merged rows)</td><td>13%</td></tr>
+      <tr><td>Right numbers, a label column missing or renamed</td><td>9%</td></tr>
+      <tr><td>Other (query did not run)</td><td>2%</td></tr>
+    </tbody>
+  </table></div>
+  <p class="caption"><b>Table 5.</b> Classification of strict-wrong answers on held-out set 3 (628 answers). 45 of the wrong-number answers differ only by rounding.</p>
+  <p>The largest lever left is unnecessary stops, not wrong SQL.</p>
+</section>
+
+<section id="fixes" class="column">
+  <h2>10. Defects found during the study</h2>
+  <p>We changed DQL three times while running this benchmark and disclose each change, its evidence and whether it is in the measured builds.</p>
+  <ol class="findings">
+    <li><b>Near-fit certified blocks</b> (in both builds). A tag on a certified block was treated as its name, and a block that only nearly fit a question was served as governed without letting the drafter answer first. Found on the development set.</li>
+    <li><b>A metric name overriding the reading</b> (in both builds). A question word that named a metric replaced the measure the model had read ("the expense reserve amount of all claims" measured as a claim count). Found on the development set.</li>
+    <li><b>Short table names on DuckDB</b> (build 627009a1, LB and WB only). A check on the final SQL rejected <span class="mono">main.claim</span> for the inspected <span class="mono">acme_insurance.main.claim</span>. It caused most of Sonnet 5's stops at LB (15) and WB (19), because Sonnet 5 copies the short names certified blocks use. The first half of this fix came from the development set; this second half was found on the sealed set, and every model's LB and WB were re-run on the fixed build.</li>
+    <li><b>Lists answered with a count</b> (fix written, not measured). A list whose count metric merged records is no longer labelled governed. Found on the development set; to be measured on set 4.</li>
+  </ol>
+</section>
+
+<section id="limits" class="column">
+  <h2>11. Limitations</h2>
+  <ul>
+    <li><b>A small warehouse.</b> With 2 policies and 2 claims, many answers are one or two rows and an agent can explore the whole schema in a few calls. It is a fair test of reasoning over an awkward schema, not of scale. A larger benchmark (Spider 2.0 <a href="#r-spider2">[7]</a> or LiveSQLBench <a href="#r-live">[8]</a>) is the next step.</li>
+    <li><b>Sample size.</b> 40 answerable and 10 unanswerable questions per condition give intervals of about ±14 and a lower bound of 72% on a 10/10 stop score. Set 4 addresses this.</li>
+    <li><b>One run per condition.</b> Earlier repeated runs moved individual levels by up to 4 questions.</li>
+    <li><b>Unequal reasoning settings.</b> Claude used DQL's per-step effort while each GPT model used one fixed level; Codex adds its own fixed preamble to every call.</li>
+    <li><b>Latency.</b> Runs shared a laptop and ran in parallel, so times are indicative only.</li>
+    <li><b>The dbt-only gap.</b> L0 trails because dbt projects do not yet get DQL's warehouse-first drafting; an opt-in switch closed most of the gap on the development set but regressed golden tests, so it stays off.</li>
+    <li><b>AI-written reference answers.</b> The sealed sets' SQL was written by an agent and executed; a human spot-check is planned.</li>
+  </ul>
+</section>
+
+<section id="repro" class="column">
+  <h2>12. Reproducing the results</h2>
+  <p>The harness, question sets (sealed sets included after publication), answer-key audit, recorded model replies and analysis scripts are in the <span class="mono">dql-benchmarks</span> repository, to be released with this paper. Each report records the DQL build, model, CLI version and settings. A run is started with:</p>
+  <pre class="cmd">node insurance/run.mjs --layer W2 --set heldout-3 --provider claude-code --model claude-sonnet-5-5 --run my-run
+node insurance/baseline-text2sql.mjs --ddl full --set heldout-3 --provider claude-code --model claude-sonnet-5-5 --run my-run
+node insurance/baseline-agent.mjs --context ddl --set heldout-3 --provider claude-code --model claude-sonnet-5-5 --run my-agent</pre>
+  <p class="note">The DQL builds used here are on local branches and will be published as an npm release before the paper is final.</p>
+</section>
+
+<section id="refs" class="column">
+  <h2>References</h2>
+  <ol class="refs">
+    <li id="r-dw">J. Sequeda, D. Allemang, B. Jacob. <em>A Benchmark to Understand the Role of Knowledge Graphs on Large Language Model's Accuracy for Question Answering on Enterprise SQL Databases.</em> 2023. <a href="https://arxiv.org/abs/2311.07509">arXiv:2311.07509</a></li>
+    <li id="r-dwdata">data.world. <em>cwd-benchmark-data</em> (schema, data, ontology and questions). <a href="https://github.com/datadotworld/cwd-benchmark-data">github.com/datadotworld/cwd-benchmark-data</a></li>
+    <li id="r-dbt">dbt Labs. <em>Semantic Layer vs Text-to-SQL: 2026 Benchmark Update.</em> <a href="https://docs.getdbt.com/blog/semantic-layer-vs-text-to-sql-2026">docs.getdbt.com</a>; code: <a href="https://github.com/dbt-labs/dbt-llm-sl-bench">github.com/dbt-labs/dbt-llm-sl-bench</a></li>
+    <li id="r-cube">Cube. <em>Semantic layer benchmark.</em> <a href="https://github.com/cubedevinc/semantic-layer-benchmark">github.com/cubedevinc/semantic-layer-benchmark</a></li>
+    <li id="r-annot"><em>Pervasive Annotation Errors Break Text-to-SQL Benchmarks.</em> CIDR 2026. <a href="https://arxiv.org/abs/2601.08778">arXiv:2601.08778</a></li>
+    <li id="r-bird">J. Li et al. <em>Can LLM Already Serve as A Database Interface? A BIg Bench for Large-Scale Database Grounded Text-to-SQLs (BIRD).</em> NeurIPS 2023. <a href="https://arxiv.org/abs/2305.03111">arXiv:2305.03111</a>; <a href="https://bird-bench.github.io/">bird-bench.github.io</a></li>
+    <li id="r-spider2">F. Lei et al. <em>Spider 2.0: Evaluating Language Models on Real-World Enterprise Text-to-SQL Workflows.</em> ICLR 2025. <a href="https://arxiv.org/abs/2411.07763">arXiv:2411.07763</a>; <a href="https://spider2-sql.github.io/">spider2-sql.github.io</a></li>
+    <li id="r-live">BIRD team. <em>LiveSQLBench.</em> <a href="https://livesqlbench.ai/">livesqlbench.ai</a></li>
+    <li id="r-mcnemar">Q. McNemar. <em>Note on the sampling error of the difference between correlated proportions or percentages.</em> Psychometrika 12(2):153–157, 1947. <a href="https://doi.org/10.1007/BF02295996">doi:10.1007/BF02295996</a></li>
+    <li id="r-wilson">E. B. Wilson. <em>Probable inference, the law of succession, and statistical inference.</em> Journal of the American Statistical Association 22(158):209–212, 1927. <a href="https://doi.org/10.1080/01621459.1927.10502953">doi:10.1080/01621459.1927.10502953</a></li>
+    <li id="r-three">J. A. Hanley, A. Lippman-Hand. <em>If nothing goes wrong, is everything all right? Interpreting zero numerators.</em> JAMA 249(13):1743–1745, 1983. <a href="https://doi.org/10.1001/jama.1983.03330370053031">doi:10.1001/jama.1983.03330370053031</a></li>
+    <li id="r-mf">dbt Labs. <em>About MetricFlow.</em> <a href="https://docs.getdbt.com/docs/build/about-metricflow">docs.getdbt.com</a></li>
+    <li id="r-dql">DuckCode AI Labs. <em>DQL.</em> <a href="https://github.com/duckcode-ai/dql">github.com/duckcode-ai/dql</a></li>
+  </ol>
+</section>
+</div>
+
+<script>window.MathJax = { tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] }, svg: { fontCache: 'global' }, startup: { typeset: true } };</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.min.js"></script>
+<script>
+const DATA = /*DATA*/;
+const M = DATA.models;
+const ORDER = ['opus', 'sonnet55', 'sonnet5', 'qwen', 'luna', 'sol', 'terra'];
+const COLS = ['P', 'A', 'L0', 'L1', 'L2', 'L3', 'LB', 'W0', 'W1', 'W2', 'WB'];
+const DQL = ['L0', 'L1', 'L2', 'L3', 'LB', 'W0', 'W1', 'W2', 'WB'];
+const pct = (x) => `${Math.round(x * 1000) / 10}%`;
+const ci = (c) => c && c[0] != null ? `${Math.round(c[0] * 100)}–${Math.round(c[1] * 100)}%` : '';
+const complete = (k) => DQL.every((L) => M[k].heldout[L]) && M[k].heldout.P;
+const esc = (s) => String(s).replace(/[&<>]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[ch]));
+
+// Figures quoted in the text.
+const h = (k, L) => M[k].heldout[L];
+const pt = DATA.pooled_trust;
+const F = {
+  's55.W2': `${h('sonnet55', 'W2').k} of 40`, 's55.P': `${h('sonnet55', 'P').k}`, 's55.A': `${h('sonnet55', 'A').k}`,
+  's55.W2pct': pct(h('sonnet55', 'W2').acc),
+  'trust.L2L3': `${pt.L2_L3.trusted} of ${pt.L2_L3.trusted}`, 'trust.L2L3short': `0 of ${pt.L2_L3.trusted}`,
+  'trust.L2L3T': `${pt.L2_L3.trusted}`, 'trust.L2L3bound': pct(pt.L2_L3.upper95_if_zero),
+  'trust.LB': pct(pt.LB.wrong / pt.LB.trusted), 'trust.LBw': `${pt.LB.wrong} of ${pt.LB.trusted}`,
+  'stops': `${DATA.pooled_unanswerable.correct_stops} of ${DATA.pooled_unanswerable.n}`,
+  'stopsshort': `${DATA.pooled_unanswerable.correct_stops}/${DATA.pooled_unanswerable.n}`,
+  'stopsci': ci(DATA.pooled_unanswerable.ci),
+  'qwenlift': `${h('qwen', 'P').k} → ${h('qwen', 'WB').k}`, 'qwen.P': `${h('qwen', 'P').k}`, 'qwen.WB': `${h('qwen', 'WB').k}`,
+  's55.Wrange': `${Math.min(...['W0', 'W1', 'W2', 'WB'].map((L) => h('sonnet55', L).k))}–${Math.max(...['W0', 'W1', 'W2', 'WB'].map((L) => h('sonnet55', L).k))}`,
+  's55.W2vsA': `${h('sonnet55', 'W2').vs_A.gained} questions to ${h('sonnet55', 'W2').vs_A.lost} (p = ${h('sonnet55', 'W2').vs_A.p.toFixed(2)})`,
+  'l1gain': (() => { const g = ORDER.filter((k) => h(k, 'L0') && h(k, 'L1')).map((k) => h(k, 'L1').k - h(k, 'L0').k); return `${Math.min(...g)} to ${Math.max(...g)}`; })(),
+};
+document.querySelectorAll('[data-f]').forEach((el) => { el.textContent = F[el.dataset.f] ?? '—'; });
+
+// Table 1: accuracy.
+(() => {
+  const head = `<thead><tr><th>Model</th>${COLS.map((c) => `<th>${c}</th>`).join('')}</tr></thead>`;
+  const rows = ORDER.map((k) => {
+    const m = M[k]; const best = Math.max(...DQL.map((L) => m.heldout[L]?.k ?? -1));
+    const cells = COLS.map((c) => {
+      const x = m.heldout[c];
+      if (!x) return c === 'A' ? '<td class="pending">–</td>' : '<td class="pending">pending</td>';
+      const mark = x.vs_P && x.vs_P.p < 0.05 ? (x.vs_P.gained > x.vs_P.lost ? ' <span class="sig">▲</span>' : ' <span class="sigdown">▼</span>') : '';
+      const cls = DQL.includes(c) && x.k === best ? ' class="best"' : '';
+      return `<td${cls}>${x.k}${mark}<span class="ci">${ci(x.ci)}</span></td>`;
+    }).join('');
+    return `<tr><td>${esc(m.label)}</td>${cells}</tr>`;
+  }).join('');
+  document.getElementById('t-acc').innerHTML = head + `<tbody>${rows}</tbody>`;
+})();
+
+// Table 2: agent vs DQL.
+(() => {
+  const head = '<thead><tr><th>Model</th><th>P</th><th>Agent</th>' + DQL.map((L) => `<th>${L}</th>`).join('') + '</tr></thead>';
+  const rows = ['sonnet55', 'opus'].map((k) => {
+    const m = M[k];
+    return `<tr><td>${esc(m.label)}</td><td>${m.heldout.P.k}</td><td>${m.heldout.A.k}</td>` + DQL.map((L) => {
+      const x = m.heldout[L]; const v = x.vs_A;
+      return `<td>${x.k}<span class="ci">+${v.gained}/−${v.lost} · p ${v.p < 0.001 ? '<0.001' : v.p.toFixed(2)}</span></td>`;
+    }).join('') + '</tr>';
+  }).join('');
+  document.getElementById('t-agent').innerHTML = head + `<tbody>${rows}</tbody>`;
+})();
+
+// Table 3: silent errors and trusted coverage.
+(() => {
+  const conds = ['P', 'A', 'L2', 'L3', 'LB', 'W1', 'W2', 'WB'];
+  const head = '<thead><tr><th>Model</th>' + conds.map((c) => `<th>${c}</th>`).join('') + '</tr></thead>';
+  const rows = ['sonnet55', 'opus'].map((k) => {
+    const m = M[k];
+    return `<tr><td>${esc(m.label)}</td>` + conds.map((c) => {
+      const x = m.heldout[c];
+      const silent = (c === 'P' || c === 'A') ? (x.n - x.k) / x.n : x.trusted_wrong / x.n;
+      const cover = (c === 'P' || c === 'A') ? 0 : x.trusted / x.n;
+      return `<td>σ ${pct(silent)}<span class="ci">κ ${pct(cover)}</span></td>`;
+    }).join('') + '</tr>';
+  }).join('');
+  document.getElementById('t-silent').innerHTML = head + `<tbody>${rows}</tbody>`;
+})();
+
+// Table 4: pooled trust.
+(() => {
+  const rows = [['L2 + L3 (dbt Labs metrics)', pt.L2_L3], ['LB (dbt + business layer)', pt.LB], ['WB (warehouse + business layer)', pt.WB], ['W2 (native metrics)', pt.W2]]
+    .map(([name, v]) => `<tr><td>${name}</td><td>${v.trusted}</td><td>${v.wrong}</td><td>${v.trusted ? pct(1 - v.wrong / v.trusted) : '–'}</td><td>${ci(v.ci_wrong_rate)}</td></tr>`).join('');
+  document.getElementById('t-trust').innerHTML = '<thead><tr><th>Levels</th><th>Trusted</th><th>Wrong</th><th>Precision</th><th>Wrong-trusted 95% CI</th></tr></thead>' + `<tbody>${rows}</tbody>`;
+})();
+
+// Figure 1: accuracy with intervals, one panel per complete model.
+(() => {
+  const models = ORDER.filter(complete);
+  const conds = ['P', 'A', ...DQL];
+  const W = 900, panelH = 210, top = 34, left = 56, right = 20, rowGap = 36;
+  const H = models.length * (panelH + rowGap) + 10;
+  const x = (i) => left + (i + 0.5) * ((W - left - right) / conds.length);
+  const y = (v, y0) => y0 + top + (1 - v) * (panelH - top - 30);
+  const css = getComputedStyle(document.documentElement);
+  const col = (c) => c === 'P' ? 'var(--chart-p)' : c === 'A' ? 'var(--chart-a)' : 'var(--accent)';
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Accuracy with 95 percent confidence intervals">`;
+  models.forEach((k, mi) => {
+    const y0 = mi * (panelH + rowGap);
+    s += `<text x="${left}" y="${y0 + 20}" fill="var(--ink)" font-family="IBM Plex Sans, sans-serif" font-size="14" font-weight="600">${esc(M[k].label)}</text>`;
+    [0.25, 0.5, 0.75, 1].forEach((g) => {
+      s += `<line x1="${left}" x2="${W - right}" y1="${y(g, y0)}" y2="${y(g, y0)}" stroke="var(--rule)" stroke-width="1"/>`;
+      s += `<text x="${left - 8}" y="${y(g, y0) + 4}" text-anchor="end" fill="var(--muted)" font-family="IBM Plex Mono, monospace" font-size="11">${g * 100}%</text>`;
+    });
+    conds.forEach((c, i) => {
+      const v = M[k].heldout[c];
+      s += `<text x="${x(i)}" y="${y0 + panelH - 6}" text-anchor="middle" fill="var(--muted)" font-family="IBM Plex Mono, monospace" font-size="11">${c}</text>`;
+      if (!v) return;
+      s += `<line x1="${x(i)}" x2="${x(i)}" y1="${y(v.ci[0], y0)}" y2="${y(v.ci[1], y0)}" stroke="${col(c)}" stroke-width="2"/>`;
+      s += `<circle cx="${x(i)}" cy="${y(v.acc, y0)}" r="5" fill="${col(c)}"/>`;
+      s += `<text x="${x(i) + 8}" y="${y(v.acc, y0) + 4}" fill="var(--ink)" font-family="IBM Plex Sans, sans-serif" font-size="11">${v.k}</text>`;
+    });
+  });
+  s += '</svg>';
+  document.getElementById('f-acc').innerHTML = s + '<div class="legend"><span style="--c:var(--chart-p)">P, plain SQL</span><span style="--c:var(--chart-a)">A, agent</span><span style="--c:var(--accent)">DQL levels</span></div>';
+})();
+</script>

@@ -1,0 +1,350 @@
+{
+  "identity": {
+    "benchmark": "insurance",
+    "condition": "agent-ddl",
+    "repoCommit": "5cd9153baff66a2076584fba2de69dde4938ae12",
+    "repoDirty": false,
+    "contentFingerprint": "ffe198f4bff92bfd",
+    "dql": {
+      "version": "none (agentic text-to-SQL)",
+      "source": "none",
+      "commit": "5cd9153baff66a2076584fba2de69dde4938ae12",
+      "dirty": false
+    },
+    "provider": "claude-code",
+    "model": "claude-sonnet-5-5",
+    "cassetteMode": "record",
+    "dataHash": null,
+    "tools": {
+      "claudeCli": "2.1.285 (Claude Code)",
+      "effort": "high"
+    },
+    "node": "v22.18.0",
+    "createdAt": "2026-09-30T03:05:25.424Z",
+    "publishable": true,
+    "notPublishableBecause": []
+  },
+  "provenance": {
+    "source": "saved agent transcripts",
+    "recordings": 10,
+    "realProviderQualityEligible": true,
+    "reasons": []
+  },
+  "run": {
+    "id": "ag-sonnet55",
+    "layer": "agent-ddl",
+    "set": "heldout-3-unanswerable",
+    "warehouse": "L0",
+    "startedAt": "2026-09-30T03:05:25.425Z",
+    "repeat": 1
+  },
+  "method": {
+    "design": "insurance/AGENT-BASELINE.md",
+    "protocol": "text protocol: one JSON action per reply; each turn is a fresh call carrying the whole transcript",
+    "systemPrompt": "You are a data analyst. You answer one business question by writing one SQL query against a DuckDB database. You cannot see the database: you explore it through the actions below, and after each reply you are shown what your action returned.\n\nActions (reply with exactly one JSON object per reply, and nothing else):\n{\"action\": \"list_tables\"}                             every table and view you can query\n{\"action\": \"describe_table\", \"table\": \"<name>\"}       the table's columns and types\n{\"action\": \"sample_rows\", \"table\": \"<name>\", \"n\": 3}  up to 5 rows of the table\n{\"action\": \"run_sql\", \"sql\": \"<query>\"}               run one read-only query; you see at most 50 rows\nFinish with exactly one of:\n{\"action\": \"final_sql\", \"sql\": \"<query>\"}             the query whose full result answers the question\n{\"action\": \"cannot_answer\", \"reason\": \"<why>\"}        the data does not hold what the question needs\n(A reply that starts with CANNOT_ANSWER: <reason> also finishes with cannot_answer.)\n\nRules:\n- The database is DuckDB and read-only.\n- Your final query's full result is the answer, and it is checked by its values: return the columns and rows the question asks for, not a preview. The 50-row limit applies only to what you are shown while exploring.\n- If a query fails, you are shown the error and may try again. If your final query fails to run, you are shown the error and may send a corrected final_sql.\n- Use cannot_answer only when the data does not hold what the question needs (a missing measure, attribute, entity or period). Do not substitute a different measure.\n- You have at most 12 replies and 20 tool calls for this question. A question left without final_sql or cannot_answer when they run out gets no answer.\n- Reply with one JSON object only: no prose, no Markdown.",
+    "systemPromptSha256": "6abec871ffb9966e688e399268a6efe8a84526a880bc42bd9279157d126a8db5",
+    "context": "ddl",
+    "contextSha256": "cc748a46c14b73e067eae59095d7de446750369c05d6d9a1a426d2322a4aa454",
+    "tools": [
+      "list_tables",
+      "describe_table",
+      "sample_rows",
+      "run_sql",
+      "final_sql",
+      "cannot_answer"
+    ],
+    "limits": {
+      "maxTurns": 12,
+      "maxToolCalls": 20,
+      "maxWallMs": 900000,
+      "callTimeoutMs": 300000,
+      "rowCap": 50,
+      "cellChars": 200,
+      "sampleMax": 5,
+      "statementTimeoutS": 30
+    },
+    "grading": "final query run in full on the warehouse copy; lib/row-match.mjs with extra columns allowed (as baseline P); cannot_answer is a correct stop only on an unanswerable set"
+  },
+  "results": [
+    {
+      "name": "heldout-unanswerable-which-agent-earned-the-most-commission-last-year-fff901",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 22211,
+      "providerDispatchCount": 5,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The database has no commission measure. The only policy amount types are null and 'Year' (premium-like), and claim amounts use unlabeled integer type codes. Agents exist only as a party role ('AG'), so there is nothing to attribute commission earnings to."
+      },
+      "usage": {
+        "input": 10,
+        "output": 565,
+        "cacheRead": 2655,
+        "cacheWrite": 35379
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 5,
+      "toolCalls": 4,
+      "sqlStatementsRun": 1,
+      "protocolErrors": 0,
+      "totalMs": 22211,
+      "modelMs": 21181,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-how-much-did-we-recover-from-reinsurers-on-the-f-f9ab1c",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 30656,
+      "providerDispatchCount": 7,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The database has no measure for reinsurance recoveries. Every claim_amount row has a NULL Amount_Type_Code and Insurance_Type_Code, so amounts can't be classified as recoveries, payments or reserves. The party roles are only Agent, Underwriter and PolicyHolder, and the only organization is the company itself, so no reinsurer is recorded. The loss_payment, loss_reserve and other amount tables hold only an identifier. Fire catastrophe claims can be identified through the catastrophe table, but the amount recovered from reinsurers cannot be determined."
+      },
+      "usage": {
+        "input": 14,
+        "output": 1027,
+        "cacheRead": 3717,
+        "cacheWrite": 50306
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 7,
+      "toolCalls": 6,
+      "sqlStatementsRun": 2,
+      "protocolErrors": 0,
+      "totalMs": 30656,
+      "modelMs": 29131,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-is-the-average-credit-score-of-our-policy-h-d340e7",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 14171,
+      "providerDispatchCount": 3,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The database has no credit score measure. No table or column holds a credit score for policy holders. The assessment_result table has only two rows, both with Assessment_Result_Type_Code 'OK' and no numeric score. The assessment description and reason columns are integer placeholders, not scores."
+      },
+      "usage": {
+        "input": 6,
+        "output": 467,
+        "cacheRead": 1593,
+        "cacheWrite": 19824
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 3,
+      "toolCalls": 2,
+      "sqlStatementsRun": 1,
+      "protocolErrors": 0,
+      "totalMs": 14171,
+      "modelMs": 13792,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-deductible-applies-to-each-policy-and-how-o-3fdd38",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 35474,
+      "providerDispatchCount": 7,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "No deductible is recorded anywhere in the data. policy_amount holds only two kinds of amounts: rows tagged 'Year' (12,000-20,000, which look like annual premiums) and untagged rows (600,000-1,000,000, which look like coverage limits). policy_coverage_detail and claim_amount have no type or description values populated, so nothing identifies a deductible. Without a per-policy deductible, the question of how often claims fall below it cannot be answered, and substituting another amount would be a different measure."
+      },
+      "usage": {
+        "input": 14,
+        "output": 1762,
+        "cacheRead": 3717,
+        "cacheWrite": 49993
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 7,
+      "toolCalls": 6,
+      "sqlStatementsRun": 2,
+      "protocolErrors": 0,
+      "totalMs": 35474,
+      "modelMs": 34072,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-how-much-have-we-collected-through-subrogation-a-67153f",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 24201,
+      "providerDispatchCount": 5,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The database has no subrogation data. Every claim_amount row has a null Amount_Type_Code and Insurance_Type_Code, so recoveries or subrogation collections cannot be told apart from other amounts. The party_role table only defines Agent, Underwriter and PolicyHolder, so at-fault third parties cannot be identified. The claim description and status fields are integer columns with no lookup that flags subrogation."
+      },
+      "usage": {
+        "input": 10,
+        "output": 596,
+        "cacheRead": 2655,
+        "cacheWrite": 33961
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 5,
+      "toolCalls": 4,
+      "sqlStatementsRun": 2,
+      "protocolErrors": 0,
+      "totalMs": 24201,
+      "modelMs": 23391,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-which-claims-were-referred-to-the-special-invest-719613",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 35358,
+      "providerDispatchCount": 8,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The database has no field that records a referral to a special investigations unit or a fraud suspicion. Claim_Status_Code, Claim_Description, Assessment_Description and Assessment_Reason_Description are null in the sampled rows, and assessment_result only holds the code 'OK'. The party roles are just Agent, Underwriter and PolicyHolder, and there is no SIU or investigator entity."
+      },
+      "usage": {
+        "input": 16,
+        "output": 1028,
+        "cacheRead": 4248,
+        "cacheWrite": 57123
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 8,
+      "toolCalls": 7,
+      "sqlStatementsRun": 3,
+      "protocolErrors": 0,
+      "totalMs": 35358,
+      "modelMs": 33854,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-which-claims-adjuster-handled-each-claim-and-wha-5b7afe",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 17559,
+      "providerDispatchCount": 4,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The data has no claims adjuster. The party_role table defines only three roles: Agent (AG), Underwriter (UW) and PolicyHolder (PH). The role codes actually used in agreement_party_role and assesment_party_role are only AG, PH and UW. The claim table also has no column linking a claim to a party or handler. So there is no way to say which adjuster handled a claim, or to compute an adjuster's open caseload."
+      },
+      "usage": {
+        "input": 8,
+        "output": 571,
+        "cacheRead": 2124,
+        "cacheWrite": 27002
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 4,
+      "toolCalls": 3,
+      "sqlStatementsRun": 1,
+      "protocolErrors": 0,
+      "totalMs": 17559,
+      "modelMs": 16842,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-share-of-quotes-we-issued-last-year-convert-784e24",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 35162,
+      "providerDispatchCount": 8,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The database has no quote data. There is no quote table, quote status, or quote-to-policy link. The only candidates are the underwriting assessment tables, which hold 2 rows, both with result 'OK'. Assessments are not quotes, and counting them would substitute a different measure. The policy table has 2 rows with null status codes and no way to tell which were bound from a quote. All dates are from 2014-2020, so there is also nothing for last year (2025)."
+      },
+      "usage": {
+        "input": 16,
+        "output": 1071,
+        "cacheRead": 4248,
+        "cacheWrite": 57000
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 8,
+      "toolCalls": 7,
+      "sqlStatementsRun": 1,
+      "protocolErrors": 0,
+      "totalMs": 35162,
+      "modelMs": 33228,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-was-the-maximum-wind-speed-of-the-hurricane-d6f83c",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 13763,
+      "providerDispatchCount": 3,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The database has no wind speed measure. The catastrophe table only identifies a 'Hurricane' by name, with null type and industry/company codes. Neither occurrences, pysical_location, nor any other table has a wind speed or storm intensity column. Claim severity by wind speed cannot be computed, and the maximum wind speed cannot be given."
+      },
+      "usage": {
+        "input": 6,
+        "output": 459,
+        "cacheRead": 1593,
+        "cacheWrite": 19937
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 3,
+      "toolCalls": 2,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 13763,
+      "modelMs": 13147,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-how-satisfied-were-policy-holders-with-the-claim-18d134",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 15440,
+      "providerDispatchCount": 4,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The database has no customer satisfaction or Net Promoter Score data. No table or column holds survey responses, NPS scores, or satisfaction ratings from policy holders. The assessment tables are the closest match, but assessment_result only holds status codes such as 'OK', and the assessment description fields are integer columns with no survey content. Answering would mean substituting a different measure."
+      },
+      "usage": {
+        "input": 8,
+        "output": 365,
+        "cacheRead": 2124,
+        "cacheWrite": 26966
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 4,
+      "toolCalls": 3,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 15440,
+      "modelMs": 14564,
+      "finalSql": null
+    }
+  ]
+}

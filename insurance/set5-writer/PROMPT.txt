@@ -1,0 +1,26 @@
+You are an independent question writer for a text-to-SQL benchmark. Work ONLY inside the current
+directory. It contains acme_insurance.duckdb (a property-and-casualty insurance warehouse), FORMAT.md
+(the output format) and validate.py. Do not read, list or search anything outside this directory.
+
+Explore the warehouse read-only with the DuckDB CLI: /opt/homebrew/bin/duckdb -readonly acme_insurance.duckdb
+Use schema main: learn the tables, columns, keys you can infer, row counts, code values and how tables
+join (policies reach people through agreement_party_role with role codes such as PH = policy holder and
+AG = agent; claim money is in claim_amount, and its kind comes from which of loss_payment, loss_reserve,
+expense_payment or expense_reserve holds its Claim_Amount_Identifier; verify all of this yourself).
+
+Write 200 answerable questions and 50 unanswerable ones into questions-5.json following FORMAT.md:
+- Answerable questions are what an insurance analyst or manager would ask in plain English, without
+  table or column names. Cover lookups, counts, sums, averages, ratios (such as loss ratios or claim
+  severity, with the definition stated in `note`), rankings and top-N, filters on codes and dates,
+  groupings, multi-hop joins through bridge tables, comparisons, and list questions ("return all …",
+  "which …") as well as aggregates. Each must have one defensible correct answer and must not depend on
+  today's date. When a question asks for a list, return one row per listed record.
+- 50 per quadrant (LQLS, LQHS, HQLS, HQHS as defined in FORMAT.md) and a shape for each.
+- goldSql returns exactly the columns the question asks for, runs on the warehouse and returns at least
+  one row. Run every query yourself.
+- Unanswerable questions are plausible business questions this data cannot answer (an attribute,
+  measure, time range or entity that is absent), written as near-misses that tempt a system to answer
+  with a similar column. Give `why` for each.
+- No duplicates or near-duplicates.
+Run `python3 validate.py` until it prints VALID. Finish by replying only with the validator's first
+line (counts). Do not repeat any question or SQL in your reply.

@@ -1,0 +1,573 @@
+[
+  {
+    "key": "sequeda2023benchmark",
+    "status": "VERIFIED",
+    "authors": [
+      "Juan Sequeda",
+      "Dean Allemang",
+      "Bryon Jacob"
+    ],
+    "title": "A Benchmark to Understand the Role of Knowledge Graphs on Large Language Model's Accuracy for Question Answering on Enterprise SQL Databases",
+    "venue": "arXiv preprint (no journal-ref on the arXiv record; comments: 34 pages)",
+    "year": 2023,
+    "identifier": "arXiv:2311.07509",
+    "url": "https://arxiv.org/abs/2311.07509",
+    "verified_fields": [
+      "authors",
+      "title",
+      "year (v1 13 Nov 2023)",
+      "arXiv id",
+      "16.7% SQL vs 54.2% KG (paper body; abstract rounds to 16% and 54%)",
+      "43 questions",
+      "GPT-4 zero-shot, temperature 0.3",
+      "both high-schema-complexity quadrants 0% for SQL",
+      "metric = Average Overall Execution Accuracy (AOEA)"
+    ],
+    "notes": "Table 1 (per quadrant, SQL vs KG/SPARQL AOEA): Low question/Low schema 25.5% vs 71.1%; High question/Low schema 37.4% vs 66.9%; Low question/High schema 0% vs 35.7%; High question/High schema 0% vs 38.5%. Paper text: 'SQL was not able to answer any question accurately' in the high-schema quadrants. Runs dated 20 Sep - 13 Oct 2023. Not peer-reviewed venue on the arXiv record; cite as arXiv preprint. Fetched 2026-09-30."
+  },
+  {
+    "key": "dataworld_cwd_benchmark",
+    "status": "VERIFIED",
+    "authors": [
+      "data.world (datadotworld organisation)"
+    ],
+    "title": "cwd-benchmark-data (Data for the Chat With Your Data benchmark)",
+    "venue": "GitHub repository",
+    "year": 2023,
+    "identifier": "https://github.com/datadotworld/cwd-benchmark-data",
+    "url": "https://github.com/datadotworld/cwd-benchmark-data",
+    "verified_fields": [
+      "exists, public",
+      "description 'Data for the Chat With Your Data benchmark.'",
+      "license Apache-2.0",
+      "created 2023-10-12, last push 2023-12-01",
+      "contents"
+    ],
+    "notes": "Contents (GitHub tree API): ACME_Insurance/DDL/ACME_small.ddl; ACME_Insurance/data/ with 29 CSV tables (Agreement, Claim, Policy, Premium, Loss_Payment, Loss_Reserve, etc.) plus an R2RML mapping 'data.world_P&C_Insurance_Ontology_V1.r2rml'; ACME_Insurance/ontology/insurance.ttl; ACME_Insurance/investigation/acme-benchmark.ttl (the benchmark questions); README, LICENSE.txt, setup_directories.sh. README purpose: test scenarios for language-to-query (SQL and SPARQL) systems. Author field is the organisation; no individual authors are named in the repo metadata. Fetched 2026-09-30."
+  },
+  {
+    "key": "ganz2026dbtbenchmark",
+    "status": "CORRECTED (authors/date added; claim wording)",
+    "authors": [
+      "Jason Ganz",
+      "Benoit Perigaud"
+    ],
+    "title": "Semantic Layer vs. Text-to-SQL: 2026 Benchmark Update",
+    "venue": "dbt Developer Blog (dbt Labs)",
+    "year": 2026,
+    "identifier": "https://docs.getdbt.com/blog/semantic-layer-vs-text-to-sql-2026",
+    "url": "https://docs.getdbt.com/blog/semantic-layer-vs-text-to-sql-2026",
+    "verified_fields": [
+      "authors",
+      "title",
+      "date 7 April 2026",
+      "dataset ACME Insurance (credited to Sequeda et al., data.world)",
+      "11 questions x 20 runs",
+      "accuracy tables",
+      "no significance tests",
+      "out-of-scope behaviour"
+    ],
+    "notes": "Main table (after adding 3 dbt models so the Semantic Layer covers every question): claude-sonnet-4-6 text-to-SQL 90.0% vs SL 98.2% (+8.2 pts); gpt-5.3-codex 84.1% vs 100.0% (+15.9 pts). The '8 to 16 points' gain is our arithmetic on this table; the blog does not state a range. Split table on the original modeling, by 'Too Many Hops': False -> T2SQL 26.9% (2023) / 62.5% (Sonnet 4.6) / 51.2% (GPT-5.3 Codex), SL 83.1% / 100.0% / 100.0%; True -> T2SQL 48.3% / 70.0% / 100.0%, SL 0.0% / 0.0% / 0.0%; All -> T2SQL 32.7% / 64.5% / 64.5%, SL 60.5% / 72.7% / 72.7%. No confidence intervals, error bars, p-values or significance tests. On questions the SL could not model, the post says failure 'looks like an error message', whereas text-to-SQL gives 'a plausible but incorrect answer'. Reasoning effort: default levels in the full run (sweep of Anthropic low-max, OpenAI none-xhigh reported separately). Number of questions in each 'hops' group is not stated. Fetched 2026-09-30."
+  },
+  {
+    "key": "dbt_llm_sl_bench",
+    "status": "VERIFIED",
+    "authors": [
+      "dbt Labs"
+    ],
+    "title": "dbt-llm-sl-bench: LLM Benchmark Tool - A modular benchmarking framework for testing LLM query generation against dbt Semantic Layer",
+    "venue": "GitHub repository",
+    "year": 2025,
+    "identifier": "https://github.com/dbt-labs/dbt-llm-sl-bench",
+    "url": "https://github.com/dbt-labs/dbt-llm-sl-bench",
+    "verified_fields": [
+      "exists, public",
+      "description",
+      "created 2025-11-14",
+      "contents"
+    ],
+    "notes": "Three strategies (SQL generation, Semantic Layer queries, MCP tool use); ACME DDL (ACME_small.ddl, ACME_enhanced.ddl); questions in benchmark_questions.ttl with gold SQL; results accumulate in DuckDB; Evidence dashboard at dbt-labs.github.io/dbt-llm-sl-bench. README lists a later August 2026 update (Claude Sonnet 5 / Opus 5 / GPT-5.6 with effort sweeps), so the repo now holds results beyond the April blog. GitHub license detection returns NOASSERTION. Fetched 2026-09-30."
+  },
+  {
+    "key": "cube_slbenchmark_repo",
+    "status": "VERIFIED",
+    "authors": [
+      "Cube (cubedevinc)"
+    ],
+    "title": "semantic-layer-benchmark",
+    "venue": "GitHub repository",
+    "year": 2026,
+    "identifier": "https://github.com/cubedevinc/semantic-layer-benchmark",
+    "url": "https://github.com/cubedevinc/semantic-layer-benchmark",
+    "verified_fields": [
+      "exists, public",
+      "created 2026-04-25",
+      "dataset Contoso retail on ClickHouse",
+      "100 questions, 5 difficulty tiers",
+      "conditions raw vs +Sem markdown",
+      "Wilson 95% CI and paired exact McNemar"
+    ],
+    "notes": "Conditions: 'raw' = system prompt + SHOW CREATE TABLE DDL + question; '+Sem' = same with fixtures/semantic_layer.md prepended. README says '~ 9 KB / ~ 2.2 K tokens' for the markdown while the repo description and paper say 4 KB (paper: '8,969 characters, ~2,200 tokens'), an internal inconsistency in the source. README headline: +17 to +23 pts, 'paired McNemar exact p < 0.002'. Fetched 2026-09-30."
+  },
+  {
+    "key": "rumiantsau2026semantic",
+    "status": "CORRECTED (full title; 99 scored questions; condition is a markdown document)",
+    "authors": [
+      "Michael Rumiantsau",
+      "Ivan Fokeev"
+    ],
+    "title": "Semantic Layers for Reliable LLM-Powered Data Analytics: A Paired Benchmark of Accuracy and Hallucination Across Three Frontier Models",
+    "venue": "arXiv preprint (cs.AI)",
+    "year": 2026,
+    "identifier": "arXiv:2604.25149",
+    "url": "https://arxiv.org/abs/2604.25149",
+    "verified_fields": [
+      "authors (affiliation Cube)",
+      "full title",
+      "v1 28 Apr 2026",
+      "Contoso on ClickHouse",
+      "100 questions, 99 scored",
+      "semantic layer = hand-authored markdown in prompt",
+      "gains +17.2/+22.2/+23.2",
+      "exact McNemar and Wilson CI"
+    ],
+    "notes": "Single-shot, no tools/retries, medium reasoning effort. Table 1 (analytical verdict, n=99, q33 excluded for exceeding ClickHouse memory quota): Opus 4.7 50.5% [40.8, 60.1] -> 67.7% [58.0, 76.1] (+17.2); Sonnet 4.6 46.5% [37.0, 56.2] -> 68.7% [59.0, 77.0] (+22.2); GPT-5.4 45.5% [36.0, 55.2] -> 68.7% [59.0, 77.0] (+23.2). Brackets are Wilson 95% CIs. All three paired gains significant under two-sided exact McNemar, p <= 0.0015 (paper) / p < 0.002 (README). The 'semantic layer' is NOT a query engine: it is a markdown file describing measures, conventions and disambiguation rules, prepended to the prompt; the model still writes raw SQL. Primary metric is the 'analytical' judge verdict; 'strict' row match is secondary. Fetched 2026-09-30."
+  },
+  {
+    "key": "jin2026pervasive",
+    "status": "CORRECTED (exact title and authors; numbers differ from CIDR version)",
+    "authors": [
+      "Tengjun Jin",
+      "Yoojin Choi",
+      "Yuxuan Zhu",
+      "Daniel Kang"
+    ],
+    "title": "Pervasive Annotation Errors Break Text-to-SQL Benchmarks and Leaderboards",
+    "venue": "arXiv preprint (comments: 18 pages, 14 figures, 9 tables; no journal-ref)",
+    "year": 2026,
+    "identifier": "arXiv:2601.08778 (v3, 19 Jan 2026)",
+    "url": "https://arxiv.org/abs/2601.08778",
+    "verified_fields": [
+      "authors",
+      "title",
+      "versions v1 13 Jan, v2 14 Jan, v3 19 Jan 2026",
+      "error rates",
+      "16 agents",
+      "relative change -7% to 31%",
+      "rank change -9 to +9",
+      "Spearman results"
+    ],
+    "notes": "Abstract (v3): BIRD Mini-Dev 52.8% and Spider 2.0-Snow 62.8% annotation error rates; all 16 open-source agents from the BIRD leaderboard re-evaluated on original vs corrected BIRD Dev subsets; performance changes -7% to 31% (relative); rank changes -9 to +9 positions; uncorrected-subset rankings correlate with full Dev (Spearman r_s=0.85, p=3.26e-5) but corrected-subset rankings only weakly (r_s=0.32, p=0.23). RECOMMENDED version to cite (latest, broadest). Fetched 2026-09-30."
+  },
+  {
+    "key": "jin2026cidr",
+    "status": "CORRECTED (exact title; numbers differ from arXiv version)",
+    "authors": [
+      "Tengjun Jin",
+      "Yoojin Choi",
+      "Yuxuan Zhu",
+      "Daniel Kang"
+    ],
+    "title": "Text-to-SQL Benchmarks are Broken: An In-Depth Analysis of Annotation Errors",
+    "venue": "16th Annual Conference on Innovative Data Systems Research (CIDR '26), January 18-21, 2026, Chaminade, USA",
+    "year": 2026,
+    "identifier": "https://www.vldb.org/cidrdb/papers/2026/p5-jin.pdf",
+    "url": "https://www.vldb.org/cidrdb/papers/2026/p5-jin.pdf",
+    "verified_fields": [
+      "title",
+      "authors (order from CIDR 2026 program; all UIUC)",
+      "venue",
+      "error rates",
+      "5 agents",
+      "-3% to 31% relative",
+      "up to three positions"
+    ],
+    "notes": "Abstract: BIRD (Mini-Dev) 52.8% and Spider 2.0-Snow 66.1% error rates (Spider 2.0-Snow: 121 problems with open-sourced gold SQL). Re-evaluating five open-source BIRD-leaderboard methods on a 100-problem corrected sample of BIRD Dev: performance changes -3% to 31% relative (-2% to 19% absolute), rank changes up to three positions (-2 to 3); CHESS 62% -> 81%, 4th -> 1st. Licensed CC-BY 4.0. Presented in session 'Text-to-SQL, Agents, LLMs, Oh My!' (19 Jan 2026). Fetched 2026-09-30."
+  },
+  {
+    "key": "li2023bird",
+    "status": "CORRECTED (venue is the Datasets and Benchmarks Track; pages/DOI added; author count differs by source)",
+    "authors": [
+      "Jinyang Li",
+      "Binyuan Hui",
+      "Ge Qu",
+      "Jiaxi Yang",
+      "Binhua Li",
+      "Bowen Li",
+      "Bailin Wang",
+      "Bowen Qin",
+      "Ruiying Geng",
+      "Nan Huo",
+      "Xuanhe Zhou",
+      "Chenhao Ma",
+      "Guoliang Li",
+      "Kevin Chang",
+      "Fei Huang",
+      "Reynold Cheng",
+      "Yongbin Li"
+    ],
+    "title": "Can LLM Already Serve as A Database Interface? A BIg Bench for Large-Scale Database Grounded Text-to-SQLs",
+    "venue": "Advances in Neural Information Processing Systems 36 (NeurIPS 2023), Datasets and Benchmarks Track, pp. 42330-42357",
+    "year": 2023,
+    "identifier": "arXiv:2305.03111; doi:10.52202/075280-1835",
+    "url": "https://proceedings.neurips.cc/paper_files/paper/2023/hash/83fc8fab1710363050bbd1d4b8cc0021-Abstract-Datasets_and_Benchmarks.html",
+    "verified_fields": [
+      "title",
+      "authors (proceedings bibtex)",
+      "venue/track",
+      "volume 36",
+      "pages 42330-42357",
+      "DOI",
+      "arXiv id"
+    ],
+    "notes": "Author list above is from the NeurIPS proceedings BibTeX (17 authors). The arXiv record (v3, 15 Nov 2023) lists 18 authors, adding Rongyu Cao after Bowen Qin and giving 'Kevin C.C. Chang'. Cite as 'Li et al.' either way. Fetched 2026-09-30."
+  },
+  {
+    "key": "lei2025spider2",
+    "status": "VERIFIED (pages added)",
+    "authors": [
+      "Fangyu Lei",
+      "Jixuan Chen",
+      "Yuxiao Ye",
+      "Ruisheng Cao",
+      "Dongchan Shin",
+      "Hongjin Su",
+      "Zhaoqing Suo",
+      "Hongcheng Gao",
+      "Wenjing Hu",
+      "Pengcheng Yin",
+      "Victor Zhong",
+      "Caiming Xiong",
+      "Ruoxi Sun",
+      "Qian Liu",
+      "Sida Wang",
+      "Tao Yu"
+    ],
+    "title": "Spider 2.0: Evaluating Language Models on Real-World Enterprise Text-to-SQL Workflows",
+    "venue": "International Conference on Learning Representations (ICLR 2025), pp. 28691-28735 (Oral per arXiv comments)",
+    "year": 2025,
+    "identifier": "arXiv:2411.07763",
+    "url": "https://proceedings.iclr.cc/paper_files/paper/2025/hash/46c10f6c8ea5aa6f267bcdabcb123f97-Abstract-Conference.html",
+    "verified_fields": [
+      "title",
+      "authors",
+      "venue",
+      "pages (ICLR proceedings bibtex)",
+      "arXiv id (v1 12 Nov 2024, v2 17 Mar 2025)",
+      "Oral (arXiv comment field)"
+    ],
+    "notes": "Fetched 2026-09-30."
+  },
+  {
+    "key": "livesqlbench",
+    "status": "VERIFIED (no paper yet)",
+    "authors": [
+      "BIRD Team, The University of Hong Kong (HKU), with Google Cloud"
+    ],
+    "title": "LiveSQLBench: A Dynamic and Contamination-Free Benchmark for Evaluating LLMs on Real-World Text-to-SQL Tasks",
+    "venue": "Project website",
+    "year": 2025,
+    "identifier": "https://livesqlbench.ai",
+    "url": "https://livesqlbench.ai",
+    "verified_fields": [
+      "publisher",
+      "description",
+      "release list"
+    ],
+    "notes": "Releases listed on the site: LiveSQLBench-Base-Lite (28 May 2025; 18 databases, 270 tasks, PostgreSQL), LiveSQLBench-Base-Full v1 (4 Sep 2025; 22 databases, 600 tasks, PostgreSQL), LiveSQLBench-Large-v1 (2 Mar 2026; 18 industrial-scale databases of ~1K columns, 480 tasks). Hidden test set of each release becomes the open dev set of the next. Paper listed as 'Coming Soon'; cite the website with access date. Fetched 2026-09-30."
+  },
+  {
+    "key": "mcnemar1947",
+    "status": "VERIFIED",
+    "authors": [
+      "Quinn McNemar"
+    ],
+    "title": "Note on the Sampling Error of the Difference Between Correlated Proportions or Percentages",
+    "venue": "Psychometrika 12(2):153-157",
+    "year": 1947,
+    "identifier": "doi:10.1007/BF02295996",
+    "url": "https://doi.org/10.1007/BF02295996",
+    "verified_fields": [
+      "author",
+      "title",
+      "journal",
+      "volume",
+      "issue",
+      "pages",
+      "year (June 1947)",
+      "DOI"
+    ],
+    "notes": "Verified from Crossref metadata (Springer page is behind a login redirect). Fetched 2026-09-30."
+  },
+  {
+    "key": "wilson1927",
+    "status": "VERIFIED",
+    "authors": [
+      "Edwin B. Wilson"
+    ],
+    "title": "Probable Inference, the Law of Succession, and Statistical Inference",
+    "venue": "Journal of the American Statistical Association 22(158):209-212",
+    "year": 1927,
+    "identifier": "doi:10.1080/01621459.1927.10502953",
+    "url": "https://doi.org/10.1080/01621459.1927.10502953",
+    "verified_fields": [
+      "author",
+      "title",
+      "journal",
+      "volume",
+      "issue",
+      "pages",
+      "year (June 1927)",
+      "DOI"
+    ],
+    "notes": "Verified from Crossref metadata (Taylor & Francis page returned 403). Fetched 2026-09-30."
+  },
+  {
+    "key": "hanley1983",
+    "status": "VERIFIED (title completed)",
+    "authors": [
+      "James A. Hanley",
+      "Abby Lippman-Hand"
+    ],
+    "title": "If Nothing Goes Wrong, Is Everything All Right? Interpreting Zero Numerators",
+    "venue": "JAMA 249(13):1743-1745",
+    "year": 1983,
+    "identifier": "doi:10.1001/jama.1983.03330370053031",
+    "url": "https://jamanetwork.com/journals/jama/fullarticle/385438",
+    "verified_fields": [
+      "authors (JAMA page)",
+      "title",
+      "journal",
+      "volume",
+      "issue",
+      "pages 1743-1745 (JAMA page)",
+      "date 1 April 1983",
+      "DOI"
+    ],
+    "notes": "Crossref lists only James A. Hanley and first page 1743; the JAMA article page lists both authors and pages 1743-1745. The fetched abstract describes interpreting zero numerators; the phrase 'rule of three' itself was not in the text I could fetch, so the attribution of the 3/n bound to this paper is from general knowledge, not confirmed from the fetched page. Fetched 2026-09-30."
+  },
+  {
+    "key": "dbt_metricflow_docs",
+    "status": "VERIFIED",
+    "authors": [
+      "dbt Labs"
+    ],
+    "title": "About MetricFlow",
+    "venue": "dbt Developer Hub (documentation)",
+    "year": null,
+    "identifier": "https://docs.getdbt.com/docs/build/about-metricflow",
+    "url": "https://docs.getdbt.com/docs/build/about-metricflow",
+    "verified_fields": [
+      "page exists",
+      "title 'About MetricFlow | dbt Developer Hub'"
+    ],
+    "notes": "Opening text describes MetricFlow as a SQL query generation tool that works from YAML files in which a semantic graph links language to data. No publication date on the page; cite with access date 2026-09-30."
+  },
+  {
+    "key": "dql_repo",
+    "status": "VERIFIED (license detection caveat)",
+    "authors": [
+      "DuckCode AI (duckcode-ai)"
+    ],
+    "title": "DQL",
+    "venue": "GitHub repository",
+    "year": 2026,
+    "identifier": "https://github.com/duckcode-ai/dql",
+    "url": "https://github.com/duckcode-ai/dql",
+    "verified_fields": [
+      "exists",
+      "public (GitHub API visibility=public, private=false)",
+      "created 2026-03-07",
+      "description"
+    ],
+    "notes": "Description: 'Git-native certified analytics workspace for dbt teams — governed AI answers on Snowflake, Databricks, and DuckDB'. Rendered repo page shows Apache-2.0, but the GitHub API license detector returns NOASSERTION ('Other') for the LICENSE file; worth checking the LICENSE file text before stating the licence in the paper. Fetched 2026-09-30."
+  },
+  {
+    "key": "elyaniv2010foundations",
+    "status": "VERIFIED",
+    "authors": [
+      "Ran El-Yaniv",
+      "Yair Wiener"
+    ],
+    "title": "On the Foundations of Noise-free Selective Classification",
+    "venue": "Journal of Machine Learning Research 11(53):1605-1641",
+    "year": 2010,
+    "identifier": "https://jmlr.org/papers/v11/el-yaniv10a.html",
+    "url": "https://jmlr.org/papers/v11/el-yaniv10a.html",
+    "verified_fields": [
+      "authors",
+      "title",
+      "journal",
+      "volume 11 (issue 53)",
+      "pages 1605-1641",
+      "year"
+    ],
+    "notes": "No DOI; cite the JMLR URL. Fetched 2026-09-30."
+  },
+  {
+    "key": "geifman2017selective",
+    "status": "VERIFIED",
+    "authors": [
+      "Yonatan Geifman",
+      "Ran El-Yaniv"
+    ],
+    "title": "Selective Classification for Deep Neural Networks",
+    "venue": "Advances in Neural Information Processing Systems 30 (NIPS 2017)",
+    "year": 2017,
+    "identifier": "arXiv:1705.08500",
+    "url": "https://proceedings.neurips.cc/paper/2017/hash/4a8423d5e91fda00bb7e46540e2b0cf1-Abstract.html",
+    "verified_fields": [
+      "authors",
+      "title",
+      "venue",
+      "volume 30",
+      "year",
+      "arXiv id (v1 23 May 2017, v2 1 Jun 2017)"
+    ],
+    "notes": "The proceedings BibTeX has an empty pages field, so no page range is given. The conference was named NIPS in 2017. Fetched 2026-09-30."
+  },
+  {
+    "key": "richardson2026predicts",
+    "status": "VERIFIED (new)",
+    "authors": [
+      "Robert Richardson"
+    ],
+    "title": "What Predicts Correctness in Text-to-SQL? A Selective-Prediction Study",
+    "venue": "arXiv preprint (cs.LG; cs.AI)",
+    "year": 2026,
+    "identifier": "arXiv:2607.06799",
+    "url": "https://arxiv.org/abs/2607.06799",
+    "verified_fields": [
+      "author",
+      "full title",
+      "v1 7 Jul 2026",
+      "subjects",
+      "abstract numbers"
+    ],
+    "notes": "Summary: measures how well various signals predict whether generated SQL is correct (AUROC) on BIRD and Spider; black-box signals (self-consistency, schema relevance, executability) sit around 0.61-0.68, LLM judges reach 0.72-0.78, and a two-provider judge ensemble reaches 0.82 AUROC (ECE 0.03), enabling abstention frontiers such as answering 27% of questions at 24% selective risk. Relation: it frames correctness prediction for text-to-SQL as selective prediction (risk-coverage), the same accounting used to score trust labels and abstentions. Single-author preprint, not peer-reviewed. Fetched 2026-09-30."
+  },
+  {
+    "key": "chen2025rts",
+    "status": "VERIFIED (new; published version found)",
+    "authors": [
+      "Kaiwen Chen",
+      "Yueting Chen",
+      "Nick Koudas",
+      "Xiaohui Yu"
+    ],
+    "title": "Reliable Text-to-SQL with Adaptive Abstention",
+    "venue": "Proceedings of the ACM on Management of Data (PACMMOD / SIGMOD) 3(1), pp. 1-30",
+    "year": 2025,
+    "identifier": "doi:10.1145/3709719; arXiv:2501.10858",
+    "url": "https://doi.org/10.1145/3709719",
+    "verified_fields": [
+      "authors (Crossref order)",
+      "title",
+      "journal",
+      "volume",
+      "issue",
+      "pages 1-30 (Crossref)",
+      "published 10 Feb 2025",
+      "DOI",
+      "arXiv id (v1 18 Jan 2025)"
+    ],
+    "notes": "Summary: proposes RTS, which uses conformal prediction on LLM hidden states at the schema-linking step (Branching Point Prediction) to detect likely errors and either abstain or ask the user, giving probabilistic guarantees on schema-linking accuracy on BIRD. Relation: a system-level abstention mechanism for text-to-SQL, i.e. a 'stop instead of guess' policy whose value depends on how often it abstains versus answers wrongly. Author order differs: arXiv lists Chen, Chen, Yu, Koudas; the ACM/Crossref record lists Chen, Chen, Koudas, Yu (use the published order). The ACM article number could not be confirmed from a primary source. Fetched 2026-09-30."
+  },
+  {
+    "key": "wang2023know",
+    "status": "VERIFIED (new)",
+    "authors": [
+      "Bing Wang",
+      "Yan Gao",
+      "Zhoujun Li",
+      "Jian-Guang Lou"
+    ],
+    "title": "Know What I don't Know: Handling Ambiguous and Unknown Questions for Text-to-SQL",
+    "venue": "Findings of the Association for Computational Linguistics: ACL 2023, pp. 5701-5714",
+    "year": 2023,
+    "identifier": "doi:10.18653/v1/2023.findings-acl.352",
+    "url": "https://aclanthology.org/2023.findings-acl.352/",
+    "verified_fields": [
+      "authors",
+      "title",
+      "venue",
+      "pages",
+      "DOI",
+      "anthology id"
+    ],
+    "notes": "Summary: categorises ambiguous and unanswerable text-to-SQL questions into 6 feature categories, generates counterfactual ambiguous/unanswerable examples automatically, and proposes a weakly supervised Detecting-Then-Explaining (DTE) model to detect, localise and explain such errors. Relation: it treats 'this question should not get a SQL answer' as a first-class outcome, which is the case a correct refusal/stop label must capture. Fetched 2026-09-30."
+  },
+  {
+    "key": "arxiv_genai_policy",
+    "status": "VERIFIED",
+    "authors": [
+      "arXiv"
+    ],
+    "title": "Content Moderation: Policy for authors' use of generative AI language tools",
+    "venue": "arXiv info pages",
+    "year": null,
+    "identifier": "https://info.arxiv.org/help/moderation/index.html",
+    "url": "https://info.arxiv.org/help/moderation/index.html",
+    "verified_fields": [
+      "disclosure requirement",
+      "full author responsibility",
+      "AI not an author",
+      "no penalty stated on this page"
+    ],
+    "notes": "Authors must report significant use of sophisticated tools, now including text-to-text generative AI; each author takes full responsibility for all contents irrespective of how they were generated, including AI-generated plagiarism, errors or incorrect references; AI tools must not be listed as authors. This page, the Code of Conduct and the Code of Conduct enforcement page do NOT state a one-year ban (enforcement page only mentions suspension of submission privileges 'for a designated period'). Fetched 2026-09-30."
+  },
+  {
+    "key": "dietterich2026ban",
+    "status": "VERIFIED (source is a social-media announcement, not an info.arxiv.org page)",
+    "authors": [
+      "Thomas G. Dietterich (chair, arXiv computer science section)"
+    ],
+    "title": "Bluesky thread announcing arXiv penalty for unchecked LLM output",
+    "venue": "Bluesky (also posted on X)",
+    "year": 2026,
+    "identifier": "https://bsky.app/profile/tdietterich.bsky.social/post/3mlqt6k5ix22p",
+    "url": "https://bsky.app/profile/tdietterich.bsky.social/post/3mlqt6k5ix22p",
+    "verified_fields": [
+      "text via public Bluesky API",
+      "created 2026-05-13"
+    ],
+    "notes": "Rule as posted: if there is incontrovertible evidence of LLM slop in a paper, the penalty is a 1-year ban from arXiv followed by a requirement that subsequent arXiv submissions must first be accepted at a reputable peer-reviewed venue. Examples of incontrovertible evidence: hallucinated references (not just minor errors) and LLM meta-comments left in the text. Later posts: co-authors should also be penalised (with appeal), and papers found this way are withdrawn. The X post (x.com/tdietterich/status/2055000961161290077) was found by search only, not fetched. Fetched 2026-09-30."
+  },
+  {
+    "key": "techcrunch2026arxiv",
+    "status": "VERIFIED",
+    "authors": [
+      "Anthony Ha"
+    ],
+    "title": "Research repository ArXiv will ban authors for a year if they let AI do all the work",
+    "venue": "TechCrunch",
+    "year": 2026,
+    "identifier": "https://techcrunch.com/2026/05/16/research-repository-arxiv-will-ban-authors-for-a-year-if-they-let-ai-do-all-the-work/",
+    "url": "https://techcrunch.com/2026/05/16/research-repository-arxiv-will-ban-authors-for-a-year-if-they-let-ai-do-all-the-work/",
+    "verified_fields": [
+      "author",
+      "date 16 May 2026",
+      "one-year ban + peer-review requirement",
+      "one-strike with appeal"
+    ],
+    "notes": "Article links to Dietterich's X/Bluesky posts, not to an arXiv policy page. Fetched 2026-09-30."
+  },
+  {
+    "key": "arxiv_submit_formats",
+    "status": "VERIFIED",
+    "authors": [
+      "arXiv"
+    ],
+    "title": "Submission guidelines / PDF submission guidelines",
+    "venue": "arXiv info pages",
+    "year": null,
+    "identifier": "https://info.arxiv.org/help/submit/index.html",
+    "url": "https://info.arxiv.org/help/submit/index.html",
+    "verified_fields": [
+      "accepted formats",
+      "rejected formats",
+      "PDF-from-Word guidance"
+    ],
+    "notes": "Accepted formats in order of preference: (La)TeX / AMS(La)TeX / PDFLaTeX; PDF; HTML with JPEG/PNG/GIF images. Not accepted: dvi, PS, or PDF created from TeX/LaTeX source, or scanned documents. .docx is not an accepted format; the PDF page (info.arxiv.org/help/submit_pdf.html) gives instructions for saving a PDF from Word (avoid 'Print to PDF', embed fonts, machine-readable text), so a Word-authored paper goes in as a single PDF. Fetched 2026-09-30."
+  }
+]

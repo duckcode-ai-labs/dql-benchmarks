@@ -1,0 +1,701 @@
+{
+  "identity": {
+    "benchmark": "insurance",
+    "condition": "baseline-full",
+    "repoCommit": "2a2c09f0cde2b265ead13021d5a76c16df6976b0",
+    "repoDirty": false,
+    "contentFingerprint": "91340d4b3b68b067",
+    "dql": {
+      "version": "none (plain text-to-SQL)",
+      "source": "none",
+      "commit": "2a2c09f0cde2b265ead13021d5a76c16df6976b0",
+      "dirty": false
+    },
+    "provider": "codex",
+    "model": "gpt-6-sol",
+    "cassetteMode": "record",
+    "dataHash": null,
+    "tools": {
+      "codexCli": "codex exec (ChatGPT subscription); CODEX_HOME=/Users/Kranthi_1/.codex-bench (isolated: no AGENTS.md, plugins, MCP or memories)",
+      "effort": "medium"
+    },
+    "node": "v22.18.0",
+    "createdAt": "2026-09-27T06:23:21.030Z",
+    "publishable": true,
+    "notPublishableBecause": []
+  },
+  "provenance": {
+    "source": "saved model replies",
+    "recordings": 40,
+    "realProviderQualityEligible": true,
+    "reasons": []
+  },
+  "run": {
+    "id": "fl-sol",
+    "layer": "baseline-full",
+    "set": "heldout-3",
+    "startedAt": "2026-09-27T06:23:21.035Z",
+    "repeat": 1
+  },
+  "method": {
+    "prompt": "dbt Labs' SQLStrategy prompt with one added line, 'The database is DuckDB.'",
+    "extraction": "a Markdown code fence around the reply is removed",
+    "schema": "work/insurance/ACME_full.ddl"
+  },
+  "results": [
+    {
+      "name": "heldout-how-many-different-catastrophes-do-we-have-on-re-7bd42a",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 4885,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT COUNT(DISTINCT Catastrophe_Identifier) AS catastrophe_count\nFROM catastrophe;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-list-the-names-of-all-catastrophes-we-track-in-a-dfe333",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 4346,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT Catastrophe_Name\nFROM catastrophe\nORDER BY Catastrophe_Name;",
+        "rowCount": 4
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-for-each-policy-show-the-policy-number-and-how-m-30aeeb",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 5774,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n    Policy_Number,\n    date_diff('day', Effective_Date, Expiration_Date) AS Term_Days\nFROM policy;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-what-is-the-total-premium-we-have-charged-across-dbb59f",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 7718,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT SUM(pa.Policy_Amount) AS total_premium\nFROM policy_amount AS pa\nJOIN premium AS p\n  ON pa.Policy_Amount_Identifier = p.Policy_Amount_Identifier;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-on-average-how-many-days-does-it-take-to-close-a-a090ca",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 4854,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT AVG(DATEDIFF('day', Claim_Open_Date, Claim_Close_Date)) AS average_days_to_close\nFROM claim\nWHERE Claim_Open_Date IS NOT NULL\n  AND Claim_Close_Date IS NOT NULL;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-in-our-fire-claims-history-how-many-claims-invol-3a20dc",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 6852,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT COUNT(*)\nFROM fire_claim\nWHERE LOWER(TRIM(Fireplace)) IN ('yes', 'y', 'true', '1');",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-what-is-the-average-loss-ratio-on-fire-claims-fo-a9ed75",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 4414,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT AVG(Loss_Ratio) AS average_loss_ratio\nFROM fire_claim\nWHERE Year_Built < 1970;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-how-many-distinct-zip-codes-appear-across-our-re-707278",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 4596,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT COUNT(DISTINCT Postal_Code) AS distinct_zip_codes\nFROM location_address;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-which-claim-number-took-the-longest-to-close-cou-c1bb8e",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 7428,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n    Company_Claim_Number,\n    date_diff('day', Claim_Open_Date, Claim_Close_Date) AS Days_To_Close\nFROM claim\nWHERE Claim_Open_Date IS NOT NULL\n  AND Claim_Close_Date IS NOT NULL\nORDER BY Days_To_Close DESC\nLIMIT 1;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-what-is-the-total-amount-currently-set-aside-in-8b7f86",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 5559,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT COALESCE(SUM(ca.Claim_Amount), 0) AS total_loss_reserves\nFROM loss_reserve AS lr\nJOIN claim_amount AS ca\n  ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-what-is-the-full-name-first-middle-and-last-of-t-2f3937",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "result has 1 columns, gold needs 3",
+      "durationMs": 9542,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT DISTINCT concat_ws(' ', p.First_Name, p.Middle_Name, p.Last_Name) AS full_name\nFROM policy AS pol\nJOIN agreement_party_role AS apr\n  ON apr.Agreement_Identifier = pol.Policy_Identifier\nJOIN party_role AS pr\n  ON pr.Party_Role_Code = apr.Party_Role_Code\nJOIN person AS p\n  ON p.Person_Identifier = apr.Party_Identifier\nWHERE pol.Policy_Number = 31003000336\n  AND lower(pr.Party_Role_Name) = 'agent';",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-who-is-the-policy-holder-first-middle-and-last-n-e05795",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "row count 0 does not match gold 1",
+      "durationMs": 14575,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT DISTINCT\n    pe.First_Name,\n    pe.Middle_Name,\n    pe.Last_Name\nFROM policy AS po\nJOIN geographic_location AS gl\n    ON gl.Geographic_Location_Identifier = po.Geographic_Location_Identifier\nJOIN location_address AS la\n    ON la.Location_Address_Identifier = gl.Location_Address_Identifier\nJOIN agreement_party_role AS apr\n    ON apr.Agreement_Identifier = po.Policy_Identifier\nJOIN party_role AS pr\n    ON pr.Party_Role_Code = apr.Party_Role_Code\nJOIN person AS pe\n    ON pe.Person_Identifier = apr.Party_Identifier\nWHERE la.Line_1_Address ILIKE '13017 Zen Gardens Way'\n  AND regexp_replace(lower(pr.Party_Role_Name), '[^a-z]', '', 'g') = 'policyholder';",
+        "rowCount": 0
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-which-underwriter-first-middle-and-last-name-per-806ab5",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 12399,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT DISTINCT\n    p.First_Name,\n    p.Middle_Name,\n    p.Last_Name,\n    ar.Assessment_Result_Type_Code AS Assessment_Result\nFROM policy AS pol\nJOIN agreement_assessment AS aa\n    ON aa.Agreement_Identifier = pol.Policy_Identifier\nJOIN assesment_party_role AS apr\n    ON apr.Assessment_Identifier = aa.Assessment_Identifier\nJOIN party_role AS pr\n    ON pr.Party_Role_Code = apr.Party_Role_Code\nJOIN person AS p\n    ON p.Person_Identifier = apr.Party_Identifier\nJOIN assessment_result AS ar\n    ON ar.Assessment_Identifier = aa.Assessment_Identifier\nJOIN underwriting_assessment AS ua\n    ON ua.Assessment_Result_Identifier = ar.Assessment_Result_Identifier\nWHERE pol.Policy_Number = 31003000337\n  AND LOWER(pr.Party_Role_Name) LIKE '%underwriter%';",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-which-catastrophe-caused-the-claim-on-the-insure-9689a3",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 8168,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT DISTINCT c.Catastrophe_Name\nFROM claim AS cl\nJOIN catastrophe AS c\n  ON c.Catastrophe_Identifier = cl.Catastrophe_Identifier\nJOIN insurable_object AS io\n  ON io.Insurable_Object_Identifier = cl.Insurable_Object_Identifier\nJOIN geographic_location AS gl\n  ON gl.Geographic_Location_Identifier = io.Geographic_Location_Identifier\nJOIN location_address AS la\n  ON la.Location_Address_Identifier = gl.Location_Address_Identifier\nWHERE la.Line_1_Address = '5315 Martin Ave';",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-for-every-claim-what-is-the-street-address-city-96eca0",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "a gold column has no matching result column",
+      "durationMs": 6814,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n    c.Claim_Identifier,\n    la.Line_1_Address AS Street_Address,\n    la.Municipality_Name AS City,\n    la.Postal_Code AS ZIP_Code\nFROM claim AS c\nLEFT JOIN insurable_object AS io\n    ON c.Insurable_Object_Identifier = io.Insurable_Object_Identifier\nLEFT JOIN geographic_location AS gl\n    ON io.Geographic_Location_Identifier = gl.Geographic_Location_Identifier\nLEFT JOIN location_address AS la\n    ON gl.Location_Address_Identifier = la.Location_Address_Identifier;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-what-are-the-latitude-and-longitude-of-the-insur-63d230",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 12213,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT DISTINCT\n    pl.Latitude_Value AS latitude,\n    pl.Longitude_Value AS longitude\nFROM claim AS c\nJOIN catastrophe AS cat\n    ON c.Catastrophe_Identifier = cat.Catastrophe_Identifier\nJOIN insurable_object AS io\n    ON c.Insurable_Object_Identifier = io.Insurable_Object_Identifier\nJOIN geographic_location AS gl\n    ON io.Geographic_Location_Identifier = gl.Geographic_Location_Identifier\nJOIN pysical_location AS pl\n    ON gl.Physical_Location_Identifier = pl.Physical_Location_Identifier\nWHERE cat.Catastrophe_Name ILIKE '%fire%';",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-how-much-have-we-paid-out-in-loss-payments-on-cl-2b895a",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 10700,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT COALESCE(SUM(ca.Claim_Amount), 0) AS total_loss_payments\nFROM catastrophe AS c\nJOIN claim AS cl\n  ON cl.Catastrophe_Identifier = c.Catastrophe_Identifier\nJOIN claim_amount AS ca\n  ON ca.Claim_Identifier = cl.Claim_Identifier\nJOIN loss_payment AS lp\n  ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\nWHERE LOWER(c.Catastrophe_Name) = 'fire';",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-based-on-the-policy-coverage-each-claim-was-file-57959e",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "a gold column has no matching result column",
+      "durationMs": 7128,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT DISTINCT\n    c.Claim_Identifier,\n    p.Policy_Number\nFROM claim AS c\nLEFT JOIN claim_coverage AS cc\n    ON c.Claim_Identifier = cc.Claim_Identifier\nLEFT JOIN policy_coverage_detail AS pcd\n    ON cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier\nLEFT JOIN policy AS p\n    ON pcd.Policy_Identifier = p.Policy_Identifier;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-what-premium-was-charged-for-the-policy-coverage-8f9f05",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "row count 0 does not match gold 1",
+      "durationMs": 8004,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT DISTINCT pa.Policy_Amount AS Premium\nFROM claim_coverage AS cc\nJOIN policy_amount AS pa\n  ON pa.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier\nJOIN premium AS p\n  ON p.Policy_Amount_Identifier = pa.Policy_Amount_Identifier\nWHERE cc.Claim_Identifier = 12312701;",
+        "rowCount": 0
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-in-which-zip-codes-are-the-properties-covered-by-5355ea",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 8310,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT DISTINCT la.Postal_Code\nFROM policy AS p\nJOIN policy_coverage_detail AS pcd\n  ON pcd.Policy_Identifier = p.Policy_Identifier\nJOIN insurable_object AS io\n  ON io.Insurable_Object_Identifier = pcd.Insurable_Object_Identifier\nJOIN geographic_location AS gl\n  ON gl.Geographic_Location_Identifier = io.Geographic_Location_Identifier\nJOIN location_address AS la\n  ON la.Location_Address_Identifier = gl.Location_Address_Identifier\nWHERE p.Policy_Number = 31003000336\n  AND la.Postal_Code IS NOT NULL\nORDER BY la.Postal_Code;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-for-policy-number-31003000336-show-the-annual-pr-d75a86",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "a gold column has no matching result column",
+      "durationMs": 9604,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "WITH coverage_periods AS (\n  SELECT\n    pa.Effective_Date AS start_date,\n    SUM(pa.Policy_Amount) AS annual_premium\n  FROM policy AS p\n  JOIN policy_amount AS pa\n    ON pa.Policy_Identifier = p.Policy_Identifier\n  JOIN premium AS pr\n    ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier\n  WHERE p.Policy_Number = 31003000336\n  GROUP BY pa.Effective_Date\n)\nSELECT\n  start_date,\n  annual_premium,\n  ROUND(\n    100.0 * (annual_premium - LAG(annual_premium) OVER (ORDER BY start_date))\n    / NULLIF(LAG(annual_premium) OVER (ORDER BY start_date), 0),\n    2\n  ) AS premium_change_pct\nFROM coverage_periods\nORDER BY start_date;",
+        "rowCount": 5
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-group-our-fire-claims-by-the-distance-to-the-nea-66c568",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "a gold column has no matching result column",
+      "durationMs": 9125,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n    CASE\n        WHEN Nearest_Firestation_miles BETWEEN 0 AND 5 THEN '0-5 miles'\n        WHEN Nearest_Firestation_miles BETWEEN 6 AND 10 THEN '6-10 miles'\n        WHEN Nearest_Firestation_miles BETWEEN 11 AND 15 THEN '11-15 miles'\n        ELSE 'More than 15 miles'\n    END AS distance_band,\n    COUNT(*) AS claim_count,\n    AVG(Loss_Ratio) AS average_loss_ratio\nFROM fire_claim\nWHERE Nearest_Firestation_miles >= 0\nGROUP BY 1\nORDER BY MIN(\n    CASE\n        WHEN Nearest_Firestation_miles <= 5 THEN 1\n        WHEN Nearest_Firestation_miles <= 10 THEN 2\n        WHEN Nearest_Firestation_miles <= 15 THEN 3\n        ELSE 4\n    END\n);",
+        "rowCount": 4
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-what-is-the-average-loss-ratio-on-fire-claims-by-9d6ca0",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "a gold column has no matching result column",
+      "durationMs": 8567,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  CAST(FLOOR(Year_Built / 10.0) * 10 AS INTEGER)::VARCHAR || 's' AS decade_built,\n  AVG(Loss_Ratio) AS average_loss_ratio,\n  COUNT(*) AS claim_count\nFROM fire_claim\nWHERE Year_Built IS NOT NULL\nGROUP BY FLOOR(Year_Built / 10.0)\nORDER BY FLOOR(Year_Built / 10.0);",
+        "rowCount": 7
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-what-percentage-of-our-fire-claims-had-a-loss-ra-fe0706",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 6758,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n    100.0 * COUNT(*) FILTER (WHERE Loss_Ratio >= 1.0)\n    / NULLIF(COUNT(*), 0) AS percentage_of_fire_claims\nFROM fire_claim;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-on-fire-claims-how-much-higher-or-lower-is-the-a-12f577",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 6732,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n    AVG(CASE WHEN LOWER(TRIM(Fireplace)) = 'yes' THEN Loss_Ratio END)\n    - AVG(CASE WHEN LOWER(TRIM(Fireplace)) = 'no' THEN Loss_Ratio END) AS average_loss_ratio_difference\nFROM fire_claim;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-across-our-fire-claims-what-is-the-correlation-c-82e631",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 6060,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT corr(Number_of_Firefighters, Loss_Ratio) AS correlation_coefficient\nFROM fire_claim;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-what-was-the-compound-annual-growth-rate-of-the-53c830",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 13445,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "WITH annual_premiums AS (\n    SELECT\n        pa.Effective_Date AS period_start,\n        SUM(pa.Policy_Amount) AS annual_premium\n    FROM policy AS p\n    JOIN policy_amount AS pa\n        ON pa.Policy_Identifier = p.Policy_Identifier\n    JOIN premium AS pr\n        ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier\n    WHERE p.Policy_Number = 31003000336\n    GROUP BY pa.Effective_Date\n),\nperiods AS (\n    SELECT\n        MIN(period_start) AS first_start,\n        MAX(period_start) AS latest_start,\n        ARG_MIN(annual_premium, period_start) AS first_premium,\n        ARG_MAX(annual_premium, period_start) AS latest_premium\n    FROM annual_premiums\n)\nSELECT\n    POWER(\n        latest_premium::DOUBLE / NULLIF(first_premium, 0),\n        365.25 / NULLIF(DATE_DIFF('day', first_start, latest_start), 0)\n    ) - 1 AS compound_annual_growth_rate\nFROM periods;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-among-fire-claims-which-number-of-firefighters-h-52b158",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 6320,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n  Number_of_Firefighters,\n  AVG(Loss_Ratio) AS Average_Loss_Ratio\nFROM fire_claim\nWHERE Number_of_Firefighters IS NOT NULL\n  AND Loss_Ratio IS NOT NULL\nGROUP BY Number_of_Firefighters\nORDER BY Average_Loss_Ratio ASC\nLIMIT 1;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-what-is-the-median-loss-ratio-on-fire-claims-for-9dea08",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 8319,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n    MEDIAN(Loss_Ratio) FILTER (WHERE Year_Built >= 2000) AS median_loss_ratio_2000_or_later,\n    MEDIAN(Loss_Ratio) FILTER (WHERE Year_Built < 2000) AS median_loss_ratio_before_2000\nFROM fire_claim;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-for-each-claim-how-many-days-passed-from-the-inc-8217e1",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "a gold column has no matching result column",
+      "durationMs": 10446,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n    c.Claim_Identifier,\n    date_diff('day', o.Occurrence_Begin_Date, c.Claim_Open_Date) AS days_incident_to_open,\n    date_diff('day', c.Claim_Open_Date, c.Claim_Close_Date) AS days_open_to_close,\n    100.0 * date_diff('day', c.Claim_Open_Date, c.Claim_Close_Date)\n        / NULLIF(date_diff('day', o.Occurrence_Begin_Date, c.Claim_Close_Date), 0)\n        AS percent_time_open\nFROM claim AS c\nLEFT JOIN occurrences AS o\n    ON c.Occurrence_Identifier = o.Occurrence_Identifier;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-what-was-our-2019-loss-ratio-defined-as-incurred-b42667",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "result has 1 columns, gold needs 3",
+      "durationMs": 14933,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "WITH incurred_losses AS (\n    SELECT SUM(ca.Claim_Amount) AS amount\n    FROM claim AS c\n    JOIN claim_amount AS ca\n      ON ca.Claim_Identifier = c.Claim_Identifier\n    WHERE c.Claim_Open_Date >= DATE '2019-01-01'\n      AND c.Claim_Open_Date < DATE '2020-01-01'\n      AND (\n          EXISTS (\n              SELECT 1\n              FROM loss_payment AS lp\n              WHERE lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n          )\n          OR EXISTS (\n              SELECT 1\n              FROM loss_reserve AS lr\n              WHERE lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n          )\n      )\n),\nearned_premium AS (\n    SELECT SUM(pa.Policy_Amount) AS amount\n    FROM policy_amount AS pa\n    JOIN premium AS p\n      ON p.Policy_Amount_Identifier = pa.Policy_Amount_Identifier\n    WHERE EXISTS (\n        SELECT 1\n        FROM policy_coverage_detail AS pcd\n        WHERE pcd.Policy_Coverage_Detail_Identifier = pa.Policy_Coverage_Detail_Identifier\n          AND pcd.Effective_Date >= DATE '2019-01-01'\n          AND pcd.Effective_Date < DATE '2020-01-01'\n    )\n)\nSELECT incurred_losses.amount / NULLIF(earned_premium.amount, 0) AS loss_ratio\nFROM incurred_losses\nCROSS JOIN earned_premium;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-for-each-claim-show-the-claim-number-the-catastr-96ee5a",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 13547,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "WITH claim_totals AS (\n  SELECT\n    ca.Claim_Identifier,\n    SUM(CASE WHEN EXISTS (\n      SELECT 1 FROM loss_payment lp\n      WHERE lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n    ) OR EXISTS (\n      SELECT 1 FROM loss_reserve lr\n      WHERE lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n    ) THEN ca.Claim_Amount ELSE 0 END) AS total_loss,\n    SUM(CASE WHEN EXISTS (\n      SELECT 1 FROM expense_payment ep\n      WHERE ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n    ) OR EXISTS (\n      SELECT 1 FROM expense_reserve er\n      WHERE er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n    ) THEN ca.Claim_Amount ELSE 0 END) AS total_expense\n  FROM claim_amount ca\n  GROUP BY ca.Claim_Identifier\n)\nSELECT\n  c.Company_Claim_Number AS claim_number,\n  cat.Catastrophe_Name AS catastrophe,\n  COALESCE(ct.total_loss, 0) AS total_loss,\n  COALESCE(ct.total_expense, 0) AS total_expense,\n  100.0 * COALESCE(ct.total_expense, 0) / NULLIF(ct.total_loss, 0) AS expense_pct_of_loss\nFROM claim c\nLEFT JOIN catastrophe cat\n  ON cat.Catastrophe_Identifier = c.Catastrophe_Identifier\nLEFT JOIN claim_totals ct\n  ON ct.Claim_Identifier = c.Claim_Identifier;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-for-each-claim-what-is-the-ratio-of-total-amount-89f9d1",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "a gold column has no matching result column",
+      "durationMs": 20093,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n    c.Claim_Identifier,\n    COALESCE(SUM(\n        CASE WHEN EXISTS (\n            SELECT 1 FROM loss_payment lp\n            WHERE lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n        ) OR EXISTS (\n            SELECT 1 FROM expense_payment ep\n            WHERE ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n        ) THEN ca.Claim_Amount ELSE 0 END\n    ), 0) / NULLIF(COALESCE(SUM(\n        CASE WHEN EXISTS (\n            SELECT 1 FROM loss_reserve lr\n            WHERE lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n        ) OR EXISTS (\n            SELECT 1 FROM expense_reserve er\n            WHERE er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n        ) THEN ca.Claim_Amount ELSE 0 END\n    ), 0), 0) AS paid_to_reserved_ratio\nFROM claim c\nLEFT JOIN claim_amount ca\n    ON ca.Claim_Identifier = c.Claim_Identifier\nGROUP BY c.Claim_Identifier;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-for-each-policy-coverage-period-that-has-at-leas-2b6c02",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 22532,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "WITH coverage_premium AS (\n    SELECT\n        pa.Policy_Coverage_Detail_Identifier,\n        pa.Effective_Date,\n        SUM(pa.Policy_Amount) AS premium\n    FROM policy_amount AS pa\n    JOIN premium AS pr\n        ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier\n    GROUP BY pa.Policy_Coverage_Detail_Identifier, pa.Effective_Date\n),\ncoverage_claims AS (\n    SELECT DISTINCT\n        Policy_Coverage_Detail_Identifier,\n        Effective_Date,\n        Claim_Identifier\n    FROM claim_coverage\n),\nloss_amounts AS (\n    SELECT ca.Claim_Identifier, ca.Claim_Amount\n    FROM claim_amount AS ca\n    JOIN loss_payment AS lp\n        ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n    UNION ALL\n    SELECT ca.Claim_Identifier, ca.Claim_Amount\n    FROM claim_amount AS ca\n    JOIN loss_reserve AS lr\n        ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n),\ncoverage_losses AS (\n    SELECT\n        cc.Policy_Coverage_Detail_Identifier,\n        cc.Effective_Date,\n        COALESCE(SUM(la.Claim_Amount), 0) AS incurred_loss\n    FROM coverage_claims AS cc\n    LEFT JOIN loss_amounts AS la\n        ON la.Claim_Identifier = cc.Claim_Identifier\n    GROUP BY cc.Policy_Coverage_Detail_Identifier, cc.Effective_Date\n)\nSELECT\n    p.Policy_Number AS policy_number,\n    pcd.Effective_Date AS coverage_start_date,\n    cp.premium,\n    cl.incurred_loss,\n    cl.incurred_loss * 1.0 / NULLIF(cp.premium, 0) AS loss_ratio\nFROM policy_coverage_detail AS pcd\nJOIN policy AS p\n    ON p.Policy_Identifier = pcd.Policy_Identifier\nJOIN coverage_losses AS cl\n    ON cl.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier\n   AND cl.Effective_Date = pcd.Effective_Date\nLEFT JOIN coverage_premium AS cp\n    ON cp.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier\n   AND cp.Effective_Date = pcd.Effective_Date\nORDER BY p.Policy_Number, pcd.Effective_Date;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-for-each-agent-first-and-last-name-how-many-dist-4dbd49",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "row count 0 does not match gold 1",
+      "durationMs": 20952,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "WITH agent_policies AS (\n    SELECT DISTINCT\n        p.Person_Identifier,\n        p.First_Name,\n        p.Last_Name,\n        pol.Policy_Identifier\n    FROM person AS p\n    JOIN agreement_party_role AS apr\n      ON apr.Party_Identifier = p.Person_Identifier\n    JOIN policy AS pol\n      ON pol.Policy_Identifier = apr.Agreement_Identifier\n    WHERE UPPER(TRIM(apr.Party_Role_Code)) = 'AGENT'\n),\npolicy_premiums AS (\n    SELECT\n        pa.Policy_Identifier,\n        SUM(pa.Policy_Amount) AS total_premium\n    FROM policy_amount AS pa\n    JOIN premium AS pr\n      ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier\n    GROUP BY pa.Policy_Identifier\n),\npolicy_loss_amounts AS (\n    SELECT DISTINCT\n        pcd.Policy_Identifier,\n        ca.Claim_Amount_Identifier,\n        ca.Claim_Amount\n    FROM policy_coverage_detail AS pcd\n    JOIN claim_coverage AS cc\n      ON cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier\n    JOIN claim_amount AS ca\n      ON ca.Claim_Identifier = cc.Claim_Identifier\n    JOIN loss_payment AS lp\n      ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n),\npolicy_losses AS (\n    SELECT\n        Policy_Identifier,\n        SUM(Claim_Amount) AS total_loss_paid\n    FROM policy_loss_amounts\n    GROUP BY Policy_Identifier\n)\nSELECT\n    ap.First_Name,\n    ap.Last_Name,\n    COUNT(DISTINCT ap.Policy_Identifier) AS distinct_policies_sold,\n    SUM(COALESCE(pp.total_premium, 0)) AS total_premium,\n    SUM(COALESCE(pl.total_loss_paid, 0)) AS total_loss_paid\nFROM agent_policies AS ap\nLEFT JOIN policy_premiums AS pp\n  ON pp.Policy_Identifier = ap.Policy_Identifier\nLEFT JOIN policy_losses AS pl\n  ON pl.Policy_Identifier = ap.Policy_Identifier\nGROUP BY ap.Person_Identifier, ap.First_Name, ap.Last_Name\nORDER BY ap.Last_Name, ap.First_Name;",
+        "rowCount": 0
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-for-each-zip-code-where-an-insured-property-had-0b0b87",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 12878,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "WITH claim_cost AS (\n  SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS total_cost\n  FROM claim_amount AS ca\n  WHERE ca.Claim_Amount_Identifier IN (\n    SELECT Claim_Amount_Identifier FROM loss_payment\n    UNION\n    SELECT Claim_Amount_Identifier FROM loss_reserve\n    UNION\n    SELECT Claim_Amount_Identifier FROM expense_payment\n    UNION\n    SELECT Claim_Amount_Identifier FROM expense_reserve\n  )\n  GROUP BY ca.Claim_Identifier\n)\nSELECT\n  la.Postal_Code AS zip_code,\n  SUM(COALESCE(cc.total_cost, 0)) AS total_claim_cost,\n  AVG(date_diff('day', c.Claim_Open_Date, c.Claim_Close_Date)) AS average_days_open_to_close\nFROM claim AS c\nJOIN insurable_object AS io\n  ON c.Insurable_Object_Identifier = io.Insurable_Object_Identifier\nJOIN geographic_location AS gl\n  ON io.Geographic_Location_Identifier = gl.Geographic_Location_Identifier\nJOIN location_address AS la\n  ON gl.Location_Address_Identifier = la.Location_Address_Identifier\nLEFT JOIN claim_cost AS cc\n  ON c.Claim_Identifier = cc.Claim_Identifier\nGROUP BY la.Postal_Code\nORDER BY la.Postal_Code;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-for-each-policy-holder-first-and-last-name-what-5390de",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 19044,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n    pe.First_Name,\n    pe.Last_Name,\n    SUM(pa.Policy_Amount) AS total_premium,\n    COUNT(*) AS coverage_periods,\n    AVG(pa.Policy_Amount) AS average_premium_per_coverage_period\nFROM person AS pe\nJOIN agreement_party_role AS apr\n    ON apr.Party_Identifier = pe.Person_Identifier\nJOIN party_role AS pr\n    ON pr.Party_Role_Code = apr.Party_Role_Code\nJOIN policy AS po\n    ON po.Policy_Identifier = apr.Agreement_Identifier\nJOIN policy_amount AS pa\n    ON pa.Policy_Identifier = po.Policy_Identifier\nJOIN premium AS pm\n    ON pm.Policy_Amount_Identifier = pa.Policy_Amount_Identifier\nWHERE LOWER(pr.Party_Role_Name) LIKE '%policy%holder%'\nGROUP BY pe.Person_Identifier, pe.First_Name, pe.Last_Name;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-for-each-policy-how-many-days-passed-between-the-a92504",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "a gold column has no matching result column",
+      "durationMs": 16906,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT\n    p.Policy_Identifier,\n    date_diff('day', a.End_Date, p.Effective_Date) AS Days_To_Policy_Effective_Date,\n    pe.First_Name AS Underwriter_First_Name,\n    pe.Last_Name AS Underwriter_Last_Name,\n    ar.Assessment_Result_Type_Code AS Assessment_Result\nFROM policy AS p\nLEFT JOIN agreement_assessment AS aa\n    ON aa.Agreement_Identifier = p.Policy_Identifier\nLEFT JOIN assessment AS a\n    ON a.Assessment_Identifier = aa.Assessment_Identifier\nLEFT JOIN assesment_party_role AS apr\n    ON apr.Assessment_Identifier = a.Assessment_Identifier\n    AND (\n        apr.Party_Role_Code ILIKE '%underwriter%'\n        OR EXISTS (\n            SELECT 1\n            FROM party_role AS pr\n            WHERE pr.Party_Role_Code = apr.Party_Role_Code\n              AND pr.Party_Role_Name ILIKE '%underwriter%'\n        )\n    )\nLEFT JOIN person AS pe\n    ON pe.Person_Identifier = apr.Party_Identifier\nLEFT JOIN assessment_result AS ar\n    ON ar.Assessment_Identifier = a.Assessment_Identifier\nLEFT JOIN underwriting_assessment AS ua\n    ON ua.Assessment_Result_Identifier = ar.Assessment_Result_Identifier\nWHERE ua.Assessment_Result_Identifier IS NOT NULL;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-for-each-catastrophe-that-has-claims-show-the-nu-e01f4f",
+      "round": 1,
+      "passed": true,
+      "executionMatched": true,
+      "durationMs": 14652,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "WITH claim_losses AS (\n  SELECT\n    ca.Claim_Identifier,\n    SUM(CASE WHEN EXISTS (\n      SELECT 1 FROM loss_payment lp\n      WHERE lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n    ) THEN ca.Claim_Amount ELSE 0 END) AS loss_paid,\n    SUM(CASE WHEN EXISTS (\n      SELECT 1 FROM loss_reserve lr\n      WHERE lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n    ) THEN ca.Claim_Amount ELSE 0 END) AS loss_reserved\n  FROM claim_amount ca\n  GROUP BY ca.Claim_Identifier\n)\nSELECT\n  ct.Catastrophe_Identifier,\n  ct.Catastrophe_Name,\n  COUNT(*) AS number_of_claims,\n  SUM(COALESCE(cl.loss_paid, 0)) AS total_loss_paid,\n  SUM(COALESCE(cl.loss_reserved, 0)) AS total_loss_reserved,\n  100.0 * SUM(COALESCE(cl.loss_paid, 0))\n    / NULLIF(\n        SUM(COALESCE(cl.loss_paid, 0) + COALESCE(cl.loss_reserved, 0)),\n        0\n      ) AS paid_share_of_incurred_loss_pct\nFROM catastrophe ct\nJOIN claim c\n  ON c.Catastrophe_Identifier = ct.Catastrophe_Identifier\nLEFT JOIN claim_losses cl\n  ON cl.Claim_Identifier = c.Claim_Identifier\nGROUP BY ct.Catastrophe_Identifier, ct.Catastrophe_Name\nORDER BY ct.Catastrophe_Identifier;",
+        "rowCount": 1
+      },
+      "usage": null,
+      "costUsd": null
+    },
+    {
+      "name": "heldout-for-each-insured-property-with-a-claim-identifie-571300",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "goldMatchReason": "a gold column has no matching result column",
+      "durationMs": 19604,
+      "providerDispatchCount": 1,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "WITH claim_properties AS (\n    SELECT DISTINCT Insurable_Object_Identifier\n    FROM claim\n    WHERE Insurable_Object_Identifier IS NOT NULL\n),\nincurred AS (\n    SELECT c.Insurable_Object_Identifier,\n           SUM(ca.Claim_Amount) AS incurred_loss\n    FROM claim c\n    JOIN claim_amount ca\n      ON ca.Claim_Identifier = c.Claim_Identifier\n    WHERE EXISTS (\n        SELECT 1 FROM loss_payment lp\n        WHERE lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n    )\n    OR EXISTS (\n        SELECT 1 FROM loss_reserve lr\n        WHERE lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\n    )\n    GROUP BY c.Insurable_Object_Identifier\n),\npremiums AS (\n    SELECT pa.Insurable_Object_Identifier,\n           SUM(pa.Policy_Amount) AS total_premium\n    FROM policy_amount pa\n    WHERE EXISTS (\n        SELECT 1 FROM premium p\n        WHERE p.Policy_Amount_Identifier = pa.Policy_Amount_Identifier\n    )\n    GROUP BY pa.Insurable_Object_Identifier\n),\nproperty_ratios AS (\n    SELECT io.Insurable_Object_Identifier,\n           la.Line_1_Address AS street_address,\n           COALESCE(i.incurred_loss, 0) AS incurred_loss,\n           p.total_premium,\n           COALESCE(i.incurred_loss, 0)::DOUBLE\n               / NULLIF(p.total_premium, 0) AS loss_to_premium_ratio\n    FROM claim_properties cp\n    JOIN insurable_object io\n      ON io.Insurable_Object_Identifier = cp.Insurable_Object_Identifier\n    LEFT JOIN geographic_location gl\n      ON gl.Geographic_Location_Identifier = io.Geographic_Location_Identifier\n    LEFT JOIN location_address la\n      ON la.Location_Address_Identifier = gl.Location_Address_Identifier\n    LEFT JOIN incurred i\n      ON i.Insurable_Object_Identifier = io.Insurable_Object_Identifier\n    LEFT JOIN premiums p\n      ON p.Insurable_Object_Identifier = io.Insurable_Object_Identifier\n)\nSELECT *,\n       RANK() OVER (ORDER BY loss_to_premium_ratio DESC NULLS LAST) AS property_rank\nFROM property_ratios\nORDER BY loss_to_premium_ratio DESC NULLS LAST, Insurable_Object_Identifier;",
+        "rowCount": 2
+      },
+      "usage": null,
+      "costUsd": null
+    }
+  ]
+}

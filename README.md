@@ -1,63 +1,74 @@
 # DQL Benchmarks
 
-Reproducible public benchmarks for [DQL](https://github.com/duckcode-ai/dql), DuckCode's governed analytics layer for dbt teams.
+Benchmarks, evidence and analysis for [DQL](https://github.com/duckcode-ai/dql), DuckCode's open-source governed analytics layer. This repository holds everything behind the paper *Accuracy, Trust Labels and Abstention in a Governed Text-to-SQL Layer* (draft, [analysis/insurance-2026-09-29/](analysis/insurance-2026-09-29/)): the harness that ran it, the question sets that may be published, every run report, the statistics script and the paper generator.
 
-**What is measured:** DQL's Ask AI answering business questions in plain English over a dbt project — text-to-SQL, the way a DQL customer uses it. Each benchmark measures how much each DQL layer (modeling, semantic layer, skills) adds on top of a plain dbt project.
+**What is measured:** DQL's Ask answering business questions in plain English, scored on three things at once:
+- **accuracy**, the share of answers that return the reference rows;
+- **trust precision**, how often an answer DQL labels *certified* or *governed* is actually right;
+- **abstention**, how often DQL declines a question the data cannot answer.
 
-Every number here is produced by a **pinned, released DQL version** (see `dql.json`), graded against the benchmark publisher's own answers, and ships with the recorded AI calls needed to replay it without an API key.
+The comparisons are against one-shot SQL from the table definitions and against an agent with database tools, with and without DQL's modeling knowledge.
 
-## Benchmarks
+## Headline results (insurance warehouse, set 4, Claude Sonnet 5.5, 200 questions)
 
-| Benchmark | What it is | Status |
-|---|---|---|
-| [Insurance](insurance/) | data.world's 43 enterprise questions and dbt Labs' 11, on dbt Labs' insurance dbt project | in progress — see [insurance/REPORT.md](insurance/REPORT.md) |
-| BIRD mini-dev | 500 questions over 11 databases; the best-known text-to-SQL leaderboard | planned |
-| Spider 2.0-Lite / Snow | enterprise databases (SQLite, BigQuery, Snowflake) | planned |
+| Condition | Correct | Question-level 95% CI |
+|---|---:|---|
+| One-shot SQL (P) | 126 | 56.0–69.5% |
+| Agent with database tools (A) | 156 | 72.0–83.5% |
+| Agent + DQL's modeling knowledge as text (A-model) | 168 | 78.5–89.0% |
+| DQL L2 / L3 (dbt metrics, + skills) | 142 / 147 | 64.5–77.0% / 67.5–79.5% |
+| DQL W2 (warehouse + native metrics) | 171 | 80.5–90.0% |
+| DQL WB (+ authored business layer) | 154 | 71.0–82.5% |
 
-## How results are reported
+- **Against one-shot SQL:** DQL W2 is significantly more accurate (Holm-adjusted p < 0.001).
+- **Against an agent with the same knowledge:** W2 is not distinguishable from A-model (+1.5 points, p = 0.73). The lift comes from the modeling knowledge, not from DQL's answering pipeline.
+- **Trust labels:**
+  - 3 of 28 governed dbt-metric answers were wrong.
+  - 13 of 26 business-layer answers were wrong.
+- **Abstention:** DQL declined 40–43 of 50 unanswerable questions; both agents declined 47.
 
-See [docs/methodology.md](docs/methodology.md). In short:
+The paper reports every caveat: the post-hoc choice of W2, different builds, the AI-written reference answers and their audit, and pooling across repeated questions. A confirmatory test on a new set is pre-registered in [insurance/PREREGISTRATION-SET5.md](insurance/PREREGISTRATION-SET5.md).
 
-1. **DQL as customers use it.** A dbt project, DQL initialised on it, questions asked through Ask.
-2. **Paired comparisons only.** DQL layer by layer on the same questions, the same grader, an exact McNemar test and Wilson 95% confidence intervals.
-3. **Provenance.** Only runs recorded from a real AI provider count. Every report names the repository commit, the DQL version, the model and the data.
-4. **The answer key is audited.** Disputed answers are logged with a reason, and accuracy is reported on all questions and on the accepted subset.
-5. **Trust labels are scored.** A wrong answer DQL labels `certified` is counted separately; the target is zero.
-6. **No tuning on the test set.** DQL runs as released; modeling and skills are written from documentation, never from the questions or answers.
-7. **Cost and latency sit beside accuracy.** Cost is reported only when measured, never estimated.
+> Set 4 and its reports are sealed until the paper is posted, so they are not in this repository yet; the numbers above come from them. Set 5 stays sealed until its pre-registered run is reported. See [docs/RELEASE-CHECKLIST.md](docs/RELEASE-CHECKLIST.md).
 
 ## Layout
 
 ```
-dql.json              pinned DQL version (npm release, or a local build while developing)
-pricing.json          dated model list prices; null means "not measured"
-lib/                  DQL resolver, runtime launcher, identity stamp, row matching, statistics, answer-key audit
-paired/               paired comparison scorer
-insurance/            insurance benchmark: download, build, questions, runs, report
-scripts/              installers for DQL, the DuckDB driver and the Python/dbt environment
-docs/                 methodology
+insurance/                 the insurance benchmark harness
+  build.mjs, run.mjs       build a context level's project and warehouse; ask a question set through DQL
+  baseline-text2sql.mjs    one-shot SQL baseline (P)
+  baseline-agent.mjs       agent baseline with database tools (A; --context modeling for A-model)
+  contexts/                the W2 modeling knowledge given to A-model as text
+  layers/                  files written for the levels (modeling, skills, business layer B)
+  heldout.mjs, heldout/    question-set import and reference answers; dev set and sets 2–3 (set 4 at release)
+  gold-audit.jsonl         reference-answer disputes on the development set
+  audit/                   human audit of set 4: sampler (seed 20260930) and instructions
+  set5-writer/             what the set-5 question writer (GPT-6 Sol) was given: prompt, format, validator
+  PREREGISTRATION-SET5.md  confirmatory test, committed before set 5 existed
+results/insurance/         every run behind the paper: report.json (+ evals.yml, agent transcripts)
+analysis/insurance-2026-09-29/
+  paper/stats_v2/          statistics: question-level bootstrap, exact McNemar, Holm, lenient re-grade
+  paper/paper_docx.py      builds the paper (.docx) from stats_v2.json; figures fig1/fig2
+  paper/references_verified.md   every reference checked against a primary source
+  regrade/, analyze.py     earlier re-grade and per-level analysis
+lib/, paired/, scripts/    DQL resolver, identity stamp, row matching, paired scorer, installers, run scripts
+spider2/                   Spider 2.0-Lite pilot: harness, layers written blind, reports
+docs/                      methodology, reproduction, data and licences, release checklist, history rewrite
 ```
 
-Downloaded data, working copies, Python environments and database files are never committed (see `.gitignore`).
+## Reproducing
 
-## Quick start
+[docs/REPRODUCE.md](docs/REPRODUCE.md) covers recomputing every number from the committed reports, and re-running a model's round from scratch with the same DQL builds. Run stores and project copies (about 450 MB) go to a release archive, not to git.
 
-```bash
-npm test                          # unit tests for the scorer and helpers
-./scripts/setup-python.sh         # dbt 1.9 with the DuckDB adapter, in .venv/
-npm run dql:install               # the DQL version pinned in dql.json, in .dql-cli/
-npm run connectors:install        # the DuckDB driver DQL loads, in .connectors/
-npm run compare -- a.json b.json  # paired comparison of two eval reports
-```
+## Principles
 
-## Using a local DQL build while developing
-
-Set `"source": "local"` and `"path"` in `dql.json` to a DQL checkout's `apps/cli/dist/index.js`, or export `DQL_CLI=/path/to/apps/cli/dist/index.js`. Reports record the source and that build's commit, and a report made from a development build is never published.
-
-## History
-
-This repository first held a harness for Spider 2.0-DBT, which tests an agent writing dbt models rather than answering questions. It was removed on 2026-09-16 when the focus was set on Ask text-to-SQL; the git history keeps it.
+1. **Paired comparisons** on the same questions and grader, with question-level bootstrap intervals and Holm correction within pre-declared families.
+2. **Provenance:** every report names the repository commit, DQL build, model identifier, CLI version and run settings.
+3. **Reference answers are audited** and the audits are published; strict and lenient grades are both reported.
+4. **Trust labels are scored:** a wrong answer labelled certified or governed is counted separately, by distinct question.
+5. **No tuning on held-out sets.** Every system change made during a study is disclosed with the evidence that prompted it.
+6. **Provider usage limits are never scored;** refused questions are asked again after the reset.
 
 ## License
 
-Code in this repository is Apache-2.0. Benchmark datasets are downloaded from their publishers and remain under their own licenses; they are not redistributed here.
+Code is Apache-2.0. The insurance data comes from [data.world's cwd-benchmark-data](https://github.com/datadotworld/cwd-benchmark-data) (Apache-2.0) as packaged by [dbt Labs](https://github.com/dbt-labs/dbt-llm-sl-bench) and is downloaded, not redistributed; see [docs/DATA.md](docs/DATA.md).
