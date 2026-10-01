@@ -25,7 +25,22 @@ a run log the operator's assistant displayed, and two set-4 reference queries ar
 to set-3 reference queries (whose question wording differs). The set-3 writer's transcript contains
 one question prefix that also opens a set-4 question.
 
-## Set 5
+## Set 5 (hashed 1 October 2026, before any system was run on it)
 
-Not yet written at the time this file was committed. The writer's command log, final message and the
-question file will be hashed here as soon as they exist, before any system is run on set 5.
+Written by GPT-6 Sol (`gpt-6-sol`, high reasoning) through the Codex CLI from an isolated home, in a
+folder holding only a copy of the warehouse, `FORMAT.md`, `PROMPT.txt` and `validate.py`
+(published in `insurance/set5-writer/`). Started 20:50 and finished 20:59 (CDT) on 30 September 2026;
+the validator reported 200 answerable questions (50 per quadrant) and 50 unanswerable, with every
+reference query returning rows. The access audit of the writer's command log found no path outside its
+folder. The pre-registration (`insurance/PREREGISTRATION-SET5.md`, commit `6f60a71`) was committed
+before the writer started but became publicly visible on GitHub only on 1 October 2026, after set 5
+existed; no system had been run on set 5 at either time, and none has been run as of this commit.
+
+| File | Bytes | SHA-256 |
+|---|---:|---|
+| `questions-5.json` (as imported into `insurance/heldout/`) | 100563 | `26c125c858a4238c26948756986388d7f59521d048da87e69e1751d358268bee` |
+| `questions-5.writer.json` (the writer's own file) | 100583 | `4407b8ef7041c230e764e8b6bf7e125c901d3f5f7aeafc1bc2dc7019ce398d54` |
+| `heldout-5.json` (reference rows) | 261602 | `389f25ffd0c2cc29421a15ae154321dd5b48060d5678206d198c45efe02ffdf3` |
+| `codex-log.jsonl` (writer command log) | 65578 | `d2be2f77affc08bb5ca05b23197a98c4132d8c89a340ed96d367167614a9666c` |
+| `final-message.txt` (writer's final reply: validator counts only) | 114 | `710f5105411301f8244c7bfbfda7022756b97ea730258b4978d3f7f1084a7718` |
+| `set5-writer-artifacts.tar` (all of the above plus the writer's inputs) | | `de7be79fb6c5b9336558229e9c86997fd88e2b2575ca6314580c39022b425774` |
