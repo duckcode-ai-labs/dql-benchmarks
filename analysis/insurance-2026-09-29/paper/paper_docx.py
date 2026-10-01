@@ -446,7 +446,7 @@ add(LIST([
 
 # ---- 9
 add(H1('9  Pre-registered confirmation on set 5'))
-add(P('To remove the departures above, we committed a pre-registration to the benchmark repository on 30 September 2026 (commit 1ab17d8; the repository history was rewritten once before its first push, and docs/HISTORY-REWRITE.md maps old commit identifiers to new ones), before set 5 existed. Its main points:'))
+add(P('To remove the departures above, we committed a pre-registration to the benchmark repository on 30 September 2026 (commit 6f60a71; the repository history was rewritten before its first push, and docs/HISTORY-REWRITE.md maps old commit identifiers to new ones), before set 5 existed. Its main points:'))
 add(LIST([
     '**Questions.** 200 answerable (50 per grid cell) and 50 unanswerable questions, including near-miss ones, written by GPT-6 Sol through the Codex CLI with an isolated home directory. The writer sees only a copy of the warehouse and a format specification, and its command log is checked for access outside its folder.',
     '**Audit.** Before scoring, a person audits a random 25% of items; results are reported on all items and without items found wrong.',
