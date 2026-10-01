@@ -6,7 +6,7 @@ set's questions or reference SQL: the set itself, its reference answers, and the
 agent that wrote it. On release day the files are published and anyone can check them against these
 hashes. A hash reveals nothing about the content.
 
-## Set 4 (hashed 1 October 2026)
+## Set 4 (hashed 30 September 2026, 21:54 CDT)
 
 Written by a Claude Opus 5.5 agent (task "Write sealed held-out set 4"). The files are archived
 together, unread, outside the repository (`private/sealed/set4-writer-artifacts.tar`).
@@ -25,16 +25,18 @@ a run log the operator's assistant displayed, and two set-4 reference queries ar
 to set-3 reference queries (whose question wording differs). The set-3 writer's transcript contains
 one question prefix that also opens a set-4 question.
 
-## Set 5 (hashed 1 October 2026, before any system was run on it)
+## Set 5 (hashed 30 September 2026, 21:54 CDT, before any system was run on it)
 
 Written by GPT-6 Sol (`gpt-6-sol`, high reasoning) through the Codex CLI from an isolated home, in a
 folder holding only a copy of the warehouse, `FORMAT.md`, `PROMPT.txt` and `validate.py`
 (published in `insurance/set5-writer/`). Started 20:50 and finished 20:59 (CDT) on 30 September 2026;
 the validator reported 200 answerable questions (50 per quadrant) and 50 unanswerable, with every
 reference query returning rows. The access audit of the writer's command log found no path outside its
-folder. The pre-registration (`insurance/PREREGISTRATION-SET5.md`, commit `6f60a71`) was committed
-before the writer started but became publicly visible on GitHub only on 1 October 2026, after set 5
-existed; no system had been run on set 5 at either time, and none has been run as of this commit.
+folder. The pre-registration (`insurance/PREREGISTRATION-SET5.md`, commit `6f60a71`) was committed at
+18:19 CDT and pushed to this public repository at 20:50:22 CDT; the writer, started automatically when
+the provider limit lifted, began at 20:50:33 CDT. Both times are from the same machine's clock
+(git reflog and the writer's log); GitHub's push record shows the first. No system had been run on
+set 5 when this file was committed. The frozen DQL build is recorded in `insurance/FREEZE-SET5.md`.
 
 | File | Bytes | SHA-256 |
 |---|---:|---|

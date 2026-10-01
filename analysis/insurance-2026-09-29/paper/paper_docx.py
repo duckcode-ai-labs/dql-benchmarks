@@ -424,7 +424,7 @@ add(LIST([
     '**Near-fit certified blocks** (both measured builds). A block tag was treated as its name, and a block that only nearly fitted a question was served as governed before the drafter could answer. Found on the development set.',
     '**Metric name overriding the reading** (both builds). A question term that named a metric replaced the measure the model had read, so "the expense reserve amount of all claims" was measured as a count of claims. Found on the development set.',
     '**Short table names on DuckDB** (build 627009a1, levels LB and WB). A final check on the executed SQL rejected main.claim for the inspected acme_insurance.main.claim. The first half of this fix came from the development set; the second half was found from set-3 stop codes, after which LB and WB were rerun for every model on set 3; set 4 ran on the fixed build from the start. This is why set 3 is spent (Section 4.2).',
-    '**Lists answered with a count** (written, not in any measured build). A list answered by a count metric that merged records is no longer labelled governed. Found on the development set; it will be in the build frozen for set 5.',
+    '**Lists answered with a count** (written, not in any measured build). A list answered by a count metric that merged records is no longer labelled governed. Found on the development set; it is not in the build frozen for set 5 (627009a1), which keeps set 5 on the build already measured on set 4.',
 ], 'decimal'))
 add(P('No change was made in response to set-4 results.'))
 
@@ -444,11 +444,11 @@ add(LIST([
 
 # ---- 9
 add(H1('9  Pre-registered confirmation on set 5'))
-add(P('To remove the departures above, we committed a pre-registration (insurance/PREREGISTRATION-SET5.md, commit 6f60a71 in github.com/duckcode-ai/dql-benchmarks) at 18:19 CDT on 30 September 2026, before set 5 existed. GPT-6 Sol wrote set 5 between 20:50 and 20:59 that evening; its validator reported 200 answerable and 50 unanswerable questions, and the audit of its command log found no access outside its folder. The repository, with the pre-registration, became public on 1 October 2026, after set 5 was written but before any system was run on it. SHA-256 hashes of the set-5 files and the writer\'s log are published in docs/SEALING.md. Its main points:'))
+add(P('To remove the departures above, we committed a pre-registration (insurance/PREREGISTRATION-SET5.md, commit 6f60a71 in github.com/duckcode-ai/dql-benchmarks) at 18:19 CDT on 30 September 2026 and pushed it to the public repository at 20:50:22 CDT. GPT-6 Sol, started automatically when its provider limit lifted, began writing set 5 at 20:50:33 and finished at 20:59 (both times from the same machine\'s clock; GitHub\'s push record shows the first). Its validator reported 200 answerable and 50 unanswerable questions, and the audit of its command log found no access outside its folder. SHA-256 hashes of the set-5 files and the writer\'s log are published in docs/SEALING.md, and the DQL build frozen for set 5 (627009a1) in insurance/FREEZE-SET5.md, both before any system was run on set 5. Its main points:'))
 add(LIST([
     '**Questions.** 200 answerable (50 per grid cell) and 50 unanswerable questions, including near-miss ones, written by GPT-6 Sol through the Codex CLI with an isolated home directory. The writer saw only a copy of the warehouse and a format specification.',
     '**Audit.** Before scoring, a person audits a random 25% of items; results are reported on all items and without items found wrong.',
-    '**System.** DQL is frozen at a tagged release before set 5 is run, and each condition runs once on it. No DQL change is made because of set 5.',
+    '**System.** DQL is frozen before set 5 is run (commit 627009a1, recorded in insurance/FREEZE-SET5.md), and each condition runs once on it. No DQL change is made because of set 5.',
     '**Primary hypothesis (H1).** With Claude Sonnet 5.5, W2 and A-model answer a different share of the 200 questions correctly: one exact two-sided McNemar test at α = 0.05, reported with the paired difference and its question-level bootstrap interval.',
     '**Secondary analyses** (Holm within each family): each of L2, L3, W2 and WB against P and against A-model; trust precision at L2 and L3 with the number of distinct questions; correct abstention against A-model; σ and κ per condition. Secondary models: GPT-6 Sol and Qwen 3.8 27B.',
     '**Scoring.** Strict rule primary; lenient and lenient + rounding reported as secondary.',
