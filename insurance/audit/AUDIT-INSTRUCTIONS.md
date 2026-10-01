@@ -1,17 +1,23 @@
-# Auditing the reference answers of sealed set 4
+# Auditing the reference answers of sealed sets 4 and 5
 
 The sealed questions and their reference SQL were written by an AI agent. Before the paper is posted, a
 person (not the AI that ran the benchmark) checks a random sample of them. This file explains how.
 
 ## What you received
 
-`set4-audit-sample.csv`: 120 rows, open it in Google Sheets or Excel.
+Two sheets, the same layout; open them in Google Sheets or Excel:
 
-- **100 answerable items**, 25 from each complexity quadrant, picked at random (seed 20260930).
-  Each row has the question, the reference SQL and the first rows of its result.
-- **20 unanswerable items**: questions the data should not be able to answer, each with the reason.
+- `set4-audit-sample.csv`: 120 rows: **100 answerable items**, 25 from each complexity quadrant, picked
+  at random (seed 20260930), and **20 unanswerable items**.
+- `set5-audit-sample.csv`: 63 rows, the pre-registered 25% sample of set 5: **50 answerable items**
+  (13, 13, 12, 12 per quadrant; seed 20261001) and **13 unanswerable items**.
 
-Please do not share the file: the questions stay sealed until the paper is published.
+Each answerable row has the question, the reference SQL and the first rows of its result; each
+unanswerable row has the question and why the data should not answer it.
+
+Please do not share the files: the questions stay sealed until their release. DQL was frozen for set 5
+before this sheet was made (`insurance/FREEZE-SET5.md`); nothing in DQL may change because of what you
+read in either sheet.
 
 ## What to decide for each row
 
