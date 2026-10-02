@@ -46,3 +46,12 @@ set 5 when this file was committed. The frozen DQL build is recorded in `insuran
 | `codex-log.jsonl` (writer command log) | 65578 | `d2be2f77affc08bb5ca05b23197a98c4132d8c89a340ed96d367167614a9666c` |
 | `final-message.txt` (writer's final reply: validator counts only) | 114 | `710f5105411301f8244c7bfbfda7022756b97ea730258b4978d3f7f1084a7718` |
 | `set5-writer-artifacts.tar` (all of the above plus the writer's inputs) | | `de7be79fb6c5b9336558229e9c86997fd88e2b2575ca6314580c39022b425774` |
+
+### Known exposure of set 5 (2 October 2026, about 17:10 CDT)
+
+While checking a Sonnet 5.5 report that had been invalidated by a provider usage limit, the operator's
+AI assistant printed the report's list of refused question identifiers. Those identifiers are truncated
+slugs of the question text (about 60 characters each), so the assistant saw the opening words of 31 of
+the 200 answerable set-5 questions, and no reference SQL or answers. It was not used for anything: DQL
+is frozen at 627009a1 and no change is made because of set 5. The 31 questions were all among those
+the L3 level was re-asking after the limit. The human audit sample is drawn independently of this event.
