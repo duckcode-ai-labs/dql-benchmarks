@@ -1,6 +1,6 @@
 # Insurance benchmark — statistics v2
 
-Generated 2026-10-02T16:10:57+00:00 by `stats_v2.py` in this folder (Python standard library; re-runnable; read-only on runs/, projects/, gold/ and insurance/; no model or network calls). Sealed sets: aggregates only.
+Generated 2026-10-02T22:41:45+00:00 by `stats_v2.py` in this folder (Python standard library; re-runnable; read-only on runs/, projects/, gold/ and insurance/; no model or network calls). Sealed sets: aggregates only.
 
 ## Method note
 
@@ -12,8 +12,6 @@ Generated 2026-10-02T16:10:57+00:00 by `stats_v2.py` in this folder (Python stan
 - **Re-grade.** Strict = the run's own `executionMatched`, re-checked on the graded rows. Lenient = strict, or same row count and every gold *measure* (numeric) column matched by an answer column row by row (label/id columns may be missing or different). Lenient + rounding = lenient, or same row count and the answer's measure values equal the gold values **rounded to d decimals, d ∈ {0,…,4}** (one d per answer; only non-integer gold values are rounded; half-up on the exact binary value, decimal half-up and half-even are all accepted). The measure/label split and the error classes are a Python port of `regrade/regrade.mjs` (measure = computed in the gold projection, numeric-sounding name that is not an id/label, or fractional values). DQL rows are those the answer showed (copy of `agent-runs.sqlite`, all attempts); P and A rows come from re-running the recorded SQL on a read-only copy of the warehouse (L0).
 - **Classes of strict-wrong answers** (first that applies): `abstained` (no SQL, asked to clarify, or stopped with SQL); `other` (SQL that fails on re-run, or rows that match although recorded wrong); `grain_or_shape` (row count differs); `missing_or_extra_columns` (same rows, measures right, a label column missing/substituted/re-formatted); `rounding_only` (measures equal the gold rounded to 0–4 decimals); `wrong_numbers` (measure values differ, or listing values differ).
 - **Inclusion.** A report with `invalid` set is missing; LB and WB count only on DQL build `627009a1`. Trusted = `trustState` certified or governed; abstained = no recorded SQL.
-
-**Excluded / partial cells:** luna LB heldout-3 (no report.json (in progress or never finished)).
 
 ## 1. Accuracy per model × condition × set
 
@@ -70,9 +68,11 @@ Accuracy on answerable sets = strict execution match; on unanswerable sets = cor
 | GPT-6 Luna (max) | L1 | 32/40 | 80.0% | 65.2–89.5% | 67.5–92.5% |
 | GPT-6 Luna (max) | L2 | 32/40 | 80.0% | 65.2–89.5% | 67.5–92.5% |
 | GPT-6 Luna (max) | L3 | 32/40 | 80.0% | 65.2–89.5% | 67.5–92.5% |
+| GPT-6 Luna (max) | LB | 30/40 | 75.0% | 59.8–85.8% | 62.5–87.5% |
 | GPT-6 Luna (max) | W0 | 30/40 | 75.0% | 59.8–85.8% | 60.0–87.5% |
 | GPT-6 Luna (max) | W1 | 34/40 | 85.0% | 70.9–92.9% | 72.5–95.0% |
 | GPT-6 Luna (max) | W2 | 31/40 | 77.5% | 62.5–87.7% | 65.0–90.0% |
+| GPT-6 Luna (max) | WB | 35/40 | 87.5% | 73.9–94.5% | 77.5–97.5% |
 | GPT-6 Sol (medium) | P (one-shot SQL) | 26/40 | 65.0% | 49.5–77.9% | 50.0–80.0% |
 | GPT-6 Sol (medium) | L0 | 20/40 | 50.0% | 35.2–64.8% | 35.0–65.0% |
 | GPT-6 Sol (medium) | L1 | 30/40 | 75.0% | 59.8–85.8% | 60.0–87.5% |
@@ -140,9 +140,11 @@ Accuracy on answerable sets = strict execution match; on unanswerable sets = cor
 | GPT-6 Luna (max) | L1 | 10/10 | 100.0% | 72.2–100.0% | 100.0–100.0% |
 | GPT-6 Luna (max) | L2 | 9/10 | 90.0% | 59.6–98.2% | 70.0–100.0% |
 | GPT-6 Luna (max) | L3 | 8/10 | 80.0% | 49.0–94.3% | 50.0–100.0% |
+| GPT-6 Luna (max) | LB | 10/10 | 100.0% | 72.2–100.0% | 100.0–100.0% |
 | GPT-6 Luna (max) | W0 | 9/10 | 90.0% | 59.6–98.2% | 70.0–100.0% |
 | GPT-6 Luna (max) | W1 | 10/10 | 100.0% | 72.2–100.0% | 100.0–100.0% |
 | GPT-6 Luna (max) | W2 | 10/10 | 100.0% | 72.2–100.0% | 100.0–100.0% |
+| GPT-6 Luna (max) | WB | 9/10 | 90.0% | 59.6–98.2% | 70.0–100.0% |
 | GPT-6 Sol (medium) | L0 | 9/10 | 90.0% | 59.6–98.2% | 70.0–100.0% |
 | GPT-6 Sol (medium) | L1 | 10/10 | 100.0% | 72.2–100.0% | 100.0–100.0% |
 | GPT-6 Sol (medium) | L2 | 9/10 | 90.0% | 59.6–98.2% | 70.0–100.0% |
@@ -209,26 +211,28 @@ The same 40 (or 10) questions are answered by every model at every level, so poo
 | W2 · GPT-6 Luna (max) | 1 | 1 | 0.0% | 0.0–79.3% | 0.0–0.0% | 1 (1) | 1.0 (1) | — | — | — | 1.0 | question-level 1/1 wrong; exact upper 100.0% |
 | W2 · GPT-6 Sol (medium) | 0 | 0 | — | — | — | 0 | — | — | — | — | — | not informative |
 | W2 · GPT-5.6 Terra (high) | 1 | 1 | 0.0% | 0.0–79.3% | 0.0–0.0% | 1 (1) | 1.0 (1) | — | — | — | 1.0 | question-level 1/1 wrong; exact upper 100.0% |
-| **LB pooled** (all models) | 57 | 17 | 70.2% | 57.3–80.5% | 41.9–91.2% | 15 (6) | 3.8 (6) | 1.0 | 15.3 | 13.1 | 11.8 | question-level 6/15 wrong; exact upper 64.0% |
+| **LB pooled** (all models) | 64 | 18 | 71.9% | 59.9–81.4% | 44.0–92.1% | 15 (6) | 4.27 (7) | 1.0 | 15.3 | 13.2 | 11.5 | question-level 6/15 wrong; exact upper 64.0% |
 | LB · Claude Opus 5.5 | 11 | 4 | 63.6% | 35.4–84.8% | 33.3–90.9% | 11 (4) | 1.0 (1) | — | — | 10.2 | 11.0 | question-level 4/11 wrong; exact upper 65.0% |
 | LB · Claude Sonnet 5.5 | 9 | 3 | 66.7% | 35.4–87.9% | 33.3–100.0% | 9 (3) | 1.0 (1) | — | — | 8.2 | 9.0 | question-level 3/9 wrong; exact upper 65.5% |
 | LB · Claude Sonnet 5 | 11 | 4 | 63.6% | 35.4–84.8% | 33.3–90.9% | 11 (4) | 1.0 (1) | — | — | 10.4 | 11.0 | question-level 4/11 wrong; exact upper 65.0% |
 | LB · Qwen 3.8 27B (local) | 11 | 3 | 72.7% | 43.4–90.2% | 42.9–100.0% | 11 (3) | 1.0 (1) | — | — | 10.2 | 11.0 | question-level 3/11 wrong; exact upper 56.4% |
+| LB · GPT-6 Luna (max) | 7 | 1 | 85.7% | 48.7–97.4% | 50.0–100.0% | 7 (1) | 1.0 (1) | — | — | 6.1 | 7.0 | question-level 1/7 wrong; exact upper 52.1% |
 | LB · GPT-6 Sol (medium) | 7 | 2 | 71.4% | 35.9–91.8% | 33.3–100.0% | 7 (2) | 1.0 (1) | — | — | 6.2 | 7.0 | question-level 2/7 wrong; exact upper 65.9% |
 | LB · GPT-5.6 Terra (high) | 8 | 1 | 87.5% | 52.9–97.8% | 60.0–100.0% | 8 (1) | 1.0 (1) | — | — | 7.2 | 8.0 | question-level 1/8 wrong; exact upper 47.1% |
-| **WB pooled** (all models) | 28 | 4 | 85.7% | 68.5–94.3% | 46.2–100.0% | 7 (3) | 4.0 (6) | 1.0 | 7.4 | 5.3 | 5.2 | question-level 3/7 wrong; exact upper 77.5% |
+| **WB pooled** (all models) | 32 | 4 | 87.5% | 71.9–95.0% | 50.0–100.0% | 7 (3) | 4.57 (7) | 1.0 | 7.5 | 5.1 | 5.1 | question-level 3/7 wrong; exact upper 77.5% |
 | WB · Claude Opus 5.5 | 5 | 1 | 80.0% | 37.5–96.4% | 33.3–100.0% | 5 (1) | 1.0 (1) | — | — | 3.9 | 5.0 | question-level 1/5 wrong; exact upper 65.7% |
 | WB · Claude Sonnet 5.5 | 5 | 1 | 80.0% | 37.5–96.4% | 33.3–100.0% | 5 (1) | 1.0 (1) | — | — | 4.0 | 5.0 | question-level 1/5 wrong; exact upper 65.7% |
 | WB · Claude Sonnet 5 | 4 | 0 | 100.0% | 51.0–100.0% | 100.0–100.0% | 4 (0) | 1.0 (1) | — | — | — | 4.0 | 3/4 = 75.0% (exact 52.7%; naive 3/4 = 75.0%) |
 | WB · Qwen 3.8 27B (local) | 6 | 2 | 66.7% | 30.0–90.3% | 20.0–100.0% | 6 (2) | 1.0 (1) | — | — | 5.0 | 6.0 | question-level 2/6 wrong; exact upper 72.9% |
+| WB · GPT-6 Luna (max) | 4 | 0 | 100.0% | 51.0–100.0% | 100.0–100.0% | 4 (0) | 1.0 (1) | — | — | — | 4.0 | 3/4 = 75.0% (exact 52.7%; naive 3/4 = 75.0%) |
 | WB · GPT-6 Sol (medium) | 4 | 0 | 100.0% | 51.0–100.0% | 100.0–100.0% | 4 (0) | 1.0 (1) | — | — | — | 4.0 | 3/4 = 75.0% (exact 52.7%; naive 3/4 = 75.0%) |
 | WB · GPT-5.6 Terra (high) | 4 | 0 | 100.0% | 51.0–100.0% | 100.0–100.0% | 4 (0) | 1.0 (1) | — | — | — | 4.0 | 3/4 = 75.0% (exact 52.7%; naive 3/4 = 75.0%) |
-| **all_DQL_levels pooled** (all models) | 137 | 24 | 82.5% | 75.3–87.9% | 56.5–95.0% | 16 (7) | 8.56 (26) | 1.0 | 17.1 | 14.0 | 8.3 | question-level 7/16 wrong; exact upper 66.7% |
+| **all_DQL_levels pooled** (all models) | 148 | 25 | 83.1% | 76.2–88.3% | 57.6–95.3% | 16 (7) | 9.25 (28) | 1.0 | 17.1 | 14.1 | 8.2 | question-level 7/16 wrong; exact upper 66.7% |
 | all_DQL_levels · Claude Opus 5.5 | 24 | 5 | 79.2% | 59.5–90.8% | 50.0–96.4% | 11 (4) | 2.18 (4) | 1.0 | 11.3 | 11.0 | 8.7 | question-level 4/11 wrong; exact upper 65.0% |
 | all_DQL_levels · Claude Sonnet 5.5 | 20 | 4 | 80.0% | 58.4–91.9% | 46.2–100.0% | 9 (3) | 2.22 (4) | 1.0 | 9.3 | 8.6 | 7.1 | question-level 3/9 wrong; exact upper 65.5% |
 | all_DQL_levels · Claude Sonnet 5 | 21 | 4 | 81.0% | 60.0–92.3% | 52.4–96.3% | 11 (4) | 1.91 (4) | 1.0 | 11.4 | 11.5 | 8.0 | question-level 4/11 wrong; exact upper 65.0% |
 | all_DQL_levels · Qwen 3.8 27B (local) | 24 | 6 | 75.0% | 55.1–88.0% | 45.5–93.5% | 13 (5) | 1.85 (4) | 1.0 | 13.4 | 12.0 | 9.6 | question-level 5/13 wrong; exact upper 64.5% |
-| all_DQL_levels · GPT-6 Luna (max) | 9 | 1 | 88.9% | 56.5–98.0% | 50.0–100.0% | 5 (1) | 1.8 (2) | 1.0 | 5.1 | 4.1 | 4.8 | question-level 1/5 wrong; exact upper 65.7% |
+| all_DQL_levels · GPT-6 Luna (max) | 20 | 2 | 90.0% | 69.9–97.2% | 66.7–100.0% | 8 (2) | 2.5 (4) | 1.0 | 8.2 | 9.5 | 6.7 | question-level 2/8 wrong; exact upper 60.0% |
 | all_DQL_levels · GPT-6 Sol (medium) | 19 | 2 | 89.5% | 68.6–97.1% | 66.7–100.0% | 8 (2) | 2.38 (4) | 1.0 | 8.3 | 9.9 | 6.6 | question-level 2/8 wrong; exact upper 60.0% |
 | all_DQL_levels · GPT-5.6 Terra (high) | 20 | 2 | 90.0% | 69.9–97.2% | 66.7–100.0% | 9 (2) | 2.22 (4) | 1.0 | 9.3 | 10.7 | 7.1 | question-level 2/9 wrong; exact upper 55.0% |
 
@@ -236,23 +240,23 @@ The same 40 (or 10) questions are answered by every model at every level, so poo
 
 | Pool | Answers | Correct stops | Rate | Naive Wilson (answers) | Question-cluster bootstrap | Distinct questions | Answers/question mean (max) | ICC | ESS_icc | ESS_boot | ESS_min |
 |---|---:|---:|---:|---|---|---:|---|---:|---:|---:|---:|
-| **All DQL levels × models, pooled** | 610 | 598 | 98.0% | 96.6–98.9% | 94.9–100.0% | 10 | 61.0 (61) | 0.0948 | 91.2 | 101.3 | 10.0 |
+| **All DQL levels × models, pooled** | 630 | 617 | 97.9% | 96.5–98.8% | 94.6–100.0% | 10 | 63.0 (63) | 0.1064 | 82.9 | 91.9 | 10.0 |
 | Claude Opus 5.5 (all its DQL levels) | 90 | 90 | 100.0% | 95.9–100.0% | 100.0–100.0% | 10 | 9.0 (9) | — | — | — | 10.0 |
 | Claude Sonnet 5.5 (all its DQL levels) | 90 | 90 | 100.0% | 95.9–100.0% | 100.0–100.0% | 10 | 9.0 (9) | — | — | — | 10.0 |
 | Claude Sonnet 5 (all its DQL levels) | 90 | 89 | 98.9% | 94.0–99.8% | 96.7–100.0% | 10 | 9.0 (9) | 0.0 | 90.0 | 99.3 | 10.0 |
 | Qwen 3.8 27B (local) (all its DQL levels) | 90 | 90 | 100.0% | 95.9–100.0% | 100.0–100.0% | 10 | 9.0 (9) | — | — | — | 10.0 |
-| GPT-6 Luna (max) (all its DQL levels) | 70 | 66 | 94.3% | 86.2–97.8% | 88.6–100.0% | 10 | 7.0 (7) | 0.0455 | 55.0 | 61.0 | 10.0 |
+| GPT-6 Luna (max) (all its DQL levels) | 90 | 85 | 94.4% | 87.6–97.6% | 87.8–100.0% | 10 | 9.0 (9) | 0.1196 | 46.0 | 50.8 | 10.0 |
 | GPT-6 Sol (medium) (all its DQL levels) | 90 | 84 | 93.3% | 86.2–96.9% | 80.0–100.0% | 10 | 9.0 (9) | 0.625 | 15.0 | 15.6 | 10.0 |
 | GPT-5.6 Terra (high) (all its DQL levels) | 90 | 89 | 98.9% | 94.0–99.8% | 96.7–100.0% | 10 | 9.0 (9) | 0.0 | 90.0 | 97.8 | 10.0 |
 | Level L0 (all models) | 70 | 69 | 98.6% | 92.3–99.8% | 95.7–100.0% | 10 | 7.0 (7) | 0.0 | 70.0 | 76.9 | 10.0 |
 | Level L1 (all models) | 70 | 70 | 100.0% | 94.8–100.0% | 100.0–100.0% | 10 | 7.0 (7) | — | — | — | 10.0 |
 | Level L2 (all models) | 70 | 67 | 95.7% | 88.1–98.5% | 90.0–100.0% | 10 | 7.0 (7) | 0.0919 | 45.1 | 48.8 | 10.0 |
 | Level L3 (all models) | 70 | 66 | 94.3% | 86.2–97.8% | 85.7–100.0% | 10 | 7.0 (7) | 0.2317 | 29.3 | 31.9 | 10.0 |
-| Level LB (all models) | 60 | 60 | 100.0% | 94.0–100.0% | 100.0–100.0% | 10 | 6.0 (6) | — | — | — | 10.0 |
+| Level LB (all models) | 70 | 70 | 100.0% | 94.8–100.0% | 100.0–100.0% | 10 | 7.0 (7) | — | — | — | 10.0 |
 | Level W0 (all models) | 70 | 68 | 97.1% | 90.2–99.2% | 91.4–100.0% | 10 | 7.0 (7) | 0.1667 | 35.0 | 37.9 | 10.0 |
 | Level W1 (all models) | 70 | 69 | 98.6% | 92.3–99.8% | 95.7–100.0% | 10 | 7.0 (7) | 0.0 | 70.0 | 76.9 | 10.0 |
 | Level W2 (all models) | 70 | 69 | 98.6% | 92.3–99.8% | 95.7–100.0% | 10 | 7.0 (7) | 0.0 | 70.0 | 76.9 | 10.0 |
-| Level WB (all models) | 60 | 60 | 100.0% | 94.0–100.0% | 100.0–100.0% | 10 | 6.0 (6) | — | — | — | 10.0 |
+| Level WB (all models) | 70 | 69 | 98.6% | 92.3–99.8% | 95.7–100.0% | 10 | 7.0 (7) | 0.0 | 70.0 | 76.9 | 10.0 |
 | Agent A · Claude Opus 5.5 | 10 | 10 | 100.0% | 72.2–100.0% | 100.0–100.0% | 10 | 1.0 (1) | — | — | — | 10.0 |
 | Agent A · Claude Sonnet 5.5 | 10 | 10 | 100.0% | 72.2–100.0% | 100.0–100.0% | 10 | 1.0 (1) | — | — | — | 10.0 |
 
@@ -343,11 +347,11 @@ T = answers labelled certified/governed; W_T = of those, strict-wrong; precision
 | L1 | 280 | 0 | 0 | — | — | — | 0 (0) | 0.0% | 0.0% — not informative (no trusted answers) |
 | L2 | 280 | 24 | 0 | 100.0% | 86.2–100.0% | 100.0–100.0% | 4 (0) | 8.6% | 0.0% |
 | L3 | 280 | 25 | 0 | 100.0% | 86.7–100.0% | 100.0–100.0% | 4 (0) | 8.9% | 0.0% |
-| LB | 240 | 57 | 17 | 70.2% | 57.3–80.5% | 41.9–91.2% | 15 (6) | 23.8% | 7.1% |
+| LB | 280 | 64 | 18 | 71.9% | 59.9–81.4% | 44.0–92.1% | 15 (6) | 22.9% | 6.4% |
 | W0 | 280 | 0 | 0 | — | — | — | 0 (0) | 0.0% | 0.0% — not informative (no trusted answers) |
 | W1 | 280 | 0 | 0 | — | — | — | 0 (0) | 0.0% | 0.0% — not informative (no trusted answers) |
 | W2 | 280 | 3 | 3 | 0.0% | 0.0–56.1% | 0.0–0.0% | 1 (1) | 1.1% | 1.1% |
-| WB | 240 | 28 | 4 | 85.7% | 68.5–94.3% | 46.2–100.0% | 7 (3) | 11.7% | 1.7% |
+| WB | 280 | 32 | 4 | 87.5% | 71.9–95.0% | 50.0–100.0% | 7 (3) | 11.4% | 1.4% |
 
 ### Set 3, per model
 
@@ -422,9 +426,11 @@ T = answers labelled certified/governed; W_T = of those, strict-wrong; precision
 | L1 | 40 | 0 | 0 | 0 | — | — | 0.0% | 0.0% — not informative (no trusted answers) | 10/10 / 0 |
 | L2 | 40 | 4 | 0 | 0 | 100.0% | 51.0–100.0% | 10.0% | 0.0% | 9/10 / 0 |
 | L3 | 40 | 4 | 0 | 0 | 100.0% | 51.0–100.0% | 10.0% | 0.0% | 8/10 / 0 |
+| LB | 40 | 7 | 1 | 1 | 85.7% | 48.7–97.4% | 17.5% | 2.5% | 10/10 / 0 |
 | W0 | 40 | 0 | 0 | 0 | — | — | 0.0% | 0.0% — not informative (no trusted answers) | 9/10 / 0 |
 | W1 | 40 | 0 | 0 | 0 | — | — | 0.0% | 0.0% — not informative (no trusted answers) | 10/10 / 0 |
 | W2 | 40 | 1 | 1 | 1 | 0.0% | 0.0–79.3% | 2.5% | 2.5% | 10/10 / 0 |
+| WB | 40 | 4 | 0 | 0 | 100.0% | 51.0–100.0% | 10.0% | 0.0% | 9/10 / 0 |
 
 **GPT-6 Sol (medium)**
 
@@ -462,15 +468,15 @@ T = answers labelled certified/governed; W_T = of those, strict-wrong; precision
 
 | Scope | Answers | Strict | Lenient | Lenient + rounding | Strict-wrong | wrong_numbers | rounding_only | missing_or_extra_columns | grain_or_shape | abstained | other |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| heldout-3 · all conditions | 2800 | 2078 (74.2%) | 2152 (76.9%) | 2205 (78.8%) | 722 | 226 (31.3%) | 53 (7.3%) | 74 (10.2%) | 96 (13.3%) | 263 (36.4%) | 10 (1.4%) |
-| heldout-3 · DQL levels | 2440 | 1836 (75.2%) | 1888 (77.4%) | 1927 (79.0%) | 604 | 188 (31.1%) | 39 (6.5%) | 52 (8.6%) | 62 (10.3%) | 263 (43.5%) | 0 (0.0%) |
+| heldout-3 · all conditions | 2880 | 2143 (74.4%) | 2219 (77.0%) | 2272 (78.9%) | 737 | 233 (31.6%) | 53 (7.2%) | 76 (10.3%) | 97 (13.2%) | 268 (36.4%) | 10 (1.4%) |
+| heldout-3 · DQL levels | 2520 | 1901 (75.4%) | 1955 (77.6%) | 1994 (79.1%) | 619 | 195 (31.5%) | 39 (6.3%) | 54 (8.7%) | 63 (10.2%) | 268 (43.3%) | 0 (0.0%) |
 | heldout-3 · P (one-shot) | 280 | 177 (63.2%) | 197 (70.4%) | 205 (73.2%) | 103 | 32 (31.1%) | 8 (7.8%) | 20 (19.4%) | 33 (32.0%) | 0 (0.0%) | 10 (9.7%) |
 | heldout-3 · A (agent) | 80 | 65 (81.2%) | 67 (83.8%) | 73 (91.2%) | 15 | 6 (40.0%) | 6 (40.0%) | 2 (13.3%) | 1 (6.7%) | 0 (0.0%) | 0 (0.0%) |
 | heldout-3 · Claude Opus 5.5 | 440 | 346 (78.6%) | 360 (81.8%) | 386 (87.7%) | 94 | 21 (22.3%) | 26 (27.7%) | 14 (14.9%) | 12 (12.8%) | 21 (22.3%) | 0 (0.0%) |
 | heldout-3 · Claude Sonnet 5.5 | 440 | 367 (83.4%) | 380 (86.4%) | 383 (87.0%) | 73 | 22 (30.1%) | 3 (4.1%) | 13 (17.8%) | 14 (19.2%) | 21 (28.8%) | 0 (0.0%) |
 | heldout-3 · Claude Sonnet 5 | 400 | 304 (76.0%) | 310 (77.5%) | 318 (79.5%) | 96 | 18 (18.8%) | 8 (8.3%) | 6 (6.2%) | 17 (17.7%) | 45 (46.9%) | 2 (2.1%) |
 | heldout-3 · Qwen 3.8 27B (local) | 400 | 242 (60.5%) | 248 (62.0%) | 263 (65.8%) | 158 | 36 (22.8%) | 15 (9.5%) | 6 (3.8%) | 23 (14.6%) | 71 (44.9%) | 7 (4.4%) |
-| heldout-3 · GPT-6 Luna (max) | 320 | 235 (73.4%) | 244 (76.2%) | 244 (76.2%) | 85 | 39 (45.9%) | 0 (0.0%) | 9 (10.6%) | 7 (8.2%) | 29 (34.1%) | 1 (1.2%) |
+| heldout-3 · GPT-6 Luna (max) | 400 | 300 (75.0%) | 311 (77.8%) | 311 (77.8%) | 100 | 46 (46.0%) | 0 (0.0%) | 11 (11.0%) | 8 (8.0%) | 34 (34.0%) | 1 (1.0%) |
 | heldout-3 · GPT-6 Sol (medium) | 400 | 301 (75.2%) | 313 (78.2%) | 314 (78.5%) | 99 | 48 (48.5%) | 1 (1.0%) | 12 (12.1%) | 9 (9.1%) | 29 (29.3%) | 0 (0.0%) |
 | heldout-3 · GPT-5.6 Terra (high) | 400 | 283 (70.8%) | 297 (74.2%) | 297 (74.2%) | 117 | 42 (35.9%) | 0 (0.0%) | 14 (12.0%) | 14 (12.0%) | 47 (40.2%) | 0 (0.0%) |
 | heldout-4 · all conditions | 1400 | 1064 (76.0%) | 1154 (82.4%) | 1157 (82.6%) | 336 | 144 (42.9%) | 3 (0.9%) | 90 (26.8%) | 46 (13.7%) | 51 (15.2%) | 2 (0.6%) |
@@ -478,7 +484,7 @@ T = answers labelled certified/governed; W_T = of those, strict-wrong; precision
 | heldout-4 · P (one-shot) | 200 | 126 (63.0%) | 152 (76.0%) | 152 (76.0%) | 74 | 25 (33.8%) | 0 (0.0%) | 26 (35.1%) | 21 (28.4%) | 0 (0.0%) | 2 (2.7%) |
 | heldout-4 · A (agent) | 200 | 156 (78.0%) | 182 (91.0%) | 183 (91.5%) | 44 | 16 (36.4%) | 1 (2.3%) | 26 (59.1%) | 1 (2.3%) | 0 (0.0%) | 0 (0.0%) |
 | heldout-4 · Claude Sonnet 5.5 | 1400 | 1064 (76.0%) | 1154 (82.4%) | 1157 (82.6%) | 336 | 144 (42.9%) | 3 (0.9%) | 90 (26.8%) | 46 (13.7%) | 51 (15.2%) | 2 (0.6%) |
-| both sets · all conditions | 4200 | 3142 (74.8%) | 3306 (78.7%) | 3362 (80.0%) | 1058 | 370 (35.0%) | 56 (5.3%) | 164 (15.5%) | 142 (13.4%) | 314 (29.7%) | 12 (1.1%) |
+| both sets · all conditions | 4280 | 3207 (74.9%) | 3373 (78.8%) | 3429 (80.1%) | 1073 | 377 (35.1%) | 56 (5.2%) | 166 (15.5%) | 143 (13.3%) | 319 (29.7%) | 12 (1.1%) |
 | both sets · Sonnet 5.5 (all its conditions) | 1840 | 1431 (77.8%) | 1534 (83.4%) | 1540 (83.7%) | 409 | 166 (40.6%) | 6 (1.5%) | 103 (25.2%) | 60 (14.7%) | 72 (17.6%) | 2 (0.5%) |
 | both sets · agent A (Opus 5.5 + Sonnet 5.5) | 280 | 221 (78.9%) | 249 (88.9%) | 256 (91.4%) | 59 | 22 (37.3%) | 7 (11.9%) | 28 (47.5%) | 2 (3.4%) | 0 (0.0%) | 0 (0.0%) |
 
@@ -494,11 +500,11 @@ Class cells = count (share of strict-wrong answers).
 | heldout-3 | L1 | 280 | 219 | 231 | 234 | 61 | 18 (29.5%) | 3 (4.9%) | 12 (19.7%) | 5 (8.2%) | 23 (37.7%) | 0 (0.0%) |
 | heldout-3 | L2 | 280 | 218 | 227 | 230 | 62 | 24 (38.7%) | 3 (4.8%) | 9 (14.5%) | 6 (9.7%) | 20 (32.3%) | 0 (0.0%) |
 | heldout-3 | L3 | 280 | 217 | 224 | 228 | 63 | 20 (31.7%) | 4 (6.3%) | 7 (11.1%) | 7 (11.1%) | 25 (39.7%) | 0 (0.0%) |
-| heldout-3 | LB | 240 | 172 | 179 | 179 | 68 | 20 (29.4%) | 0 (0.0%) | 7 (10.3%) | 12 (17.6%) | 29 (42.6%) | 0 (0.0%) |
+| heldout-3 | LB | 280 | 202 | 210 | 210 | 78 | 25 (32.1%) | 0 (0.0%) | 8 (10.3%) | 12 (15.4%) | 33 (42.3%) | 0 (0.0%) |
 | heldout-3 | W0 | 280 | 209 | 213 | 220 | 71 | 18 (25.4%) | 7 (9.9%) | 4 (5.6%) | 13 (18.3%) | 29 (40.8%) | 0 (0.0%) |
 | heldout-3 | W1 | 280 | 231 | 235 | 245 | 49 | 20 (40.8%) | 10 (20.4%) | 4 (8.2%) | 7 (14.3%) | 8 (16.3%) | 0 (0.0%) |
 | heldout-3 | W2 | 280 | 233 | 238 | 243 | 47 | 24 (51.1%) | 5 (10.6%) | 5 (10.6%) | 2 (4.3%) | 11 (23.4%) | 0 (0.0%) |
-| heldout-3 | WB | 240 | 203 | 207 | 211 | 37 | 16 (43.2%) | 4 (10.8%) | 4 (10.8%) | 6 (16.2%) | 7 (18.9%) | 0 (0.0%) |
+| heldout-3 | WB | 280 | 238 | 243 | 247 | 42 | 18 (42.9%) | 4 (9.5%) | 5 (11.9%) | 7 (16.7%) | 8 (19.0%) | 0 (0.0%) |
 | heldout-4 | P (one-shot SQL) | 200 | 126 | 152 | 152 | 74 | 25 (33.8%) | 0 (0.0%) | 26 (35.1%) | 21 (28.4%) | 0 (0.0%) | 2 (2.7%) |
 | heldout-4 | A (agent) | 200 | 156 | 182 | 183 | 44 | 16 (36.4%) | 1 (2.3%) | 26 (59.1%) | 1 (2.3%) | 0 (0.0%) | 0 (0.0%) |
 | heldout-4 | A-model (agent + DQL modeling context) | 200 | 168 | 183 | 185 | 32 | 14 (43.8%) | 2 (6.2%) | 15 (46.9%) | 1 (3.1%) | 0 (0.0%) | 0 (0.0%) |
@@ -558,9 +564,11 @@ Class cells = count (share of strict-wrong answers).
 | heldout-3 | GPT-6 Luna (max) | L1 | 40 | 32 | 33 | 33 | 8 | 3 / 0 / 1 / 1 / 3 / 0 | 37 / 0 / 0 | 0 |
 | heldout-3 | GPT-6 Luna (max) | L2 | 40 | 32 | 34 | 34 | 8 | 4 / 0 / 2 / 0 / 2 / 0 | 38 / 0 / 0 | 0 |
 | heldout-3 | GPT-6 Luna (max) | L3 | 40 | 32 | 33 | 33 | 8 | 4 / 0 / 1 / 0 / 3 / 0 | 37 / 0 / 0 | 0 |
+| heldout-3 | GPT-6 Luna (max) | LB | 40 | 30 | 31 | 31 | 10 | 5 / 0 / 1 / 0 / 4 / 0 | 36 / 0 / 0 | 0 |
 | heldout-3 | GPT-6 Luna (max) | W0 | 40 | 30 | 30 | 30 | 10 | 4 / 0 / 0 / 1 / 5 / 0 | 35 / 0 / 0 | 0 |
 | heldout-3 | GPT-6 Luna (max) | W1 | 40 | 34 | 35 | 35 | 6 | 4 / 0 / 1 / 1 / 0 / 0 | 40 / 0 / 0 | 0 |
 | heldout-3 | GPT-6 Luna (max) | W2 | 40 | 31 | 32 | 32 | 9 | 7 / 0 / 1 / 0 / 1 / 0 | 39 / 0 / 0 | 0 |
+| heldout-3 | GPT-6 Luna (max) | WB | 40 | 35 | 36 | 36 | 5 | 2 / 0 / 1 / 1 / 1 / 0 | 39 / 0 / 0 | 0 |
 | heldout-3 | GPT-6 Sol (medium) | P (one-shot SQL) | 40 | 26 | 30 | 31 | 14 | 6 / 1 / 4 / 3 / 0 / 0 | 0 / 40 / 0 | 0 |
 | heldout-3 | GPT-6 Sol (medium) | L0 | 40 | 20 | 20 | 20 | 20 | 6 / 0 / 0 / 0 / 14 / 0 | 26 / 0 / 0 | 0 |
 | heldout-3 | GPT-6 Sol (medium) | L1 | 40 | 30 | 32 | 32 | 10 | 4 / 0 / 2 / 0 / 4 / 0 | 36 / 0 / 0 | 0 |
@@ -593,31 +601,31 @@ Class cells = count (share of strict-wrong answers).
 
 | Class:sub-kind | Count |
 |---|---:|
-| wrong_numbers:values_differ | 283 |
-| abstained:no_sql | 246 |
-| missing_or_extra_columns:label_column_substituted | 121 |
-| wrong_numbers:listing_values_differ | 87 |
-| abstained:asked_to_clarify | 68 |
+| wrong_numbers:values_differ | 289 |
+| abstained:no_sql | 250 |
+| missing_or_extra_columns:label_column_substituted | 122 |
+| wrong_numbers:listing_values_differ | 88 |
+| abstained:asked_to_clarify | 69 |
 | rounding_only:gold_rounded_0_to_4_decimals | 56 |
 | grain_or_shape:empty_result | 50 |
 | grain_or_shape:list_for_a_total | 38 |
-| missing_or_extra_columns:label_case_or_format | 32 |
-| grain_or_shape:total_for_a_list | 29 |
+| missing_or_extra_columns:label_case_or_format | 33 |
+| grain_or_shape:total_for_a_list | 30 |
 | grain_or_shape:more_rows | 22 |
 | other:sql_did_not_rerun | 12 |
 | missing_or_extra_columns:label_column_missing | 11 |
 | grain_or_shape:rows_merged_into_total | 2 |
 | grain_or_shape:fewer_rows | 1 |
 
-Checks: re-applying the strict rule to the graded rows disagrees with the recorded verdict for 0 of 4200 answers; 12 answers have SQL with no stored result that fails on re-run (class `other`); 0 stored results had conflicting rows for the same SQL (first kept). For comparability, the regrade.mjs rounding rule (d = 1..4 only) gives 3361 lenient+rounding answers against 3362 with d = 0..4. Sensitivity (not in the headline): also accepting answers that equal the gold only after rounding the *answer* to the gold's 1–4 decimals gives 3362.
+Checks: re-applying the strict rule to the graded rows disagrees with the recorded verdict for 0 of 4280 answers; 12 answers have SQL with no stored result that fails on re-run (class `other`); 0 stored results had conflicting rows for the same SQL (first kept). For comparability, the regrade.mjs rounding rule (d = 1..4 only) gives 3428 lenient+rounding answers against 3429 with d = 0..4. Sensitivity (not in the headline): also accepting answers that equal the gold only after rounding the *answer* to the gold's 1–4 decimals gives 3429.
 
 ## 6. The lenient-vs-strict sentence, corrected
 
 The earlier re-grade of set 3 (2,240 answers: 56 model×condition cells, Opus 5.5, Sonnet 5, Qwen and the GPT runs available on 29 September, before the LB/WB build filter) found **1,612 strict-correct and 1,667 lenient-correct** answers: lenient exceeded strict by 55 answers (2.5 points). Correct statement: strict k = 1,612, lenient k = 1,667 (lenient is the larger number).
 
-With every condition now graded (all seven models, P, A, all DQL levels, LB/WB on build 627009a1 only): set 3 has **strict 2,078 and lenient 2,152** of 2,800 answers (lenient + rounding 2,205); set 4 (Sonnet 5.5) has strict 1,064, lenient 1,154, lenient + rounding 1,157 of 1,400.
+With every condition now graded (all seven models, P, A, all DQL levels, LB/WB on build 627009a1 only): set 3 has **strict 2,143 and lenient 2,219** of 2,880 answers (lenient + rounding 2,272); set 4 (Sonnet 5.5) has strict 1,064, lenient 1,154, lenient + rounding 1,157 of 1,400.
 
-Suggested wording: *On set 3, 2,078 of 2,800 answers were correct under the strict rule and 2,152 under the lenient rule (+2.6 points). The gap is not uniform: +2.1 points for DQL levels, +7.1 for one-shot SQL and +2.5 for the agent on set 3; on set 4, +2.9 for DQL levels against +13.0 (one-shot) and +13.0 (agent), mostly answers that return a different label column (e.g. a name for an id) with the right numbers.*
+Suggested wording: *On set 3, 2,143 of 2,880 answers were correct under the strict rule and 2,219 under the lenient rule (+2.6 points). The gap is not uniform: +2.1 points for DQL levels, +7.1 for one-shot SQL and +2.5 for the agent on set 3; on set 4, +2.9 for DQL levels against +13.0 (one-shot) and +13.0 (agent), mostly answers that return a different label column (e.g. a name for an id) with the right numbers.*
 
 The draft's conclusion that "the strict scores do not depend on column naming" holds for the pooled set-3 total but not for comparisons against the baselines: see the lenient sensitivity of the set-4 paired tests in section 3.
 

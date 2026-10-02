@@ -586,6 +586,34 @@ def _extra_column_match(actual, gold, ordered, tol):
     return rows_match(projected, gold, ordered=ordered, allow_extra=False, tol=tol)
 
 
+def consistent_match(actual, gold, ordered=False, tol=1e-6):
+    """Strict match with ONE column mapping for the whole result (the per-row sort in rows_match lets
+    values trade places between columns row by row when two columns share values). Extra actual
+    columns are allowed, as in the grading rule."""
+    if not isinstance(actual, list) or not isinstance(gold, list) or len(actual) != len(gold):
+        return False
+    if not gold:
+        return True
+    gw, aw = len(row_values(gold[0])), len(row_values(actual[0]))
+    if aw < gw:
+        return False
+    G = [tuple(normalize_value(cell_at(r, c), tol) for c in range(gw)) for r in gold]
+    A = [[normalize_value(cell_at(r, c), tol) for c in range(aw)] for r in actual]
+    gsig = [sorted(t[c] for t in G) for c in range(gw)]
+    asig = [sorted(row[c] for row in A) for c in range(aw)]
+    cands = [[a for a in range(aw) if asig[a] == gsig[g]] for g in range(gw)]
+    target = G if ordered else Counter(G)
+    def search(g, used):
+        if g == gw:
+            proj = [tuple(row[used[i]] for i in range(gw)) for row in A]
+            return (proj == target) if ordered else (Counter(proj) == target)
+        for a in cands[g]:
+            if a not in used and search(g + 1, used + [a]):
+                return True
+        return False
+    return search(0, [])
+
+
 # --- port of regrade.mjs measure detection -------------------------------------
 AGGREGATE = re.compile(r'\b(sum|count|avg|average|min|max|median|stddev\w*|datediff|date_diff)\s*\(', re.I)
 ARITHMETIC = re.compile(r'[)\w]\s*([+*/]|\s-\s)\s*[(\w]')
@@ -978,6 +1006,7 @@ def grade_cell(cell):
         source = 'store' if stored else ('rerun' if executed else ('unrunnable' if sql else 'none'))
         strict = bool(x.get('executionMatched'))
         rows_strict = rows_match(executed['rows'], gold_rows, ordered=ordered, allow_extra=allow_extra) if executed else None
+        strict_consistent = consistent_match(executed['rows'], gold_rows, ordered=ordered) if executed and strict else None
         klass = sub = None
         if not strict:
             klass, sub = classify(x, executed, gold_rows, measures)
@@ -992,7 +1021,7 @@ def grade_cell(cell):
                                          measures_match_rounded_answer(executed['rows'], gold_rows, measures))
         graded[q] = {'strict': strict, 'rows_strict': rows_strict, 'source': source, 'klass': klass, 'sub': sub,
                      'lenient': lenient, 'lenient_rounding': lenient_rounding, 'lenient_rounding_1to4': old_rounding,
-                     'lenient_rounding_symmetric': symmetric, 'trusted': rec['trusted'], 'measures': len(measures),
+                     'lenient_rounding_symmetric': symmetric, 'strict_consistent': strict_consistent, 'trusted': rec['trusted'], 'measures': len(measures),
                      'gold_found': gold is not None}
     cell['graded'] = graded
     g = list(graded.values())
@@ -1010,6 +1039,8 @@ def grade_cell(cell):
         'rows_from_store': count(lambda v: v['source'] == 'store'), 'rows_from_rerun': count(lambda v: v['source'] == 'rerun'),
         'sql_unrunnable': count(lambda v: v['source'] == 'unrunnable'), 'store_ambiguous': ambiguous,
         'strict_recheck_disagrees': count(lambda v: v['rows_strict'] is not None and v['rows_strict'] != v['strict']),
+        'strict_but_inconsistent_columns': count(lambda v: v['strict_consistent'] is False),
+        'strict_unverifiable_rows': count(lambda v: v['strict'] and v['strict_consistent'] is None),
         'gold_missing': count(lambda v: not v['gold_found']),
         'trusted': len(trusted), 'trusted_wrong_strict': sum(1 for v in trusted if not v['strict']),
         'trusted_wrong_lenient_rounding': sum(1 for v in trusted if not v['lenient_rounding']),
@@ -1082,6 +1113,14 @@ def trust_cell(c):
         out['unanswerable_n'] = unans['n']
         out['unanswerable_correct_stops'] = sum(1 for r in unans['q'].values() if r['correct'])
         out['unanswerable_answered_trusted'] = sum(1 for r in unans['q'].values() if not r['correct'] and r['trusted'])
+        if labelled:
+            # Trust precision over answerable and unanswerable questions together: a trusted answer to an
+            # unanswerable question is a wrong trusted answer.
+            T_all = T + out['unanswerable_answered_trusted']
+            W_all = W + out['unanswerable_answered_trusted']
+            out['T_all'], out['W_T_all'] = T_all, W_all
+            out['precision_all'] = round((T_all - W_all) / T_all, 4) if T_all else None
+            out['precision_all_wilson'] = wilson(T_all - W_all, T_all) if T_all else [None, None]
     return out
 
 
