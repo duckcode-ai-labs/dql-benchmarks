@@ -55,3 +55,13 @@ slugs of the question text (about 60 characters each), so the assistant saw the 
 the 200 answerable set-5 questions, and no reference SQL or answers. It was not used for anything: DQL
 is frozen at 627009a1 and no change is made because of set 5. The 31 questions were all among those
 the L3 level was re-asking after the limit. The human audit sample is drawn independently of this event.
+
+### Set-4 adjudications (2 October 2026)
+
+During a preliminary review of set 4 with an AI assistant (Codex), the author read and adjudicated two
+set-4 items (one answerable, one unanswerable) as ambiguous; the decisions and reasons were then given to
+the operator's AI assistant (Claude) to record. Both items are therefore known to the author and to both
+assistants. The decisions are kept in `work/insurance/audit/set4-adjudications.json`, out of git until
+set 4 is released because the case identifiers reveal question wording; its SHA-256 is
+`a8d5552306cec9a55a605db8d36bdc0e0c125c70f9d9fd28b1ff59ab92c1999a`. Aggregate results with and without
+the adjudicated items are in `analysis/insurance-2026-09-29/audit/`. DQL is not changed because of them.
