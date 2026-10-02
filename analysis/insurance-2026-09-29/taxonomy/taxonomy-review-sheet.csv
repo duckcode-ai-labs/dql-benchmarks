@@ -1,0 +1,656 @@
+item,part,"question (set 3, public)",AI classification,AI evidence,reference SQL,answer SQL,reference rows (first 5),answer rows (first 5),VERDICT (agree / disagree / unsure),your classification if different,notes,reviewer,date
+1,6.8 root cause,What is the total premium we have charged across all policies and all coverage periods?,definition: the metric itself computes the wrong thing (AI confidence high),"3 wrong trusted answers; levels W2 3. W2's governed metric premium is SUM(Premium) over fire_claim, the separate fire-risk sample, described as ""The total premium amount for the policy."" It comes from dbt Labs' measure fire_claim.premium, which dbt Labs did not expose as a metric (no create_metric); `dql semantic import` promoted it to a governed metric, so it exists on W2 but not on L2/L3, where MetricFlow offers no premium metric and all 14 answers to this question were drafted SQL (13 right, 1 blocked). fire_claim.Premium is NULL in every row, so the governed answer is a single NULL; the gold is 98,000 (policy_amount joined to premium). The reading is the natural one for a metric with that name and description (Qwen's reader weighed total_policy_amount, which would also be wrong: 5,698,000 includes non-premium amounts). The defect is the governed definition as imported, not dbt Labs' authoring of a measure. Alternative: route (secondary): a result that is a single NULL was still labelled governed","SELECT SUM(p.Policy_Amount) AS total_premium FROM (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) p","SELECT
+  SUM(Premium) AS premium
+FROM ""acme_insurance"".""main"".""fire_claim""","total_premium
+98000","premium
+None",,,,,
+2,6.8 root cause,"Group our fire claims by the distance to the nearest fire station into bands of 0-5 miles, 6-10 miles, 11-15 miles and more than 15 miles; for each band show the number of claims and the average loss ratio.",route: a governed answer covered only part of the question (AI confidence high),"6 wrong trusted answers; levels LB 4, WB 2. Layer B has no banding dimension for Nearest_Firestation_miles, and the structured intent has no bucketing construct (the readers' own notes say so, below), so every governed answer grouped by the raw distance (20 rows instead of 4). The per-mile counts and averages are correct (insurance/layers/B/dbt/models/business_semantics/underwriting_and_fire_risk.yml), so neither definition nor compilation is at fault. In 3 of the 6 answers the reader flagged the banding explicitly as unresolved (LB Sonnet 5: ""This system has no custom numeric-banding/bucketing capability""; WB Sonnet 5.5: ""The project has no distance-band definition; results are grouped by each distance value instead of the requested bands""; LB Sonnet 5.5 likewise), always material=false; WB Qwen recorded an unresolved clause on ""distance to the nearest fire station"" without saying why; LB Qwen and LB Sol carry only the not_modeled substitution note that all six share (""the answer is broken down by Distance to nearest fire station (miles) in its place""). The label stayed governed in all six. Drafted SQL with a CASE expression got it strictly right in 14 DQL answers, 2 of 7 P and 2 of 2 A answers, and 33 more (29 DQL, 4 P) were right except for the wording of the last band label (""More than 15 miles"", "">15 miles""; Task 2).","SELECT CASE WHEN Nearest_Firestation_miles <= 5 THEN '0-5 miles' WHEN Nearest_Firestation_miles <= 10 THEN '6-10 miles' WHEN Nearest_Firestation_miles <= 15 THEN '11-15 miles' ELSE 'more than 15 miles' END AS distance_band, COUNT(*) AS claims, AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim GROUP BY 1 ORDER BY MIN(Nearest_Firestation_miles)","SELECT
+  fire_risk_record__nearest_firestation_miles
+  , SUM(__fire_risk_records) AS fire_risk_records
+  , AVG(__fire_sample_avg_loss_ratio) AS fire_sample_avg_loss_ratio
+FROM (
+  SELECT
+    Nearest_Firestation_miles AS fire_risk_record__nearest_firestation_miles
+    , 1 AS __fire_risk_records
+    , Loss_Ratio AS __fire_sample_avg_loss_ratio
+  FROM ""acme_insurance"".""main"".""fire_claim"" fire_risk_record_src_10000
+) subq_3
+GROUP BY
+  fire_risk_record__nearest_firestation_miles
+ORDER BY fire_risk_record__nearest_firestation_miles","distance_band | claims | avg_loss_ratio
+0-5 miles | 335 | 0.3444776119402988
+6-10 miles | 164 | 0.8615853658536583
+11-15 miles | 151 | 0.825165562913907","fire_risk_record__nearest_firestation_miles | fire_risk_records | fire_sample_avg_loss_ratio
+1 | 83 | 0.3289156626506024
+2 | 74 | 0.2851351351351351
+3 | 79 | 0.28860759493670873",,,,,
+3,6.8 root cause,"What was the compound annual growth rate of the annual premium on policy number 31003000336, from its first coverage period to its most recent one, measured over the number of years between those two periods' start dates?",route: a governed answer covered only part of the question (AI confidence high),"3 wrong trusted answers; levels LB 3. written_premium (insurance/layers/B/dbt/models/business_semantics/policies.yml: sum of policy_amount.Policy_Amount listed in premium) returns the correct yearly inputs for policy 31003000336, and the CAGR computed from the first and last rows equals the gold. But the answer is the 5-row input series, labelled governed. Opus's structured intent flags it (""The intent can't express CAGR directly ..."", material=false); the two Sonnet readings say it only in prose (""CAGR itself is not a governed metric""; ""so the compound annual growth rate ... can be computed from the two endpoint values"") with an empty unresolved list, so no structured signal existed for those two. A trusted route answered a sub-question (the inputs) instead of falling back to drafted SQL, which the other four LB models did (Qwen: blocked; Luna, Sol, Terra: review_required and right).","WITH p AS ( SELECT pr.Effective_Date, pr.Policy_Amount FROM (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) pr JOIN main.policy pol ON pol.Policy_Identifier = pr.Policy_Identifier WHERE pol.Policy_Number = 31003000336), ends AS ( SELECT arg_min(Policy_Amount, Effective_Date) AS first_premium, arg_max(Policy_Amount, Effective_Date) AS last_premium, date_diff('year', MIN(Effective_Date), MAX(Effective_Date)) AS years FROM p) SELECT power(last_premium * 1.0 / first_premium, 1.0 / years) - 1 AS cagr FROM ends","SELECT
+  metric_time__day
+  , SUM(written_premium) AS written_premium
+FROM (
+  SELECT
+    subq_1.metric_time__day AS metric_time__day
+    , insurance_policies_src_10000.Policy_Number AS policy__policy_number
+    , subq_1.__written_premium AS written_premium
+  FROM (
+    SELECT
+      DATE_TRUNC('day', Effective_Date) AS metric_time__day
+      , Policy_Identifier AS policy
+      , case when Policy_Amount_Identifier in (from ""main"".""premium"") then Policy_Amount end AS __written_premium
+    FROM ""acme_insurance"".""main"".""policy_amount"" policy_amounts_src_10000
+  ) subq_1
+  LEFT OUTER JOIN
+    ""acme_insurance"".""main"".""policy"" insurance_policies_src_10000
+  ON
+    subq_1.policy = insurance_policies_src_10000.Policy_Identifier
+) subq_6
+WHERE policy__policy_number = 31003000336
+GROUP BY
+  metric_time__day
+ORDER BY metric_time__day","cagr
+0.07456993182354199","metric_time__day | written_premium
+2015-01-01T00:00:00.000Z | 15000
+2016-01-01T00:00:00.000Z | 16000
+2017-01-01T00:00:00.000Z | 17000",,,,,
+4,6.8 root cause,"Across our fire claims, what is the correlation coefficient between the number of firefighters available and the loss ratio?",route: a governed answer covered only part of the question (AI confidence high),"1 wrong trusted answers; levels LB 1. The question asks for one Pearson coefficient; layer B has no correlation metric and the semantic tier cannot express one. DQL's reader recorded exactly this in the structured intent (askIntentV1.unresolved: ""The system cannot compute a Pearson correlation directly ... A correlation over these groups only approximates the row-level coefficient"", material=false), and the host still answered on the semantic tier (MetricFlow, fire_sample_avg_loss_ratio and fire_risk_records by number_of_firefighters) and labelled the 7-row breakdown governed. The metric values are right for what they are (unweighted AVG(Loss_Ratio) and a row count, insurance/layers/B/dbt/models/business_semantics/underwriting_and_fire_risk.yml), so the definition is not at fault; the route answered a different, easier question. The approximation the answer invites is badly off: corr over the group means is -0.83 against the row-level -0.29. Of the other 62 DQL answers to this question, 61 were drafted SQL (review_required) and right, and one was blocked.","SELECT corr(Number_of_Firefighters, Loss_Ratio) AS correlation FROM main.fire_claim","SELECT
+  fire_risk_record__number_of_firefighters
+  , AVG(__fire_sample_avg_loss_ratio) AS fire_sample_avg_loss_ratio
+  , SUM(__fire_risk_records) AS fire_risk_records
+FROM (
+  SELECT
+    Number_of_Firefighters AS fire_risk_record__number_of_firefighters
+    , 1 AS __fire_risk_records
+    , Loss_Ratio AS __fire_sample_avg_loss_ratio
+  FROM ""acme_insurance"".""main"".""fire_claim"" fire_risk_record_src_10000
+) subq_3
+GROUP BY
+  fire_risk_record__number_of_firefighters
+ORDER BY fire_risk_record__number_of_firefighters","correlation
+-0.2909135233088635","fire_risk_record__number_of_firefighters | fire_sample_avg_loss_ratio | fire_risk_records
+4 | 0.7435897435897431 | 117
+5 | 0.7783216783216781 | 143
+6 | 0.7338709677419354 | 124",,,,,
+5,6.8 root cause,"What is the average loss ratio on fire claims by the decade in which the home was built (1960s, 1970s, and so on), from oldest to newest decade, along with the number of claims in each decade?",route: a governed answer covered only part of the question (AI confidence high),"1 wrong trusted answers; levels LB 1. No decade dimension exists, so the semantic tier grouped by year_built (61 rows instead of 7). The reader flagged the decade bucketing as unresolved (material=false), and the host's own coverage check warned ""This answer carries nothing for 'the number of claims in each decade': no governed metric or dimension of this project is named for it"" - yet the answer was labelled governed. This is the clearest case of the trust label ignoring the system's own evidence. A secondary reading error is visible in the intent (the count requested was bound to fire_sample_avg_loss_ratio with alias ""claims""), but the answer would be wrong even without it. Alternative: reading (secondary): the claim count was mapped to fire_sample_avg_loss_ratio aliased ""claims"" instead of fire_risk_records","SELECT (Year_Built // 10) * 10 AS decade_built, COUNT(*) AS claims, AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim GROUP BY 1 ORDER BY 1","SELECT
+  Year_Built AS fire_risk_record__year_built
+  , AVG(Loss_Ratio) AS fire_sample_avg_loss_ratio
+FROM ""acme_insurance"".""main"".""fire_claim"" fire_risk_record_src_10000
+GROUP BY
+  Year_Built
+ORDER BY fire_risk_record__year_built","decade_built | claims | avg_loss_ratio
+1960 | 159 | 0.7106918238993714
+1970 | 147 | 0.7204081632653061
+1980 | 183 | 0.6945355191256825","fire_risk_record__year_built | fire_sample_avg_loss_ratio
+1960 | 0.7333333333333334
+1961 | 0.6611111111111112
+1962 | 0.6307692307692307",,,,,
+6,6.8 root cause,"For each claim, show the claim number, the catastrophe that caused it, total loss (loss payments plus loss reserves), total expense (expense payments plus expense reserves), and expense as a percentage of loss.","compilation: ""as a percentage"" returned as a fraction (AI confidence medium)","6 wrong trusted answers; levels LB 5, WB 1. incurred_losses and incurred_expenses (insurance/layers/B/dbt/models/business_semantics/claims.yml) are correct per claim, and every reading says ""as a percentage"" (aliases expense_pct_of_loss / expense_as_pct_of_loss). The host's derived-ratio step (""expense_pct_of_loss = incurred_expenses / incurred_losses, computed from the executed metrics"") returns the fraction 1.09 under a pct name; the gold is 109.09. The intent schema's derived measure is {kind: ratio, numerator, denominator} with no scale, so the requested percentage is dropped between the reading and the computed column: the definition and the reading are right, the generated result is not. The WB Qwen answer also showed the four components instead of the two totals. Alternative: reading: the structured intent has no way to carry the ""as a percentage"" scale (derived {kind: ratio} only), so the loss can also be placed at the reading-to-intent step; the prose reading and the column alias are right","SELECT c.Company_Claim_Number, cat.Catastrophe_Name, COALESCE(lp.amt,0) + COALESCE(lr.amt,0) AS total_loss, COALESCE(ep.amt,0) + COALESCE(er.amt,0) AS total_expense, 100.0 * (COALESCE(ep.amt,0) + COALESCE(er.amt,0)) / (COALESCE(lp.amt,0) + COALESCE(lr.amt,0)) AS expense_pct_of_loss FROM main.claim c LEFT JOIN main.catastrophe cat ON cat.Catastrophe_Identifier = c.Catastrophe_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lp ON lp.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lr ON lr.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) ep ON ep.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.expense_reserve er ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) er ON er.Claim_Identifier = c.Claim_Identifier ORDER BY c.Company_Claim_Number","SELECT
+  subq_7.claim AS claim
+  , subq_13.catastrophe AS claim__catastrophe
+  , subq_13.claim_number AS claim__claim_number
+  , subq_13.catastrophe__catastrophe_name AS claim__catastrophe__catastrophe_name
+  , SUM(subq_7.__incurred_losses) AS incurred_losses
+  , SUM(subq_7.__incurred_expenses) AS incurred_expenses
+FROM (
+  SELECT
+    Claim_Identifier AS claim
+    , case when Claim_Amount_Identifier in (from ""main"".""loss_payment"") or Claim_Amount_Identifier in (from ""main"".""loss_reserve"") then Claim_Amount end AS __incurred_losses
+    , case when Claim_Amount_Identifier in (from ""main"".""expense_payment"") or Claim_Amount_Identifier in (from ""main"".""expense_reserve"") then Claim_Amount end AS __incurred_expenses
+  FROM ""acme_insurance"".""main"".""claim_amount"" claim_amounts_src_10000
+) subq_7
+LEFT OUTER JOIN (
+  SELECT
+    insurance_claims_src_10000.Claim_Identifier AS claim
+    , insurance_claims_src_10000.Catastrophe_Identifier AS catastrophe
+    , insurance_claims_src_10000.Company_Claim_Number AS claim_number
+    , catastrophes_src_10000.Catastrophe_Name AS catastrophe__catastrophe_name
+  FROM ""acme_insurance"".""main"".""claim"" insurance_claims_src_10000
+  LEFT OUTER JOIN
+    ""acme_insurance"".""main"".""catastrophe"" catastrophes_src_10000
+  ON
+    insurance_claims_src_10000.Catastrophe_Identifier = catastrophes_src_10000.Catastrophe_Identifier
+) subq_13
+ON
+  subq_7.claim = subq_13.claim
+GROUP BY
+  subq_7.claim
+  , subq_13.catastrophe
+  , subq_13.claim_number
+  , subq_13.catastrophe__catastrophe_name","Company_Claim_Number | Catastrophe_Name | total_loss | total_expense | expense_pct_of_loss
+12312701 | Fire | 2200 | 2400 | 109.0909090909091
+12312702 | Fire | 4400 | 4600 | 104.54545454545455","claim | claim__catastrophe | claim__claim_number | claim__catastrophe__catastrophe_name | incurred_losses | incurred_expenses | expense_as_pct_of_loss
+1 | 4 | 12312701 | Fire | 2200 | 2400 | 1.090909090909090909
+2 | 4 | 12312702 | Fire | 4400 | 4600 | 1.045454545454545455",,,,,
+7,6.8 root cause,"For each catastrophe that has claims, show the number of claims, total loss paid, total loss reserved, and the paid share of incurred loss as a percentage (loss paid divided by loss paid plus loss reserved).","compilation: ""as a percentage"" returned as a fraction (AI confidence medium)","5 wrong trusted answers; levels LB 4, WB 1. Same mechanism: counts and sums are right, the derived column losses_paid / incurred_losses is shown as 0.53 under a _pct name against the gold 53.03. claims_with_amounts stands in for ""number of claims""; B documents that every claim carries amounts, so this is equivalent here (insurance/layers/B/dbt/models/business_semantics/claims.yml). The not_modeled note ""by catastrophe that has"" recorded in the intent is harmless (catastrophes without claims are excluded either way). Alternative: reading (same mechanism as the per-claim expense percentage)","SELECT cat.Catastrophe_Name, COUNT(DISTINCT c.Claim_Identifier) AS claims, SUM(COALESCE(lp.amt,0)) AS loss_paid, SUM(COALESCE(lr.amt,0)) AS loss_reserved, 100.0 * SUM(COALESCE(lp.amt,0)) / (SUM(COALESCE(lp.amt,0)) + SUM(COALESCE(lr.amt,0))) AS paid_share_pct FROM main.catastrophe cat JOIN main.claim c ON c.Catastrophe_Identifier = cat.Catastrophe_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lp ON lp.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lr ON lr.Claim_Identifier = c.Claim_Identifier GROUP BY cat.Catastrophe_Name ORDER BY claims DESC","SELECT
+  subq_19.catastrophe AS claim__catastrophe
+  , subq_19.catastrophe__catastrophe_name AS claim__catastrophe__catastrophe_name
+  , COUNT(DISTINCT subq_13.__claims_with_amounts) AS claims_with_amounts
+  , SUM(subq_13.__losses_paid) AS losses_paid
+  , SUM(subq_13.__loss_reserves) AS loss_reserves
+  , SUM(subq_13.__incurred_losses) AS incurred_losses
+FROM (
+  SELECT
+    Claim_Identifier AS claim
+    , case when Claim_Amount_Identifier in (from ""main"".""loss_payment"") then Claim_Amount end AS __losses_paid
+    , case when Claim_Amount_Identifier in (from ""main"".""loss_reserve"") then Claim_Amount end AS __loss_reserves
+    , case when Claim_Amount_Identifier in (from ""main"".""loss_payment"") or Claim_Amount_Identifier in (from ""main"".""loss_reserve"") then Claim_Amount end AS __incurred_losses
+    , Claim_Identifier AS __claims_with_amounts
+  FROM ""acme_insurance"".""main"".""claim_amount"" claim_amounts_src_10000
+) subq_13
+LEFT OUTER JOIN (
+  SELECT
+    insurance_claims_src_10000.Claim_Identifier AS claim
+    , insurance_claims_src_10000.Catastrophe_Identifier AS catastrophe
+    , catastrophes_src_10000.Catastrophe_Name AS catastrophe__catastrophe_name
+  FROM ""acme_insurance"".""main"".""claim"" insurance_claims_src_10000
+  LEFT OUTER JOIN
+    ""acme_insurance"".""main"".""catastrophe"" catastrophes_src_10000
+  ON
+    insurance_claims_src_10000.Catastrophe_Identifier = catastrophes_src_10000.Catastrophe_Identifier
+) subq_19
+ON
+  subq_13.claim = subq_19.claim
+GROUP BY
+  subq_19.catastrophe
+  , subq_19.catastrophe__catastrophe_name","Catastrophe_Name | claims | loss_paid | loss_reserved | paid_share_pct
+Fire | 2 | 3500 | 3100 | 53.03030303030303","claim__catastrophe | claim__catastrophe__catastrophe_name | claims_with_amounts | losses_paid | loss_reserves | incurred_losses | paid_share_of_incurred_loss_pct
+4 | Fire | 2 | 3500 | 3100 | 6600 | 0.530303030303030303",,,,,
+8,"6.8 lenient-only (Claude Opus 5.5, L1)","For each policy coverage period that has at least one claim filed against it, show the policy number, the coverage start date, the premium for that coverage, the incurred loss (loss payments plus loss reserves) on claims filed against it, and the resulting loss ratio.",different meaning despite matching numbers,premium taken as policy amounts with Amount_Type_Code = 'year' (coincides with the premium table on this data); column policy_number holds the internal Policy_Identifier 1,"WITH cov_loss AS ( SELECT cc.Policy_Coverage_Detail_Identifier, cc.Effective_Date, SUM(COALESCE(lp.amt,0) + COALESCE(lr.amt,0)) AS incurred_loss FROM main.claim_coverage cc LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lp ON lp.Claim_Identifier = cc.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lr ON lr.Claim_Identifier = cc.Claim_Identifier GROUP BY 1, 2), cov_prem AS ( SELECT Policy_Coverage_Detail_Identifier, Effective_Date, SUM(Policy_Amount) AS premium FROM (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) x GROUP BY 1, 2) SELECT p.Policy_Number, pcd.Effective_Date AS coverage_start, cp.premium, cl.incurred_loss, cl.incurred_loss * 1.0 / cp.premium AS loss_ratio FROM cov_loss cl JOIN main.policy_coverage_detail pcd ON pcd.Policy_Coverage_Detail_Identifier = cl.Policy_Coverage_Detail_Identifier AND pcd.Effective_Date = cl.Effective_Date JOIN main.policy p ON p.Policy_Identifier = pcd.Policy_Identifier JOIN cov_prem cp ON cp.Policy_Coverage_Detail_Identifier = cl.Policy_Coverage_Detail_Identifier AND cp.Effective_Date = cl.Effective_Date ORDER BY p.Policy_Number, coverage_start","WITH claims AS (
+  SELECT cc.Policy_Coverage_Detail_Identifier, cc.Effective_Date, COUNT(DISTINCT cc.Claim_Identifier) AS claim_count
+  FROM ""acme_insurance"".""main"".""claim_coverage"" cc
+  GROUP BY cc.Policy_Coverage_Detail_Identifier, cc.Effective_Date
+),
+loss_ids AS (
+  SELECT Claim_Amount_Identifier FROM ""acme_insurance"".""main"".""loss_payment""
+  UNION
+  SELECT Claim_Amount_Identifier FROM ""acme_insurance"".""main"".""loss_reserve""
+),
+cov_claims AS (
+  SELECT DISTINCT Policy_Coverage_Detail_Identifier, Effective_Date, Claim_Identifier
+  FROM ""acme_insurance"".""main"".""claim_coverage""
+),
+losses AS (
+  SELECT c.Policy_Coverage_Detail_Identifier, c.Effective_Date, SUM(ca.Claim_Amount) AS incurred_loss
+  FROM cov_claims c
+  JOIN ""acme_insurance"".""main"".""claim_amount"" ca ON ca.Claim_Identifier = c.Claim_Identifier
+  JOIN loss_ids li ON li.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+  GROUP BY c.Policy_Coverage_Detail_Identifier, c.Effective_Date
+),
+premiums AS (
+  SELECT pa.Policy_Coverage_Detail_Identifier, pa.Effective_Date, SUM(pa.Policy_Amount) AS premium
+  FROM ""acme_insurance"".""main"".""policy_amount"" pa
+  WHERE LOWER(pa.Amount_Type_Code) = 'year'
+  GROUP BY pa.Policy_Coverage_Detail_Identifier, pa.Effective_Date
+)
+SELECT
+  pcd.Policy_Coverage_Detail_Identifier,
+  pcd.Policy_Identifier AS policy_number,
+  pcd.Effective_Date AS coverage_start_date,
+  p.premium,
+  COALESCE(l.incurred_loss, 0) AS incurred_loss,
+  COALESCE(l.incurred_loss, 0) * 1.0 / NULLIF(p.premium, 0) AS loss_ratio,
+  cl.claim_count
+FROM ""acme_insurance"".""main"".""policy_coverage_detail"" pcd
+JOIN claims cl
+  ON cl.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier
+ AND cl.Effective_Date = pcd.Effective_Date
+LEFT JOIN losses l
+  ON l.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier
+ AND l.Effective_Date = pcd.Effective_Date
+LEFT JOIN premiums p
+  ON p.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier
+ AND p.Effective_Date = pcd.Effective_Date
+WHERE cl.claim_count >= 1
+ORDER BY pcd.Policy_Identifier, pcd.Effective_Date, pcd.Policy_Coverage_Detail_Identifier
+LIMIT 500","Policy_Number | coverage_start | premium | incurred_loss | loss_ratio
+31003000336 | 2019-01-01 | 20000 | 6600 | 0.33","Policy_Coverage_Detail_Identifier | policy_number | coverage_start_date | premium | incurred_loss | loss_ratio | claim_count
+5 | 1 | 2019-01-01T00:00:00.000Z | 20000 | 6600 | 0.33 | 2",,,,,
+9,"6.8 lenient-only (Claude Opus 5.5, LB)","For each policy coverage period that has at least one claim filed against it, show the policy number, the coverage start date, the premium for that coverage, the incurred loss (loss payments plus loss reserves) on claims filed against it, and the resulting loss ratio.",identity lost,policy number asked: only internal policy and coverage ids,"WITH cov_loss AS ( SELECT cc.Policy_Coverage_Detail_Identifier, cc.Effective_Date, SUM(COALESCE(lp.amt,0) + COALESCE(lr.amt,0)) AS incurred_loss FROM main.claim_coverage cc LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lp ON lp.Claim_Identifier = cc.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lr ON lr.Claim_Identifier = cc.Claim_Identifier GROUP BY 1, 2), cov_prem AS ( SELECT Policy_Coverage_Detail_Identifier, Effective_Date, SUM(Policy_Amount) AS premium FROM (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) x GROUP BY 1, 2) SELECT p.Policy_Number, pcd.Effective_Date AS coverage_start, cp.premium, cl.incurred_loss, cl.incurred_loss * 1.0 / cp.premium AS loss_ratio FROM cov_loss cl JOIN main.policy_coverage_detail pcd ON pcd.Policy_Coverage_Detail_Identifier = cl.Policy_Coverage_Detail_Identifier AND pcd.Effective_Date = cl.Effective_Date JOIN main.policy p ON p.Policy_Identifier = pcd.Policy_Identifier JOIN cov_prem cp ON cp.Policy_Coverage_Detail_Identifier = cl.Policy_Coverage_Detail_Identifier AND cp.Effective_Date = cl.Effective_Date ORDER BY p.Policy_Number, coverage_start","WITH premium AS (
+  SELECT pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, SUM(pa.Policy_Amount) AS written_premium
+  FROM ""acme_insurance"".""main"".""policy_amount"" AS pa
+  JOIN ""acme_insurance"".""main"".""premium"" AS pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier
+  GROUP BY pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier
+),
+claim_losses AS (
+  SELECT cc.Effective_Date, cc.Policy_Coverage_Detail_Identifier,
+         COUNT(DISTINCT cc.Claim_Identifier) AS claims,
+         SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL OR lr.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END) AS incurred_losses
+  FROM ""acme_insurance"".""main"".""claim_coverage"" AS cc
+  LEFT JOIN ""acme_insurance"".""main"".""claim_amount"" AS ca ON ca.Claim_Identifier = cc.Claim_Identifier
+  LEFT JOIN ""acme_insurance"".""main"".""loss_payment"" AS lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+  LEFT JOIN ""acme_insurance"".""main"".""loss_reserve"" AS lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+  GROUP BY cc.Effective_Date, cc.Policy_Coverage_Detail_Identifier
+)
+SELECT pcd.Policy_Identifier AS policy_identifier,
+       pcd.Policy_Coverage_Detail_Identifier AS policy_coverage_detail_identifier,
+       pcd.Effective_Date AS coverage_start_date,
+       p.written_premium,
+       cl.incurred_losses,
+       CAST(cl.incurred_losses AS DOUBLE) / NULLIF(p.written_premium, 0) AS loss_ratio
+FROM ""acme_insurance"".""main"".""policy_coverage_detail"" AS pcd
+JOIN claim_losses AS cl
+  ON cl.Effective_Date = pcd.Effective_Date
+ AND cl.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier
+LEFT JOIN premium AS p
+  ON p.Effective_Date = pcd.Effective_Date
+ AND p.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier
+WHERE cl.claims > 0
+ORDER BY pcd.Policy_Identifier, pcd.Effective_Date
+LIMIT 500","Policy_Number | coverage_start | premium | incurred_loss | loss_ratio
+31003000336 | 2019-01-01 | 20000 | 6600 | 0.33","policy_identifier | policy_coverage_detail_identifier | coverage_start_date | written_premium | incurred_losses | loss_ratio
+1 | 5 | 2019-01-01T00:00:00.000Z | 20000 | 6600 | 0.33",,,,,
+10,"6.8 lenient-only (Claude Sonnet 5.5, P)","Which claim number took the longest to close, counting days from when it was opened to when it was closed, and how many days was that?",identity lost,"asked ""which claim number"": gives surrogate Claim_Identifier 2, not claim number 12312702","SELECT Company_Claim_Number, date_diff('day', Claim_Open_Date, Claim_Close_Date) AS days_to_close FROM main.claim WHERE Claim_Close_Date IS NOT NULL ORDER BY days_to_close DESC LIMIT 1","SELECT Claim_Identifier, DATE_DIFF('day', Claim_Open_Date, Claim_Close_Date) AS days_to_close
+FROM claim
+WHERE Claim_Open_Date IS NOT NULL AND Claim_Close_Date IS NOT NULL
+ORDER BY days_to_close DESC
+LIMIT 1;","Company_Claim_Number | days_to_close
+12312702 | 25","Claim_Identifier | days_to_close
+2 | 25",,,,,
+11,"6.8 lenient-only (Claude Sonnet 5, L1)","For each policy coverage period that has at least one claim filed against it, show the policy number, the coverage start date, the premium for that coverage, the incurred loss (loss payments plus loss reserves) on claims filed against it, and the resulting loss ratio.",different meaning despite matching numbers,"column policy_number holds the internal Policy_Identifier 1, not policy number 31003000336","WITH cov_loss AS ( SELECT cc.Policy_Coverage_Detail_Identifier, cc.Effective_Date, SUM(COALESCE(lp.amt,0) + COALESCE(lr.amt,0)) AS incurred_loss FROM main.claim_coverage cc LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lp ON lp.Claim_Identifier = cc.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lr ON lr.Claim_Identifier = cc.Claim_Identifier GROUP BY 1, 2), cov_prem AS ( SELECT Policy_Coverage_Detail_Identifier, Effective_Date, SUM(Policy_Amount) AS premium FROM (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) x GROUP BY 1, 2) SELECT p.Policy_Number, pcd.Effective_Date AS coverage_start, cp.premium, cl.incurred_loss, cl.incurred_loss * 1.0 / cp.premium AS loss_ratio FROM cov_loss cl JOIN main.policy_coverage_detail pcd ON pcd.Policy_Coverage_Detail_Identifier = cl.Policy_Coverage_Detail_Identifier AND pcd.Effective_Date = cl.Effective_Date JOIN main.policy p ON p.Policy_Identifier = pcd.Policy_Identifier JOIN cov_prem cp ON cp.Policy_Coverage_Detail_Identifier = cl.Policy_Coverage_Detail_Identifier AND cp.Effective_Date = cl.Effective_Date ORDER BY p.Policy_Number, coverage_start","WITH policy_amount_premium AS (
+  SELECT
+    pa.""Policy_Coverage_Detail_Identifier"" AS Policy_Coverage_Detail_Identifier,
+    pa.""Effective_Date"" AS Effective_Date,
+    SUM(pa.""Policy_Amount"") AS premium
+  FROM ""acme_insurance"".""main"".""policy_amount"" pa
+  JOIN ""acme_insurance"".""main"".""premium"" pr
+    ON pr.""Policy_Amount_Identifier"" = pa.""Policy_Amount_Identifier""
+  GROUP BY pa.""Policy_Coverage_Detail_Identifier"", pa.""Effective_Date""
+),
+claim_loss AS (
+  SELECT
+    cc.""Policy_Coverage_Detail_Identifier"" AS Policy_Coverage_Detail_Identifier,
+    cc.""Effective_Date"" AS Effective_Date,
+    SUM(ca.""Claim_Amount"") AS incurred_loss
+  FROM ""acme_insurance"".""main"".""claim_coverage"" cc
+  JOIN ""acme_insurance"".""main"".""claim_amount"" ca
+    ON ca.""Claim_Identifier"" = cc.""Claim_Identifier""
+  WHERE EXISTS (
+      SELECT 1 FROM ""acme_insurance"".""main"".""loss_payment"" lp
+      WHERE lp.""Claim_Amount_Identifier"" = ca.""Claim_Amount_Identifier""
+    )
+    OR EXISTS (
+      SELECT 1 FROM ""acme_insurance"".""main"".""loss_reserve"" lr
+      WHERE lr.""Claim_Amount_Identifier"" = ca.""Claim_Amount_Identifier""
+    )
+  GROUP BY cc.""Policy_Coverage_Detail_Identifier"", cc.""Effective_Date""
+),
+claims_exist AS (
+  SELECT DISTINCT
+    ""Policy_Coverage_Detail_Identifier"" AS Policy_Coverage_Detail_Identifier,
+    ""Effective_Date"" AS Effective_Date
+  FROM ""acme_insurance"".""main"".""claim_coverage""
+)
+SELECT
+  pcd.""Policy_Identifier"" AS policy_number,
+  pcd.""Effective_Date"" AS coverage_start_date,
+  pap.premium AS premium,
+  cl.incurred_loss AS incurred_loss,
+  cl.incurred_loss / NULLIF(pap.premium, 0) AS loss_ratio
+FROM ""acme_insurance"".""main"".""policy_coverage_detail"" pcd
+JOIN claims_exist ce
+  ON ce.Policy_Coverage_Detail_Identifier = pcd.""Policy_Coverage_Detail_Identifier""
+  AND ce.Effective_Date = pcd.""Effective_Date""
+LEFT JOIN policy_amount_premium pap
+  ON pap.Policy_Coverage_Detail_Identifier = pcd.""Policy_Coverage_Detail_Identifier""
+  AND pap.Effective_Date = pcd.""Effective_Date""
+LEFT JOIN claim_loss cl
+  ON cl.Policy_Coverage_Detail_Identifier = pcd.""Policy_Coverage_Detail_Identifier""
+  AND cl.Effective_Date = pcd.""Effective_Date""
+LIMIT 500","Policy_Number | coverage_start | premium | incurred_loss | loss_ratio
+31003000336 | 2019-01-01 | 20000 | 6600 | 0.33","policy_number | coverage_start_date | premium | incurred_loss | loss_ratio
+1 | 2019-01-01T00:00:00.000Z | 20000 | 6600 | 0.33",,,,,
+12,"6.8 lenient-only (Claude Sonnet 5, L3)","For each policy holder (first and last name), what is the total premium across all their policies and coverage periods, the number of coverage periods, and the average premium per coverage period?",identity lost,"policy holder's first and last name asked: name column is NULL, only surrogate party id","WITH holder_pol AS ( SELECT DISTINCT apr.Party_Identifier, pe.First_Name, pe.Last_Name, apr.Agreement_Identifier AS Policy_Identifier FROM main.agreement_party_role apr JOIN main.party_role r ON r.Party_Role_Code = apr.Party_Role_Code JOIN main.person pe ON pe.Person_Identifier = apr.Party_Identifier WHERE r.Party_Role_Name = 'PolicyHolder') SELECT hp.First_Name, hp.Last_Name, SUM(pr.Policy_Amount) AS total_premium, COUNT(DISTINCT pr.Policy_Amount_Identifier) AS coverage_periods, SUM(pr.Policy_Amount) * 1.0 / COUNT(DISTINCT pr.Policy_Amount_Identifier) AS avg_premium_per_period FROM holder_pol hp JOIN (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) pr ON pr.Policy_Identifier = hp.Policy_Identifier GROUP BY hp.Party_Identifier, hp.First_Name, hp.Last_Name ORDER BY total_premium DESC","SELECT
+  p.""Party_Identifier"" AS party_identifier,
+  p.""Party_Name"" AS party_name,
+  SUM(pa.""Policy_Amount"") AS total_premium,
+  COUNT(DISTINCT pa.""Policy_Amount_Identifier"") AS coverage_period_count,
+  SUM(pa.""Policy_Amount"") * 1.0 / COUNT(DISTINCT pa.""Policy_Amount_Identifier"") AS avg_premium_per_coverage_period
+FROM ""acme_insurance"".""main"".""party"" p
+JOIN ""acme_insurance"".""main"".""agreement_party_role"" apr
+  ON apr.""Party_Identifier"" = p.""Party_Identifier""
+JOIN ""acme_insurance"".""main"".""policy"" pol
+  ON apr.""Agreement_Identifier"" = pol.""Policy_Identifier""
+JOIN ""acme_insurance"".""main"".""policy_amount"" pa
+  ON pa.""Policy_Identifier"" = pol.""Policy_Identifier""
+JOIN ""acme_insurance"".""main"".""premium"" pr
+  ON pr.""Policy_Amount_Identifier"" = pa.""Policy_Amount_Identifier""
+WHERE UPPER(TRIM(apr.""Party_Role_Code"")) = 'PH'
+GROUP BY p.""Party_Identifier"", p.""Party_Name""
+LIMIT 500","First_Name | Last_Name | total_premium | coverage_periods | avg_premium_per_period
+Mary | Holder | 98000 | 6 | 16333.333333333334","party_identifier | party_name | total_premium | coverage_period_count | avg_premium_per_coverage_period
+1 | None | 98000 | 6 | 16333.333333333334",,,,,
+13,"6.8 lenient-only (Claude Sonnet 5, LB)","For each policy, how many days passed between the end of its underwriting assessment and the policy's effective date, and who was the underwriter (first and last name) and what was the assessment result?",identity lost,"""who was the underwriter (first and last name)"": underwriter_name is NULL","SELECT p.Policy_Number, pe.First_Name, pe.Last_Name, ar.Assessment_Result_Type_Code, date_diff('day', a.End_Date, p.Effective_Date) AS days_assessment_end_to_effective FROM main.policy p JOIN main.agreement_assessment aa ON aa.Agreement_Identifier = p.Policy_Identifier JOIN main.assessment a ON a.Assessment_Identifier = aa.Assessment_Identifier JOIN main.assessment_result ar ON ar.Assessment_Identifier = a.Assessment_Identifier JOIN main.underwriting_assessment ua ON ua.Assessment_Result_Identifier = ar.Assessment_Result_Identifier JOIN main.assesment_party_role apr ON apr.Assessment_Identifier = a.Assessment_Identifier JOIN main.party_role r ON r.Party_Role_Code = apr.Party_Role_Code JOIN main.person pe ON pe.Person_Identifier = apr.Party_Identifier WHERE r.Party_Role_Name = 'Underwriter' ORDER BY p.Policy_Number","SELECT
+    pol.Policy_Identifier AS policy_id,
+    pol.Policy_Number AS policy_number,
+    DATE_DIFF('day', a.End_Date, pol.Effective_Date) AS days_between_end_and_effective,
+    apr.Party_Identifier AS underwriter_id,
+    p.Party_Name AS underwriter_name,
+    ar.Assessment_Result_Type_Code AS result_code
+FROM main.assessment_result AS ar
+JOIN main.underwriting_assessment AS ua
+    ON ua.Assessment_Result_Identifier = ar.Assessment_Result_Identifier
+JOIN main.assessment AS a
+    ON a.Assessment_Identifier = ar.Assessment_Identifier
+JOIN main.agreement_assessment AS aa
+    ON aa.Assessment_Identifier = a.Assessment_Identifier
+JOIN main.policy AS pol
+    ON pol.Policy_Identifier = aa.Agreement_Identifier
+LEFT JOIN main.assesment_party_role AS apr
+    ON apr.Assessment_Identifier = a.Assessment_Identifier
+    AND apr.Party_Role_Code = 'UW'
+LEFT JOIN main.party AS p
+    ON p.Party_Identifier = apr.Party_Identifier
+ORDER BY pol.Policy_Number
+LIMIT 500","Policy_Number | First_Name | Last_Name | Assessment_Result_Type_Code | days_assessment_end_to_effective
+31003000336 | Alice | Writer | OK | 17
+31003000337 | Alice | Writer | OK | 5","policy_id | policy_number | days_between_end_and_effective | underwriter_id | underwriter_name | result_code
+1 | 31003000336 | 17 | 3 | None | OK
+2 | 31003000337 | 5 | 3 | None | OK",,,,,
+14,"6.8 lenient-only (Qwen 3.8 27B (local), P)","For each claim, show the claim number, the catastrophe that caused it, total loss (loss payments plus loss reserves), total expense (expense payments plus expense reserves), and expense as a percentage of loss.",different meaning despite matching numbers,surrogate Claim_Identifier aliased as claim_number (claims 1 and 2 shown as claim numbers),"SELECT c.Company_Claim_Number, cat.Catastrophe_Name, COALESCE(lp.amt,0) + COALESCE(lr.amt,0) AS total_loss, COALESCE(ep.amt,0) + COALESCE(er.amt,0) AS total_expense, 100.0 * (COALESCE(ep.amt,0) + COALESCE(er.amt,0)) / (COALESCE(lp.amt,0) + COALESCE(lr.amt,0)) AS expense_pct_of_loss FROM main.claim c LEFT JOIN main.catastrophe cat ON cat.Catastrophe_Identifier = c.Catastrophe_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lp ON lp.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lr ON lr.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) ep ON ep.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.expense_reserve er ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) er ON er.Claim_Identifier = c.Claim_Identifier ORDER BY c.Company_Claim_Number","SELECT 
+    c.Claim_Identifier AS claim_number,
+    cat.Catastrophe_Name AS catastrophe,
+    COALESCE(SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END), 0) +
+    COALESCE(SUM(CASE WHEN lr.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END), 0) AS total_loss,
+    COALESCE(SUM(CASE WHEN ep.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END), 0) +
+    COALESCE(SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END), 0) AS total_expense,
+    CASE 
+        WHEN (COALESCE(SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END), 0) +
+              COALESCE(SUM(CASE WHEN lr.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END), 0)) = 0 
+        THEN 0
+        ELSE (
+            (COALESCE(SUM(CASE WHEN ep.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END), 0) +
+             COALESCE(SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END), 0)) * 100.0 /
+            (COALESCE(SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END), 0) +
+             COALESCE(SUM(CASE WHEN lr.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END), 0))
+        )
+    END AS expense_percentage
+FROM claim c
+LEFT JOIN catastrophe cat ON c.Catastrophe_Identifier = cat.Catastrophe_Identifier
+LEFT JOIN claim_amount ca ON c.Claim_Identifier = ca.Claim_Identifier
+LEFT JOIN loss_payment lp ON ca.Claim_Amount_Identifier = lp.Claim_Amount_Identifier
+LEFT JOIN loss_reserve lr ON ca.Claim_Amount_Identifier = lr.Claim_Amount_Identifier
+LEFT JOIN expense_payment ep ON ca.Claim_Amount_Identifier = ep.Claim_Amount_Identifier
+LEFT JOIN expense_reserve er ON ca.Claim_Amount_Identifier = er.Claim_Amount_Identifier
+GROUP BY c.Claim_Identifier, cat.Catastrophe_Name;","Company_Claim_Number | Catastrophe_Name | total_loss | total_expense | expense_pct_of_loss
+12312701 | Fire | 2200 | 2400 | 109.0909090909091
+12312702 | Fire | 4400 | 4600 | 104.54545454545455","claim_number | catastrophe | total_loss | total_expense | expense_percentage
+2 | Fire | 4400 | 4600 | 104.54545454545455
+1 | Fire | 2200 | 2400 | 109.0909090909091",,,,,
+15,"6.8 lenient-only (Qwen 3.8 27B (local), L1)","For each policy, how many days passed between the end of its underwriting assessment and the policy's effective date, and who was the underwriter (first and last name) and what was the assessment result?",different meaning despite matching numbers,"column assessment_result is the party-role code ""UW"", not the result ""OK""; the query never reads assessment_result","SELECT p.Policy_Number, pe.First_Name, pe.Last_Name, ar.Assessment_Result_Type_Code, date_diff('day', a.End_Date, p.Effective_Date) AS days_assessment_end_to_effective FROM main.policy p JOIN main.agreement_assessment aa ON aa.Agreement_Identifier = p.Policy_Identifier JOIN main.assessment a ON a.Assessment_Identifier = aa.Assessment_Identifier JOIN main.assessment_result ar ON ar.Assessment_Identifier = a.Assessment_Identifier JOIN main.underwriting_assessment ua ON ua.Assessment_Result_Identifier = ar.Assessment_Result_Identifier JOIN main.assesment_party_role apr ON apr.Assessment_Identifier = a.Assessment_Identifier JOIN main.party_role r ON r.Party_Role_Code = apr.Party_Role_Code JOIN main.person pe ON pe.Person_Identifier = apr.Party_Identifier WHERE r.Party_Role_Name = 'Underwriter' ORDER BY p.Policy_Number","SELECT
+    p.Policy_Identifier,
+    DATEDIFF('day', a.End_Date, p.Effective_Date) AS days_between_assessment_end_and_effective,
+    per.First_Name,
+    per.Last_Name,
+    apr.Party_Role_Code AS assessment_result
+FROM ""acme_insurance"".""main"".""policy"" p
+JOIN ""acme_insurance"".""main"".""agreement_assessment"" aa
+    ON aa.Agreement_Identifier = p.Policy_Identifier
+JOIN ""acme_insurance"".""main"".""assessment"" a
+    ON a.Assessment_Identifier = aa.Assessment_Identifier
+JOIN ""acme_insurance"".""main"".""assesment_party_role"" apr
+    ON apr.Assessment_Identifier = a.Assessment_Identifier
+   AND apr.Party_Role_Code = 'UW'
+JOIN ""acme_insurance"".""main"".""person"" per
+    ON per.Person_Identifier = apr.Party_Identifier
+ORDER BY p.Policy_Identifier
+LIMIT 500","Policy_Number | First_Name | Last_Name | Assessment_Result_Type_Code | days_assessment_end_to_effective
+31003000336 | Alice | Writer | OK | 17
+31003000337 | Alice | Writer | OK | 5","Policy_Identifier | days_between_assessment_end_and_effective | First_Name | Last_Name | assessment_result
+1 | 17 | Alice | Writer | UW
+2 | 5 | Alice | Writer | UW",,,,,
+16,"6.8 lenient-only (Qwen 3.8 27B (local), L2)","For each policy, how many days passed between the end of its underwriting assessment and the policy's effective date, and who was the underwriter (first and last name) and what was the assessment result?",identity lost,"""who was the underwriter (first and last name)"": underwriter_name is NULL","SELECT p.Policy_Number, pe.First_Name, pe.Last_Name, ar.Assessment_Result_Type_Code, date_diff('day', a.End_Date, p.Effective_Date) AS days_assessment_end_to_effective FROM main.policy p JOIN main.agreement_assessment aa ON aa.Agreement_Identifier = p.Policy_Identifier JOIN main.assessment a ON a.Assessment_Identifier = aa.Assessment_Identifier JOIN main.assessment_result ar ON ar.Assessment_Identifier = a.Assessment_Identifier JOIN main.underwriting_assessment ua ON ua.Assessment_Result_Identifier = ar.Assessment_Result_Identifier JOIN main.assesment_party_role apr ON apr.Assessment_Identifier = a.Assessment_Identifier JOIN main.party_role r ON r.Party_Role_Code = apr.Party_Role_Code JOIN main.person pe ON pe.Person_Identifier = apr.Party_Identifier WHERE r.Party_Role_Name = 'Underwriter' ORDER BY p.Policy_Number","SELECT
+    p.Policy_Identifier,
+    p.Policy_Number,
+    DATEDIFF('day', a.End_Date, p.Effective_Date) AS days_between_assessment_end_and_policy_effective,
+    pty.Party_Name AS underwriter_name,
+    ar.Assessment_Result_Type_Code AS assessment_result
+FROM ""acme_insurance"".""main"".""policy"" p
+JOIN ""acme_insurance"".""main"".""agreement_assessment"" aa
+    ON aa.Agreement_Identifier = p.Policy_Identifier
+JOIN ""acme_insurance"".""main"".""assessment"" a
+    ON a.Assessment_Identifier = aa.Assessment_Identifier
+JOIN ""acme_insurance"".""main"".""assesment_party_role"" apr
+    ON apr.Assessment_Identifier = a.Assessment_Identifier
+JOIN ""acme_insurance"".""main"".""party"" pty
+    ON pty.Party_Identifier = apr.Party_Identifier
+JOIN ""acme_insurance"".""main"".""assessment_result"" ar
+    ON ar.Assessment_Identifier = a.Assessment_Identifier
+ORDER BY p.Policy_Identifier, a.End_Date
+LIMIT 500","Policy_Number | First_Name | Last_Name | Assessment_Result_Type_Code | days_assessment_end_to_effective
+31003000336 | Alice | Writer | OK | 17
+31003000337 | Alice | Writer | OK | 5","Policy_Identifier | Policy_Number | days_between_assessment_end_and_policy_effective | underwriter_name | assessment_result
+1 | 31003000336 | 17 | None | OK
+2 | 31003000337 | 5 | None | OK",,,,,
+17,"6.8 lenient-only (Claude Sonnet 5.5, L3)","Group our fire claims by the distance to the nearest fire station into bands of 0-5 miles, 6-10 miles, 11-15 miles and more than 15 miles; for each band show the number of claims and the average loss ratio.",harmless (equivalent label),"band label differs only in case or wording (""More than 15 miles"", "">15 miles"")","SELECT CASE WHEN Nearest_Firestation_miles <= 5 THEN '0-5 miles' WHEN Nearest_Firestation_miles <= 10 THEN '6-10 miles' WHEN Nearest_Firestation_miles <= 15 THEN '11-15 miles' ELSE 'more than 15 miles' END AS distance_band, COUNT(*) AS claims, AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim GROUP BY 1 ORDER BY MIN(Nearest_Firestation_miles)","SELECT
+  CASE
+    WHEN Nearest_Firestation_miles <= 5 THEN '0-5 miles'
+    WHEN Nearest_Firestation_miles <= 10 THEN '6-10 miles'
+    WHEN Nearest_Firestation_miles <= 15 THEN '11-15 miles'
+    ELSE 'More than 15 miles'
+  END AS distance_band,
+  COUNT(*) AS number_of_claims,
+  AVG(Loss_Ratio) AS average_loss_ratio
+FROM ""acme_insurance"".""main"".""fire_claim""
+WHERE Nearest_Firestation_miles IS NOT NULL
+GROUP BY 1
+ORDER BY MIN(Nearest_Firestation_miles)
+LIMIT 501","distance_band | claims | avg_loss_ratio
+0-5 miles | 335 | 0.3444776119402988
+6-10 miles | 164 | 0.8615853658536583
+11-15 miles | 151 | 0.825165562913907","distance_band | number_of_claims | average_loss_ratio
+0-5 miles | 335 | 0.3444776119402988
+6-10 miles | 164 | 0.8615853658536583
+11-15 miles | 151 | 0.825165562913907",,,,,
+18,"6.8 lenient-only (Claude Sonnet 5.5, L1)","For each claim, what is the ratio of total amounts paid (loss payments plus expense payments) to total amounts reserved (loss reserves plus expense reserves)?",harmless (equivalent label),"""for each claim"": surrogate Claim_Identifier instead of Company_Claim_Number, same two claims","SELECT c.Company_Claim_Number, (COALESCE(lp.amt,0) + COALESCE(ep.amt,0)) * 1.0 / (COALESCE(lr.amt,0) + COALESCE(er.amt,0)) AS paid_to_reserved_ratio FROM main.claim c LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lp ON lp.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lr ON lr.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) ep ON ep.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.expense_reserve er ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) er ON er.Claim_Identifier = c.Claim_Identifier ORDER BY c.Company_Claim_Number","SELECT
+  ca.Claim_Identifier,
+  SUM(CASE WHEN EXISTS (SELECT 1 FROM ""acme_insurance"".""main"".""loss_payment"" lp WHERE lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier)
+             OR EXISTS (SELECT 1 FROM ""acme_insurance"".""main"".""expense_payment"" ep WHERE ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier)
+           THEN ca.Claim_Amount ELSE 0 END) AS total_paid,
+  SUM(CASE WHEN EXISTS (SELECT 1 FROM ""acme_insurance"".""main"".""loss_reserve"" lr WHERE lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier)
+             OR EXISTS (SELECT 1 FROM ""acme_insurance"".""main"".""expense_reserve"" er WHERE er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier)
+           THEN ca.Claim_Amount ELSE 0 END) AS total_reserved,
+  SUM(CASE WHEN EXISTS (SELECT 1 FROM ""acme_insurance"".""main"".""loss_payment"" lp WHERE lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier)
+             OR EXISTS (SELECT 1 FROM ""acme_insurance"".""main"".""expense_payment"" ep WHERE ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier)
+           THEN ca.Claim_Amount ELSE 0 END) * 1.0
+  / NULLIF(SUM(CASE WHEN EXISTS (SELECT 1 FROM ""acme_insurance"".""main"".""loss_reserve"" lr WHERE lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier)
+             OR EXISTS (SELECT 1 FROM ""acme_insurance"".""main"".""expense_reserve"" er WHERE er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier)
+           THEN ca.Claim_Amount ELSE 0 END), 0) AS paid_to_reserved_ratio
+FROM ""acme_insurance"".""main"".""claim_amount"" ca
+GROUP BY ca.Claim_Identifier
+ORDER BY ca.Claim_Identifier
+LIMIT 500","Company_Claim_Number | paid_to_reserved_ratio
+12312701 | 1.1904761904761905
+12312702 | 1.0930232558139534","Claim_Identifier | total_paid | total_reserved | paid_to_reserved_ratio
+1 | 2500 | 2100 | 1.1904761904761905
+2 | 4700 | 4300 | 1.0930232558139534",,,,,
+19,"6.8 lenient-only (GPT-6 Sol (medium), L2)","Group our fire claims by the distance to the nearest fire station into bands of 0-5 miles, 6-10 miles, 11-15 miles and more than 15 miles; for each band show the number of claims and the average loss ratio.",harmless (equivalent label),"band label differs only in case or wording (""More than 15 miles"", "">15 miles"")","SELECT CASE WHEN Nearest_Firestation_miles <= 5 THEN '0-5 miles' WHEN Nearest_Firestation_miles <= 10 THEN '6-10 miles' WHEN Nearest_Firestation_miles <= 15 THEN '11-15 miles' ELSE 'more than 15 miles' END AS distance_band, COUNT(*) AS claims, AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim GROUP BY 1 ORDER BY MIN(Nearest_Firestation_miles)","WITH banded AS (
+    SELECT
+        CASE
+            WHEN Nearest_Firestation_miles BETWEEN 0 AND 5 THEN '0-5 miles'
+            WHEN Nearest_Firestation_miles BETWEEN 6 AND 10 THEN '6-10 miles'
+            WHEN Nearest_Firestation_miles BETWEEN 11 AND 15 THEN '11-15 miles'
+            ELSE 'More than 15 miles'
+        END AS distance_band,
+        CASE
+            WHEN Nearest_Firestation_miles <= 5 THEN 1
+            WHEN Nearest_Firestation_miles <= 10 THEN 2
+            WHEN Nearest_Firestation_miles <= 15 THEN 3
+            ELSE 4
+        END AS band_order,
+        Loss_Ratio
+    FROM ""acme_insurance"".""main"".""fire_claim""
+    WHERE Nearest_Firestation_miles >= 0
+)
+SELECT
+    distance_band,
+    COUNT(*) AS claim_count,
+    AVG(Loss_Ratio) AS average_loss_ratio
+FROM banded
+GROUP BY distance_band, band_order
+ORDER BY band_order
+LIMIT 501","distance_band | claims | avg_loss_ratio
+0-5 miles | 335 | 0.3444776119402988
+6-10 miles | 164 | 0.8615853658536583
+11-15 miles | 151 | 0.825165562913907","distance_band | claim_count | average_loss_ratio
+0-5 miles | 335 | 0.3444776119402988
+6-10 miles | 164 | 0.8615853658536583
+11-15 miles | 151 | 0.825165562913907",,,,,
+20,"6.8 lenient-only (GPT-6 Sol (medium), W2)","Group our fire claims by the distance to the nearest fire station into bands of 0-5 miles, 6-10 miles, 11-15 miles and more than 15 miles; for each band show the number of claims and the average loss ratio.",harmless (equivalent label),"band label differs only in case or wording (""More than 15 miles"", "">15 miles"")","SELECT CASE WHEN Nearest_Firestation_miles <= 5 THEN '0-5 miles' WHEN Nearest_Firestation_miles <= 10 THEN '6-10 miles' WHEN Nearest_Firestation_miles <= 15 THEN '11-15 miles' ELSE 'more than 15 miles' END AS distance_band, COUNT(*) AS claims, AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim GROUP BY 1 ORDER BY MIN(Nearest_Firestation_miles)","SELECT
+    CASE
+        WHEN Nearest_Firestation_miles BETWEEN 0 AND 5 THEN '0-5 miles'
+        WHEN Nearest_Firestation_miles BETWEEN 6 AND 10 THEN '6-10 miles'
+        WHEN Nearest_Firestation_miles BETWEEN 11 AND 15 THEN '11-15 miles'
+        ELSE 'More than 15 miles'
+    END AS distance_band,
+    COUNT(*) AS number_of_claims,
+    AVG(Loss_Ratio) AS average_loss_ratio
+FROM acme_insurance.main.fire_claim
+WHERE Nearest_Firestation_miles >= 0
+GROUP BY 1
+ORDER BY MIN(
+    CASE
+        WHEN Nearest_Firestation_miles <= 5 THEN 1
+        WHEN Nearest_Firestation_miles <= 10 THEN 2
+        WHEN Nearest_Firestation_miles <= 15 THEN 3
+        ELSE 4
+    END
+)
+LIMIT 501","distance_band | claims | avg_loss_ratio
+0-5 miles | 335 | 0.3444776119402988
+6-10 miles | 164 | 0.8615853658536583
+11-15 miles | 151 | 0.825165562913907","distance_band | number_of_claims | average_loss_ratio
+0-5 miles | 335 | 0.3444776119402988
+6-10 miles | 164 | 0.8615853658536583
+11-15 miles | 151 | 0.825165562913907",,,,,
+21,"6.8 lenient-only (GPT-6 Sol (medium), P)","For each policy, how many days passed between the end of its underwriting assessment and the policy's effective date, and who was the underwriter (first and last name) and what was the assessment result?",harmless (equivalent label),"""for each policy"": Policy_Identifier instead of Policy_Number; names and result present","SELECT p.Policy_Number, pe.First_Name, pe.Last_Name, ar.Assessment_Result_Type_Code, date_diff('day', a.End_Date, p.Effective_Date) AS days_assessment_end_to_effective FROM main.policy p JOIN main.agreement_assessment aa ON aa.Agreement_Identifier = p.Policy_Identifier JOIN main.assessment a ON a.Assessment_Identifier = aa.Assessment_Identifier JOIN main.assessment_result ar ON ar.Assessment_Identifier = a.Assessment_Identifier JOIN main.underwriting_assessment ua ON ua.Assessment_Result_Identifier = ar.Assessment_Result_Identifier JOIN main.assesment_party_role apr ON apr.Assessment_Identifier = a.Assessment_Identifier JOIN main.party_role r ON r.Party_Role_Code = apr.Party_Role_Code JOIN main.person pe ON pe.Person_Identifier = apr.Party_Identifier WHERE r.Party_Role_Name = 'Underwriter' ORDER BY p.Policy_Number","SELECT
+    p.Policy_Identifier,
+    date_diff('day', a.End_Date, p.Effective_Date) AS Days_To_Policy_Effective_Date,
+    pe.First_Name AS Underwriter_First_Name,
+    pe.Last_Name AS Underwriter_Last_Name,
+    ar.Assessment_Result_Type_Code AS Assessment_Result
+FROM policy AS p
+LEFT JOIN agreement_assessment AS aa
+    ON aa.Agreement_Identifier = p.Policy_Identifier
+LEFT JOIN assessment AS a
+    ON a.Assessment_Identifier = aa.Assessment_Identifier
+LEFT JOIN assesment_party_role AS apr
+    ON apr.Assessment_Identifier = a.Assessment_Identifier
+    AND (
+        apr.Party_Role_Code ILIKE '%underwriter%'
+        OR EXISTS (
+            SELECT 1
+            FROM party_role AS pr
+            WHERE pr.Party_Role_Code = apr.Party_Role_Code
+              AND pr.Party_Role_Name ILIKE '%underwriter%'
+        )
+    )
+LEFT JOIN person AS pe
+    ON pe.Person_Identifier = apr.Party_Identifier
+LEFT JOIN assessment_result AS ar
+    ON ar.Assessment_Identifier = a.Assessment_Identifier
+LEFT JOIN underwriting_assessment AS ua
+    ON ua.Assessment_Result_Identifier = ar.Assessment_Result_Identifier
+WHERE ua.Assessment_Result_Identifier IS NOT NULL;","Policy_Number | First_Name | Last_Name | Assessment_Result_Type_Code | days_assessment_end_to_effective
+31003000336 | Alice | Writer | OK | 17
+31003000337 | Alice | Writer | OK | 5","Policy_Identifier | Days_To_Policy_Effective_Date | Underwriter_First_Name | Underwriter_Last_Name | Assessment_Result
+2 | 5 | Alice | Writer | OK
+1 | 17 | Alice | Writer | OK",,,,,
+22,"6.8 lenient-only (Claude Sonnet 5.5, W1)","Group our fire claims by the distance to the nearest fire station into bands of 0-5 miles, 6-10 miles, 11-15 miles and more than 15 miles; for each band show the number of claims and the average loss ratio.",harmless (equivalent label),"band label differs only in case or wording (""More than 15 miles"", "">15 miles"")","SELECT CASE WHEN Nearest_Firestation_miles <= 5 THEN '0-5 miles' WHEN Nearest_Firestation_miles <= 10 THEN '6-10 miles' WHEN Nearest_Firestation_miles <= 15 THEN '11-15 miles' ELSE 'more than 15 miles' END AS distance_band, COUNT(*) AS claims, AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim GROUP BY 1 ORDER BY MIN(Nearest_Firestation_miles)","SELECT
+  CASE
+    WHEN Nearest_Firestation_miles <= 5 THEN '0-5 miles'
+    WHEN Nearest_Firestation_miles <= 10 THEN '6-10 miles'
+    WHEN Nearest_Firestation_miles <= 15 THEN '11-15 miles'
+    ELSE 'More than 15 miles'
+  END AS distance_band,
+  COUNT(*) AS claim_count,
+  AVG(Loss_Ratio) AS avg_loss_ratio
+FROM acme_insurance.main.fire_claim
+WHERE Nearest_Firestation_miles IS NOT NULL
+  AND Nearest_Firestation_miles >= 0
+GROUP BY 1
+ORDER BY MIN(Nearest_Firestation_miles)
+LIMIT 501","distance_band | claims | avg_loss_ratio
+0-5 miles | 335 | 0.3444776119402988
+6-10 miles | 164 | 0.8615853658536583
+11-15 miles | 151 | 0.825165562913907","distance_band | claim_count | avg_loss_ratio
+0-5 miles | 335 | 0.3444776119402988
+6-10 miles | 164 | 0.8615853658536583
+11-15 miles | 151 | 0.825165562913907",,,,,
+23,"6.8 lenient-only (GPT-5.6 Terra (high), L2)","For each policy, how many days passed between the end of its underwriting assessment and the policy's effective date, and who was the underwriter (first and last name) and what was the assessment result?",harmless (equivalent label),"underwriter name concatenated (""Alice Writer"") instead of two columns","SELECT p.Policy_Number, pe.First_Name, pe.Last_Name, ar.Assessment_Result_Type_Code, date_diff('day', a.End_Date, p.Effective_Date) AS days_assessment_end_to_effective FROM main.policy p JOIN main.agreement_assessment aa ON aa.Agreement_Identifier = p.Policy_Identifier JOIN main.assessment a ON a.Assessment_Identifier = aa.Assessment_Identifier JOIN main.assessment_result ar ON ar.Assessment_Identifier = a.Assessment_Identifier JOIN main.underwriting_assessment ua ON ua.Assessment_Result_Identifier = ar.Assessment_Result_Identifier JOIN main.assesment_party_role apr ON apr.Assessment_Identifier = a.Assessment_Identifier JOIN main.party_role r ON r.Party_Role_Code = apr.Party_Role_Code JOIN main.person pe ON pe.Person_Identifier = apr.Party_Identifier WHERE r.Party_Role_Name = 'Underwriter' ORDER BY p.Policy_Number","SELECT DISTINCT p.Policy_Identifier, p.Policy_Number, a.Assessment_Identifier, a.End_Date AS assessment_end_date, p.Effective_Date AS policy_effective_date, date_diff('day', a.End_Date, p.Effective_Date) AS days_between_assessment_end_and_policy_effective_date, apr.Party_Identifier AS underwriter_party_identifier, concat_ws(' ', pe.First_Name, pe.Last_Name) AS underwriter_first_and_last_name, ar.Assessment_Result_Type_Code AS assessment_result
+FROM ""acme_insurance"".""main"".""policy"" AS p
+JOIN ""acme_insurance"".""main"".""agreement_assessment"" AS aa ON aa.Agreement_Identifier = p.Policy_Identifier
+JOIN ""acme_insurance"".""main"".""assessment"" AS a ON a.Assessment_Identifier = aa.Assessment_Identifier
+JOIN ""acme_insurance"".""main"".""assessment_result"" AS ar ON ar.Assessment_Identifier = a.Assessment_Identifier
+JOIN ""acme_insurance"".""main"".""underwriting_assessment"" AS ua ON ua.Assessment_Result_Identifier = ar.Assessment_Result_Identifier
+JOIN ""acme_insurance"".""main"".""assesment_party_role"" AS apr ON apr.Assessment_Identifier = a.Assessment_Identifier
+JOIN ""acme_insurance"".""main"".""person"" AS pe ON pe.Person_Identifier = apr.Party_Identifier
+WHERE lower(apr.Party_Role_Code) = 'uw'
+LIMIT 500","Policy_Number | First_Name | Last_Name | Assessment_Result_Type_Code | days_assessment_end_to_effective
+31003000336 | Alice | Writer | OK | 17
+31003000337 | Alice | Writer | OK | 5","Policy_Identifier | Policy_Number | Assessment_Identifier | assessment_end_date | policy_effective_date | days_between_assessment_end_and_policy_effective_date | underwriter_party_identifier | underwriter_first_and_last_name | assessment_result
+1 | 31003000336 | 1 | 2014-12-15T00:00:00.000Z | 2015-01-01T00:00:00.000Z | 17 | 3 | Alice Writer | OK
+2 | 31003000337 | 2 | 2019-05-27T00:00:00.000Z | 2019-06-01T00:00:00.000Z | 5 | 3 | Alice Writer | OK",,,,,
+24,"6.8 lenient-only (Claude Opus 5.5, L2)","Group our fire claims by the distance to the nearest fire station into bands of 0-5 miles, 6-10 miles, 11-15 miles and more than 15 miles; for each band show the number of claims and the average loss ratio.",harmless (equivalent label),"band label differs only in case or wording (""More than 15 miles"", "">15 miles"")","SELECT CASE WHEN Nearest_Firestation_miles <= 5 THEN '0-5 miles' WHEN Nearest_Firestation_miles <= 10 THEN '6-10 miles' WHEN Nearest_Firestation_miles <= 15 THEN '11-15 miles' ELSE 'more than 15 miles' END AS distance_band, COUNT(*) AS claims, AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim GROUP BY 1 ORDER BY MIN(Nearest_Firestation_miles)","SELECT
+  CASE
+    WHEN ""Nearest_Firestation_miles"" BETWEEN 0 AND 5 THEN '0-5 miles'
+    WHEN ""Nearest_Firestation_miles"" BETWEEN 6 AND 10 THEN '6-10 miles'
+    WHEN ""Nearest_Firestation_miles"" BETWEEN 11 AND 15 THEN '11-15 miles'
+    WHEN ""Nearest_Firestation_miles"" > 15 THEN 'More than 15 miles'
+  END AS distance_band,
+  COUNT(*) AS number_of_claims,
+  AVG(""Loss_Ratio"") AS avg_loss_ratio
+FROM ""acme_insurance"".""main"".""fire_claim""
+WHERE ""Nearest_Firestation_miles"" >= 0
+GROUP BY 1
+ORDER BY MIN(""Nearest_Firestation_miles"")
+LIMIT 501","distance_band | claims | avg_loss_ratio
+0-5 miles | 335 | 0.3444776119402988
+6-10 miles | 164 | 0.8615853658536583
+11-15 miles | 151 | 0.825165562913907","distance_band | number_of_claims | avg_loss_ratio
+0-5 miles | 335 | 0.3444776119402988
+6-10 miles | 164 | 0.8615853658536583
+11-15 miles | 151 | 0.825165562913907",,,,,
+25,"6.8 lenient-only (GPT-6 Sol (medium), P)","Group our fire claims by the distance to the nearest fire station into bands of 0-5 miles, 6-10 miles, 11-15 miles and more than 15 miles; for each band show the number of claims and the average loss ratio.",harmless (equivalent label),"band label differs only in case or wording (""More than 15 miles"", "">15 miles"")","SELECT CASE WHEN Nearest_Firestation_miles <= 5 THEN '0-5 miles' WHEN Nearest_Firestation_miles <= 10 THEN '6-10 miles' WHEN Nearest_Firestation_miles <= 15 THEN '11-15 miles' ELSE 'more than 15 miles' END AS distance_band, COUNT(*) AS claims, AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim GROUP BY 1 ORDER BY MIN(Nearest_Firestation_miles)","SELECT
+    CASE
+        WHEN Nearest_Firestation_miles BETWEEN 0 AND 5 THEN '0-5 miles'
+        WHEN Nearest_Firestation_miles BETWEEN 6 AND 10 THEN '6-10 miles'
+        WHEN Nearest_Firestation_miles BETWEEN 11 AND 15 THEN '11-15 miles'
+        ELSE 'More than 15 miles'
+    END AS distance_band,
+    COUNT(*) AS claim_count,
+    AVG(Loss_Ratio) AS average_loss_ratio
+FROM fire_claim
+WHERE Nearest_Firestation_miles >= 0
+GROUP BY 1
+ORDER BY MIN(
+    CASE
+        WHEN Nearest_Firestation_miles <= 5 THEN 1
+        WHEN Nearest_Firestation_miles <= 10 THEN 2
+        WHEN Nearest_Firestation_miles <= 15 THEN 3
+        ELSE 4
+    END
+);","distance_band | claims | avg_loss_ratio
+0-5 miles | 335 | 0.3444776119402988
+6-10 miles | 164 | 0.8615853658536583
+11-15 miles | 151 | 0.825165562913907","distance_band | claim_count | average_loss_ratio
+0-5 miles | 335 | 0.3444776119402988
+6-10 miles | 164 | 0.8615853658536583
+11-15 miles | 151 | 0.825165562913907",,,,,
+26,"6.8 lenient-only (GPT-5.6 Terra (high), L2)","For each claim, what is the ratio of total amounts paid (loss payments plus expense payments) to total amounts reserved (loss reserves plus expense reserves)?",harmless (equivalent label),"""for each claim"": surrogate Claim_Identifier instead of Company_Claim_Number, same two claims","SELECT c.Company_Claim_Number, (COALESCE(lp.amt,0) + COALESCE(ep.amt,0)) * 1.0 / (COALESCE(lr.amt,0) + COALESCE(er.amt,0)) AS paid_to_reserved_ratio FROM main.claim c LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lp ON lp.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) lr ON lr.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) ep ON ep.Claim_Identifier = c.Claim_Identifier LEFT JOIN (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.expense_reserve er ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) er ON er.Claim_Identifier = c.Claim_Identifier ORDER BY c.Company_Claim_Number","WITH categorized_amounts AS (
+  SELECT
+    ca.Claim_Identifier,
+    SUM(CASE WHEN EXISTS (SELECT 1 FROM ""acme_insurance"".""main"".""loss_payment"" lp WHERE lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier) THEN ca.Claim_Amount ELSE 0 END)
+      + SUM(CASE WHEN EXISTS (SELECT 1 FROM ""acme_insurance"".""main"".""expense_payment"" ep WHERE ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier) THEN ca.Claim_Amount ELSE 0 END) AS total_paid,
+    SUM(CASE WHEN EXISTS (SELECT 1 FROM ""acme_insurance"".""main"".""loss_reserve"" lr WHERE lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier) THEN ca.Claim_Amount ELSE 0 END)
+      + SUM(CASE WHEN EXISTS (SELECT 1 FROM ""acme_insurance"".""main"".""expense_reserve"" er WHERE er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier) THEN ca.Claim_Amount ELSE 0 END) AS total_reserved
+  FROM ""acme_insurance"".""main"".""claim_amount"" ca
+  GROUP BY ca.Claim_Identifier
+)
+SELECT
+  Claim_Identifier,
+  total_paid / NULLIF(total_reserved, 0) AS paid_to_reserved_ratio
+FROM categorized_amounts
+LIMIT 501","Company_Claim_Number | paid_to_reserved_ratio
+12312701 | 1.1904761904761905
+12312702 | 1.0930232558139534","Claim_Identifier | paid_to_reserved_ratio
+1 | 1.1904761904761905
+2 | 1.0930232558139534",,,,,
