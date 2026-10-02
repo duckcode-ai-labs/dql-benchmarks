@@ -21,7 +21,7 @@ The comparisons are against one-shot SQL from the table definitions and against 
 | DQL WB (+ authored business layer) | 154 | 71.0–82.5% |
 
 - **Against one-shot SQL:** DQL W2 is significantly more accurate (Holm-adjusted p < 0.001).
-- **Against an agent with the same knowledge:** W2 is not distinguishable from A-model (+1.5 points, p = 0.73). The lift comes from the modeling knowledge, not from DQL's answering pipeline.
+- **Against an agent with the same knowledge:** W2 and A-model differ by +1.5 points (p = 0.73). The results are consistent with the modeling knowledge explaining much of the gain; an additional advantage from DQL's answering pipeline was not established. This is not a claim of equivalence: no equivalence margin was set.
 - **Trust labels:**
   - 3 of 28 governed dbt-metric answers were wrong.
   - 13 of 26 business-layer answers were wrong.
