@@ -27,3 +27,25 @@ Node v22.18.0. Provider usage limits are waited out and never scored.
 
 The 25% audit sample (50 answerable, 13 unanswerable; seed 20261001) is drawn after this freeze and
 audited by an author; DQL is not changed after the auditor has read the sample.
+
+## Addendum, 3 October 2026 (before any answer was re-asked): runtime connection failures
+
+During the set-5 runs, some answers ended within 5–20 seconds with "the runtime did not answer: read
+ECONNRESET" or "socket hang up": DQL's local runtime dropped the connection and no answer was produced.
+None occurred in the 8,364 answers of sets 3 and 4. By the time of this addendum there were 24 on set 5
+(Qwen L2 6, L3 13, W2 3; Sonnet 5.5 L3 2), on 23 different questions, scattered through each run, so
+they are not tied to particular questions. This rule was decided after those counts and the per-level
+totals were known; it is reported as a deviation.
+
+- **Definition.** An answer whose recorded failure is "the runtime did not answer" (connection reset
+  or socket hang up) is an infrastructure failure, like a provider usage limit: the system under test
+  gave no answer.
+- **Handling.** Each such answer is asked again once, on a fresh agent, after its condition's run
+  finishes (`insurance/run.mjs --retry-runtime-failures`). The original report is kept unchanged beside
+  the result as `<set>.as-recorded`. If the retry also fails, the answer counts as wrong.
+- **Reporting.** The main analysis uses the retried answers, as for refused calls; the as-recorded
+  reading, where every such failure counts as wrong, is reported beside it for every condition.
+- **Scope.** All models and conditions on set 5. The pre-registered primary test (Sonnet 5.5, W2 vs
+  A-model) is unaffected: neither condition had such a failure.
+- **Environment.** Jobs run under launchd, whose default limit of 256 open files per process is a
+  possible cause; the Qwen job is restarted with a limit of 10,240. No DQL code changes.
