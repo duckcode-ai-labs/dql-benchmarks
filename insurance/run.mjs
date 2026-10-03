@@ -112,7 +112,7 @@ function codexEffort(pinned = process.env.DQL_CODEX_REASONING_EFFORT) {
 }
 
 function parseArgs(argv) {
-  const options = { layer: 'L0', set: 'dbt-labs', run: null, cassette: 'record', provider: 'claude-code', model: 'claude-sonnet-5', only: null, debugCli: false, readingEffort: null, codexEffort: null, codexHome: null, resume: false };
+  const options = { layer: 'L0', set: 'dbt-labs', run: null, cassette: 'record', provider: 'claude-code', model: 'claude-sonnet-5', only: null, debugCli: false, readingEffort: null, codexEffort: null, codexHome: null, resume: false, retryRuntime: false };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     const next = () => argv[++index];
@@ -124,6 +124,7 @@ function parseArgs(argv) {
     else if (arg === '--model') options.model = next();
     else if (arg === '--only') options.only = next().split(',');
     else if (arg === '--resume') options.resume = true;
+    else if (arg === '--retry-runtime-failures') options.retryRuntime = true;
     else if (arg === '--debug-cli') options.debugCli = true;
     else if (arg === '--reading-effort') options.readingEffort = next();
     else if (arg === '--codex-effort') options.codexEffort = next();
@@ -331,6 +332,14 @@ export function cassetteEvidence(dir, mode) {
   return { source: 'harness scan of the server cassette folder', mode, recordings: files.length, kinds, realProviderQualityEligible: reasons.length === 0, reasons };
 }
 
+/** An answer where DQL's runtime dropped the connection: no answer was produced (insurance/FREEZE-SET5.md). */
+export function isRuntimeFailure(item) {
+  return (item?.failures ?? []).some((failure) => {
+    const text = String(failure);
+    return text.includes('the runtime did not answer') && /(ECONNRESET|socket hang up)/i.test(text);
+  });
+}
+
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   // Set before any child process starts, so every Codex call inherits it.
@@ -377,6 +386,29 @@ async function main() {
     const keptIds = new Set(kept.map((item) => item.name));
     cases = cases.filter((c) => !keptIds.has(c.id));
     console.error(`resuming ${options.layer}/${options.set}: ${kept.length} answered question(s) kept, ${cases.length} to ask`);
+  }
+  // RETRY RUNTIME FAILURES (set-5 rule, insurance/FREEZE-SET5.md, 3 October 2026). An answer whose
+  // run ended with DQL's runtime dropping the connection produced no answer; it is asked once more on a
+  // fresh agent. The original report is kept unchanged as <set>.as-recorded, so both readings can be
+  // reported, and a set is never retried twice. A retry that fails again counts as wrong.
+  let retried = null;
+  if (options.retryRuntime) {
+    if (options.resume) throw new Error('--retry-runtime-failures and --resume cannot be combined.');
+    const reportPath = join(outDir, 'report.json');
+    if (!existsSync(reportPath)) throw new Error(`${relative(REPO_ROOT, outDir)} has no report to retry.`);
+    if (existsSync(`${outDir}.as-recorded`)) throw new Error(`${relative(REPO_ROOT, outDir)} was already retried once.`);
+    const prior = JSON.parse(readFileSync(reportPath, 'utf-8'));
+    if (prior.invalid) throw new Error('This report has provider-refused questions: resume them first with --resume.');
+    const failed = new Set((prior.results ?? []).filter(isRuntimeFailure).map((item) => item.name));
+    if (failed.size === 0) {
+      console.log(`${options.layer}/${options.set}: no runtime failures to retry`);
+      return;
+    }
+    kept = (prior.results ?? []).filter((item) => !failed.has(item.name));
+    renameSync(outDir, `${outDir}.as-recorded`);
+    retried = { asRecorded: relative(REPO_ROOT, `${outDir}.as-recorded`), questions: failed.size, kept: kept.length };
+    cases = cases.filter((c) => failed.has(c.id));
+    console.error(`retrying ${options.layer}/${options.set}: ${failed.size} runtime failure(s), ${kept.length} answer(s) kept`);
   }
   if (options.cassette === 'record' && existsSync(join(outDir, 'report.json'))) {
     throw new Error(`Run ${options.run} already has ${options.layer}/${options.set}; pick a new run id or replay it.`);
@@ -477,6 +509,7 @@ async function main() {
     provenance: cassetteEvidence(join(outDir, 'cassettes'), options.cassette),
     ...(outages.length ? { invalid: { reason: 'the AI provider refused calls during the run', questions: outages.length, messages: [...new Set(outages.map((item) => item.message))].slice(0, 3), refusedQuestions: [...new Set(outages.map((item) => idByQuestion.get(item.question.trim())).filter(Boolean))] } } : {}),
     ...(resumedFrom ? { resumedFrom } : {}),
+    ...(retried ? { retriedRuntimeFailures: retried } : {}),
     run: { id: options.run, layer: options.layer, set: options.set, startedAt, finishedAt: new Date().toISOString(), evalExitCode: result.code },
     questions: cases.length + kept.length,
     ...report,

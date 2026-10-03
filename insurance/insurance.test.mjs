@@ -186,3 +186,13 @@ test('a benchmark Codex home is signed in and holds no personal instructions, pl
   assert.equal(process.env.CODEX_HOME, clean);
   if (previous === undefined) delete process.env.CODEX_HOME; else process.env.CODEX_HOME = previous;
 });
+
+test('a dropped runtime connection is a runtime failure; a wrong or blocked answer is not', async () => {
+  const { isRuntimeFailure } = await import('./run.mjs');
+  assert.equal(isRuntimeFailure({ failures: ['the runtime did not answer: read ECONNRESET'] }), true);
+  assert.equal(isRuntimeFailure({ failures: ['the runtime did not answer: socket hang up'] }), true);
+  assert.equal(isRuntimeFailure({ failures: ['the runtime did not answer: Runtime returned 500: {"error":"database or disk is full"}'] }), false);
+  assert.equal(isRuntimeFailure({ failures: ['FALSE REFUSAL: this question is answerable, but the run dead-ended'] }), false);
+  assert.equal(isRuntimeFailure({ failures: [] }), false);
+  assert.equal(isRuntimeFailure({}), false);
+});
