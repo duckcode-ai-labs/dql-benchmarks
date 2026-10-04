@@ -38,7 +38,8 @@ def outcomes(cond, s):
 adj = json.load(open(ADJ))
 excl = {'ambiguous': {}, 'wrong': {}}
 for it in adj['items']:
-    excl.setdefault(it['decision'], {}).setdefault(it['set'], set()).add(it['case_id'])
+    if it['decision'] in excl:  # an item adjudicated 'correct' (for example a revised decision) is not an exclusion
+        excl[it['decision']].setdefault(it['set'], set()).add(it['case_id'])
 
 out = {'scope': adj['scope'], 'conventions': adj.get('conventions', []),
        'adjudicated': {d: {s: len(v) for s, v in m.items()} for d, m in excl.items()}, 'readings': {}}

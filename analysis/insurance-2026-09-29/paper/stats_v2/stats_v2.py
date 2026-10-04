@@ -6,6 +6,14 @@
 Writes stats_v2.json and stats_v2.md next to this file and prints a short
 aggregate summary. Re-runnable; results are deterministic (fixed seed).
 
+    STATS_SET=5 python3 .../stats_v2.py                      # set 5 -> stats_v2_set5.json / .md
+    STATS_SET=5 STATS_AS_RECORDED=1 python3 .../stats_v2.py  # set 5 as first recorded -> stats_v2_set5_as_recorded.*
+
+Besides set 3, the script analyses one single-model sealed set: set 4 (default) or set 5. Set 5 goes
+through the same code with the conditions, families and seed its pre-registration names
+(insurance/PREREGISTRATION-SET5.md). In a set-5 file the keys named after set 4 (set4_paired,
+trust_heldout4, ...) hold set 5; 'sealed_set' says which set they hold.
+
 Rules this script keeps:
   * Read-only on work/insurance/runs, projects, gold and insurance/. Run stores
     (agent-runs.sqlite) and warehouses (acme_insurance.duckdb) are COPIED into a
@@ -13,7 +21,7 @@ Rules this script keeps:
     repository's own lib/duckdb_query.py, run with .venv/bin/python because
     DuckDB is not in the standard library). The temporary directory is removed.
   * No model, network or service calls.
-  * Sealed sets (heldout-3, heldout-4 and their unanswerable twins): question ids,
+  * Sealed sets (heldout-3, heldout-4, heldout-5 and their unanswerable twins): question ids,
     question text and reference SQL are held in memory only, for pairing. Nothing
     but aggregates is printed or written.
 
@@ -46,6 +54,15 @@ OLD_REGRADE = os.path.join(HERE, '..', '..', 'regrade', 'regrade.json')
 
 FIXED = '627009a1'          # LB / WB count only on this DQL build
 SEED = 20260930
+SEALED = os.environ.get('STATS_SET', '4')
+if SEALED not in ('4', '5'):
+    sys.exit('STATS_SET must be 4 or 5')
+HSET, HSETU = f'heldout-{SEALED}', f'heldout-{SEALED}-unanswerable'
+SEALED_SEED = 5 if SEALED == '5' else SEED   # set 5: "10,000 resamples, seed 5" (pre-registration, H1)
+# STATS_AS_RECORDED=1: where a set's runtime failures were re-asked (insurance/FREEZE-SET5.md, addendum of
+# 3 October 2026), read the report as first recorded (<set>.as-recorded) instead of the retried one.
+AS_RECORDED = os.environ.get('STATS_AS_RECORDED') == '1'
+OUT_NAME = 'stats_v2' + ('' if SEALED == '4' else f'_set{SEALED}') + ('_as_recorded' if AS_RECORDED else '')
 REPS = 10_000
 Z = 1.959963984540054
 TRUSTED = ('certified', 'governed')
@@ -58,15 +75,15 @@ MODELS = [('opus', 'Claude Opus 5.5', 'fl-opus', 'ag-opus'),
           ('luna', 'GPT-6 Luna (max)', 'fl-luna', None),
           ('sol', 'GPT-6 Sol (medium)', 'fl-sol', None),
           ('terra', 'GPT-5.6 Terra (high)', 'fl-terra', None)]
-SET4 = ('sonnet55', 'Claude Sonnet 5.5', 'fl4-sonnet55', 'ag4-sonnet55')
-SET4_AGENT_MODELING = 'ag4m-sonnet55'  # A-model: the agent with DQL's W2 modeling context (fair baseline)
+SET4 = ('sonnet55', 'Claude Sonnet 5.5', f'fl{SEALED}-sonnet55', f'ag{SEALED}-sonnet55')
+SET4_AGENT_MODELING = f'ag{SEALED}m-sonnet55'  # A-model: the agent with DQL's W2 modeling context (fair baseline)
 LEVELS = ['L0', 'L1', 'L2', 'L3', 'LB', 'W0', 'W1', 'W2', 'WB']
 SET4_LEVELS = ['L2', 'L3', 'W2', 'WB']
 CONDS = ['P', 'A', 'Am'] + LEVELS
 UNLABELLED = ('P', 'A', 'Am')
 SETS = {  # set -> (gold file or None, answerable?)
     'heldout-3': ('heldout-3.json', True), 'heldout-3-unanswerable': (None, False),
-    'heldout-4': ('heldout-4.json', True), 'heldout-4-unanswerable': (None, False)}
+    HSET: (f'{HSET}.json', True), HSETU: (None, False)}
 CLASSES = ['wrong_numbers', 'rounding_only', 'missing_or_extra_columns', 'grain_or_shape', 'abstained', 'other']
 
 
@@ -151,7 +168,8 @@ class QuestionBootstrap:
         self.qids = sorted(qids)
         self.pos = {q: i for i, q in enumerate(self.qids)}
         n = len(self.qids)
-        rng = random.Random(f'{SEED}:{name}')
+        seed = SEALED_SEED if name in (HSET, HSETU) else SEED
+        rng = random.Random(f'{seed}:{name}')
         self.counts = []
         for _ in range(REPS):
             c = [0] * n
@@ -283,6 +301,8 @@ def load_cell(model, label, run, agent, cond, set_name):
     d = cell_dir(run, agent, cond, set_name)
     if d is None:
         return
+    if AS_RECORDED and os.path.isdir(d + '.as-recorded'):
+        d += '.as-recorded'
     path = os.path.join(d, 'report.json')
     if not os.path.exists(path):
         if os.path.isdir(d):
@@ -315,7 +335,7 @@ for model, label, run, agent in MODELS:
                 continue
             load_cell(model, label, run, agent, cond, set_name)
 for cond in ['P', 'A', 'Am'] + SET4_LEVELS:
-    for set_name in ('heldout-4', 'heldout-4-unanswerable'):
+    for set_name in (HSET, HSETU):
         if cond == 'P' and set_name.endswith('unanswerable'):
             continue
         load_cell(SET4[0], SET4[1], SET4[2], SET4[3], cond, set_name)
@@ -421,10 +441,10 @@ for L in LEVELS:
         u_entry['per_level'][L] = stop_pool(cl, 'heldout-3-unanswerable')
 pooled['correct_stop_heldout3_unanswerable'] = u_entry
 # Set 4 unanswerable, pooled over the four DQL levels (one model): still 50 questions × 4 levels.
-if universe['heldout-4-unanswerable']:
-    pooled['correct_stop_heldout4_unanswerable'] = {'pooled': stop_pool(dql_cells('heldout-4-unanswerable', SET4_LEVELS), 'heldout-4-unanswerable')}
-    pooled['trust_heldout4'] = {'L2_L3': trust_pool(dql_cells('heldout-4', ['L2', 'L3']), 'heldout-4'),
-                                'all_DQL_levels': trust_pool(dql_cells('heldout-4', SET4_LEVELS), 'heldout-4')}
+if universe[HSETU]:
+    pooled['correct_stop_heldout4_unanswerable'] = {'pooled': stop_pool(dql_cells(HSETU, SET4_LEVELS), HSETU)}
+    pooled['trust_heldout4'] = {'L2_L3': trust_pool(dql_cells(HSET, ['L2', 'L3']), HSET),
+                                'all_DQL_levels': trust_pool(dql_cells(HSET, SET4_LEVELS), HSET)}
 
 
 # =========================================================================== 3. set 4 paired tests
@@ -446,33 +466,52 @@ def paired(a, b, set_name, grade='strict'):
             'gained': g, 'lost': l, 'p_raw': mcnemar_exact(g, l), 'diff_bootstrap': summarize_boot(values, undefined)}
 
 
-P4, A4, Am4 = get(SET4[0], 'P', 'heldout-4'), get(SET4[0], 'A', 'heldout-4'), get(SET4[0], 'Am', 'heldout-4')
+P4, A4, Am4 = get(SET4[0], 'P', HSET), get(SET4[0], 'A', HSET), get(SET4[0], 'Am', HSET)
 
 
 def set4_family(grade='strict'):
     res = {'vs_A': {}, 'vs_P': {}, 'P_vs_A': None}
-    for ref_name, ref in (('vs_A', A4), ('vs_P', P4)):
+    # Set 5 pre-registers its secondary families against P and against A-model; vs A is kept for comparison.
+    refs = (('vs_A', A4), ('vs_P', P4)) + ((('vs_Am', Am4),) if SEALED == '5' else ())
+    for ref_name, ref in refs:
         if not ref:
             continue
-        family = [L for L in SET4_LEVELS if get(SET4[0], L, 'heldout-4')]
-        tests = {L: paired(get(SET4[0], L, 'heldout-4'), ref, 'heldout-4', grade) for L in family}
+        family = [L for L in SET4_LEVELS if get(SET4[0], L, HSET)]
+        tests = {L: paired(get(SET4[0], L, HSET), ref, HSET, grade) for L in family}
         adj = holm([tests[L]['p_raw'] for L in family])
         for L, p in zip(family, adj):
             tests[L]['p_holm'] = p
             tests[L]['holm_family'] = family
         res[ref_name] = tests
     if P4 and A4:
-        res['P_vs_A'] = paired(P4, A4, 'heldout-4', grade)
+        res['P_vs_A'] = paired(P4, A4, HSET, grade)
     # Exploratory on set 4 (set 5 pre-registers W2 vs A-model as its one primary test).
-    W2c = get(SET4[0], 'W2', 'heldout-4')
+    W2c = get(SET4[0], 'W2', HSET)
     if Am4 and W2c and Am4['n'] == W2c['n']:
-        res['W2_vs_Am'] = paired(W2c, Am4, 'heldout-4', grade)
+        res['W2_vs_Am'] = paired(W2c, Am4, HSET, grade)
         if A4:
-            res['Am_vs_A'] = paired(Am4, A4, 'heldout-4', grade)
+            res['Am_vs_A'] = paired(Am4, A4, HSET, grade)
     return res
 
 
 set4 = set4_family('strict')
+
+
+# Set 5, pre-registered secondary 3: correct stops on the unanswerable questions, each DQL level against
+# A-model (exact McNemar, Holm over the four levels).
+def stop_family():
+    ref = get(SET4[0], 'Am', HSETU)
+    family = [L for L in SET4_LEVELS if get(SET4[0], L, HSETU)]
+    if not ref or not family:
+        return None
+    tests = {L: paired(get(SET4[0], L, HSETU), ref, HSETU) for L in family}
+    for L, p in zip(family, holm([tests[L]['p_raw'] for L in family])):
+        tests[L]['p_holm'] = p
+        tests[L]['holm_family'] = family
+    return tests
+
+
+stops_vs_Am = stop_family() if SEALED == '5' else None
 
 
 # Set 3: every level against the model's own P (and A where run), Holm within each model's family.
@@ -903,7 +942,7 @@ def store_results(cell):
     level_dir = os.path.dirname(cell['dir'])
     set_name = cell['set']
     names = [n for n in os.listdir(level_dir)
-             if n == set_name or n.startswith(f'{set_name}.attempt-') or n.startswith(f'{set_name}.aborted-')]
+             if n == set_name or n.startswith(f'{set_name}.attempt-') or n.startswith(f'{set_name}.aborted-') or n == f'{set_name}.as-recorded']
     names.sort(key=lambda n: (n != set_name, n))
     out, ambiguous = {}, 0
     for n in names:
@@ -1068,7 +1107,7 @@ def pool_regrade(filter_fn):
 
 
 regrade_pooled = {}
-for s in ('heldout-3', 'heldout-4'):
+for s in ('heldout-3', HSET):
     entry = {'all_conditions': pool_regrade(lambda c, s=s: c['set'] == s),
              'DQL_levels': pool_regrade(lambda c, s=s: c['set'] == s and c['cond'] in LEVELS),
              'P_one_shot': pool_regrade(lambda c, s=s: c['set'] == s and c['cond'] == 'P'),
@@ -1124,11 +1163,11 @@ def trust_cell(c):
     return out
 
 
-trust = {'heldout-4': {}, 'heldout-3': {}, 'heldout-3_pooled_by_level': {}}
+trust = {HSET: {}, 'heldout-3': {}, 'heldout-3_pooled_by_level': {}}
 for cond in CONDS:
-    c = get(SET4[0], cond, 'heldout-4')
+    c = get(SET4[0], cond, HSET)
     if c:
-        trust['heldout-4'][cond] = trust_cell(c)
+        trust[HSET][cond] = trust_cell(c)
 for model, *_ in MODELS:
     for cond in CONDS:
         c = get(model, cond, 'heldout-3')
@@ -1153,7 +1192,7 @@ if os.path.exists(OLD_REGRADE):
     old = {'answers': sum(x['n'] for x in oc), 'cells': len(oc), 'strict': sum(x['strict'] for x in oc),
            'lenient': sum(x['lenient'] for x in oc), 'lenient_rounding_1to4': sum(x['lenientRounded'] for x in oc)}
 h3 = regrade_pooled['heldout-3']['all_conditions']
-h4 = regrade_pooled['heldout-4']['all_conditions']
+h4 = regrade_pooled[HSET]['all_conditions']
 sentence = {'old_scope_from_regrade_json': old, 'set3_all_conditions_now': {k: h3[k] for k in ('n', 'strict', 'lenient', 'lenient_rounding')},
             'set4_all_conditions_now': {k: h4[k] for k in ('n', 'strict', 'lenient', 'lenient_rounding')}}
 
@@ -1161,7 +1200,8 @@ sentence = {'old_scope_from_regrade_json': old, 'set3_all_conditions_now': {k: h
 out = {
     'generatedAt': datetime.now(timezone.utc).isoformat(timespec='seconds'),
     'method': {
-        'bootstrap': f'question-level (cluster) percentile bootstrap, {REPS} reps, seed {SEED} (random.Random("{SEED}:<set>")), '
+        'bootstrap': f'question-level (cluster) percentile bootstrap, {REPS} reps, seed {SEED} (random.Random("{SEED}:<set>")); '
+                     f'{HSET} and {HSETU} use seed {SEALED_SEED}; '
                      'same resamples for every statistic on a set; pooled ratios resample questions, not answers',
         'wilson': 'Wilson score 95% interval, z = 1.96',
         'mcnemar': 'exact two-sided binomial McNemar on discordant pairs',
@@ -1177,13 +1217,14 @@ out = {
         'LB_WB_build': f'LB and WB count only when identity.dql.commit starts with {FIXED}',
         'sealed': 'aggregates only; no question ids, text or SQL are written',
     },
+    'sealed_set': HSET, 'as_recorded': AS_RECORDED,
     'excluded': excluded, 'partial_cells': partial,
     'questions_per_set': {s: len(universe[s]) for s in SETS},
     'accuracy': {s: {m: dict(v) for m, v in d.items()} for s, d in accuracy.items()},
-    'pooled': pooled, 'set4_paired': set4, 'set3_paired': set3_paired, 'trust': trust,
+    'pooled': pooled, 'set4_paired': set4, 'set3_paired': set3_paired, 'trust': trust, 'stops_vs_Am': stops_vs_Am,
     'regrade': {'cells': regrade_cells, 'pooled': regrade_pooled}, 'lenient_sentence': sentence,
 }
-with open(os.path.join(HERE, 'stats_v2.json'), 'w') as f:
+with open(os.path.join(HERE, f'{OUT_NAME}.json'), 'w') as f:
     json.dump(out, f, indent=1)
 
 
@@ -1206,14 +1247,14 @@ LABEL = {m: l for m, l, *_ in MODELS}
 COND_NAME = {'P': 'P (one-shot SQL)', 'A': 'A (agent)', 'Am': 'A-model (agent + DQL modeling context)'}
 md = []
 w = md.append
-w('# Insurance benchmark — statistics v2')
+w('# Insurance benchmark — statistics v2' + (f' (sealed set {SEALED}' + (', as first recorded' if AS_RECORDED else '') + ')' if SEALED != '4' or AS_RECORDED else ''))
 w('')
 w(f"Generated {out['generatedAt']} by `stats_v2.py` in this folder (Python standard library; re-runnable; read-only on runs/, projects/, gold/ and insurance/; "
   'no model or network calls). Sealed sets: aggregates only.')
 w('')
 w('## Method note')
 w('')
-w(f'- **Bootstrap.** Question-level (cluster) percentile bootstrap: questions are resampled with replacement, {REPS:,} replicates, fixed seed `{SEED}` '
+w(f'- **Bootstrap.** Question-level (cluster) percentile bootstrap: questions are resampled with replacement, {REPS:,} replicates, fixed seed `{SEED}`' + (f' (`{SEALED_SEED}` for {HSET})' if SEALED_SEED != SEED else '') + ' '
   '(one stream per set, `random.Random("<seed>:<set>")`). Every statistic on a set uses the same resamples, so paired differences are computed on identical question draws. '
   'For pooled measures all answers to a resampled question enter together (a question drawn twice contributes all its answers twice), which removes the pseudo-replication '
   'of counting the same question once per model and level as if it were an independent observation.')
@@ -1222,7 +1263,8 @@ w('- **Effective sample size.** `ESS_icc = answers / DEFF`, `DEFF = 1 + (n0 − 
   '`ESS_boot = p(1 − p) / SE²_boot` (undefined when p is 0 or 1); `ESS_min = (Σ m_q)² / Σ m_q²`, the value if all answers to a question always agreed (ICC = 1).')
 w('- **Rule of three.** With zero wrong trusted answers, the one-sided 95% upper bound is `3/n` with **n = distinct questions that ever received a trusted answer**; '
   'the exact bound `1 − 0.05^(1/n)` is shown beside it. When some are wrong, the question-level rate (questions with ≥ 1 wrong trusted answer) gets an exact Clopper–Pearson one-sided bound.')
-w('- **Paired tests (set 4).** Exact two-sided McNemar on discordant questions; Holm–Bonferroni step-down within the family {L2, L3, W2, WB} vs A (4 tests) and separately vs P (4 tests).')
+w(f'- **Paired tests (set {SEALED}).** Exact two-sided McNemar on discordant questions; Holm–Bonferroni step-down within the family {{L2, L3, W2, WB}} vs A (4 tests) and separately vs P (4 tests)'
+  + (' and vs A-model (4 tests, pre-registered); correct stops vs A-model (4 tests, pre-registered).' if SEALED == '5' else '.'))
 w('- **Re-grade.** Strict = the run\'s own `executionMatched`, re-checked on the graded rows. Lenient = strict, or same row count and every gold *measure* (numeric) column '
   'matched by an answer column row by row (label/id columns may be missing or different). Lenient + rounding = lenient, or same row count and the answer\'s measure values '
   'equal the gold values **rounded to d decimals, d ∈ {0,…,4}** (one d per answer; only non-integer gold values are rounded; half-up on the exact binary value, decimal half-up '
@@ -1317,27 +1359,27 @@ for model, p in u_entry['agent'].items():
     stop_row(f'Agent A · {LABEL[model]}', p)
 w('')
 if 'correct_stop_heldout4_unanswerable' in pooled:
-    w('Set 4 (Sonnet 5.5) for reference:')
+    w(f'Set {SEALED} (Sonnet 5.5) for reference:')
     w('')
     w('| Pool | Answers | Correct stops | Rate | Naive Wilson (answers) | Question-cluster bootstrap | Distinct questions | Answers/question mean (max) | ICC | ESS_icc | ESS_boot | ESS_min |')
     w('|---|---:|---:|---:|---|---|---:|---|---:|---:|---:|---:|')
-    stop_row('heldout-4-unanswerable, L2+L3+W2+WB pooled', pooled['correct_stop_heldout4_unanswerable']['pooled'])
+    stop_row(f'{HSETU}, L2+L3+W2+WB pooled', pooled['correct_stop_heldout4_unanswerable']['pooled'])
     w('')
     w('| Pool | Trusted answers | Wrong | Precision | Naive Wilson (answers) | Question-cluster bootstrap | Distinct questions (with wrong) | Answers/question mean (max) | ICC | ESS_icc | ESS_boot | ESS_min | Upper 95% wrong-rate |')
     w('|---|---:|---:|---:|---|---|---:|---|---:|---:|---:|---:|---|')
     for name, p in pooled['trust_heldout4'].items():
-        pool_row(f'heldout-4 {name}', p)
+        pool_row(f'{HSET} {name}', p)
     w('')
 
 # ---- 3. set 4 paired
-w('## 3. Set 4 (Claude Sonnet 5.5, 200 questions): paired tests')
+w(f'## 3. Set {SEALED} (Claude Sonnet 5.5, 200 questions): paired tests')
 w('')
 w('Gained = the level right and the reference wrong; lost = the reverse. Holm adjusts within each family of 4 tests.')
 w('')
 def paired_table(res):
     w('| Comparison | Level k/n | Ref k/n | Δ accuracy | Paired bootstrap 95% (Δ) | Gained / lost | McNemar p (raw) | Holm-adjusted p |')
     w('|---|---:|---:|---:|---|---|---:|---:|')
-    for ref_name, ref_label in (('vs_A', 'A (agent)'), ('vs_P', 'P (one-shot SQL)')):
+    for ref_name, ref_label in (('vs_A', 'A (agent)'), ('vs_P', 'P (one-shot SQL)'), ('vs_Am', 'A-model')):
         for L, t in (res.get(ref_name) or {}).items():
             w(f"| {L} − {ref_label} | {t['k_left']}/{t['n']} | {t['k_right']}/{t['n']} | {'+' if t['diff'] >= 0 else ''}{100 * t['diff']:.1f} pts | "
               f"{ci(t['diff_bootstrap']['ci'])} | {t['gained']} / {t['lost']} | {pfmt(t['p_raw'])} | {pfmt(t['p_holm'])} |")
@@ -1345,7 +1387,7 @@ def paired_table(res):
         t = res['P_vs_A']
         w(f"| P − A (not in a family) | {t['k_left']}/{t['n']} | {t['k_right']}/{t['n']} | {'+' if t['diff'] >= 0 else ''}{100 * t['diff']:.1f} pts | "
           f"{ci(t['diff_bootstrap']['ci'])} | {t['gained']} / {t['lost']} | {pfmt(t['p_raw'])} | — |")
-    for key, name in (('W2_vs_Am', 'W2 − A-model (exploratory)'), ('Am_vs_A', 'A-model − A (exploratory)')):
+    for key, name in (('W2_vs_Am', 'W2 − A-model (H1, pre-registered primary)' if SEALED == '5' else 'W2 − A-model (exploratory)'), ('Am_vs_A', 'A-model − A (exploratory)')):
         t = res.get(key)
         if t:
             w(f"| {name} | {t['k_left']}/{t['n']} | {t['k_right']}/{t['n']} | {'+' if t['diff'] >= 0 else ''}{100 * t['diff']:.1f} pts | "
@@ -1354,6 +1396,15 @@ def paired_table(res):
 
 
 paired_table(set4)
+if stops_vs_Am:
+    w('**Correct stops on the 50 unanswerable questions, each level against A-model** (pre-registered secondary 3; Holm over the four levels).')
+    w('')
+    w('| Comparison | Level k/n | A-model k/n | Δ | Paired bootstrap 95% (Δ) | Gained / lost | McNemar p (raw) | Holm-adjusted p |')
+    w('|---|---:|---:|---:|---|---|---:|---:|')
+    for L, t in stops_vs_Am.items():
+        w(f"| {L} − A-model | {t['k_left']}/{t['n']} | {t['k_right']}/{t['n']} | {'+' if t['diff'] >= 0 else ''}{100 * t['diff']:.1f} pts | "
+          f"{ci(t['diff_bootstrap']['ci'])} | {t['gained']} / {t['lost']} | {pfmt(t['p_raw'])} | {pfmt(t['p_holm'])} |")
+    w('')
 w('**Sensitivity: the same tests under the lenient grades** (section 5). The agent and one-shot SQL lose many more answers to label columns than DQL does, '
   'so the comparison with A depends on the grading rule.')
 w('')
@@ -1381,9 +1432,9 @@ def trust_table(rows):
     w('')
 
 
-w('### Set 4 (Sonnet 5.5)')
+w(f'### Set {SEALED} (Sonnet 5.5)')
 w('')
-trust_table(list(trust['heldout-4'].items()))
+trust_table(list(trust[HSET].items()))
 w('### Set 3, pooled across models per level (precision CI = question-cluster bootstrap)')
 w('')
 w('| Level | Answers | T | W_T | Precision π | Naive Wilson | Cluster bootstrap | Distinct questions trusted (with wrong) | κ | σ |')
@@ -1415,7 +1466,7 @@ w('')
 w('| Scope | Answers | Strict | Lenient | Lenient + rounding | Strict-wrong | ' + ' | '.join(CLASSES) + ' |')
 w('|---|---:|---:|---:|---:|---:|' + '---:|' * len(CLASSES))
 scopes = []
-for s in ('heldout-3', 'heldout-4'):
+for s in ('heldout-3', HSET):
     e = regrade_pooled[s]
     scopes += [(f'{s} · all conditions', e['all_conditions']), (f'{s} · DQL levels', e['DQL_levels']),
                (f'{s} · P (one-shot)', e['P_one_shot']), (f'{s} · A (agent)', e['A_agent'])]
@@ -1435,7 +1486,7 @@ w('### Per condition, pooled over models')
 w('')
 w('| Set | Condition | Answers | Strict | Lenient | Lenient + rounding | Strict-wrong | ' + ' | '.join(CLASSES) + ' |')
 w('|---|---|---:|---:|---:|---:|---:|' + '---:|' * len(CLASSES))
-for s in ('heldout-3', 'heldout-4'):
+for s in ('heldout-3', HSET):
     for cond, p in regrade_pooled[s]['per_condition'].items():
         w(f"| {s} | {COND_NAME.get(cond, cond)} | {p['n']} | {p['strict']} | {p['lenient']} | {p['lenient_rounding']} | {p['strict_wrong']} | {class_cells(p)} |")
 w('')
@@ -1474,27 +1525,27 @@ if old:
       f"lenient k = {old['lenient']:,} (lenient is the larger number).")
     w('')
 w(f"With every condition now graded (all seven models, P, A, all DQL levels, LB/WB on build {FIXED} only): set 3 has **strict {h3['strict']:,} and lenient {h3['lenient']:,}** "
-  f"of {h3['n']:,} answers (lenient + rounding {h3['lenient_rounding']:,}); set 4 (Sonnet 5.5) has strict {h4['strict']:,}, lenient {h4['lenient']:,}, "
+  f"of {h3['n']:,} answers (lenient + rounding {h3['lenient_rounding']:,}); set {SEALED} (Sonnet 5.5) has strict {h4['strict']:,}, lenient {h4['lenient']:,}, "
   f"lenient + rounding {h4['lenient_rounding']:,} of {h4['n']:,}.")
 w('')
 pc = regrade_pooled['heldout-3']['per_condition']
-pc4 = regrade_pooled['heldout-4']['per_condition']
+pc4 = regrade_pooled[HSET]['per_condition']
 gap = lambda p: 100 * (p['lenient'] - p['strict']) / p['n']
 dql3 = regrade_pooled['heldout-3']['DQL_levels']
-dql4 = regrade_pooled['heldout-4']['DQL_levels']
+dql4 = regrade_pooled[HSET]['DQL_levels']
 w(f"Suggested wording: *On set 3, {h3['strict']:,} of {h3['n']:,} answers were correct under the strict rule and {h3['lenient']:,} under the lenient rule "
   f"(+{gap(h3):.1f} points). The gap is not uniform: +{gap(dql3):.1f} points for DQL levels, +{gap(pc['P']):.1f} for one-shot SQL and +{gap(pc['A']):.1f} for the agent on set 3; "
-  f"on set 4, +{gap(dql4):.1f} for DQL levels against +{gap(pc4['P']):.1f} (one-shot) and +{gap(pc4['A']):.1f} (agent), mostly answers that return a different label column "
+  f"on set {SEALED}, +{gap(dql4):.1f} for DQL levels against +{gap(pc4['P']):.1f} (one-shot) and +{gap(pc4['A']):.1f} (agent), mostly answers that return a different label column "
   "(e.g. a name for an id) with the right numbers.*")
 w('')
 w('The draft\'s conclusion that "the strict scores do not depend on column naming" holds for the pooled set-3 total but not for comparisons against the baselines: '
   'see the lenient sensitivity of the set-4 paired tests in section 3.')
 w('')
 
-with open(os.path.join(HERE, 'stats_v2.md'), 'w') as f:
+with open(os.path.join(HERE, f'{OUT_NAME}.md'), 'w') as f:
     f.write('\n'.join(md) + '\n')
 
 # =========================================================================== stdout (aggregates only)
 print(f"cells {len(cells)} (excluded {len(excluded)}, partial {len(partial)}); graded answers {sum(c['n'] for c in regrade_cells)}; "
       f"strict re-check disagreements {tot_dis}; unrunnable {tot_unr}")
-print('wrote stats_v2.json and stats_v2.md')
+print(f'wrote {OUT_NAME}.json and {OUT_NAME}.md')
