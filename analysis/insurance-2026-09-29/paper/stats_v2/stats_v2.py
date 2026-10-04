@@ -938,13 +938,15 @@ TMP = tempfile.mkdtemp(prefix='stats_v2_')
 
 def store_results(cell):
     """Rows each DQL answer showed, from COPIES of the run store(s) of this cell
-    (the finished set first, then resumed attempts), keyed by identical SQL text."""
+    (the finished set first, then resumed attempts). Keyed by the asking run's question and the SQL text,
+    so that two questions whose SQL is identical but whose shown rows differ (a governed answer can
+    post-process rows) each get their own; keyed by SQL text alone as a fallback."""
     level_dir = os.path.dirname(cell['dir'])
     set_name = cell['set']
     names = [n for n in os.listdir(level_dir)
              if n == set_name or n.startswith(f'{set_name}.attempt-') or n.startswith(f'{set_name}.aborted-') or n == f'{set_name}.as-recorded']
     names.sort(key=lambda n: (n != set_name, n))
-    out, ambiguous = {}, 0
+    out, by_question, ambiguous = {}, {}, 0
     for n in names:
         source = os.path.join(level_dir, n, 'project', '.dql', 'local', 'agent-runs.sqlite')
         if not os.path.exists(source):
@@ -957,7 +959,13 @@ def store_results(cell):
             shutil.copyfile(source + '-wal', target + '-wal')
         con = sqlite3.connect(target)
         try:
-            for (payload,) in con.execute('select payload_json from agent_run_artifacts'):
+            questions = defaultdict(set)
+            try:
+                for question, fingerprint in con.execute('select r.question, f.fingerprint from agent_runs r join agent_run_artifact_refs f on f.run_id = r.id'):
+                    questions[fingerprint].add((question or '').strip())
+            except sqlite3.Error:
+                pass
+            for (fingerprint, payload) in con.execute('select fingerprint, payload_json from agent_run_artifacts'):
                 try:
                     artifact = json.loads(payload)
                 except Exception:
@@ -975,13 +983,15 @@ def store_results(cell):
                         rows.append([row.get(k) for k in keys])
                     else:
                         rows.append(row)
+                for question in questions.get(fingerprint, ()):
+                    by_question.setdefault((question, sql), {'rows': rows})
                 if sql in out and out[sql]['rows'] != rows:
                     ambiguous += 1
                     continue
                 out.setdefault(sql, {'rows': rows})
         finally:
             con.close()
-    return out, ambiguous
+    return {'sql': out, 'question': by_question}, ambiguous
 
 
 _warehouses = {}
@@ -1025,8 +1035,8 @@ for s, (fname, answerable) in SETS.items():
 
 
 def grade_cell(cell):
-    store, ambiguous = ({}, 0) if cell['cond'] in UNLABELLED else store_results(cell)
-    need = [answer_sql(r['result']) for r in cell['q'].values() if answer_sql(r['result']) and answer_sql(r['result']) not in store]
+    store, ambiguous = ({'sql': {}, 'question': {}}, 0) if cell['cond'] in UNLABELLED else store_results(cell)
+    need = [answer_sql(r['result']) for r in cell['q'].values() if answer_sql(r['result']) and answer_sql(r['result']) not in store['sql']]
     cache = rerun(cell['layer'], need) if need else {}
     graded = {}
     for q, rec in cell['q'].items():
@@ -1039,7 +1049,8 @@ def grade_cell(cell):
         columns = gold['gold'].get('columns') or [] if gold else []
         measures = measure_indexes(gold.get('goldSql'), columns, gold_rows) if gold else []
         sql = answer_sql(x)
-        stored = store.get(sql) if sql else None
+        asked = (gold or {}).get('question', '').strip()
+        stored = (store['question'].get((asked, sql)) or store['sql'].get(sql)) if sql else None
         ran = cache.get(sql) if sql and not stored else None
         executed = stored if stored else (ran if ran and 'error' not in ran else None)
         source = 'store' if stored else ('rerun' if executed else ('unrunnable' if sql else 'none'))
