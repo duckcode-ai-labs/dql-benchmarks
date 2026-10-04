@@ -58,3 +58,24 @@ shows a table's columns.
 
 Save the sheet and return it. The paper reports the share of correct, wrong and ambiguous items with a
 95% interval, and re-scores the benchmark without any item found wrong.
+
+## A second, separate review: the set-5 questions where W2 and A-model disagree
+
+`work/insurance/audit/set5-discordant-review.csv` (made by `insurance/audit/make_discordant_sheet.py`,
+after set 5 was scored) lists every answerable set-5 question where exactly one of DQL W2 and A-model
+returned the reference rows: 34 questions. It judges the answers, not the reference. It is reported
+separately from the reference audit above, as a post-hoc analysis of the primary result.
+
+The two answers appear as **Answer 1** and **Answer 2** in a random order, so you do not know which is
+DQL's. Judge each from its result rows against the question and the reference result:
+
+- **acceptable**: a business reader who asked this question would accept this result as the answer: the
+  numbers are right and each is attached to an identifiable entity, period or group as asked. A different
+  but equivalent label (a name where the reference shows an id) is acceptable.
+- **not acceptable**: wrong numbers, a different grain or shape (a total where a list was asked), the
+  entity a number belongs to cannot be identified, or it answers a different question.
+- **unsure**: you cannot decide from what is shown; say why.
+
+Then say which answer is better (1, 2 or same) and why. The SQL columns at the right are optional: their
+style may reveal which system wrote them, so read them only when the rows alone do not settle it.
+`set5-discordant-key.json` says which answer is which; open it only after every verdict is written.

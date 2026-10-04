@@ -1,6 +1,6 @@
 # DQL Benchmarks
 
-Benchmarks, evidence and analysis for [DQL](https://github.com/duckcode-ai/dql), DuckCode's open-source governed analytics layer. This repository holds everything behind the paper *Accuracy, Trust Labels and Abstention in a Governed Text-to-SQL Layer* (draft, [analysis/insurance-2026-09-29/](analysis/insurance-2026-09-29/)): the harness that ran it, the question sets that may be published, every run report, the statistics script and the paper generator.
+Benchmarks, evidence and analysis for [DQL](https://github.com/duckcode-ai-labs/dql), DuckCode's open-source governed analytics layer. This repository holds everything behind the paper *Accuracy, Trust Labels and Abstention in a Governed Text-to-SQL Layer* (draft, [analysis/insurance-2026-09-29/](analysis/insurance-2026-09-29/)): the harness that ran it, the question sets that may be published, every run report, the statistics script and the paper generator.
 
 **What is measured:** DQL's Ask answering business questions in plain English, scored on three things at once:
 - **accuracy**, the share of answers that return the reference rows;

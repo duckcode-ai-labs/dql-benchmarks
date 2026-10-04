@@ -1,6 +1,6 @@
 # Insurance benchmark — statistics v2 (sealed set 5)
 
-Generated 2026-10-04T03:53:20+00:00 by `stats_v2.py` in this folder (Python standard library; re-runnable; read-only on runs/, projects/, gold/ and insurance/; no model or network calls). Sealed sets: aggregates only.
+Generated 2026-10-04T04:54:44+00:00 by `stats_v2.py` in this folder (Python standard library; re-runnable; read-only on runs/, projects/, gold/ and insurance/; no model or network calls). Sealed sets: aggregates only.
 
 ## Method note
 
@@ -309,15 +309,15 @@ Gained = the level right and the reference wrong; lost = the reverse. Holm adjus
 | Comparison | Level k/n | Ref k/n | Δ accuracy | Paired bootstrap 95% (Δ) | Gained / lost | McNemar p (raw) | Holm-adjusted p |
 |---|---:|---:|---:|---|---|---:|---:|
 | L2 − A (agent) | 177/200 | 176/200 | +0.5 pts | -5.0–6.0% | 16 / 15 | 1.0000 | 1.0000 |
-| L3 − A (agent) | 180/200 | 176/200 | +2.0 pts | -3.5–7.5% | 17 / 13 | 0.5847 | 1.0000 |
+| L3 − A (agent) | 181/200 | 176/200 | +2.5 pts | -3.0–7.5% | 17 / 12 | 0.4583 | 1.0000 |
 | W2 − A (agent) | 184/200 | 176/200 | +4.0 pts | -0.5–8.5% | 16 / 8 | 0.1516 | 0.6064 |
 | WB − A (agent) | 177/200 | 176/200 | +0.5 pts | -4.5–5.5% | 14 / 13 | 1.0000 | 1.0000 |
 | L2 − P (one-shot SQL) | 177/200 | 151/200 | +13.0 pts | 6.5–19.5% | 38 / 12 | 0.0003 | 0.0006 |
-| L3 − P (one-shot SQL) | 180/200 | 151/200 | +14.5 pts | 8.0–21.0% | 39 / 10 | 3.8e-05 | 0.0001 |
+| L3 − P (one-shot SQL) | 181/200 | 151/200 | +15.0 pts | 8.5–21.5% | 39 / 9 | 1.5e-05 | 4.6e-05 |
 | W2 − P (one-shot SQL) | 184/200 | 151/200 | +16.5 pts | 10.5–22.5% | 38 / 5 | 2.5e-07 | 1.0e-06 |
 | WB − P (one-shot SQL) | 177/200 | 151/200 | +13.0 pts | 6.5–19.5% | 38 / 12 | 0.0003 | 0.0006 |
 | L2 − A-model | 177/200 | 184/200 | -3.5 pts | -8.0–1.0% | 8 / 15 | 0.2100 | 0.7570 |
-| L3 − A-model | 180/200 | 184/200 | -2.0 pts | -6.5–2.5% | 9 / 13 | 0.5235 | 1.0000 |
+| L3 − A-model | 181/200 | 184/200 | -1.5 pts | -6.0–3.0% | 9 / 12 | 0.6636 | 1.0000 |
 | W2 − A-model | 184/200 | 184/200 | +0.0 pts | -3.5–3.5% | 7 / 7 | 1.0000 | 1.0000 |
 | WB − A-model | 177/200 | 184/200 | -3.5 pts | -8.0–1.0% | 7 / 14 | 0.1892 | 0.7570 |
 | P − A (not in a family) | 151/200 | 176/200 | -12.5 pts | -17.5–-7.5% | 3 / 28 | 4.6e-06 | — |
@@ -329,15 +329,15 @@ Gained = the level right and the reference wrong; lost = the reverse. Holm adjus
 | Comparison | Level k/n | Ref k/n | Δ accuracy | Paired bootstrap 95% (Δ) | Gained / lost | McNemar p (raw) | Holm-adjusted p |
 |---|---:|---:|---:|---|---|---:|---:|
 | L2 − A (agent) | 177/200 | 176/200 | +0.5 pts | -5.0–6.0% | 16 / 15 | 1.0000 | 1.0000 |
-| L3 − A (agent) | 180/200 | 176/200 | +2.0 pts | -3.5–7.5% | 17 / 13 | 0.5847 | 1.0000 |
+| L3 − A (agent) | 181/200 | 176/200 | +2.5 pts | -3.0–7.5% | 17 / 12 | 0.4583 | 1.0000 |
 | W2 − A (agent) | 184/200 | 176/200 | +4.0 pts | -0.5–8.5% | 16 / 8 | 0.1516 | 0.6064 |
 | WB − A (agent) | 177/200 | 176/200 | +0.5 pts | -4.5–5.5% | 14 / 13 | 1.0000 | 1.0000 |
 | L2 − P (one-shot SQL) | 177/200 | 151/200 | +13.0 pts | 6.5–19.5% | 38 / 12 | 0.0003 | 0.0006 |
-| L3 − P (one-shot SQL) | 180/200 | 151/200 | +14.5 pts | 8.0–21.0% | 39 / 10 | 3.8e-05 | 0.0001 |
+| L3 − P (one-shot SQL) | 181/200 | 151/200 | +15.0 pts | 8.5–21.5% | 39 / 9 | 1.5e-05 | 4.6e-05 |
 | W2 − P (one-shot SQL) | 184/200 | 151/200 | +16.5 pts | 10.5–22.5% | 38 / 5 | 2.5e-07 | 1.0e-06 |
 | WB − P (one-shot SQL) | 177/200 | 151/200 | +13.0 pts | 6.5–19.5% | 38 / 12 | 0.0003 | 0.0006 |
 | L2 − A-model | 177/200 | 184/200 | -3.5 pts | -8.0–1.0% | 8 / 15 | 0.2100 | 0.7570 |
-| L3 − A-model | 180/200 | 184/200 | -2.0 pts | -6.5–2.5% | 9 / 13 | 0.5235 | 1.0000 |
+| L3 − A-model | 181/200 | 184/200 | -1.5 pts | -6.0–3.0% | 9 / 12 | 0.6636 | 1.0000 |
 | W2 − A-model | 184/200 | 184/200 | +0.0 pts | -3.5–3.5% | 7 / 7 | 1.0000 | 1.0000 |
 | WB − A-model | 177/200 | 184/200 | -3.5 pts | -8.0–1.0% | 7 / 14 | 0.1892 | 0.7570 |
 | P − A (not in a family) | 151/200 | 176/200 | -12.5 pts | -17.5–-7.5% | 3 / 28 | 4.6e-06 | — |
@@ -356,7 +356,7 @@ T = answers labelled certified/governed; W_T = of those, strict-wrong; precision
 | A (agent) | 200 | — (no labels) | — | — | — | — | — | 29.5% | 45/50 / 0 |
 | A-model (agent + DQL modeling context) | 200 | — (no labels) | — | — | — | — | — | 19.5% | 46/50 / 0 |
 | L2 | 200 | 28 | 10 | 1 | 64.3% | 45.8–79.3% | 14.0% | 5.0% | 45/50 / 2 |
-| L3 | 200 | 26 | 8 | 1 | 69.2% | 50.0–83.5% | 13.0% | 4.0% | 43/50 / 2 |
+| L3 | 200 | 26 | 8 | 0 | 69.2% | 50.0–83.5% | 13.0% | 4.0% | 43/50 / 2 |
 | W2 | 200 | 4 | 1 | 1 | 75.0% | 30.1–95.4% | 2.0% | 0.5% | 41/50 / 1 |
 | WB | 200 | 45 | 14 | 10 | 68.9% | 54.3–80.5% | 22.5% | 7.0% | 39/50 / 2 |
 
@@ -500,13 +500,13 @@ T = answers labelled certified/governed; W_T = of those, strict-wrong; precision
 | heldout-3 · GPT-6 Luna (max) | 400 | 300 (75.0%) | 311 (77.8%) | 311 (77.8%) | 100 | 46 (46.0%) | 0 (0.0%) | 11 (11.0%) | 8 (8.0%) | 34 (34.0%) | 1 (1.0%) |
 | heldout-3 · GPT-6 Sol (medium) | 400 | 301 (75.2%) | 313 (78.2%) | 314 (78.5%) | 99 | 48 (48.5%) | 1 (1.0%) | 12 (12.1%) | 9 (9.1%) | 29 (29.3%) | 0 (0.0%) |
 | heldout-3 · GPT-5.6 Terra (high) | 400 | 283 (70.8%) | 297 (74.2%) | 297 (74.2%) | 117 | 42 (35.9%) | 0 (0.0%) | 14 (12.0%) | 14 (12.0%) | 47 (40.2%) | 0 (0.0%) |
-| heldout-5 · all conditions | 1400 | 1086 (77.6%) | 1229 (87.8%) | 1229 (87.8%) | 314 | 104 (33.1%) | 0 (0.0%) | 150 (47.8%) | 47 (15.0%) | 12 (3.8%) | 1 (0.3%) |
-| heldout-5 · DQL levels | 800 | 665 (83.1%) | 718 (89.8%) | 718 (89.8%) | 135 | 49 (36.3%) | 0 (0.0%) | 53 (39.3%) | 21 (15.6%) | 12 (8.9%) | 0 (0.0%) |
+| heldout-5 · all conditions | 1400 | 1086 (77.6%) | 1230 (87.9%) | 1230 (87.9%) | 314 | 103 (32.8%) | 0 (0.0%) | 151 (48.1%) | 47 (15.0%) | 12 (3.8%) | 1 (0.3%) |
+| heldout-5 · DQL levels | 800 | 665 (83.1%) | 719 (89.9%) | 719 (89.9%) | 135 | 48 (35.6%) | 0 (0.0%) | 54 (40.0%) | 21 (15.6%) | 12 (8.9%) | 0 (0.0%) |
 | heldout-5 · P (one-shot) | 200 | 119 (59.5%) | 151 (75.5%) | 151 (75.5%) | 81 | 25 (30.9%) | 0 (0.0%) | 34 (42.0%) | 21 (25.9%) | 0 (0.0%) | 1 (1.2%) |
 | heldout-5 · A (agent) | 200 | 141 (70.5%) | 176 (88.0%) | 176 (88.0%) | 59 | 19 (32.2%) | 0 (0.0%) | 37 (62.7%) | 3 (5.1%) | 0 (0.0%) | 0 (0.0%) |
-| heldout-5 · Claude Sonnet 5.5 | 1400 | 1086 (77.6%) | 1229 (87.8%) | 1229 (87.8%) | 314 | 104 (33.1%) | 0 (0.0%) | 150 (47.8%) | 47 (15.0%) | 12 (3.8%) | 1 (0.3%) |
-| both sets · all conditions | 4280 | 3229 (75.4%) | 3448 (80.6%) | 3501 (81.8%) | 1051 | 337 (32.1%) | 53 (5.0%) | 226 (21.5%) | 144 (13.7%) | 280 (26.6%) | 11 (1.0%) |
-| both sets · Sonnet 5.5 (all its conditions) | 1840 | 1453 (79.0%) | 1609 (87.4%) | 1612 (87.6%) | 387 | 126 (32.6%) | 3 (0.8%) | 163 (42.1%) | 61 (15.8%) | 33 (8.5%) | 1 (0.3%) |
+| heldout-5 · Claude Sonnet 5.5 | 1400 | 1086 (77.6%) | 1230 (87.9%) | 1230 (87.9%) | 314 | 103 (32.8%) | 0 (0.0%) | 151 (48.1%) | 47 (15.0%) | 12 (3.8%) | 1 (0.3%) |
+| both sets · all conditions | 4280 | 3229 (75.4%) | 3449 (80.6%) | 3502 (81.8%) | 1051 | 336 (32.0%) | 53 (5.0%) | 227 (21.6%) | 144 (13.7%) | 280 (26.6%) | 11 (1.0%) |
+| both sets · Sonnet 5.5 (all its conditions) | 1840 | 1453 (79.0%) | 1610 (87.5%) | 1613 (87.7%) | 387 | 125 (32.3%) | 3 (0.8%) | 164 (42.4%) | 61 (15.8%) | 33 (8.5%) | 1 (0.3%) |
 | both sets · agent A (Opus 5.5 + Sonnet 5.5) | 280 | 206 (73.6%) | 243 (86.8%) | 249 (88.9%) | 74 | 25 (33.8%) | 6 (8.1%) | 39 (52.7%) | 4 (5.4%) | 0 (0.0%) | 0 (0.0%) |
 
 Class cells = count (share of strict-wrong answers).
@@ -530,7 +530,7 @@ Class cells = count (share of strict-wrong answers).
 | heldout-5 | A (agent) | 200 | 141 | 176 | 176 | 59 | 19 (32.2%) | 0 (0.0%) | 37 (62.7%) | 3 (5.1%) | 0 (0.0%) | 0 (0.0%) |
 | heldout-5 | A-model (agent + DQL modeling context) | 200 | 161 | 184 | 184 | 39 | 11 (28.2%) | 0 (0.0%) | 26 (66.7%) | 2 (5.1%) | 0 (0.0%) | 0 (0.0%) |
 | heldout-5 | L2 | 200 | 159 | 177 | 177 | 41 | 12 (29.3%) | 0 (0.0%) | 18 (43.9%) | 3 (7.3%) | 8 (19.5%) | 0 (0.0%) |
-| heldout-5 | L3 | 200 | 165 | 180 | 180 | 35 | 11 (31.4%) | 0 (0.0%) | 15 (42.9%) | 5 (14.3%) | 4 (11.4%) | 0 (0.0%) |
+| heldout-5 | L3 | 200 | 165 | 181 | 181 | 35 | 10 (28.6%) | 0 (0.0%) | 16 (45.7%) | 5 (14.3%) | 4 (11.4%) | 0 (0.0%) |
 | heldout-5 | W2 | 200 | 175 | 184 | 184 | 25 | 13 (52.0%) | 0 (0.0%) | 9 (36.0%) | 3 (12.0%) | 0 (0.0%) | 0 (0.0%) |
 | heldout-5 | WB | 200 | 166 | 177 | 177 | 34 | 13 (38.2%) | 0 (0.0%) | 11 (32.4%) | 10 (29.4%) | 0 (0.0%) | 0 (0.0%) |
 
@@ -614,17 +614,17 @@ Class cells = count (share of strict-wrong answers).
 | heldout-5 | Claude Sonnet 5.5 | A (agent) | 200 | 141 | 176 | 176 | 59 | 19 / 0 / 37 / 3 / 0 / 0 | 0 / 200 / 0 | 0 |
 | heldout-5 | Claude Sonnet 5.5 | A-model (agent + DQL modeling context) | 200 | 161 | 184 | 184 | 39 | 11 / 0 / 26 / 2 / 0 / 0 | 0 / 200 / 0 | 0 |
 | heldout-5 | Claude Sonnet 5.5 | L2 | 200 | 159 | 177 | 177 | 41 | 12 / 0 / 18 / 3 / 8 / 0 | 192 / 0 / 0 | 0 |
-| heldout-5 | Claude Sonnet 5.5 | L3 | 200 | 165 | 180 | 180 | 35 | 11 / 0 / 15 / 5 / 4 / 0 | 196 / 0 / 0 | 0 |
+| heldout-5 | Claude Sonnet 5.5 | L3 | 200 | 165 | 181 | 181 | 35 | 10 / 0 / 16 / 5 / 4 / 0 | 196 / 0 / 0 | 0 |
 | heldout-5 | Claude Sonnet 5.5 | W2 | 200 | 175 | 184 | 184 | 25 | 13 / 0 / 9 / 3 / 0 / 0 | 200 / 0 / 0 | 0 |
-| heldout-5 | Claude Sonnet 5.5 | WB | 200 | 166 | 177 | 177 | 34 | 13 / 0 / 11 / 10 / 0 / 0 | 200 / 0 / 0 | 1 |
+| heldout-5 | Claude Sonnet 5.5 | WB | 200 | 166 | 177 | 177 | 34 | 13 / 0 / 11 / 10 / 0 / 0 | 200 / 0 / 0 | 0 |
 
 ### Sub-kinds, pooled (both sets, all conditions)
 
 | Class:sub-kind | Count |
 |---|---:|
-| wrong_numbers:values_differ | 235 |
+| wrong_numbers:values_differ | 234 |
 | abstained:no_sql | 230 |
-| missing_or_extra_columns:label_column_substituted | 156 |
+| missing_or_extra_columns:label_column_substituted | 157 |
 | wrong_numbers:listing_values_differ | 102 |
 | rounding_only:gold_rounded_0_to_4_decimals | 53 |
 | abstained:asked_to_clarify | 50 |
@@ -641,15 +641,15 @@ Class cells = count (share of strict-wrong answers).
 | grain_or_shape:extra_rows_gold_rows_inside | 4 |
 | grain_or_shape:rows_merged_into_total | 2 |
 
-Checks: re-applying the strict rule to the graded rows disagrees with the recorded verdict for 1 of 4280 answers; 11 answers have SQL with no stored result that fails on re-run (class `other`); 4 stored results had conflicting rows for the same SQL (first kept). For comparability, the regrade.mjs rounding rule (d = 1..4 only) gives 3500 lenient+rounding answers against 3501 with d = 0..4. Sensitivity (not in the headline): also accepting answers that equal the gold only after rounding the *answer* to the gold's 1–4 decimals gives 3501.
+Checks: re-applying the strict rule to the graded rows disagrees with the recorded verdict for 0 of 4280 answers; 11 answers have SQL with no stored result that fails on re-run (class `other`); 4 stored results had conflicting rows for the same SQL (first kept). For comparability, the regrade.mjs rounding rule (d = 1..4 only) gives 3501 lenient+rounding answers against 3502 with d = 0..4. Sensitivity (not in the headline): also accepting answers that equal the gold only after rounding the *answer* to the gold's 1–4 decimals gives 3502.
 
 ## 6. The lenient-vs-strict sentence, corrected
 
 The earlier re-grade of set 3 (2,240 answers: 56 model×condition cells, Opus 5.5, Sonnet 5, Qwen and the GPT runs available on 29 September, before the LB/WB build filter) found **1,612 strict-correct and 1,667 lenient-correct** answers: lenient exceeded strict by 55 answers (2.5 points). Correct statement: strict k = 1,612, lenient k = 1,667 (lenient is the larger number).
 
-With every condition now graded (all seven models, P, A, all DQL levels, LB/WB on build 627009a1 only): set 3 has **strict 2,143 and lenient 2,219** of 2,880 answers (lenient + rounding 2,272); set 5 (Sonnet 5.5) has strict 1,086, lenient 1,229, lenient + rounding 1,229 of 1,400.
+With every condition now graded (all seven models, P, A, all DQL levels, LB/WB on build 627009a1 only): set 3 has **strict 2,143 and lenient 2,219** of 2,880 answers (lenient + rounding 2,272); set 5 (Sonnet 5.5) has strict 1,086, lenient 1,230, lenient + rounding 1,230 of 1,400.
 
-Suggested wording: *On set 3, 2,143 of 2,880 answers were correct under the strict rule and 2,219 under the lenient rule (+2.6 points). The gap is not uniform: +2.1 points for DQL levels, +7.1 for one-shot SQL and +2.5 for the agent on set 3; on set 5, +6.6 for DQL levels against +16.0 (one-shot) and +17.5 (agent), mostly answers that return a different label column (e.g. a name for an id) with the right numbers.*
+Suggested wording: *On set 3, 2,143 of 2,880 answers were correct under the strict rule and 2,219 under the lenient rule (+2.6 points). The gap is not uniform: +2.1 points for DQL levels, +7.1 for one-shot SQL and +2.5 for the agent on set 3; on set 5, +6.8 for DQL levels against +16.0 (one-shot) and +17.5 (agent), mostly answers that return a different label column (e.g. a name for an id) with the right numbers.*
 
 The draft's conclusion that "the strict scores do not depend on column naming" holds for the pooled set-3 total but not for comparisons against the baselines: see the lenient sensitivity of the set-4 paired tests in section 3.
 

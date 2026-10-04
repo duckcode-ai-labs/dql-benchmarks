@@ -39,7 +39,7 @@ seed is 20260930, so the output is identical on every run.
 1. Install: Node 20+, Python 3.11+, then `./scripts/setup-python.sh` (dbt 1.9 + DuckDB adapter,
    MetricFlow) and `npm run connectors:install`.
 2. Fetch the data at pinned commits: `./insurance/download.sh`.
-3. Build DQL twice from [duckcode-ai/dql](https://github.com/duckcode-ai/dql): at `49c0e1cb` (all
+3. Build DQL twice from [duckcode-ai/dql](https://github.com/duckcode-ai-labs/dql): at `49c0e1cb` (all
    levels but LB and WB) and at `627009a1` (LB and WB). Both are development builds of 1.17.3.
 4. Run a round, for example Claude Sonnet 5.5 through the Claude Code CLI:
 
