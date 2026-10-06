@@ -64,7 +64,11 @@ SEALED_SEED = 5 if SEALED == '5' else SEED   # set 5: "10,000 resamples, seed 5"
 AS_RECORDED = os.environ.get('STATS_AS_RECORDED') == '1'
 # STATS_RUN_SUFFIX=-rep2: an exploratory repeat of the sealed set's runs (only the conditions repeated are loaded).
 RUN_SUFFIX = os.environ.get('STATS_RUN_SUFFIX', '')
-OUT_NAME = 'stats_v2' + ('' if SEALED == '4' else f'_set{SEALED}') + RUN_SUFFIX.replace('-', '_') + ('_as_recorded' if AS_RECORDED else '')
+# STATS_MODEL=qwen: the sealed set's secondary model (set 5 pre-registers Qwen 3.8 27B as one), same tests.
+SEALED_MODEL = os.environ.get('STATS_MODEL', 'sonnet55')
+if SEALED_MODEL not in ('sonnet55', 'qwen'):
+    sys.exit('STATS_MODEL must be sonnet55 or qwen')
+OUT_NAME = 'stats_v2' + ('' if SEALED == '4' else f'_set{SEALED}') + ('' if SEALED_MODEL == 'sonnet55' else f'_{SEALED_MODEL}') + RUN_SUFFIX.replace('-', '_') + ('_as_recorded' if AS_RECORDED else '')
 REPS = 10_000
 Z = 1.959963984540054
 TRUSTED = ('certified', 'governed')
@@ -77,8 +81,8 @@ MODELS = [('opus', 'Claude Opus 5.5', 'fl-opus', 'ag-opus'),
           ('luna', 'GPT-6 Luna (max)', 'fl-luna', None),
           ('sol', 'GPT-6 Sol (medium)', 'fl-sol', None),
           ('terra', 'GPT-5.6 Terra (high)', 'fl-terra', None)]
-SET4 = ('sonnet55', 'Claude Sonnet 5.5', f'fl{SEALED}-sonnet55{RUN_SUFFIX}', f'ag{SEALED}-sonnet55{RUN_SUFFIX}')
-SET4_AGENT_MODELING = f'ag{SEALED}m-sonnet55{RUN_SUFFIX}'  # A-model: the agent with DQL's W2 modeling context (fair baseline)
+SET4 = (SEALED_MODEL, {'sonnet55': 'Claude Sonnet 5.5', 'qwen': 'Qwen 3.8 27B (local)'}[SEALED_MODEL], f'fl{SEALED}-{SEALED_MODEL}{RUN_SUFFIX}', f'ag{SEALED}-{SEALED_MODEL}{RUN_SUFFIX}')
+SET4_AGENT_MODELING = f'ag{SEALED}m-{SEALED_MODEL}{RUN_SUFFIX}'  # A-model: the agent with DQL's W2 modeling context (fair baseline)
 LEVELS = ['L0', 'L1', 'L2', 'L3', 'LB', 'W0', 'W1', 'W2', 'WB']
 SET4_LEVELS = ['L2', 'L3', 'W2', 'WB']
 CONDS = ['P', 'A', 'Am'] + LEVELS
@@ -1372,7 +1376,7 @@ for model, p in u_entry['agent'].items():
     stop_row(f'Agent A · {LABEL[model]}', p)
 w('')
 if 'correct_stop_heldout4_unanswerable' in pooled:
-    w(f'Set {SEALED} (Sonnet 5.5) for reference:')
+    w(f'Set {SEALED} ({SET4[1]}) for reference:')
     w('')
     w('| Pool | Answers | Correct stops | Rate | Naive Wilson (answers) | Question-cluster bootstrap | Distinct questions | Answers/question mean (max) | ICC | ESS_icc | ESS_boot | ESS_min |')
     w('|---|---:|---:|---:|---|---|---:|---|---:|---:|---:|---:|')
@@ -1385,7 +1389,7 @@ if 'correct_stop_heldout4_unanswerable' in pooled:
     w('')
 
 # ---- 3. set 4 paired
-w(f'## 3. Set {SEALED} (Claude Sonnet 5.5, 200 questions): paired tests')
+w(f'## 3. Set {SEALED} ({SET4[1]}, 200 questions): paired tests')
 w('')
 w('Gained = the level right and the reference wrong; lost = the reverse. Holm adjusts within each family of 4 tests.')
 w('')
@@ -1445,7 +1449,7 @@ def trust_table(rows):
     w('')
 
 
-w(f'### Set {SEALED} (Sonnet 5.5)')
+w(f'### Set {SEALED} ({SET4[1]})')
 w('')
 trust_table(list(trust[HSET].items()))
 w('### Set 3, pooled across models per level (precision CI = question-cluster bootstrap)')
@@ -1538,7 +1542,7 @@ if old:
       f"lenient k = {old['lenient']:,} (lenient is the larger number).")
     w('')
 w(f"With every condition now graded (all seven models, P, A, all DQL levels, LB/WB on build {FIXED} only): set 3 has **strict {h3['strict']:,} and lenient {h3['lenient']:,}** "
-  f"of {h3['n']:,} answers (lenient + rounding {h3['lenient_rounding']:,}); set {SEALED} (Sonnet 5.5) has strict {h4['strict']:,}, lenient {h4['lenient']:,}, "
+  f"of {h3['n']:,} answers (lenient + rounding {h3['lenient_rounding']:,}); set {SEALED} ({SET4[1]}) has strict {h4['strict']:,}, lenient {h4['lenient']:,}, "
   f"lenient + rounding {h4['lenient_rounding']:,} of {h4['n']:,}.")
 w('')
 pc = regrade_pooled['heldout-3']['per_condition']

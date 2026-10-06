@@ -1,6 +1,6 @@
 # Insurance benchmark — statistics v2 (sealed set 5)
 
-Generated 2026-10-04T04:54:44+00:00 by `stats_v2.py` in this folder (Python standard library; re-runnable; read-only on runs/, projects/, gold/ and insurance/; no model or network calls). Sealed sets: aggregates only.
+Generated 2026-10-06T14:18:30+00:00 by `stats_v2.py` in this folder (Python standard library; re-runnable; read-only on runs/, projects/, gold/ and insurance/; no model or network calls). Sealed sets: aggregates only.
 
 ## Method note
 
@@ -260,7 +260,7 @@ The same 40 (or 10) questions are answered by every model at every level, so poo
 | Agent A · Claude Opus 5.5 | 10 | 10 | 100.0% | 72.2–100.0% | 100.0–100.0% | 10 | 1.0 (1) | — | — | — | 10.0 |
 | Agent A · Claude Sonnet 5.5 | 10 | 10 | 100.0% | 72.2–100.0% | 100.0–100.0% | 10 | 1.0 (1) | — | — | — | 10.0 |
 
-Set 5 (Sonnet 5.5) for reference:
+Set 5 (Claude Sonnet 5.5) for reference:
 
 | Pool | Answers | Correct stops | Rate | Naive Wilson (answers) | Question-cluster bootstrap | Distinct questions | Answers/question mean (max) | ICC | ESS_icc | ESS_boot | ESS_min |
 |---|---:|---:|---:|---|---|---:|---|---:|---:|---:|---:|
@@ -348,7 +348,7 @@ Gained = the level right and the reference wrong; lost = the reverse. Holm adjus
 
 T = answers labelled certified/governed; W_T = of those, strict-wrong; precision π = (T − W_T)/T with Wilson 95%; trusted coverage κ = T/n; silent-error rate σ = W_T/n for DQL, (n − k)/n for P and A (no labels, every wrong answer is silent). W_T (lenient+rounding) re-counts W_T under the lenient + rounding grade.
 
-### Set 5 (Sonnet 5.5)
+### Set 5 (Claude Sonnet 5.5)
 
 | Condition | n | T | W_T | W_T (lenient+rounding) | Precision π | π Wilson 95% | κ | σ | Unanswerable: correct stops / answered as trusted |
 |---|---:|---:|---:|---:|---:|---|---:|---|---|
@@ -647,7 +647,7 @@ Checks: re-applying the strict rule to the graded rows disagrees with the record
 
 The earlier re-grade of set 3 (2,240 answers: 56 model×condition cells, Opus 5.5, Sonnet 5, Qwen and the GPT runs available on 29 September, before the LB/WB build filter) found **1,612 strict-correct and 1,667 lenient-correct** answers: lenient exceeded strict by 55 answers (2.5 points). Correct statement: strict k = 1,612, lenient k = 1,667 (lenient is the larger number).
 
-With every condition now graded (all seven models, P, A, all DQL levels, LB/WB on build 627009a1 only): set 3 has **strict 2,143 and lenient 2,219** of 2,880 answers (lenient + rounding 2,272); set 5 (Sonnet 5.5) has strict 1,086, lenient 1,230, lenient + rounding 1,230 of 1,400.
+With every condition now graded (all seven models, P, A, all DQL levels, LB/WB on build 627009a1 only): set 3 has **strict 2,143 and lenient 2,219** of 2,880 answers (lenient + rounding 2,272); set 5 (Claude Sonnet 5.5) has strict 1,086, lenient 1,230, lenient + rounding 1,230 of 1,400.
 
 Suggested wording: *On set 3, 2,143 of 2,880 answers were correct under the strict rule and 2,219 under the lenient rule (+2.6 points). The gap is not uniform: +2.1 points for DQL levels, +7.1 for one-shot SQL and +2.5 for the agent on set 3; on set 5, +6.8 for DQL levels against +16.0 (one-shot) and +17.5 (agent), mostly answers that return a different label column (e.g. a name for an id) with the right numbers.*
 
