@@ -35,6 +35,23 @@ add(P((f'**H1 (primary).** W2 answered {AC5["W2"]["k"]} of 200 questions correct
       f'**H1 (primary).** W2 answered {AC5["W2"]["k"]} of 200 questions correctly and A-model {AC5["Am"]["k"]}: a difference of {dpt(_h)} points (question-level bootstrap 95% interval {dci(_h)}). W2 alone was right on {_h["gained"]} questions and A-model alone on {_h["lost"]}; the exact two-sided McNemar test gives {pstr(_h["p_raw"])}. Under the lenient rule the difference is {dpt(_hl)} points ({pstr(_hl["p_raw"])})')
   + f': the lenient rule accepts {_gA} more of A-model\'s answers and {_gW} more of W2\'s. The strict advantage disappears under the lenient sensitivity rule and is associated with differences in the columns the answers returned. That is consistent with DQL\'s instructions to show an entity\'s identifier beside its name, which the agent did not receive (Section 4.3), and with a strict rule that accepts extra columns. Whether those differences are harmless substitutions or lose the identity the question asked for needs case-level review; an author is reviewing the {_h["gained"] + _h["lost"]} questions on which the two disagree, blind to which system gave which answer.' + _tax))
 
+if REPS:
+    _runs = [S5] + REPS
+    def _wa(d, grade):
+        acc = d['accuracy']['heldout-5']['sonnet55']
+        cells = {c['cond']: c for c in d['regrade']['cells'] if c['set'] == 'heldout-5'}
+        t = d['set4_paired']['W2_vs_Am'] if grade == 'strict' else d['set4_paired']['sensitivity'][grade]['W2_vs_Am']
+        k = (lambda c: acc[c]['k']) if grade == 'strict' else (lambda c: cells[c][grade])
+        return k('W2'), k('Am'), t['p_raw']
+    _s = [_wa(d, 'strict') for d in _runs]; _l = [_wa(d, 'lenient') for d in _runs]
+    _ord = ['pre-registered run', 'second run', 'third run']
+    _pn = lambda ps: ', '.join(pstr(p).replace('p = ', '').replace('p ', '') for p in ps[:-1]) + ' and ' + pstr(ps[-1]).replace('p = ', '').replace('p ', '')
+    _times = {1: 'once', 2: 'twice'}.get(len(REPS), f'{len(REPS)} times')
+    add(P(f'**Repeat runs** (exploratory, not pre-registered). Earlier repeated runs had moved single levels by up to 4 of 40 questions (10 points), more than the H1 effect, so after the pre-registered result was known we ran W2 and A-model {_times} more on set 5 with the same build, model and settings. Under the strict rule W2 led in every run: '
+          + ', '.join(f'{w} against {a} in the {_ord[i]}' for i, (w, a, _) in enumerate(_s)) + f'; exact McNemar p = {_pn([p for *_, p in _s])}. '
+          + f'Under the lenient rule {"no" if all(p >= 0.05 for *_, p in _l) else "not every"} run showed a significant difference: ' + ', '.join(f'{w} against {a}' for w, a, _ in _l) + f'; p = {_pn([p for *_, p in _l])}. '
+          + 'The strict advantage is stable across runs, and so is its dependence on the columns returned. One runtime failure in the second W2 run was re-asked under the same rule as the main runs (Section 8).'))
+
 _vp, _vm, _va = PR5['vs_P'], PR5['vs_Am'], PR5['vs_A']
 _vaL = PR5['sensitivity']['lenient']['vs_A']
 _rng = lambda fam: f"{min(fam[L]['diff'] for L in _lev) * 100:+.1f} to {max(fam[L]['diff'] for L in _lev) * 100:+.1f}".replace('-', '−')
