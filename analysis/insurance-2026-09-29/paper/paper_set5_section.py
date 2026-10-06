@@ -10,20 +10,29 @@ add(H2('6.1  Pre-registered test on set 5'))
 add(P(f'Claude Sonnet 5.5 ran every condition once on the frozen build. '
       + ('The audit found no wrong item in the set-5 sample (Section 4.5), so the scoring without wrong items is the scoring on all items. ' if not _wrong5 else f'The audit found {_wrong5} wrong items in the set-5 sample (Section 4.5); results without them are in audit/. ')
       + 'Table 4 gives accuracy and abstention, Table 5 the trusted labels.'))
+_MODELS5 = [('Sonnet 5.5', S5, 'sonnet55')] + ([('Qwen 3.8 27B', S5Q, 'qwen')] if S5Q else [])
+def _m5(d, key):
+    return (d['accuracy']['heldout-5'][key], d['accuracy']['heldout-5-unanswerable'].get(key, {}),
+            {c['cond']: c for c in d['regrade']['cells'] if c['set'] == 'heldout-5' and c['model'] == key}, d['trust']['heldout-5'])
 rows = []
-for k in _C5:
-    c, rc, u = AC5[k], RC5[k], U5.get(k)
-    rows.append([NAME[k], f"{c['k']} ({pct(c['acc'])})", ci(c['bootstrap']['ci']), str(rc['lenient']), str(rc['lenient_rounding']), f"{u['k']}/50" if u else '–'])
-add(TABLE(['Condition', 'Strict correct', 'Bootstrap 95% CI', 'Lenient', 'Lenient + rounding', 'Correct abstentions'], rows, [2700, 1500, 1500, 1100, 1300, 1260]))
+for mlabel, d, key in _MODELS5:
+    acc, un, rcs, _ = _m5(d, key)
+    for k in _C5:
+        if k not in acc: continue
+        c, rc, uu = acc[k], rcs[k], un.get(k)
+        rows.append([mlabel if k == _C5[0] else '', NAME[k], f"{c['k']} ({pct(c['acc'])})", ci(c['bootstrap']['ci']), str(rc['lenient']), str(rc['lenient_rounding']), f"{uu['k']}/50" if uu else '–'])
+add(TABLE(['Model', 'Condition', 'Strict correct', 'Bootstrap 95% CI', 'Lenient', 'Lenient + rounding', 'Correct abstentions'], rows, [1300, 2500, 1300, 1300, 900, 1100, 960]))
 _l3r = S5R['accuracy']['heldout-5']['sonnet55']['L3']['k']
-add(CAP(f'**Table 4.** Set 5 (200 answerable and 50 unanswerable questions written by GPT-6 Sol), Claude Sonnet 5.5, build 627009a1: correct answers of 200 under each grading rule and correct abstentions of 50. Bootstrap: question-level, seed 5. L3 includes the two re-asked runtime failures (Section 8); as recorded it answered {_l3r}.'))
+add(CAP(f'**Table 4.** Set 5 (200 answerable and 50 unanswerable questions written by GPT-6 Sol), build 627009a1: correct answers of 200 under each grading rule and correct abstentions of 50. Claude Sonnet 5.5 is the pre-registered primary model' + (', Qwen 3.8 27B a pre-registered secondary model' if S5Q else '') + f'. Bootstrap: question-level, seed 5. DQL counts include answers re-asked after runtime connection failures (Section 8); as recorded, Sonnet\'s L3 answered {_l3r}.'))
 rows = []
-for k in _lev:
-    t = T5[k]
-    rows.append([NAME[k], str(t['T']), str(t['W_T']), f"{pct(t['precision'])} ({ci(t['precision_wilson'], 0)})" if t['T'] else 'none', str(t['W_T_lenient_rounding']),
-                 f"{pct(t['precision_all'])} ({ci(t['precision_all_wilson'], 0)})" if t.get('T_all') else 'none', pct(t['kappa']), pct(t['sigma']), str(t.get('unanswerable_answered_trusted', 0))])
-add(TABLE(['Level', 'T', 'W_T', 'π (Wilson)', 'W_T, lenient + rounding', 'π all (Wilson)', 'κ', 'ω', 'Unanswerable labelled trusted'], rows, [2300, 500, 600, 1500, 1200, 1500, 650, 650, 1300]))
-add(CAP('**Table 5.** Trusted answers on set 5, Claude Sonnet 5.5. *T* trusted answers on the answerable set, *W*_{T} of them strict-wrong; π all counts trusted answers to unanswerable questions as wrong. One-shot SQL and the agents assign no labels.'))
+for mlabel, d, key in _MODELS5:
+    tr = _m5(d, key)[3]
+    for k in _lev:
+        t = tr[k]
+        rows.append([mlabel if k == _lev[0] else '', NAME[k], str(t['T']), str(t['W_T']), f"{pct(t['precision'])} ({ci(t['precision_wilson'], 0)})" if t['T'] else 'none', str(t['W_T_lenient_rounding']),
+                     f"{pct(t['precision_all'])} ({ci(t['precision_all_wilson'], 0)})" if t.get('T_all') else 'none', pct(t['kappa']), pct(t['sigma']), str(t.get('unanswerable_answered_trusted', 0))])
+add(TABLE(['Model', 'Level', 'T', 'W_T', 'π (Wilson)', 'W_T, lenient + rounding', 'π all (Wilson)', 'κ', 'ω', 'Unanswerable labelled trusted'], rows, [1200, 2000, 450, 550, 1300, 1050, 1300, 550, 550, 1050]))
+add(CAP('**Table 5.** Trusted answers on set 5. *T* trusted answers on the answerable set, *W*_{T} of them strict-wrong; π all counts trusted answers to unanswerable questions as wrong. One-shot SQL and the agents assign no labels.'))
 
 _h, _hl = PR5['W2_vs_Am'], PR5['sensitivity']['lenient']['W2_vs_Am']
 _tax = ''
@@ -84,5 +93,23 @@ add(P(f'**Abstention** (secondary). On the 50 unanswerable questions A-model abs
       + (', but no level abstained correctly more often than A-model' if len(_le) == 4 else '')
       + f', and {", ".join(str(T5[L].get("unanswerable_answered_trusted", 0)) for L in _lev[:3])} and {T5["WB"].get("unanswerable_answered_trusted", 0)} answers to unanswerable questions carried a trusted label.'))
 
+if S5Q:
+    _qa, _qu, _qrc, _qt = _m5(S5Q, 'qwen')
+    _qp = S5Q['set4_paired']; _qh, _qhl = _qp['W2_vs_Am'], _qp['sensitivity']['lenient']['W2_vs_Am']
+    _qsigP = [L for L in _lev if _qp['vs_P'][L]['p_holm'] < 0.05]; _qsigM = [L for L in _lev if _qp['vs_Am'][L]['p_holm'] < 0.05]
+    _qst = S5Q.get('stops_vs_Am') or {}
+    _qsigS = [L for L in _lev if _qst.get(L, {}).get('p_holm', 1) < 0.05]
+    _qpool = S5Q['pooled']['trust_heldout4']['L2_L3']
+    _rec = (S5QR or {}).get('accuracy', {}).get('heldout-5', {}).get('qwen', {})
+    _chg = [L for L in _lev if L in _rec and _rec[L]['k'] != _qa[L]['k']]
+    _lst = lambda Ls: ', '.join(Ls[:-1]) + (' and ' if len(Ls) > 1 else '') + Ls[-1] if Ls else 'none'
+    add(P(f'**Secondary model.** Qwen 3.8 27B, run locally, is the pre-registered secondary model reported here (GPT-6 Sol, the other, was not run; Section 8). It answered fewer questions in every condition (Table 4). W2 answered {_qa["W2"]["k"]} of 200 correctly and A-model {_qa["Am"]["k"]}: {dpt(_qh)} points (exact McNemar {pstr(_qh["p_raw"])}; {_qh["gained"]} questions only W2 answered correctly and {_qh["lost"]} only A-model), and {dpt(_qhl)} points under the lenient rule ({pstr(_qhl["p_raw"])}). '
+          + f'Against one-shot SQL ({_qa["P"]["k"]} correct), {_lst(_qsigP)} {"was" if len(_qsigP) == 1 else "were"} significantly more accurate after Holm correction; against A-model, {_lst(_qsigM)}. '
+          + f'At L2 and L3, {_qpool["trusted_right"]} of {_qpool["trusted"]} trusted answers were right' + (f' ({pct(_qpool["precision"])})' if _qpool['trusted'] else '') + f'; at WB, {_qt["WB"]["T"] - _qt["WB"]["W_T"]} of {_qt["WB"]["T"]}. '
+          + f'On the 50 unanswerable questions DQL abstained correctly {", ".join(str(_qu[L]["k"]) for L in _lev[:3])} and {_qu["WB"]["k"]} times at L2, L3, W2 and WB, against {_qu["Am"]["k"]} for A-model and {_qu["A"]["k"]} for the agent without modeling; '
+          + (f'{_lst(_qsigS)} abstained correctly significantly more often than A-model after Holm correction. ' if _qsigS else 'no level differed significantly from A-model after Holm correction. ')
+          + (f'Re-asking Qwen\'s runtime connection failures changed {_lst(_chg)} (as recorded: ' + ', '.join(f'{L} {_rec[L]["k"]}' for L in _chg) + '). ' if _chg else '')
+          + 'With this model, then, the pre-registered comparison of W2 with A-model ' + ('also favoured W2.' if _qh['p_raw'] < 0.05 and _qh['diff'] > 0 else 'showed no significant difference.')))
+
 _inc = sum(c.get('strict_but_inconsistent_columns', 0) for c in RC5.values())
-add(P(f'**Checks.** Read as first recorded, without the re-asked runtime failures, only L3 changes ({_l3r} of 200), and no conclusion above changes. {_word(_inc, True)} strict-correct answer{"" if _inc == 1 else "s"} failed the consistent-column check of Section 5. The database variants and the root-cause taxonomy have not yet been applied to set 5. **Secondary models.** GPT-6 Sol was not run on set 5, and Qwen 3.8 27B is still running at the time of writing.'))
+add(P(f'**Checks.** Read as first recorded, without the re-asked runtime failures, Sonnet\'s results change only at L3 ({_l3r} of 200), and no conclusion above changes. {_word(_inc, True)} strict-correct answer{"" if _inc == 1 else "s"} failed the consistent-column check of Section 5. The database variants and the root-cause taxonomy have not yet been applied to set 5. ' + ('' if S5Q else '**Secondary models.** GPT-6 Sol was not run on set 5, and Qwen 3.8 27B is still running at the time of writing.')))
