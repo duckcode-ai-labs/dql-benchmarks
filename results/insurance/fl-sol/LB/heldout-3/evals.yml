@@ -1,6 +1,171 @@
 {
   "cases": [
     {
+      "name": "heldout-how-many-different-catastrophes-do-we-have-on-re-7bd42a",
+      "question": "How many different catastrophes do we have on record?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            4
+          ]
+        ],
+        "goldSql": "SELECT COUNT(*) AS catastrophe_count FROM main.catastrophe",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-list-the-names-of-all-catastrophes-we-track-in-a-dfe333",
+      "question": "List the names of all catastrophes we track, in alphabetical order.",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            "Fire"
+          ],
+          [
+            "Flood"
+          ],
+          [
+            "Hurricane"
+          ],
+          [
+            "Tornado"
+          ]
+        ],
+        "goldSql": "SELECT Catastrophe_Name FROM main.catastrophe ORDER BY Catastrophe_Name",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-for-each-policy-show-the-policy-number-and-how-m-30aeeb",
+      "question": "For each policy, show the policy number and how many days its policy term runs from effective date to expiration date.",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            31003000336,
+            1825
+          ],
+          [
+            31003000337,
+            365
+          ]
+        ],
+        "goldSql": "SELECT Policy_Number, date_diff('day', Effective_Date, Expiration_Date) AS term_days FROM main.policy ORDER BY Policy_Number",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-what-is-the-total-premium-we-have-charged-across-dbb59f",
+      "question": "What is the total premium we have charged across all policies and all coverage periods?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            98000
+          ]
+        ],
+        "goldSql": "SELECT SUM(p.Policy_Amount) AS total_premium FROM (SELECT pa.Policy_Amount_Identifier, pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Coverage_Detail_Identifier, pa.Policy_Amount FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) p",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-on-average-how-many-days-does-it-take-to-close-a-a090ca",
+      "question": "On average, how many days does it take to close a claim, measured from the date the claim was opened to the date it was closed?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            20.5
+          ]
+        ],
+        "goldSql": "SELECT AVG(date_diff('day', Claim_Open_Date, Claim_Close_Date)) AS avg_days_to_close FROM main.claim WHERE Claim_Close_Date IS NOT NULL",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-in-our-fire-claims-history-how-many-claims-invol-3a20dc",
+      "question": "In our fire claims history, how many claims involved a home that has a fireplace?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            692
+          ]
+        ],
+        "goldSql": "SELECT COUNT(*) AS claims_with_fireplace FROM main.fire_claim WHERE Fireplace = 'yes'",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-what-is-the-average-loss-ratio-on-fire-claims-fo-a9ed75",
+      "question": "What is the average loss ratio on fire claims for homes built before 1970?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            0.7106918238993714
+          ]
+        ],
+        "goldSql": "SELECT AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim WHERE Year_Built < 1970",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-how-many-distinct-zip-codes-appear-across-our-re-707278",
+      "question": "How many distinct ZIP codes appear across our recorded location addresses?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            7
+          ]
+        ],
+        "goldSql": "SELECT COUNT(DISTINCT Postal_Code) AS zip_code_count FROM main.location_address",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-which-claim-number-took-the-longest-to-close-cou-c1bb8e",
+      "question": "Which claim number took the longest to close, counting days from when it was opened to when it was closed, and how many days was that?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            12312702,
+            25
+          ]
+        ],
+        "goldSql": "SELECT Company_Claim_Number, date_diff('day', Claim_Open_Date, Claim_Close_Date) AS days_to_close FROM main.claim WHERE Claim_Close_Date IS NOT NULL ORDER BY days_to_close DESC LIMIT 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-what-is-the-total-amount-currently-set-aside-in-8b7f86",
+      "question": "What is the total amount currently set aside in loss reserves across all claims?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            3100
+          ]
+        ],
+        "goldSql": "SELECT SUM(amt) AS total_loss_reserves FROM (SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS amt FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier) r",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
       "name": "heldout-what-is-the-full-name-first-middle-and-last-of-t-2f3937",
       "question": "What is the full name (first, middle and last) of the agent who sold policy number 31003000336?",
       "expected": {

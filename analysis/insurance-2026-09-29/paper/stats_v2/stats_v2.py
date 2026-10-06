@@ -62,7 +62,9 @@ SEALED_SEED = 5 if SEALED == '5' else SEED   # set 5: "10,000 resamples, seed 5"
 # STATS_AS_RECORDED=1: where a set's runtime failures were re-asked (insurance/FREEZE-SET5.md, addendum of
 # 3 October 2026), read the report as first recorded (<set>.as-recorded) instead of the retried one.
 AS_RECORDED = os.environ.get('STATS_AS_RECORDED') == '1'
-OUT_NAME = 'stats_v2' + ('' if SEALED == '4' else f'_set{SEALED}') + ('_as_recorded' if AS_RECORDED else '')
+# STATS_RUN_SUFFIX=-rep2: an exploratory repeat of the sealed set's runs (only the conditions repeated are loaded).
+RUN_SUFFIX = os.environ.get('STATS_RUN_SUFFIX', '')
+OUT_NAME = 'stats_v2' + ('' if SEALED == '4' else f'_set{SEALED}') + RUN_SUFFIX.replace('-', '_') + ('_as_recorded' if AS_RECORDED else '')
 REPS = 10_000
 Z = 1.959963984540054
 TRUSTED = ('certified', 'governed')
@@ -75,8 +77,8 @@ MODELS = [('opus', 'Claude Opus 5.5', 'fl-opus', 'ag-opus'),
           ('luna', 'GPT-6 Luna (max)', 'fl-luna', None),
           ('sol', 'GPT-6 Sol (medium)', 'fl-sol', None),
           ('terra', 'GPT-5.6 Terra (high)', 'fl-terra', None)]
-SET4 = ('sonnet55', 'Claude Sonnet 5.5', f'fl{SEALED}-sonnet55', f'ag{SEALED}-sonnet55')
-SET4_AGENT_MODELING = f'ag{SEALED}m-sonnet55'  # A-model: the agent with DQL's W2 modeling context (fair baseline)
+SET4 = ('sonnet55', 'Claude Sonnet 5.5', f'fl{SEALED}-sonnet55{RUN_SUFFIX}', f'ag{SEALED}-sonnet55{RUN_SUFFIX}')
+SET4_AGENT_MODELING = f'ag{SEALED}m-sonnet55{RUN_SUFFIX}'  # A-model: the agent with DQL's W2 modeling context (fair baseline)
 LEVELS = ['L0', 'L1', 'L2', 'L3', 'LB', 'W0', 'W1', 'W2', 'WB']
 SET4_LEVELS = ['L2', 'L3', 'W2', 'WB']
 CONDS = ['P', 'A', 'Am'] + LEVELS
@@ -1546,7 +1548,7 @@ dql3 = regrade_pooled['heldout-3']['DQL_levels']
 dql4 = regrade_pooled[HSET]['DQL_levels']
 w(f"Suggested wording: *On set 3, {h3['strict']:,} of {h3['n']:,} answers were correct under the strict rule and {h3['lenient']:,} under the lenient rule "
   f"(+{gap(h3):.1f} points). The gap is not uniform: +{gap(dql3):.1f} points for DQL levels, +{gap(pc['P']):.1f} for one-shot SQL and +{gap(pc['A']):.1f} for the agent on set 3; "
-  f"on set {SEALED}, +{gap(dql4):.1f} for DQL levels against +{gap(pc4['P']):.1f} (one-shot) and +{gap(pc4['A']):.1f} (agent), mostly answers that return a different label column "
+  f"on set {SEALED}, +{gap(dql4):.1f} for DQL levels against +{gap(pc4['P']) if 'P' in pc4 else float('nan'):.1f} (one-shot) and +{gap(pc4['A']) if 'A' in pc4 else float('nan'):.1f} (agent), mostly answers that return a different label column "
   "(e.g. a name for an id) with the right numbers.*")
 w('')
 w('The draft\'s conclusion that "the strict scores do not depend on column naming" holds for the pooled set-3 total but not for comparisons against the baselines: '

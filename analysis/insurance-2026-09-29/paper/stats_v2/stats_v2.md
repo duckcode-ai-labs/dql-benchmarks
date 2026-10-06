@@ -1,6 +1,6 @@
 # Insurance benchmark — statistics v2
 
-Generated 2026-10-04T04:54:20+00:00 by `stats_v2.py` in this folder (Python standard library; re-runnable; read-only on runs/, projects/, gold/ and insurance/; no model or network calls). Sealed sets: aggregates only.
+Generated 2026-10-06T03:46:00+00:00 by `stats_v2.py` in this folder (Python standard library; re-runnable; read-only on runs/, projects/, gold/ and insurance/; no model or network calls). Sealed sets: aggregates only.
 
 ## Method note
 

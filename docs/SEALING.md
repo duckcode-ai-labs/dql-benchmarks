@@ -65,3 +65,33 @@ assistants. The decisions are kept in `work/insurance/audit/set4-adjudications.j
 set 4 is released because the case identifiers reveal question wording; its SHA-256 is
 `a8d5552306cec9a55a605db8d36bdc0e0c125c70f9d9fd28b1ff59ab92c1999a`. Aggregate results with and without
 the adjudicated items are in `analysis/insurance-2026-09-29/audit/`. DQL is not changed because of them.
+
+### Audit of sets 4 and 5, and its second look (3 October 2026)
+
+The author audited the random samples of both sets (120 set-4 items, 63 set-5 items; procedure in
+`insurance/audit/AUDIT-INSTRUCTIONS.md`) after DQL was frozen and the primary model had run. The completed
+sheets are kept out of git until release:
+
+| File | Bytes | SHA-256 |
+|---|---:|---|
+| `work/insurance/audit/set4-audit-sample.csv` (completed) | 59815 | `df15b3409bbafc47e027c1da1b8e112a3c7417a2f3900cf20f0ba263e6191522` |
+| `work/insurance/audit/set5-audit-sample.csv` (completed) | 25813 | `46a072b2c44ec14a719bde77dbda4911f319bed8cfa4e32cb2a6a90333050220` |
+| `work/insurance/audit/set4-adjudications.json` (revised) | 3317 | `4e0c3cfdcbd9592bdc4d73f6a3b03e26ca45b846683d73366e481361bd8633b4` |
+
+The adjudications file above replaces the version of 2 October (`a8d55523…`): in the audit the author
+judged the premium-per-day item correct (its earlier decision is kept inside the file as history) and
+judged one set-4 unanswerable item wrong. Two AI models (Claude Fable 5.1 and GPT-6.1 Sol), each in a
+separate session with only the sample sheets and a copy of the warehouse, also read both samples as a
+second look, so the 183 sampled items are known to those sessions; neither session had access to DQL or
+to the benchmark repository. Aggregates only are in `analysis/insurance-2026-09-29/audit/`.
+
+### Blind review of the set-5 disagreements (sheet made 3 October 2026)
+
+After set 5 was scored, `insurance/audit/make_discordant_sheet.py` wrote the 34 answerable set-5
+questions on which exactly one of W2 and A-model was strict-correct, for the author to judge blind to
+which system gave which answer. Kept out of git until release:
+
+| File | Bytes | SHA-256 |
+|---|---:|---|
+| `work/insurance/audit/set5-discordant-review.csv` (as generated, before review) | 63544 | `c8cc6bc898336829b8236ee4c42ef75876736be7d2c8cba02d455ccfbe38eebf` |
+| `work/insurance/audit/set5-discordant-key.json` (which answer is which) | 3124 | `0c89b8a0a659c96120275f42e2b483e4bd414db42d215cf1ff3706aaf53e501c` |
