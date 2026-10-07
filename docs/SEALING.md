@@ -103,3 +103,19 @@ To have the verdicts entered, the author pasted the completed 12-row blind check
 answers) into the operator's AI assistant's chat. This happened after every set-5 run (primary model,
 repeats and secondary model) had finished, with DQL frozen at `627009a1`; nothing in DQL or in any
 recorded answer changed. The 12 questions are therefore known to that assistant.
+
+### Blind review of the set-5 disagreements: results (7 October 2026)
+
+| File | Bytes | SHA-256 |
+|---|---:|---|
+| `work/insurance/audit/set5-discordant-check12.csv` | 21439 | `86fd19d003f8c0a7287350c827ec0b12af91170e61a322613da90c10752afdf7` |
+| `work/insurance/audit/second-opinion/set5-blind-codex-review.csv` | 9212 | `cd3b6b144214d1c168f488b6da8f0df92d825141305a6eecfbcbd1a9a1158317` |
+| `work/insurance/audit/second-opinion/set5-blind-codex-summary.md` | 7207 | `7bb772db7f04905447a4c324d4c2800bb8388e06d65a6f56c9dc179827e60970` |
+| `work/insurance/audit/second-opinion/set5-blind-codex-prompt.md` | 4932 | `1cd2bcea8f27cf12921ae972185658e7ca60dce798bdc1152ac6fcd46c577f90` |
+
+The AI model (GPT-6.1 Sol at low reasoning effort) judged all 34 rows without access to the key or to
+the benchmark repository. The author judged a random 12 (seed 20261007), blind. Afterwards the operator's
+assistant pointed out two entries that contradicted themselves (row 15: the answer marked better was the
+one marked not acceptable; row 19: an answer identical to the reference marked not acceptable), and the
+author corrected both. The overall agreement with the model had already been shown to the author at that
+point; no row-level model verdict was shown.
