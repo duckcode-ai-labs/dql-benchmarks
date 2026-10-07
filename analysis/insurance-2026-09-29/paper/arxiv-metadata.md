@@ -2,10 +2,10 @@
 
 Generated from paper.docx by arxiv_metadata.py; re-run after any change to the paper.
 
-- **Title:** Context, Trust Labels and Abstention in a Governed Text-to-SQL Layer: An Exploratory Case Study on an Insurance Warehouse
+- **Title:** Context, Trust Labels and Abstention in a Governed Text-to-SQL Layer: A Pre-registered Evaluation on an Insurance Warehouse
 - **Authors:** [Author names]  <- fill in before submitting
 - **Primary category:** cs.DB (Databases); **cross-lists:** cs.CL, cs.AI
-- **Comments:** <pages> pages, 2 figures, 14 tables. Code, data, pre-registration and run archive: https://github.com/duckcode-ai-labs/dql-benchmarks
+- **Comments:** <pages> pages, 3 figures, 14 tables. Code, data, pre-registration and run archive: https://github.com/duckcode-ai-labs/dql-benchmarks
 - **License:** the author's choice (CC BY 4.0 lets others reuse the text with attribution; the arXiv default licence does not)
 - **Abstract length:** 1537 characters (arXiv limit 1,920)
 

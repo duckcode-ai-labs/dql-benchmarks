@@ -60,6 +60,8 @@ RC5 = {c['cond']: c for c in S5['regrade']['cells'] if c['set'] == 'heldout-5'}
 P5L23 = S5['pooled']['trust_heldout4']['L2_L3']
 H1T, H1L = PR5['W2_vs_Am'], PR5['sensitivity']['lenient']['W2_vs_Am']
 RT = json.load(open(os.path.join(HERE, '..', 'routes', 'routes.json')))
+# The set-3 classification (Appendix D) is read here too, because Section 6.1 cites one of its counts.
+TAX = json.load(open(os.path.join(HERE, '..', 'taxonomy', 'taxonomy.json'))) if os.path.exists(os.path.join(HERE, '..', 'taxonomy', 'taxonomy.json')) else None
 # Exploratory repeats of W2 and A-model on set 5 (stats_v2_set5_rep2/3.json), in run order after the pre-registered run.
 REPS = [json.load(open(f)) for f in (os.path.join(HERE, 'stats_v2', f'stats_v2_set5_rep{k}.json') for k in (2, 3)) if os.path.exists(f)]
 # Set 5's secondary model (Qwen 3.8 27B), the same tests: stats_v2_set5_qwen[_as_recorded].json, when present.
@@ -214,10 +216,45 @@ def fig2():
         s.append(f'<text x="{lx + 18}" y="25" font-family="Times New Roman" font-size="15" fill="#44525c">{lab_}</text>'); lx += 40 + 8 * len(lab_)
     s.append(f'<text x="{lx}" y="25" font-family="Times New Roman" font-size="15" fill="#44525c">lines: bootstrap 95% CI</text>')
     s.append('</svg>'); return svg_png('fig2', ''.join(s), W, H), W, H
+def fig5():
+    # Set 5: W2 against A-model, strict (with question-level bootstrap CI) and lenient panels, one row per run / model.
+    runs = ([('Sonnet 5.5, pre-registered run', S5, 'sonnet55')] + [(f'Sonnet 5.5, repeat {i}', d, 'sonnet55') for i, d in enumerate(REPS, 2)]
+            + ([('Qwen 3.8 27B', S5Q, 'qwen')] if S5Q else []))
+    pts = []  # (row, panel, cond, accuracy, ci or None)
+    for i, (_, d, m) in enumerate(runs):
+        cells = {c['cond']: c for c in d['regrade']['cells'] if c['set'] == 'heldout-5' and c['model'] == m}
+        for cond in ('W2', 'Am'):
+            c = d['accuracy']['heldout-5'][m][cond]
+            pts.append((i, 0, cond, c['k'] / c['n'], c['bootstrap']['ci']))
+            pts.append((i, 1, cond, cells[cond]['lenient'] / cells[cond]['n'], None))
+    lo_ax, hi_ax = min(0.6, math.floor(10 * min(min(v, b[0] if b else v) for *_, v, b in pts)) / 10), 1.0
+    W, L, R, G, T, RH = 900, 260, 30, 80, 100, 50
+    PW = (W - L - R - G) / 2
+    gy1 = T + (len(runs) - 1) * RH + 30; H = gy1 + 58
+    X = lambda v, j: L + j * (PW + G) + (v - lo_ax) / (hi_ax - lo_ax) * PW
+    s = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}"><rect width="{W}" height="{H}" fill="#ffffff"/>']
+    for j, title in enumerate(('Strict grading', 'Lenient grading')):
+        mid = L + j * (PW + G) + PW / 2
+        s.append(f'<text x="{mid}" y="{T - 36}" text-anchor="middle" font-family="Times New Roman" font-size="17" fill="#1b2630">{title}</text>')
+        for g in [round(lo_ax + k / 10, 1) for k in range(int(round(10 * (hi_ax - lo_ax))) + 1)]:
+            s.append(f'<line x1="{X(g, j)}" x2="{X(g, j)}" y1="{T - 22}" y2="{gy1}" stroke="#d5dde2" stroke-width="1"/><text x="{X(g, j)}" y="{gy1 + 24}" text-anchor="middle" font-family="Times New Roman" font-size="16" fill="#44525c">{int(round(g * 100))}%</text>')
+        s.append(f'<text x="{mid}" y="{gy1 + 48}" text-anchor="middle" font-family="Times New Roman" font-size="15" fill="#44525c">accuracy (of 200 answerable questions)</text>')
+    for i, (lab_, _, _) in enumerate(runs):
+        s.append(f'<text x="{L - 14}" y="{T + i * RH + 6}" text-anchor="end" font-family="Times New Roman" font-size="17" fill="#1b2630">{lab_}</text>')
+    for i, j, cond, v, b in pts:
+        col, yy, xx = ('#0d6b66' if cond == 'W2' else '#6d4fa0'), T + i * RH + (-8 if cond == 'W2' else 8), X(v, j)
+        if b: s.append(f'<line x1="{X(b[0], j)}" x2="{X(b[1], j)}" y1="{yy}" y2="{yy}" stroke="{col}" stroke-width="2"/>')
+        s.append(f'<circle cx="{xx}" cy="{yy}" r="6" fill="{col}"/>' if cond == 'W2' else f'<rect x="{xx - 5}" y="{yy - 5}" width="10" height="10" fill="{col}" transform="rotate(45 {xx} {yy})"/>')
+    lx = L
+    for lab_, col, shape in (('DQL W2', '#0d6b66', 'c'), ('A-model, agent + modeling', '#6d4fa0', 'd')):
+        s.append(f'<circle cx="{lx + 6}" cy="20" r="6" fill="{col}"/>' if shape == 'c' else f'<rect x="{lx + 1}" y="15" width="10" height="10" fill="{col}" transform="rotate(45 {lx + 6} 20)"/>')
+        s.append(f'<text x="{lx + 18}" y="25" font-family="Times New Roman" font-size="15" fill="#44525c">{lab_}</text>'); lx += 40 + 8 * len(lab_)
+    s.append(f'<text x="{lx}" y="25" font-family="Times New Roman" font-size="15" fill="#44525c">lines: bootstrap 95% CI (strict only)</text>')
+    s.append('</svg>'); return svg_png('fig5', ''.join(s), W, H), W, H
 
 # ---------------------------------------------------------------- the paper
 B = []; add = B.append
-add(para(run('Context, Trust Labels and Abstention in a Governed Text-to-SQL Layer: An Exploratory Case Study on an Insurance Warehouse'), style='Title'))
+add(para(run('Context, Trust Labels and Abstention in a Governed Text-to-SQL Layer: A Pre-registered Evaluation on an Insurance Warehouse'), style='Title'))
 add(para(run('[Author names]'), style='Authors'))
 add(para(run('DuckCode AI Labs', i=True), style='Authors'))
 add(para(run(f'Preprint, {date(2026, 10, 4).strftime("%-d %B %Y")}. Intended categories: cs.DB (primary), cs.CL, cs.AI.', sz=9.5, color='55636C'), align='center'))
@@ -236,17 +273,17 @@ add(P('Benchmarks such as BIRD [9] and Spider 2.0 [10] score text-to-SQL systems
 add(P('Describing a warehouse to the model is known to raise accuracy. On the insurance data used here, querying a knowledge-graph representation raised GPT-4 from 16.7% to 54.2% [1]. dbt Labs reported that, once three models were added so that its semantic layer covered all 11 test questions, the layer answered 98.2% and 100% of 20 runs per question correctly against 90.0% and 84.1% for text-to-SQL [3]. On a retail warehouse, prepending a hand-written description of the data to the prompt raised three models by 17 to 23 points [6]. These studies measure accuracy. We add the reliability of answer labels and the rate of correct abstention, and we try to report all three with the statistical care that a small warehouse requires.'))
 add(P('We study DQL [16], an open-source layer that answers through certified queries, governed metrics or drafted SQL and labels each answer (Section 3). Our contributions are:'))
 add(LIST([
-    'Metrics for labelled text-to-SQL answers framed as selective prediction (trust precision, trusted coverage, wrong trusted answers, correct abstention), with question-level bootstrap intervals that account for the same question being answered by many models and levels (Sections 5 and 6.6).',
+    'Metrics for labelled text-to-SQL answers framed as selective prediction (trust precision, trusted coverage, wrong trusted answers, correct abstention), with question-level bootstrap intervals that account for the same question being answered by many models and levels (Section 5 and Appendix B).',
     'A context ladder that separates a dbt project, entity and relationship modeling, metric definitions, written business rules and an authored business layer, with and without dbt (Section 4.3).',
-    'Results for seven models, a one-shot baseline and two agentic baselines, one of them given the same modeling knowledge as DQL, separating context-assisted accuracy from the reliability of governance labels, with negative results on both labels and abstention (Section 6).',
-    'A test-suite check on altered copies of the warehouse, and a root-cause taxonomy of wrong trusted answers (Sections 6.8 and 6.9).',
+    'Results for seven models, a one-shot baseline and two agentic baselines, one of them given the same modeling knowledge as DQL, separating context-assisted accuracy from the reliability of governance labels, with negative results on both labels and abstention (Section 6 and Appendices A and B).',
+    'A test-suite check on altered copies of the warehouse, and a root-cause taxonomy of wrong trusted answers (Appendices C and D).',
     'An account of where the study departed from a clean held-out protocol, and a pre-registered confirmatory test of the central comparison (Sections 4.2, 4.6, 6.1, 7 and 8).',
 ], 'decimal'))
 add(P('Our central finding is narrower than a system comparison. On a small insurance warehouse, modeled context improved accuracy relative to one-shot SQL. Against an agent given the same knowledge, the pre-registered test found an advantage for DQL with the primary model under the strict rule that disappears when label columns are forgiven; with the secondary model, and on an earlier, exploratory set, no advantage was established. Governance labels required separate validation and fell short of the precision we pre-registered. We do not claim that DQL is more accurate than, or equivalent to, an agentic text-to-SQL system given the same knowledge beyond this warehouse, model and grading rule (no equivalence margin was set); that its trusted labels reach a particular precision; that results on a warehouse with two policies carry over to production scale; or that our figures can be compared with BIRD or Spider 2.0 leaderboard scores, which use different data, scale, tasks and protocols.'))
 
 # ---- 2
 add(H1('2  Related work'))
-add(P('**Text-to-SQL benchmarks.** BIRD [9] and Spider 2.0 [10] measure execution accuracy on large and enterprise-style databases; LiveSQLBench [11] refreshes its tasks to limit contamination. Jin et al. [7] found errors in 52.8% of BIRD Mini-Dev and 62.8% of Spider 2.0-Snow reference annotations; re-scoring 16 agents changed their performance by −7% to +31% (relative) and their ranks by up to nine positions. A shorter peer-reviewed version analyses five agents and reports different figures [8]. We therefore audit our reference answers and report lenient scores next to strict ones. Zhong et al. [26] evaluate a query on a distilled suite of databases so that a query correct only by coincidence on one database is caught; we apply a small version of this idea (Section 6.8).'))
+add(P('**Text-to-SQL benchmarks.** BIRD [9] and Spider 2.0 [10] measure execution accuracy on large and enterprise-style databases; LiveSQLBench [11] refreshes its tasks to limit contamination. Jin et al. [7] found errors in 52.8% of BIRD Mini-Dev and 62.8% of Spider 2.0-Snow reference annotations; re-scoring 16 agents changed their performance by −7% to +31% (relative) and their ranks by up to nine positions. A shorter peer-reviewed version analyses five agents and reports different figures [8]. We therefore audit our reference answers and report lenient scores next to strict ones. Zhong et al. [26] evaluate a query on a distilled suite of databases so that a query correct only by coincidence on one database is caught; we apply a small version of this idea (Appendix C).'))
 add(P('**Semantic layers and knowledge graphs.** Sequeda et al. [1] released the insurance warehouse with 43 questions in a 2×2 grid of question and schema complexity [2]; GPT-4 answered 16.7% correctly over SQL and 54.2% over a knowledge graph, and 0% over SQL in both high-schema-complexity quadrants. Ganz and Perigaud [3] used the same data with 11 questions run 20 times each [4]. Before three models were added, the semantic layer scored 0% on questions that needed too many joins and failed with an error, where text-to-SQL returned a plausible wrong answer; they report no significance tests. Rumiantsau and Fokeev [5][6] used a retail warehouse on ClickHouse with 99 scored questions. Their "semantic layer" is a markdown document of about 2,200 tokens prepended to the prompt, so the model still writes SQL. They report Wilson intervals and paired exact McNemar tests, and gains of 17.2 to 23.2 points across three models. MetricFlow [15] is the dbt metric engine used at two of our levels. The dbt study notes that the layer fails visibly out of scope; we measure this directly, as correct abstention on unanswerable questions, and we also measure how often labelled answers are wrong.'))
 add(P('**Abstention and selective prediction.** A system that may abstain is characterized by its coverage and by its risk on the answers it gives [17][18]. Wang et al. [21] classify ambiguous and unanswerable text-to-SQL questions into six types and train a model to detect and explain them. Chen et al. [20] apply conformal prediction to a model\'s hidden states at schema linking and abstain or ask the user when an error is likely. TrustSQL [24] scores systems on answering feasible questions and abstaining on infeasible ones, with a penalty for wrong answers, and PRACTIQ [25] separates ambiguous questions from four kinds of unanswerable ones in conversation and studies clarification. Richardson [19] measures which signals predict SQL correctness: a two-provider ensemble of LLM judges reaches an AUROC of 0.82, and, for example, answers 27% of questions at 24% selective risk. DQL\'s trusted label is a selective predictor of a different kind: it is assigned by rules over the route an answer took and the reading of the question, not by a confidence score. That makes it auditable, but not calibrated, and, as Section 6 shows, not error-free.'))
 
@@ -346,11 +383,12 @@ add(EQ(EQS['silent'], 8))
 add(P('**Abstention.** On an unanswerable set of *n*_{u} questions with *S*_{u} correct abstentions, the rate is'))
 add(EQ(EQS['stop'], 9))
 add(P(f'On answerable sets an abstention counts as a wrong answer. **Grading rules.** The strict rule above is primary. The *lenient* rule also accepts an answer with the reference row count whose numeric reference columns each match a returned column row by row, which forgives a missing or substituted label column. *Lenient + rounding* further accepts numbers that equal the reference rounded to 0–4 decimals. When an answer has one numeric column and a substituted label, the lenient rule cannot check that each number is attached to the right entity, so it is a sensitivity analysis, not a replacement. Both rules compare values without column names. The strict matcher normalises the values within each row before comparing rows, which in principle lets values trade places between columns that share values; among the {N_STRICT - N_UNVER:,} originally strict-correct answers whose rows could be reconstructed ({N_UNVER} could not), {N_INCONS} failed an independent check that requires one column mapping for the whole result. The check was applied to strict-correct answers only, since it can only remove credit.'))
-add(P('**Database variants (secondary, not pre-registered).** On a warehouse with two policies a wrong filter, join or aggregation can return the right rows by coincidence. Following the test-suite idea [26], each strict-correct answer\'s SQL and the reference SQL are re-run on two altered copies of the warehouse: V1 adds an independent second book of business (new identifiers, amounts ×3 + 7, distinct names, street addresses and coordinates, dates moved 400 days with closing dates moved 410), and V2 adds the same book in the same period. Catastrophes, cities and codes are shared, so that every question keeps its meaning; we checked this on the public set 3 only, so it is unverified for the fragile set-4 answers (Section 6.8). An answer *survives* when it matches the re-run reference on both. Answers whose recorded SQL does not reproduce their correct rows on the original (for example a ratio DQL computes after the query) are *not checkable*. A first design that also duplicated names, addresses, catastrophes and coordinates broke the presuppositions of some questions (a named property no longer identified one property); it was replaced after inspecting public set-3 cases only.'))
+add(P('**Database variants (secondary, not pre-registered).** On a warehouse with two policies a wrong filter, join or aggregation can return the right rows by coincidence. Following the test-suite idea [26], each strict-correct answer\'s SQL and the reference SQL are re-run on two altered copies of the warehouse: V1 adds an independent second book of business (new identifiers, amounts ×3 + 7, distinct names, street addresses and coordinates, dates moved 400 days with closing dates moved 410), and V2 adds the same book in the same period. Catastrophes, cities and codes are shared, so that every question keeps its meaning; we checked this on the public set 3 only, so it is unverified for the fragile set-4 answers (Appendix C). An answer *survives* when it matches the re-run reference on both. Answers whose recorded SQL does not reproduce their correct rows on the original (for example a ratio DQL computes after the query) are *not checkable*. A first design that also duplicated names, addresses, catastrophes and coordinates broke the presuppositions of some questions (a named property no longer identified one property); it was replaced after inspecting public set-3 cases only.'))
 
 # ---- 6
 add(H1('6  Results'))
-add(P('We report the pre-registered test on set 5 first (Section 6.1). The results on sets 3 and 4 that follow (Sections 6.2 to 6.9) are exploratory: their headline comparisons, and the A-model baseline, were chosen after results were seen.'))
+add(P('We report the pre-registered test on set 5 first (Section 6.1). The results on sets 3 and 4 that follow (Sections 6.2 to 6.5 and Appendices A to D) are exploratory: their headline comparisons, and the A-model baseline, were chosen after results were seen.'))
+add(P('The exploratory results on set 3 are in Appendices A and B, the check on altered copies of the warehouse in Appendix C, and the classification of wrong trusted answers in Appendix D.'))
 exec(open(os.path.join(HERE, 'paper_set5_section.py')).read())
 add(H2('6.2  Accuracy on set 4 (exploratory)'))
 f1, w1, hh1 = fig1()
@@ -366,7 +404,7 @@ for k in C4:
 add(TABLE(['Condition', 'Correct', 'Accuracy', 'Bootstrap 95% CI', 'Δ vs P (Holm p)', 'Δ vs A (Holm p)', 'Median'], rows, [2500, 900, 950, 1250, 1500, 1500, 760]))
 add(CAP('**Table 6.** Claude Sonnet 5.5 on set 4 (200 answerable questions), strict grading. Δ in percentage points. ^{a} A against P, raw *p* (not in a family). ^{b} Exploratory, raw *p*. Times are indicative (Section 9).'))
 add(FIG(f1, w1, hh1))
-add(CAP('**Figure 1.** Accuracy on set 4 with question-level bootstrap 95% intervals, Claude Sonnet 5.5.'))
+add(CAP('**Figure 2.** Accuracy on set 4 with question-level bootstrap 95% intervals, Claude Sonnet 5.5.'))
 sigP = [L for L in ('L2', 'L3', 'W2', 'WB') if PR4['vs_P'][L]['p_holm'] < 0.05]
 nsP = [L for L in ('L2', 'L3', 'W2', 'WB') if L not in sigP]
 add(P(f'Every DQL level was more accurate than one-shot SQL; after Holm correction the difference is significant for {", ".join(sigP)}' + (f' ({", ".join(f"{L}: Holm {pstr(PR4["vs_P"][L]["p_holm"])}" for L in nsP)})' if nsP else '') + f'. No DQL level differed significantly from the agent. The most accurate level, W2, answered {W2["k"]} of 200 questions. Its advantage over the agent ({dpt(tW2A)} points, CI {dci(tW2A)}; {tW2A["gained"]} questions gained and {tW2A["lost"]} lost; raw {pstr(tW2A["p_raw"])}) does not survive the correction (Holm {pstr(tW2A["p_holm"])}). Three further caveats apply to W2. It was chosen as the headline level after set 3 had been seen. It ran on a different build from WB. And none of its answers carried a trusted label (Section 6.4), so its accuracy measures drafted SQL written with DQL\'s context, not governed answers.'))
@@ -387,7 +425,7 @@ add(TABLE(['Condition', 'Strict', 'Lenient', 'Lenient + rounding', 'Lenient gain
 add(CAP('**Table 7.** Correct answers of 200 on set 4 under the three grading rules.'))
 sub = RG['heldout-4']['A_agent']['sub_kinds']
 lp = [L for L in ('L2', 'L3', 'WB') if LEN['vs_A'][L]['p_holm'] < 0.05]
-add(P(f'Under the lenient rule the agent gains {RG["heldout-4"]["A_agent"]["lenient"] - RG["heldout-4"]["A_agent"]["strict"]} answers, most of them ({sub.get("missing_or_extra_columns:label_column_substituted", 0)}) answers that return a different label column, such as a name where the reference has an identifier, with the right numbers. DQL levels gain {RG["heldout-4"]["DQL_levels"]["lenient"] - RG["heldout-4"]["DQL_levels"]["strict"]} answers across all four levels. The comparison with the agent reverses: W2 − A becomes {ptest(LEN["vs_A"]["W2"])}, and {", ".join(lp)} fall significantly below the agent. Against one-shot SQL only W2 stays significant under the lenient rule ({ptest(LEN["vs_P"]["W2"])}). The lenient + rounding results are nearly identical (W2 − A {ptest(LR["vs_A"]["W2"])}).{(' The agent given DQL\'s modeling knowledge also leads W2 under the lenient rule (W2 − A-model ' + dpt(LEN['W2_vs_Am']) + ' points, exploratory ' + pstr(LEN['W2_vs_Am']['p_raw']) + ').') if HAS_AM else ''} Whether DQL is more or less accurate than the agent on this set therefore depends on whether a substituted label column counts as an error; a business user reading a report would usually see it as one, a numeric check would not. Neither grade is the business metric in general: returning a name instead of an identifier is often acceptable, while losing which entity a number belongs to is not. Section 6.9 gives classified examples of each kind from the public set 3.'))
+add(P(f'Under the lenient rule the agent gains {RG["heldout-4"]["A_agent"]["lenient"] - RG["heldout-4"]["A_agent"]["strict"]} answers, most of them ({sub.get("missing_or_extra_columns:label_column_substituted", 0)}) answers that return a different label column, such as a name where the reference has an identifier, with the right numbers. DQL levels gain {RG["heldout-4"]["DQL_levels"]["lenient"] - RG["heldout-4"]["DQL_levels"]["strict"]} answers across all four levels. The comparison with the agent reverses: W2 − A becomes {ptest(LEN["vs_A"]["W2"])}, and {", ".join(lp)} fall significantly below the agent. Against one-shot SQL only W2 stays significant under the lenient rule ({ptest(LEN["vs_P"]["W2"])}). The lenient + rounding results are nearly identical (W2 − A {ptest(LR["vs_A"]["W2"])}).{(' The agent given DQL\'s modeling knowledge also leads W2 under the lenient rule (W2 − A-model ' + dpt(LEN['W2_vs_Am']) + ' points, exploratory ' + pstr(LEN['W2_vs_Am']['p_raw']) + ').') if HAS_AM else ''} Whether DQL is more or less accurate than the agent on this set therefore depends on whether a substituted label column counts as an error; a business user reading a report would usually see it as one, a numeric check would not. Neither grade is the business metric in general: returning a name instead of an identifier is often acceptable, while losing which entity a number belongs to is not. Appendix D gives classified examples of each kind from the public set 3.'))
 
 add(H2('6.4  Trust labels and abstention on set 4'))
 rows = []
@@ -406,56 +444,14 @@ add(TABLE(['Condition', 'T', 'W_T', 'π answerable (Wilson)', 'π all (Wilson)',
 add(CAP('**Table 8.** Trusted answers and abstention on set 4, Claude Sonnet 5.5. At each level every question is answered once, so *T* also counts distinct questions. π all counts trusted answers to unanswerable questions as wrong. One-shot SQL and the agents assign no labels, so π, κ and ω do not apply to them. ‡ not informative: no trusted answers (κ = 0).'))
 add(P(f'Trusted coverage was small: {pct(T4["L2"]["kappa"])} of answers at L2 and L3, {pct(T4["WB"]["kappa"])} at WB and none at W2. The dbt-metric governed answers were wrong {dbt4["trusted_wrong"]} times out of {dbt4["trusted"]}, on {dbt4["distinct_questions_with_wrong_trusted"]} of {dbt4["distinct_questions"]} distinct questions (question-level upper 95% bound on the wrong rate {pct(dbt4["question_level_exact_upper95"])}); under the lenient + rounding rule {T4["L2"]["W_T_lenient_rounding"] + T4["L3"]["W_T_lenient_rounding"]} of them {'remains' if T4['L2']['W_T_lenient_rounding'] + T4['L3']['W_T_lenient_rounding'] == 1 else 'remain'} wrong. The authored business layer did not deliver reliable labels: {T4["WB"]["W_T"]} of its {T4["WB"]["T"]} trusted answers were wrong ({T4["WB"]["W_T_lenient_rounding"]} under lenient + rounding). On the 50 unanswerable questions DQL abstained correctly {min(u4k.values())} to {max(u4k.values())} times, against {U4["A"]["k"]} for the agent{(' and ' + str(U4['Am']['k']) + ' for A-model') if HAS_AM else ''}, and {u4gov} of its answers to unanswerable questions across the four levels carried a trusted label; counted together with the answerable set, trust precision was {pct(T4['L2']['precision_all'])} at L2, {pct(T4['L3']['precision_all'])} at L3 and {pct(T4['WB']['precision_all'])} at WB. Pooled over the four levels, DQL abstained correctly on {st4["successes"]} of {st4["answers"]} answers ({pct(st4["estimate"])}, question-level CI {ci(st4["bootstrap"]["ci"])}, {st4["distinct_questions"]} questions).'))
 
-add(H2('6.5  Seven models on set 3'))
-rows = []
-for k in ORDER:
-    r = [LAB[k]]; best = max((a3(k, L)['k'] for L in DQL if a3(k, L)), default=None)
-    fam = PR3.get(k, {}).get('vs_P', {})
-    for L in ['P', 'A'] + DQL:
-        c = a3(k, L)
-        if not c: r.append('–' if L == 'A' else '·'); continue
-        t = fam.get(L); mk = ''
-        if t and t['p_holm'] < 0.05: mk = '▲' if t['diff'] > 0 else '▼'
-        v = f"{c['k']}{mk}"
-        r.append(f"**{v}**" if L in DQL and c['k'] == best else v)
-    rows.append(r)
-_miss3 = any(not a3(k, L) for k in ORDER for L in ['P'] + DQL)
-add(TABLE(['Model', 'P', 'A'] + DQL, rows, [2260] + [645] * 11, ['left'] + ['center'] * 11))
-add(CAP('**Table 9.** Correct answers of 40 on set 3. ▲/▼ significantly above/below the model\'s own P after Holm correction over its nine levels. Bold: best DQL level.' + (' · not run on the final build.' if _miss3 else '') + ' –: agent not run.'))
-f2, w2_, hh2 = fig2()
-add(FIG(f2, w2_, hh2))
-add(CAP('**Figure 2.** Set 3: one-shot SQL (P), DQL W2 and, where run, the agent (A) for each model, with question-level bootstrap 95% intervals.'))
-sig3 = {k: [L for L, t in PR3.get(k, {}).get('vs_P', {}).items() if t['p_holm'] < 0.05] for k in ORDER}
-sig3txt = '; '.join(f"{LAB[k]} at {', '.join(v)}" for k, v in sig3.items() if v) or 'none'
-gains = [a3(k, 'L1')['k'] - a3(k, 'L0')['k'] for k in ORDER if a3(k, 'L0') and a3(k, 'L1')]
-l0rg = RG['heldout-3']['per_condition']['L0']
-anyA = [k for k in ORDER if PR3.get(k, {}).get('vs_A') and any(t['p_holm'] < 0.05 for t in PR3[k]['vs_A'].values())]
-add(P(f'With 40 questions a 95% interval spans about ±14 points, so set 3 separates conditions only when differences are large. After Holm correction within each model, levels significantly above the model\'s own one-shot baseline were: {sig3txt}. No level was significantly below it, and for the two models run with the agent no level differed significantly from it{"" if not anyA else " (except " + ", ".join(anyA) + ")"}. L0 was the weakest level for every model, mostly because it abstained on answerable questions ({l0rg["classes"]["abstained"]} of its {l0rg["strict_wrong"]} wrong answers); adding modeling (L1) raised every model by {min(gains)} to {max(gains)} questions of 40.'))
-
-add(H2('6.6  What set 3 showed about labels and abstention'))
-rows = []
-for key, name in (('L2_L3', 'L2 + L3 (dbt metrics)'), ('LB', 'LB (business layer, dbt)'), ('WB', 'WB (business layer, warehouse)'), ('W2', 'W2'), ('all_DQL_levels', 'All DQL levels')):
-    p = pt3[key]['pooled']
-    if p.get('rule_of_three_n'):
-        ub = f"{pct(p['rule_of_three_upper95_wrong_rate'], 0)} (exact {pct(p['exact_upper95_wrong_rate'])})"
-    else:
-        ub = pct(p['question_level_exact_upper95'], 0)
-    rows.append([name, str(p['trusted']), str(p['trusted_wrong']), f"{p['distinct_questions']} ({p['distinct_questions_with_wrong_trusted']})",
-                 pct(p['precision']), ci(p['wilson_answer_level_naive'], 0), ci(p['bootstrap']['ci'], 0) if p['trusted_wrong'] else '–', ub])
-add(TABLE(['Pool (all models)', 'Trusted answers', 'Wrong', 'Distinct questions (with wrong)', 'Precision', 'Naive Wilson', 'Question bootstrap', 'Upper 95% wrong rate (questions)'],
-          rows, [2150, 900, 700, 1250, 950, 1050, 1100, 1260]))
-add(CAP('**Table 10.** Trusted answers on set 3 pooled over models. The naive interval treats every answer as independent; the question bootstrap and the upper bound use distinct questions. The bootstrap is degenerate when no answer is wrong.'))
-p23 = pt3['L2_L3']['pooled']
-add(P(f'On set 3 the dbt-metric governed answers and abstention looked nearly perfect, but both rest on few distinct questions. The {p23["trusted"]} governed answers at L2 and L3 came from {p23["distinct_questions"]} questions, so the upper 95% bound on their wrong rate is {pct(p23["rule_of_three_upper95_wrong_rate"], 0)} (exact {pct(p23["exact_upper95_wrong_rate"])}), not the {pct(p23["naive_rule_of_three_on_answers"])} that counting answers suggests. Set 3 already showed the business-layer labels to be unreliable: {pt3["LB"]["pooled"]["trusted_wrong"]} of {pt3["LB"]["pooled"]["trusted"]} trusted answers at LB were wrong ({pt3["LB"]["pooled"]["distinct_questions_with_wrong_trusted"]} of {pt3["LB"]["pooled"]["distinct_questions"]} questions) and {pt3["WB"]["pooled"]["trusted_wrong"]} of {pt3["WB"]["pooled"]["trusted"]} at WB, and W2\'s only {pt3["W2"]["pooled"]["trusted"]} trusted answers, all on one question, were wrong. DQL\'s levels abstained correctly on {st3["successes"]} of {st3["answers"]} answers to unanswerable questions, but they come from only {st3["distinct_questions"]} questions. Resampling those questions gives {ci(st3["bootstrap"]["ci"])}, an interval that describes these {st3["distinct_questions"]} questions and cannot represent the variety of unanswerable questions a user may ask; on the 50 questions of set 4 the rate was {pct(st4["estimate"], 0)}. Set 4 did not so much contradict set 3 as show what its small numbers could not establish.'))
-
-add(H2('6.7  Error analysis'))
+add(H2('6.5  Error analysis'))
 groups = [('Set 3, DQL levels', RG['heldout-3']['DQL_levels']), ('Set 3, P', RG['heldout-3']['P_one_shot']), ('Set 3, A', RG['heldout-3']['A_agent']),
           ('Set 4, DQL levels', RG['heldout-4']['DQL_levels']), ('Set 4, P', RG['heldout-4']['P_one_shot']), ('Set 4, A', RG['heldout-4']['A_agent'])]
 if HAS_AM: groups.append(('Set 4, A-model', RG['heldout-4']['per_condition']['Am']))
 CL = [('wrong_numbers', 'Wrong numbers'), ('abstained', 'Abstained'), ('missing_or_extra_columns', 'Label column'), ('grain_or_shape', 'Grain or shape'), ('rounding_only', 'Rounding only'), ('other', 'Other')]
 rows = [[g, str(v['strict_wrong'])] + [f"{v['classes'][c]} ({round(100 * v['classes'][c] / v['strict_wrong']) if v['strict_wrong'] else 0}%)" for c, _ in CL] for g, v in groups]
 add(TABLE(['Group', 'Wrong'] + [n for _, n in CL], rows, [1900, 800, 1150, 1100, 1150, 1150, 1150, 900], ['left'] + ['right'] * 7))
-add(CAP('**Table 11.** Strict-wrong answers by class (first class that applies). *Label column*: right rows and numbers, a label column missing, substituted or formatted differently. *Grain or shape*: a different number of rows, such as a list for a total.'))
+add(CAP('**Table 9.** Strict-wrong answers by class (first class that applies). *Label column*: right rows and numbers, a label column missing, substituted or formatted differently. *Grain or shape*: a different number of rows, such as a list for a total.'))
 h3a, h4a = RG['heldout-3']['all_conditions'], RG['heldout-4']['all_conditions']
 gap = lambda v: 100 * (v['lenient'] - v['strict']) / v['n']
 s55 = RG['sonnet55_all_conditions_both_sets']
@@ -463,24 +459,6 @@ add(P(f'On set 3, {h3a["strict"]:,} of {h3a["n"]:,} answers were correct under t
 
 _r4, _r5 = RT['heldout-4']['levels'], RT['heldout-5']['levels']
 add(P(f'**Where added context lost answers.** More context did not always help. W2 answered {AC4["W2"]["k"]} questions of set 4 correctly against {AC4["L2"]["k"]} at L2, {AC4["L3"]["k"]} at L3 and {AC4["WB"]["k"]} at WB, and {AC5["W2"]["k"]} of set 5 against {AC5["L2"]["k"]}, {AC5["L3"]["k"]} and {AC5["WB"]["k"]}. W2 itself answered almost every question with drafted SQL ({RT["heldout-4"]["W2_routes"].get("drafted", 0)} and {RT["heldout-5"]["W2_routes"].get("drafted", 0)} of 200). Of the questions W2 answered correctly and WB did not ({_r4["WB"]["W2_right_level_wrong"]} on set 4 and {_r5["WB"]["W2_right_level_wrong"]} on set 5), WB had answered {_r4["WB"]["lost_by_route"].get("trusted", 0)} and {_r5["WB"]["lost_by_route"].get("trusted", 0)} with a governed label: the business layer\'s metrics took questions they did not fit, which drafted SQL had answered correctly. At L2 and L3 on set 4, {_r4["L2"]["lost_by_route"].get("no_answer", 0)} of {_r4["L2"]["W2_right_level_wrong"]} and {_r4["L3"]["lost_by_route"].get("no_answer", 0)} of {_r4["L3"]["W2_right_level_wrong"]} such losses were stops on answerable questions ({_r5["L2"]["lost_by_route"].get("no_answer", 0)} of {_r5["L2"]["W2_right_level_wrong"]} and {_r5["L3"]["lost_by_route"].get("no_answer", 0)} of {_r5["L3"]["W2_right_level_wrong"]} on set 5). This breakdown is exploratory and describes these runs only.'))
-
-add(H2('6.8  Robustness on database variants'))
-rows = []
-for key, name in [('heldout-4:P', 'P, one-shot SQL'), ('heldout-4:A', 'A, agent'), ('heldout-4:Am', 'A-model, agent + modeling'), ('heldout-4:L2', 'L2'), ('heldout-4:L3', 'L3'),
-                  ('heldout-4:W2', 'W2'), ('heldout-4:WB', 'WB'), ('heldout-3:DQL levels', 'Set 3, all DQL levels, all models'), ('heldout-3:P', 'Set 3, P, all models'), ('heldout-3:A', 'Set 3, A, two models')]:
-    v = VP.get(key)
-    if not v: continue
-    rows.append([name, str(v['n']), str(v['strict']), str(v['robust']), str(v['fragile']), str(v['not_checkable']), f"{100 * v['robust'] / v['n']:.1f}–{100 * (v['robust'] + v['not_checkable']) / v['n']:.1f}%"])
-add(TABLE(['Condition (set 4 unless stated)', 'Answers', 'Strict-correct', 'Survive', 'Fragile', 'Not checkable', 'Surviving share'], rows, [3000, 900, 1100, 900, 900, 1200, 1360]))
-add(CAP('**Table 12.** Strict-correct answers re-checked on two altered copies of the warehouse (Section 5). The surviving share counts not-checkable answers as wrong (lower) and as right (upper).'))
-VPP = VAR['set4_paired']
-_w = lambda k: VPP[k]['lower']
-add(P(f'On the public set 3, no strict-correct answer of any model or condition was fragile once the variants preserved every question\'s meaning: the small warehouse did not, by this test, make coincidentally correct answers common. On set 4, {VP["heldout-4:DQL levels"]["fragile"]} of {VP["heldout-4:DQL levels"]["strict"]} strict-correct DQL answers, {VP["heldout-4:P"]["fragile"]} one-shot answers, {VP["heldout-4:A"]["fragile"]} agent answers and {VP.get("heldout-4:Am", {}).get("fragile", 0)} A-model answers were fragile; while set 4 is sealed we cannot check whether these reflect answer errors or questions that the variants made ambiguous. Counting only surviving answers as correct retains the advantage over one-shot SQL and establishes no advantage over A-model: W2 {_w("W2 vs Am")["k_left"]} against A-model {_w("W2 vs Am")["k_right"]} (exploratory {pstr(_w("W2 vs Am")["p_raw"])}), against the agent {_w("W2 vs A")["k_right"]} ({pstr(_w("W2 vs A")["p_raw"])}) and against one-shot SQL {_w("W2 vs P")["k_right"]} ({pstr(_w("W2 vs P")["p_raw"])}); A-model against the agent {pstr(_w("Am vs A")["p_raw"])}. The clone-based variants catch hard-coded values, missing filters and totals that hold only on the original rows; they do not catch every kind of error. Until the fragile set-4 cases are adjudicated, these checks add evidence; they are not a semantic validation of the answers.'))
-
-TAXF = os.path.join(HERE, '..', 'taxonomy', 'taxonomy.json')
-if os.path.exists(TAXF) and os.path.exists(os.path.join(HERE, 'paper_taxonomy_section.py')):
-    TAX = json.load(open(TAXF))
-    exec(open(os.path.join(HERE, 'paper_taxonomy_section.py')).read())
 
 # ---- 7
 add(H1('7  Changes to the system during the study'))
@@ -531,14 +509,14 @@ add(H1('10  Conclusion'))
 if HAS_AM:
     tm = PR4['W2_vs_Am']; tam = PR4['Am_vs_A']
     _u5 = [U5[L]['k'] for L in ('L2', 'L3', 'W2', 'WB')]
-    add(P(f'This case study supports a narrow claim. In a pre-registered test on 200 questions written by a GPT model, DQL with modeled context (W2) answered {pct(AC5["W2"]["acc"])} correctly against {pct(AC5["P"]["acc"])} for one-shot SQL and {pct(AC5["Am"]["acc"])} for an agent given the same modeling knowledge as text. The advantage over that agent ({dpt(H1T)} points, {pstr(H1T["p_raw"])}, and of similar size in {len(REPS)} repeat runs) held under the strict rule and disappeared under the lenient one, so it is associated with the columns the answers returned, consistent with DQL\'s instructions on answer shape that the agent did not have (Section 4.3); on an earlier, exploratory set the same comparison was not established ({dpt(tm)} points, {pstr(tm["p_raw"])})' + (f', and with the secondary model, Qwen 3.8 27B, W2 and the agent did not differ significantly under the strict rule ({dpt(S5Q["set4_paired"]["W2_vs_Am"])} points, {pstr(S5Q["set4_paired"]["W2_vs_Am"]["p_raw"])}) while the agent led under the lenient one' if S5Q else '') + f'. Governance labels need validation of their own: at the dbt-metric levels {P5L23["trusted_right"]} of {P5L23["trusted"]} governed answers were right under the strict rule, short of the pre-registered 95%; business-layer labels were wrong in {T4["WB"]["W_T"]} of {T4["WB"]["T"]} cases on set 4 and {T5["WB"]["W_T"]} of {T5["WB"]["T"]} on set 5; and no DQL level declined more unanswerable questions than the agents. For practitioners the main lesson is this distinction: a layer can make drafted SQL more accurate while its labels remain unreliable, so the two must be measured separately. Methodologically, pooled figures on a small set can look decisive while resting on four questions, and a baseline without the same context can make a pipeline look better than it is. We recommend that evaluations of governed or abstaining text-to-SQL systems report trust precision, coverage and abstention together with accuracy; give baselines the same knowledge; count distinct questions; correct for multiple comparisons; check answers on altered databases; pre-register the main comparison; and disclose every system change and every departure from the held-out protocol.'))
+    add(P(f'This case study supports a narrow claim. In a pre-registered test on 200 questions written by a GPT model, DQL with modeled context (W2) answered {pct(AC5["W2"]["acc"])} correctly against {pct(AC5["P"]["acc"])} for one-shot SQL and {pct(AC5["Am"]["acc"])} for an agent given the same modeling knowledge as text. The advantage over that agent ({dpt(H1T)} points, {pstr(H1T["p_raw"])}, and of similar size in {len(REPS)} repeat runs) held under the strict rule and disappeared under the lenient one, so it is associated with the columns the answers returned, consistent with DQL\'s instructions on answer shape that the agent did not have (Section 4.3); on an earlier, exploratory set the same comparison was not established ({dpt(tm)} points, {pstr(tm["p_raw"])})' + (f', and with the secondary model, Qwen 3.8 27B, W2 and the agent did not differ significantly under the strict rule ({dpt(S5Q["set4_paired"]["W2_vs_Am"])} points, {pstr(S5Q["set4_paired"]["W2_vs_Am"]["p_raw"])}) while the agent led under the lenient one' if S5Q else '') + f'. Governance labels need validation of their own: at the dbt-metric levels {P5L23["trusted_right"]} of {P5L23["trusted"]} governed answers were right under the strict rule, short of the pre-registered 95%; business-layer labels were wrong in {T4["WB"]["W_T"]} of {T4["WB"]["T"]} cases on set 4 and {T5["WB"]["W_T"]} of {T5["WB"]["T"]} on set 5; and no DQL level declined more unanswerable questions than the agents. For practitioners the main lesson is this distinction: a layer can make drafted SQL more accurate while its labels remain unreliable, so the two must be measured separately. Methodologically, pooled figures on a small set can look decisive while resting on four questions, and a baseline without the same context can make a pipeline look better than it is. We recommend that evaluations of governed or abstaining text-to-SQL systems report trust precision, coverage and abstention together with accuracy; give baselines the same knowledge; count distinct questions; correct for multiple comparisons; check answers on altered databases; pre-register the main comparison; and disclose every system change and every departure from the held-out protocol. A natural next step is to test whether a small trained classifier that selects the context given to the model can close the gap we saw with a local model.'))
 else:
     add(P(f'Three findings survive the corrections in this revision. First, DQL\'s modeled context made drafted SQL substantially more accurate than one-shot SQL over table definitions: {pct(W2["acc"])} against {pct(P4["acc"])} on 200 held-out questions, significant under both grading rules. Second, an advantage over an agent that explores the database is not established: the difference was not significant after correction, and its sign depended on the grading rule. Third, DQL\'s labels and abstention are not yet as reliable as its design intends. dbt-metric labels were mostly right but rare, business-layer labels were wrong about half the time, and DQL answered more unanswerable questions than the agent. The methodological lesson is the one that most changed this paper: pooled figures on a small set can look decisive while resting on four questions. We recommend that evaluations of governed or abstaining text-to-SQL systems report trust precision, coverage and abstention together with accuracy; count distinct questions; correct for multiple comparisons; and disclose every system change and every departure from the held-out protocol.'))
 
 # ---- statements
 add(H1('Statements'))
 add(P('**Data and code availability.** The benchmark harness, conditions, development-set audit, recorded model outputs for the development set and set 3, statistics script (question-level bootstrap, McNemar and Holm), paper generator and the set-5 pre-registration are public at github.com/duckcode-ai-labs/dql-benchmarks. Sets 4 and 5, with their reports and audits, are added when this paper is posted; their hashes are already published there. DQL is open source under the Apache License 2.0 [16]. The experiments ran on development commits 49c0e1cb and 627009a1, public as branches of github.com/duckcode-ai-labs/dql; a tagged release containing them will be published for reproducibility, and the run archive (run stores, cassettes and project copies) will be deposited with a persistent identifier. Each result file records the DQL build, model identifier, CLI version and run settings.'))
-add(P('**Use of generative AI.** This study made substantial use of AI tools, which we disclose consistent with arXiv\'s policy on generative AI tools. An AI coding assistant (Claude, Anthropic) wrote most of the benchmark harness and analysis code, ran the experiments, checked the bibliography against primary sources and drafted this manuscript under the authors\' direction. AI agents wrote the question sets and their reference SQL (Claude agents for sets 3 and 4; GPT-6 Sol for set 5) and drafted the business layer, which a second agent checked and a person certified. The root-cause and lenient-grade classifications in Section 6.9 and the redesign of the database variants were made by the AI assistant and are not yet confirmed by a person; the development-set reference disputes and the audits of sets 4 and 5 (Section 4.5) are an author\'s, and two AI models looked over the audit samples only as a second check. Every number in the text, tables and figures is generated by scripts from the saved result files. The authors have reviewed the manuscript and each reference and take full responsibility for its content.'))
+add(P('**Use of generative AI.** This study made substantial use of AI tools, which we disclose consistent with arXiv\'s policy on generative AI tools. An AI coding assistant (Claude, Anthropic) wrote most of the benchmark harness and analysis code, ran the experiments, checked the bibliography against primary sources and drafted this manuscript under the authors\' direction. AI agents wrote the question sets and their reference SQL (Claude agents for sets 3 and 4; GPT-6 Sol for set 5) and drafted the business layer, which a second agent checked and a person certified. The root-cause and lenient-grade classifications in Appendix D and the redesign of the database variants were made by the AI assistant and are not yet confirmed by a person; the development-set reference disputes and the audits of sets 4 and 5 (Section 4.5) are an author\'s, and two AI models looked over the audit samples only as a second check. Every number in the text, tables and figures is generated by scripts from the saved result files. The authors have reviewed the manuscript and each reference and take full responsibility for its content.'))
 add(P('**Competing interests.** The authors develop DQL at DuckCode AI Labs, which offers commercial services around it.'))
 
 # ---- references
@@ -573,6 +551,67 @@ REFS = [
 ]
 for i, (t, lt, url) in enumerate(REFS, 1):
     add(para(run(f'[{i}]\t') + run(t) + LINK(lt, url), style='Reference'))
+
+# ---- appendices (exploratory set-3 results, database variants, taxonomy of wrong trusted answers)
+add(H1('Appendix A  Seven models on set 3'))
+rows = []
+for k in ORDER:
+    r = [LAB[k]]; best = max((a3(k, L)['k'] for L in DQL if a3(k, L)), default=None)
+    fam = PR3.get(k, {}).get('vs_P', {})
+    for L in ['P', 'A'] + DQL:
+        c = a3(k, L)
+        if not c: r.append('–' if L == 'A' else '·'); continue
+        t = fam.get(L); mk = ''
+        if t and t['p_holm'] < 0.05: mk = '▲' if t['diff'] > 0 else '▼'
+        v = f"{c['k']}{mk}"
+        r.append(f"**{v}**" if L in DQL and c['k'] == best else v)
+    rows.append(r)
+_miss3 = any(not a3(k, L) for k in ORDER for L in ['P'] + DQL)
+add(TABLE(['Model', 'P', 'A'] + DQL, rows, [2260] + [645] * 11, ['left'] + ['center'] * 11))
+add(CAP('**Table 10.** Correct answers of 40 on set 3. ▲/▼ significantly above/below the model\'s own P after Holm correction over its nine levels. Bold: best DQL level.' + (' · not run on the final build.' if _miss3 else '') + ' –: agent not run.'))
+f2, w2_, hh2 = fig2()
+add(FIG(f2, w2_, hh2))
+add(CAP('**Figure 3.** Set 3: one-shot SQL (P), DQL W2 and, where run, the agent (A) for each model, with question-level bootstrap 95% intervals.'))
+sig3 = {k: [L for L, t in PR3.get(k, {}).get('vs_P', {}).items() if t['p_holm'] < 0.05] for k in ORDER}
+sig3txt = '; '.join(f"{LAB[k]} at {', '.join(v)}" for k, v in sig3.items() if v) or 'none'
+gains = [a3(k, 'L1')['k'] - a3(k, 'L0')['k'] for k in ORDER if a3(k, 'L0') and a3(k, 'L1')]
+l0rg = RG['heldout-3']['per_condition']['L0']
+anyA = [k for k in ORDER if PR3.get(k, {}).get('vs_A') and any(t['p_holm'] < 0.05 for t in PR3[k]['vs_A'].values())]
+add(P(f'With 40 questions a 95% interval spans about ±14 points, so set 3 separates conditions only when differences are large. After Holm correction within each model, levels significantly above the model\'s own one-shot baseline were: {sig3txt}. No level was significantly below it, and for the two models run with the agent no level differed significantly from it{"" if not anyA else " (except " + ", ".join(anyA) + ")"}. L0 was the weakest level for every model, mostly because it abstained on answerable questions ({l0rg["classes"]["abstained"]} of its {l0rg["strict_wrong"]} wrong answers); adding modeling (L1) raised every model by {min(gains)} to {max(gains)} questions of 40.'))
+
+add(H1('Appendix B  What set 3 showed about labels and abstention'))
+rows = []
+for key, name in (('L2_L3', 'L2 + L3 (dbt metrics)'), ('LB', 'LB (business layer, dbt)'), ('WB', 'WB (business layer, warehouse)'), ('W2', 'W2'), ('all_DQL_levels', 'All DQL levels')):
+    p = pt3[key]['pooled']
+    if p.get('rule_of_three_n'):
+        ub = f"{pct(p['rule_of_three_upper95_wrong_rate'], 0)} (exact {pct(p['exact_upper95_wrong_rate'])})"
+    else:
+        ub = pct(p['question_level_exact_upper95'], 0)
+    rows.append([name, str(p['trusted']), str(p['trusted_wrong']), f"{p['distinct_questions']} ({p['distinct_questions_with_wrong_trusted']})",
+                 pct(p['precision']), ci(p['wilson_answer_level_naive'], 0), ci(p['bootstrap']['ci'], 0) if p['trusted_wrong'] else '–', ub])
+add(TABLE(['Pool (all models)', 'Trusted answers', 'Wrong', 'Distinct questions (with wrong)', 'Precision', 'Naive Wilson', 'Question bootstrap', 'Upper 95% wrong rate (questions)'],
+          rows, [2150, 900, 700, 1250, 950, 1050, 1100, 1260]))
+add(CAP('**Table 11.** Trusted answers on set 3 pooled over models. The naive interval treats every answer as independent; the question bootstrap and the upper bound use distinct questions. The bootstrap is degenerate when no answer is wrong.'))
+p23 = pt3['L2_L3']['pooled']
+add(P(f'On set 3 the dbt-metric governed answers and abstention looked nearly perfect, but both rest on few distinct questions. The {p23["trusted"]} governed answers at L2 and L3 came from {p23["distinct_questions"]} questions, so the upper 95% bound on their wrong rate is {pct(p23["rule_of_three_upper95_wrong_rate"], 0)} (exact {pct(p23["exact_upper95_wrong_rate"])}), not the {pct(p23["naive_rule_of_three_on_answers"])} that counting answers suggests. Set 3 already showed the business-layer labels to be unreliable: {pt3["LB"]["pooled"]["trusted_wrong"]} of {pt3["LB"]["pooled"]["trusted"]} trusted answers at LB were wrong ({pt3["LB"]["pooled"]["distinct_questions_with_wrong_trusted"]} of {pt3["LB"]["pooled"]["distinct_questions"]} questions) and {pt3["WB"]["pooled"]["trusted_wrong"]} of {pt3["WB"]["pooled"]["trusted"]} at WB, and W2\'s only {pt3["W2"]["pooled"]["trusted"]} trusted answers, all on one question, were wrong. DQL\'s levels abstained correctly on {st3["successes"]} of {st3["answers"]} answers to unanswerable questions, but they come from only {st3["distinct_questions"]} questions. Resampling those questions gives {ci(st3["bootstrap"]["ci"])}, an interval that describes these {st3["distinct_questions"]} questions and cannot represent the variety of unanswerable questions a user may ask; on the 50 questions of set 4 the rate was {pct(st4["estimate"], 0)}. Set 4 did not so much contradict set 3 as show what its small numbers could not establish.'))
+
+add(H1('Appendix C  Robustness on database variants'))
+rows = []
+for key, name in [('heldout-4:P', 'P, one-shot SQL'), ('heldout-4:A', 'A, agent'), ('heldout-4:Am', 'A-model, agent + modeling'), ('heldout-4:L2', 'L2'), ('heldout-4:L3', 'L3'),
+                  ('heldout-4:W2', 'W2'), ('heldout-4:WB', 'WB'), ('heldout-3:DQL levels', 'Set 3, all DQL levels, all models'), ('heldout-3:P', 'Set 3, P, all models'), ('heldout-3:A', 'Set 3, A, two models')]:
+    v = VP.get(key)
+    if not v: continue
+    rows.append([name, str(v['n']), str(v['strict']), str(v['robust']), str(v['fragile']), str(v['not_checkable']), f"{100 * v['robust'] / v['n']:.1f}–{100 * (v['robust'] + v['not_checkable']) / v['n']:.1f}%"])
+add(TABLE(['Condition (set 4 unless stated)', 'Answers', 'Strict-correct', 'Survive', 'Fragile', 'Not checkable', 'Surviving share'], rows, [3000, 900, 1100, 900, 900, 1200, 1360]))
+add(CAP('**Table 12.** Strict-correct answers re-checked on two altered copies of the warehouse (Section 5). The surviving share counts not-checkable answers as wrong (lower) and as right (upper).'))
+VPP = VAR['set4_paired']
+_w = lambda k: VPP[k]['lower']
+add(P(f'On the public set 3, no strict-correct answer of any model or condition was fragile once the variants preserved every question\'s meaning: the small warehouse did not, by this test, make coincidentally correct answers common. On set 4, {VP["heldout-4:DQL levels"]["fragile"]} of {VP["heldout-4:DQL levels"]["strict"]} strict-correct DQL answers, {VP["heldout-4:P"]["fragile"]} one-shot answers, {VP["heldout-4:A"]["fragile"]} agent answers and {VP.get("heldout-4:Am", {}).get("fragile", 0)} A-model answers were fragile; while set 4 is sealed we cannot check whether these reflect answer errors or questions that the variants made ambiguous. Counting only surviving answers as correct retains the advantage over one-shot SQL and establishes no advantage over A-model: W2 {_w("W2 vs Am")["k_left"]} against A-model {_w("W2 vs Am")["k_right"]} (exploratory {pstr(_w("W2 vs Am")["p_raw"])}), against the agent {_w("W2 vs A")["k_right"]} ({pstr(_w("W2 vs A")["p_raw"])}) and against one-shot SQL {_w("W2 vs P")["k_right"]} ({pstr(_w("W2 vs P")["p_raw"])}); A-model against the agent {pstr(_w("Am vs A")["p_raw"])}. The clone-based variants catch hard-coded values, missing filters and totals that hold only on the original rows; they do not catch every kind of error. Until the fragile set-4 cases are adjudicated, these checks add evidence; they are not a semantic validation of the answers.'))
+
+TAXF = os.path.join(HERE, '..', 'taxonomy', 'taxonomy.json')
+if os.path.exists(TAXF) and os.path.exists(os.path.join(HERE, 'paper_taxonomy_section.py')):
+    TAX = json.load(open(TAXF))
+    exec(open(os.path.join(HERE, 'paper_taxonomy_section.py')).read())
 
 # ---------------------------------------------------------------- package
 NS = ('xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" '
@@ -626,7 +665,7 @@ root_rels = ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationsh
              '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>'
              '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/></Relationships>')
 core = ('<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
-        '<dc:title>Context, Trust Labels and Abstention in a Governed Text-to-SQL Layer: An Exploratory Case Study on an Insurance Warehouse</dc:title><dc:creator>DuckCode AI Labs</dc:creator></cp:coreProperties>')
+        '<dc:title>Context, Trust Labels and Abstention in a Governed Text-to-SQL Layer: A Pre-registered Evaluation on an Insurance Warehouse</dc:title><dc:creator>DuckCode AI Labs</dc:creator></cp:coreProperties>')
 out = os.path.join(HERE, 'paper.docx')
 with zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as z:
     z.writestr('[Content_Types].xml', ctypes); z.writestr('_rels/.rels', root_rels); z.writestr('docProps/core.xml', core)

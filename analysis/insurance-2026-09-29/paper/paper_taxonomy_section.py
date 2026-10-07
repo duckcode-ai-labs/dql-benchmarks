@@ -1,4 +1,4 @@
-# Section 6.9, generated from ../taxonomy/taxonomy.json (exec'd by paper_docx.py with TAX loaded).
+# Appendix D, generated from ../taxonomy/taxonomy.json (exec'd by paper_docx.py with TAX loaded).
 T1, T2 = TAX['task1'], TAX['task2']
 _bl = T1['counts']['by_level']['heldout-3']
 _tr = sum(v['trusted'] for v in _bl.values()); _wr = sum(v['wrong_trusted'] for v in _bl.values())
@@ -18,7 +18,7 @@ def _only_case(x):
     return low(g) == low(a) and exact(g) != exact(a)
 _case = sum(1 for x in T2['all_lenient_only_answers'] if _only_case(x))
 
-add(H2('6.9  Why trusted answers were wrong, and what the lenient grade forgives (set 3)'))
+add(H1('Appendix D  Why trusted answers were wrong, and what the lenient grade forgives (set 3)'))
 add(P(f'An AI assistant (Claude) classified every wrong trusted answer on the public set 3 by root cause, from the recorded SQL, the reference SQL, the rows and the metric definitions; these classifications have not yet been confirmed by a person (set 4 will follow once its audit is complete and it is released). Of {_tr} trusted answers across seven models, {_wr} were wrong, on {_qw} distinct questions. None was certified: no set-3 question matched a certified block, the certified tier declined each of the {_refused} times it was consulted at LB and WB, and every trusted answer came from governed metrics. On set 3, therefore, the absence of wrong certified answers is an empty statement. The run reports\' route field names the certified tier for these governed answers; we classify by the trust label instead.'))
 _lbl = {'route': 'Route: a governed answer covered only part of the question', 'compilation': 'Compilation: "as a percentage" returned as a fraction',
         'definition': 'Definition: the metric sums a column that is empty in every row', 'reading': 'Reading', 'execution': 'Execution', 'reference': 'Reference error'}
