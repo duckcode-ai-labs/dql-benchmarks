@@ -36,9 +36,9 @@ add(CAP('**Table 5.** Trusted answers on set 5. *T* trusted answers on the answe
 
 _h, _hl = PR5['W2_vs_Am'], PR5['sensitivity']['lenient']['W2_vs_Am']
 _tax = ''
-if 'TAX' in globals():
+if globals().get('TAX'):
     _lk = TAX['task2']['counts_by_kind']['all']
-    _tax = f' On the public set 3, {_lk["b"] + _lk["c"]} of the {_lk["lenient_only"]} answers that only the lenient rule accepts lost an identity the question asked for or changed its meaning, as classified by an AI assistant (Section 6.9).'
+    _tax = f' On the public set 3, {_lk["b"] + _lk["c"]} of the {_lk["lenient_only"]} answers that only the lenient rule accepts lost an identity the question asked for or changed its meaning, as classified by an AI assistant (Appendix D).'
 _gA, _gW = RC5['Am']['lenient'] - RC5['Am']['strict'], RC5['W2']['lenient'] - RC5['W2']['strict']
 add(P((f'**H1 (primary).** W2 answered {AC5["W2"]["k"]} of 200 questions correctly and A-model {AC5["Am"]["k"]}: a difference of {dpt(_h)} points (question-level bootstrap 95% interval {dci(_h)}). W2 alone was right on {_h["gained"]} questions and A-model alone on {_h["lost"]}; the exact two-sided McNemar test gives {pstr(_h["p_raw"])}, below the pre-registered α = 0.05. H1 is supported: under the strict rule, DQL at W2 answered more of these questions correctly than an agent given the same modeling knowledge as text. The difference depends on the grading rule. Under the lenient rule both answered {RC5["W2"]["lenient"]} ({_hl["gained"]} questions each way, {pstr(_hl["p_raw"])})' if _hl['gained'] == _hl['lost'] else
       f'**H1 (primary).** W2 answered {AC5["W2"]["k"]} of 200 questions correctly and A-model {AC5["Am"]["k"]}: a difference of {dpt(_h)} points (question-level bootstrap 95% interval {dci(_h)}). W2 alone was right on {_h["gained"]} questions and A-model alone on {_h["lost"]}; the exact two-sided McNemar test gives {pstr(_h["p_raw"])}. Under the lenient rule the difference is {dpt(_hl)} points ({pstr(_hl["p_raw"])})')
@@ -60,6 +60,12 @@ if REPS:
           + ', '.join(f'{w} against {a} in the {_ord[i]}' for i, (w, a, _) in enumerate(_s)) + f'; exact McNemar p = {_pn([p for *_, p in _s])}. '
           + f'Under the lenient rule {"no" if all(p >= 0.05 for *_, p in _l) else "not every"} run showed a significant difference: ' + ', '.join(f'{w} against {a}' for w, a, _ in _l) + f'; p = {_pn([p for *_, p in _l])}. '
           + 'The strict advantage is stable across runs, and so is its dependence on the columns returned. One runtime failure in the second W2 run was re-asked under the same rule as the main runs (Section 8).'))
+
+_f5, _w5, _hh5 = fig5()
+add(FIG(_f5, _w5, _hh5))
+_fr = ['the pre-registered run'] + ([f'{_word(len(REPS))} repeat run' + ('s' if len(REPS) != 1 else '')] if REPS else [])
+_frt = (', '.join(_fr) + ' and with the secondary model') if S5Q else ' and '.join(_fr)
+add(CAP(f'**Figure 1.** Set 5: DQL W2 against the agent given the same modeling knowledge (A-model), under strict and lenient grading, in {_frt}. Lines: question-level bootstrap 95% intervals (strict grading only).'))
 
 _vp, _vm, _va = PR5['vs_P'], PR5['vs_Am'], PR5['vs_A']
 _vaL = PR5['sensitivity']['lenient']['vs_A']
