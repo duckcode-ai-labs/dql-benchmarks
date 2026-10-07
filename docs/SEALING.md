@@ -95,3 +95,11 @@ which system gave which answer. Kept out of git until release:
 |---|---:|---|
 | `work/insurance/audit/set5-discordant-review.csv` (as generated, before review) | 63544 | `c8cc6bc898336829b8236ee4c42ef75876736be7d2c8cba02d455ccfbe38eebf` |
 | `work/insurance/audit/set5-discordant-key.json` (which answer is which) | 3124 | `0c89b8a0a659c96120275f42e2b483e4bd414db42d215cf1ff3706aaf53e501c` |
+
+### Exposure while recording the blind check (7 October 2026)
+
+To have the verdicts entered, the author pasted the completed 12-row blind check
+(`work/insurance/audit/set5-discordant-check12.csv`: 12 set-5 questions, their reference results and both
+answers) into the operator's AI assistant's chat. This happened after every set-5 run (primary model,
+repeats and secondary model) had finished, with DQL frozen at `627009a1`; nothing in DQL or in any
+recorded answer changed. The 12 questions are therefore known to that assistant.
