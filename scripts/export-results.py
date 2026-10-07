@@ -55,7 +55,7 @@ if RELEASE:
         shutil.copy2(src, os.path.join(OUT, 'gold', f'{s}.json')); copied += 1
     AUD_SRC, AUD_DST = os.path.join(REPO, 'work', 'insurance', 'audit'), os.path.join(REPO, 'insurance', 'audit')
     for src_name, dst_name in (('set4-audit-sample.csv', 'set4-audit-completed.csv'), ('set5-audit-sample.csv', 'set5-audit-completed.csv'),
-                               ('set5-discordant-review.csv', 'set5-discordant-review.csv')):
+                               ('set5-discordant-review.csv', 'set5-discordant-review.csv'), ('set5-discordant-check12.csv', 'set5-discordant-check12.csv')):
         src = os.path.join(AUD_SRC, src_name)
         if not os.path.exists(src):
             continue
@@ -68,6 +68,12 @@ if RELEASE:
         with open(os.path.join(AUD_DST, dst_name), 'w', newline='') as f:
             csv.writer(f).writerows(rows)
         copied += 1
+    # The AI model's blind judgement of the set-5 disagreements and the prompt it was given.
+    src_dir = os.path.join(AUD_SRC, 'second-opinion')
+    if os.path.isdir(src_dir):
+        os.makedirs(os.path.join(AUD_DST, 'second-opinion'), exist_ok=True)
+        for name in sorted(os.listdir(src_dir)):
+            shutil.copy2(os.path.join(src_dir, name), os.path.join(AUD_DST, 'second-opinion', name)); copied += 1
     for name in ('set4-adjudications.json', 'set5-discordant-key.json'):
         src = os.path.join(AUD_SRC, name)
         if os.path.exists(src):
