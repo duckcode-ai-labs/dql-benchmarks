@@ -105,7 +105,7 @@ No ZLens code changes. Questions, gold, projects, model and strict grader do not
 ## After the bugs were fixed
 
 r1 to r3 found four ZLens bugs. They were fixed on the branch `fix/ask-benchmark-bugs`
-(zlens commit 56d3ac50), and the same arms ran again on that build:
+(zlens commit eb3d6bde), and the same arms ran again on that build:
 
 - r4: r2's wording, with the punctuated line.
 - r5: r3's wording, plain questions.
