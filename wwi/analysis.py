@@ -14,6 +14,7 @@ import grade  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent / "results" / "wwi"
 ARMS = ("C", "W0", "W1a", "WM")
+RUNS = ("r2", "r3", "r4", "r5")
 # Questions whose gold rows one of NVIDIA's custom analyses returns exactly, with
 # more than a lone number. WM holds those analyses as certified saved queries.
 SUPPLIED = {31, 32, 34, 35, 39, 40}
@@ -37,7 +38,7 @@ def main():
     sound = {q for q, verdict in audit.items() if verdict == "SOUND"}
 
     print("Strict, mean of three passes, with and without the supplied questions")
-    for run in ("r2", "r3"):
+    for run in RUNS:
         for arm in ARMS:
             passes = [graded(run, arm, n) for n in (1, 2, 3)]
             everything = statistics.mean(sum(r["strict"] for r in p.values()) for p in passes)
@@ -49,7 +50,7 @@ def main():
             print(f"  {run} {arm:4} all {everything:4.1f}/39  supplied {supplied:3.1f}/6  other {without:4.1f}/33  sound {sound_mean:4.1f}/16  shape {shape:4.1f}/39  refused {refused:3.1f}")
 
     print("\nShape with ZLens's row cap taken off, pass 1")
-    for run in ("r2", "r3"):
+    for run in RUNS:
         for arm in ARMS:
             hits = 0
             strict = 0
@@ -65,7 +66,7 @@ def main():
             print(f"  {run} {arm:4} strict {strict}/39  shape {hits}/39")
 
     print("\nTrust labels on WM, all passes: certified answers, and how many match gold")
-    for run in ("r2", "r3"):
+    for run in RUNS:
         total = right = 0
         misses = set()
         for number in (1, 2, 3):
@@ -79,7 +80,7 @@ def main():
         print(f"  {run}: {right}/{total} certified answers matched gold; misses {sorted(misses)}")
 
     print("\nFixed against control and broken, on sound gold, pass 1")
-    for run in ("r2", "r3"):
+    for run in RUNS:
         base = graded(run, "C", 1)
         for arm in ARMS[1:]:
             rows = graded(run, arm, 1)
