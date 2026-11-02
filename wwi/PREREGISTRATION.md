@@ -104,13 +104,16 @@ No ZLens code changes. Questions, gold, projects, model and strict grader do not
 
 ## After the bugs were fixed
 
-r1 to r3 found four ZLens bugs. They were fixed on the branch `fix/ask-benchmark-bugs`
-(zlens commit eb3d6bde), and the same arms ran again on that build:
+r1 to r3 found five ZLens bugs. They were fixed on the branch `fix/ask-benchmark-bugs`
+(zlens commit 1281f373), and the same arms ran again on that build:
 
 - r4: r2's wording, with the punctuated line.
 - r5: r3's wording, plain questions.
 
 The control doesn't use ZLens, so r2's and r3's control runs are reused.
+
+An independent review of the first fix found defects, so an earlier r4 and r5 on
+that build were stopped after one pass and discarded. These runs are on the final code.
 
 **This is not a fresh test.** The fixes came from reading the answers to these same
 39 questions. None of them names a question, table or value from this dataset, but
