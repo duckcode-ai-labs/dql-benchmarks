@@ -101,3 +101,18 @@ were decided after seeing r1, so they are post-hoc, and are labelled that way.
    SOUND, AMBIGUOUS or WRONG, and scores are also given on the SOUND questions.
 
 No ZLens code changes. Questions, gold, projects, model and strict grader do not change.
+
+## After the bugs were fixed
+
+r1 to r3 found four ZLens bugs. They were fixed on the branch `fix/ask-benchmark-bugs`
+(zlens commit 56d3ac50), and the same arms ran again on that build:
+
+- r4: r2's wording, with the punctuated line.
+- r5: r3's wording, plain questions.
+
+The control doesn't use ZLens, so r2's and r3's control runs are reused.
+
+**This is not a fresh test.** The fixes came from reading the answers to these same
+39 questions. None of them names a question, table or value from this dataset, but
+the score is a development score, and an improvement here overstates what a new
+question set would show.
