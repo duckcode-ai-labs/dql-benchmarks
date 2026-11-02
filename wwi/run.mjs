@@ -23,10 +23,12 @@ const CASE_TIMEOUT_MS = 900_000;
 export const PROJECTION_RULE = 'Return exactly the requested output fields and NO others.';
 /** Gold SQL that doesn't run (grade.py --gold). NVIDIA's rule takes these out of the denominator. */
 export const GOLD_FAILED = new Set([4, 27]);
+/** The row cap ZLens's host adds to a statement it runs (withRowGuard). A delivery cap, not part of the query. */
+const HOST_ROW_GUARD = /\nLIMIT 501\s*$/;
 const RUN_ENV = { DQL_EMBEDDINGS_AUTODETECT: 'off', DQL_TELEMETRY_DISABLED: '1' };
 
 function parseArgs(argv) {
-  const options = { arm: null, run: null, pass: 1, only: null, questions: null, model: 'claude-sonnet-5-5' };
+  const options = { arm: null, run: null, pass: 1, only: null, questions: null, model: 'claude-sonnet-5-5', line: 'punctuated' };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--arm') options.arm = argv[++index];
@@ -35,10 +37,18 @@ function parseArgs(argv) {
     else if (arg === '--only') options.only = new Set(argv[++index].split(',').map(Number));
     else if (arg === '--questions') options.questions = argv[++index];
     else if (arg === '--model') options.model = argv[++index];
+    else if (arg === '--line') options.line = argv[++index];
     else throw new Error(`Unknown option ${arg}`);
   }
   if (!options.arm || !options.run) throw new Error('--arm and --run are required.');
+  if (!['punctuated', 'none'].includes(options.line)) throw new Error('--line must be punctuated or none.');
   return options;
+}
+
+/** Ends the question's own sentence first: ZLens reads a capitalised word inside a sentence as a stated value. */
+function askedText(question, line) {
+  if (line === 'none') return question;
+  return `${question}${/[.?!]\s*$/.test(question) ? '' : '.'} ${PROJECTION_RULE}`;
 }
 
 function selectQuestions(options) {
@@ -106,9 +116,13 @@ export function storedRuns(projectDir) {
     const payload = JSON.parse(row.payload_json);
     const artifact = artifacts.get(row.id);
     const receipt = payload.diagnosticReceiptV9 ?? {};
+    // A run that ended in "no rows" ran its statement and has no answer artifact.
+    const noRows = (receipt.story ?? []).at(-1)?.title === 'The tables hold no rows for this';
+    const lastDraft = (receipt.dispatches ?? []).map((dispatch) => dispatch.reply).filter((reply) => /^\s*(select|with)\b/i.test(reply ?? '')).at(-1);
     runs.set(row.question, {
-      proposed: artifact?.sql ?? artifact?.compiledSql ?? null,
-      executed: Boolean(receipt.executed),
+      proposed: artifact?.sql ?? artifact?.compiledSql ?? (noRows ? lastDraft : null) ?? null,
+      executed: Boolean(receipt.executed) || noRows,
+      noRows,
       route: payload.route ?? null,
       trust: payload.trustState ?? null,
       status: payload.status ?? null,
@@ -122,7 +136,7 @@ export function storedRuns(projectDir) {
 
 function prediction(question, run, outages) {
   if (!run) return { question_id: question.question_id, sql: null, failure: 'unknown_error' };
-  const sql = run.executed ? run.proposed : null;
+  const sql = run.executed && run.proposed ? run.proposed.replace(HOST_ROW_GUARD, '') : null;
   let failure = null;
   if (!sql) {
     if (outages.has(question.asked)) failure = 'no_model_output';
@@ -139,7 +153,7 @@ async function main() {
   mkdirSync(outDir, { recursive: true });
   mkdirSync(workDir, { recursive: true });
   const questions = selectQuestions(options);
-  const asked = questions.map((question) => ({ ...question, asked: `${question.question} ${PROJECTION_RULE}` }));
+  const asked = questions.map((question) => ({ ...question, asked: askedText(question.question, options.line) }));
   const evalPath = join(workDir, 'evals.yml');
   writeFileSync(evalPath, `${JSON.stringify({ cases: asked.map((question) => ({ name: `q${question.question_id}`, question: question.asked, expected: { answerable: true } })) }, null, 2)}\n`);
 

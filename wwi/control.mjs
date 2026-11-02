@@ -18,8 +18,8 @@ const DATASET = join(REPO_ROOT, 'work', 'wwi', 'dataset');
 const WORKERS = 4;
 const ATTEMPTS = 3;
 
-export const SYSTEM_PROMPT = 'Please reason step by step, and put your final answer within the tags "```sql" and "```".\n'
-  + 'Return exactly the requested output fields and NO others.';
+const FIRST_LINE = 'Please reason step by step, and put your final answer within the tags "```sql" and "```".';
+export const SYSTEM_PROMPT = `${FIRST_LINE}\nReturn exactly the requested output fields and NO others.`;
 
 export function schemaDump(ddlDir = join(DATASET, 'ddl')) {
   const files = readdirSync(ddlDir).filter((name) => name.endsWith('.sql')).sort();
@@ -34,14 +34,14 @@ export function userPrompt(question, schema) {
   ].join('\n\n');
 }
 
-function ask(prompt, model) {
+function ask(prompt, model, system) {
   return new Promise((resolve) => {
     const cwd = mkdtempSync(join(tmpdir(), 'wwi-control-'));
     const started = Date.now();
     const child = spawn('claude', [
       '-p', '--output-format', 'json', '--tools', '', '--max-turns', '1',
       '--permission-mode', 'dontAsk', '--strict-mcp-config', '--no-session-persistence',
-      '--model', model, '--system-prompt', SYSTEM_PROMPT,
+      '--model', model, '--system-prompt', system,
     ], { cwd, stdio: ['pipe', 'pipe', 'pipe'] });
     let stdout = '';
     let stderr = '';
@@ -66,12 +66,13 @@ function ask(prompt, model) {
 }
 
 function parseArgs(argv) {
-  const options = { run: null, pass: 1, model: 'claude-sonnet-5-5', limit: null };
+  const options = { run: null, pass: 1, model: 'claude-sonnet-5-5', limit: null, line: true };
   for (let index = 0; index < argv.length; index += 1) {
     if (argv[index] === '--run') options.run = argv[++index];
     else if (argv[index] === '--pass') options.pass = Number(argv[++index]);
     else if (argv[index] === '--model') options.model = argv[++index];
     else if (argv[index] === '--limit') options.limit = Number(argv[++index]);
+    else if (argv[index] === '--no-line') options.line = false;
     else throw new Error(`Unknown option ${argv[index]}`);
   }
   if (!options.run) throw new Error('--run <id> is required.');
@@ -87,10 +88,11 @@ async function main() {
     ? readFileSync(outPath, 'utf-8').split('\n').filter(Boolean).map((line) => JSON.parse(line)).filter((row) => row.reply).map((row) => row.question_id)
     : []);
   const schema = schemaDump();
+  const system = options.line ? SYSTEM_PROMPT : FIRST_LINE;
   const questions = JSON.parse(readFileSync(join(DATASET, 'evaluation.json'), 'utf-8'))
     .slice(0, options.limit ?? undefined)
     .filter((question) => !done.has(question.question_id));
-  writeFileSync(join(outDir, 'settings.json'), `${JSON.stringify({ model: options.model, systemPrompt: SYSTEM_PROMPT, schemaChars: schema.length, tools: 'none', startedAt: new Date().toISOString() }, null, 2)}\n`);
+  writeFileSync(join(outDir, 'settings.json'), `${JSON.stringify({ model: options.model, systemPrompt: system, schemaChars: schema.length, tools: 'none', startedAt: new Date().toISOString() }, null, 2)}\n`);
 
   let next = 0;
   await Promise.all(Array.from({ length: WORKERS }, async () => {
@@ -99,7 +101,7 @@ async function main() {
       next += 1;
       let answer;
       for (let attempt = 1; attempt <= ATTEMPTS; attempt += 1) {
-        answer = await ask(userPrompt(question.question, schema), options.model);
+        answer = await ask(userPrompt(question.question, schema), options.model, system);
         if (answer.reply) break;
         await new Promise((done_) => setTimeout(done_, attempt * 20_000));
       }

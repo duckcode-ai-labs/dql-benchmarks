@@ -76,3 +76,28 @@ ZLens build: main at the commit recorded in each report, unreleased.
 - I ran two questions of my own for a smoke test. They aren't in the set.
 - One dataset, one model, one person's harness. It says nothing about Auto
   Ontology's own score, which needs its stack and a separate run.
+
+## Amendments after run r1
+
+r1 ran as designed on 2026-11-02 and stays in `results/wwi/r1`, unchanged. Reading
+its answers showed the harness, not only ZLens, shaped the result. These follow-ups
+were decided after seeing r1, so they are post-hoc, and are labelled that way.
+
+1. **The projection line broke ZLens's questions.** It was added with no punctuation
+   after questions that have none, so "Return" sat mid-sentence and the stated-values
+   check read it as a filter value. NVIDIA passes this line to its generation
+   prompt, not as part of the user's question.
+   - r2: as r1, with the question's sentence closed first.
+   - r3: no line. ZLens gets the question as a user would type it, and a control
+     (`C`) runs without the line too.
+2. **"No rows" answers count as answers.** ZLens ran the SQL and said no rows, so
+   the last SQL it ran is graded.
+3. **ZLens's own row cap is removed before grading.** The host adds `LIMIT 501` to
+   what it delivers. It isn't part of the query.
+4. **Added diagnostic, `shape`.** `form` in both directions, because r1 showed right
+   answers that drop a column. Never the headline.
+5. **Added: a blind audit of the gold SQL.** r1 showed gold returning NULL for a
+   revenue total. A reviewer who has not seen any arm's answers grades each gold query
+   SOUND, AMBIGUOUS or WRONG, and scores are also given on the SOUND questions.
+
+No ZLens code changes. Questions, gold, projects, model and strict grader do not change.

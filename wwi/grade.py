@@ -110,6 +110,15 @@ def form_match(gold, pred):
     return assign(0, [])
 
 
+def shape_match(gold, pred):
+    """form_match in both directions: the smaller result's columns are all in the
+    larger one, row for row. Catches a right answer that drops a column as well as
+    one that adds a column."""
+    if form_match(gold, pred):
+        return True
+    return bool(gold) and bool(pred) and len(pred[0]) < len(gold[0]) and form_match(pred, gold)
+
+
 def extract_sql(text):
     """extract_sql from exec_match.py, quirks included: the last block wins, and a
     `--` comment removes everything after it. Returns the SQL, and whether that
@@ -177,6 +186,7 @@ def grade(path, out):
             "gold_rows": len(gold_rows),
             "strict": False,
             "form": False,
+            "shape": False,
             "failure_reason": failure,
             "sql": sql,
             "comment_cut": comment_cut,
@@ -191,6 +201,7 @@ def grade(path, out):
             else:
                 item["strict"] = strict_match(gold_rows, rows)
                 item["form"] = form_match(gold_rows, rows)
+                item["shape"] = shape_match(gold_rows, rows)
                 item["pred_rows"] = len(rows)
                 item["failure_reason"] = None if item["strict"] else "wrong_result"
         elif not failure:
