@@ -67,7 +67,7 @@ def main():
         return 1
 
     print("\nStrict (NVIDIA's rule), pass 1")
-    print(f"{'arm':6}{'strict':>10}{'95% CI':>16}{'non-empty':>11}{'form':>8}{'refused':>9}{'errors':>8}")
+    print(f"{'arm':6}{'strict':>10}{'95% CI':>16}{'non-empty':>11}{'form':>8}{'shape':>8}{'refused':>9}{'errors':>8}")
     base = data[arms[0]][1]
     for arm in arms:
         rows = data[arm][1]
@@ -82,6 +82,7 @@ def main():
             f"{arm:6}{hits:>4}/{n} {hits/n:>4.0%}{f'{low:.0%}-{high:.0%}':>16}"
             f"{sum(r['strict'] for r in nonempty):>7}/{len(nonempty)}"
             f"{sum(r['form'] for r in rows.values()):>8}"
+            f"{sum(r.get('shape', r['form']) for r in rows.values()):>8}"
             f"{sum(r['failure_reason'] == 'refused' for r in rows.values()):>9}"
             f"{sum(r['failure_reason'] in ('execution_error', 'execution_timeout') for r in rows.values()):>8}"
         )
@@ -100,6 +101,23 @@ def main():
         steady = sum(1 for q in passes[0] if len({p[q]["strict"] for p in passes if q in p}) == 1)
         always = sum(1 for q in passes[0] if all(p[q]["strict"] for p in passes if q in p))
         print(f"  {arm}: {steady}/{len(passes[0])} steady, {always} right every pass")
+
+    audit_path = Path(__file__).resolve().parent / "gold-audit.json"
+    if audit_path.exists():
+        audit = {row["question_id"]: row["verdict"] for row in json.loads(audit_path.read_text())}
+        print("\nOn the blind gold audit, pass 1 (strict / shape), then mean strict across passes")
+        for label, keep in (("sound", {"SOUND"}), ("sound+ambiguous", {"SOUND", "AMBIGUOUS"}), ("wrong gold", {"WRONG"})):
+            print(f"  {label}:")
+            for arm in arms:
+                rows = data[arm][1]
+                if rows is None:
+                    continue
+                chosen = [r for r in rows.values() if audit.get(r["question_id"]) in keep]
+                strict = sum(r["strict"] for r in chosen)
+                shape = sum(r.get("shape", r["form"]) for r in chosen)
+                passes = [rs for rs in data[arm].values() if rs]
+                mean = sum(sum(r["strict"] for r in rs.values() if audit.get(r["question_id"]) in keep) for rs in passes) / len(passes)
+                print(f"    {arm:6}{strict:>3}/{len(chosen)} strict, {shape:>3}/{len(chosen)} shape, mean strict {mean:.1f}")
 
     print("\nAgainst the control, pass 1")
     for arm in arms[1:]:
