@@ -1,0 +1,1496 @@
+[
+  {
+    "question_id": 1,
+    "category": "lookup",
+    "question": "What arena do the Golden State Warriors play in?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT team_id, city, team_nickname, arena\nFROM nba_analysis.TRANSFORMED.dim_teams_cleansed\nWHERE LOWER(team_nickname) = 'warriors'\n  AND LOWER(city) = 'golden state'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [],
+    "tables": [
+      "transformed.dim_teams_cleansed"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing in C",
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612744",
+        "Golden State",
+        "Warriors",
+        "Chase Center"
+      ]
+    ]
+  },
+  {
+    "question_id": 2,
+    "category": "lookup",
+    "question": "Who is listed as the head coach of the Boston Celtics in the teams data?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT team_id, city, team_nickname, head_coach FROM nba_analysis.TRANSFORMED.dim_teams_cleansed WHERE LOWER(city) = 'boston' AND LOWER(team_nickname) = 'celtics'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [],
+    "tables": [
+      "transformed.dim_teams_cleansed"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing in C",
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612738",
+        "Boston",
+        "Celtics",
+        "Brad Stevens"
+      ]
+    ]
+  },
+  {
+    "question_id": 3,
+    "category": "lookup",
+    "question": "What founding year does the teams data list for the San Antonio Spurs?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT team_id, city, team_nickname, year_founded\nFROM nba_analysis.TRANSFORMED.dim_teams_cleansed\nWHERE LOWER(city) = 'san antonio' AND LOWER(team_nickname) = 'spurs'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [],
+    "tables": [
+      "transformed.dim_teams_cleansed"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing in C",
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612759",
+        "San Antonio",
+        "Spurs",
+        "1976"
+      ]
+    ]
+  },
+  {
+    "question_id": 4,
+    "category": "lookup",
+    "question": "What are the earliest and latest game dates in the data?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT MIN(GAME_DATE_EST) AS earliest_game_date, MAX(GAME_DATE_EST) AS latest_game_date FROM nba_analysis.RAW.raw_games",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "raw"
+    ],
+    "tables": [
+      "raw.raw_games"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of RAW.raw_games, which nobody has reviewed.",
+      "used AI-drafted descriptions of RAW.raw_games, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing in CONTEXT defines (a",
+      "used AI-drafted descriptions of RAW.raw_games, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2003-10-05",
+        "2022-12-22"
+      ]
+    ]
+  },
+  {
+    "question_id": 5,
+    "category": "lookup",
+    "question": "How many points did LeBron James score in the game on June 19, 2016?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, game_id, game_date, points\nFROM nba_analysis.TRANSFORMED.local_player_game_facts\nWHERE LOWER(player_name) = 'lebron james'\n  AND game_date = DATE '2016-06-19'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2544",
+        "LeBron James",
+        "41500407",
+        "2016-06-19",
+        "27.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 6,
+    "category": "lookup",
+    "question": "Which team has the largest arena capacity? Give the team abbreviation and the capacity.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT team_id, team_abbreviation, arena_capacity\nFROM nba_analysis.TRANSFORMED.dim_teams_cleansed\nWHERE arena_capacity = (SELECT MAX(arena_capacity) FROM nba_analysis.TRANSFORMED.dim_teams_cleansed)\nORDER BY team_abbreviation",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [],
+    "tables": [
+      "transformed.dim_teams_cleansed"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing in C",
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612741",
+        "CHI",
+        "21711"
+      ]
+    ]
+  },
+  {
+    "question_id": 7,
+    "category": "aggregate",
+    "question": "Who scored the most points in the 2017 season, counting every game in the data, preseason and playoffs included, and how many points?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, SUM(points) AS total_points\nFROM nba_analysis.TRANSFORMED.local_player_game_facts\nWHERE season = 2017\nGROUP BY player_id, player_name\nORDER BY total_points DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2544",
+        "LeBron James",
+        "3016.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 8,
+    "category": "aggregate",
+    "question": "How many games were played in the 2019 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(DISTINCT GAME_ID) AS games_played\nFROM nba_analysis.RAW.raw_games\nWHERE SEASON = 2019",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "raw"
+    ],
+    "tables": [
+      "raw.raw_games"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of RAW.raw_games, which nobody has reviewed.",
+      "used AI-drafted descriptions of RAW.raw_games, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing in CONTEXT defines (a",
+      "used AI-drafted descriptions of RAW.raw_games, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1241"
+      ]
+    ]
+  },
+  {
+    "question_id": 9,
+    "category": "aggregate",
+    "question": "Who are the top 5 scorers across all seasons by total points, counting every game in the data, preseason and playoffs included? Give each player's name and total points.",
+    "gold_rows": 5,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, SUM(points) AS total_points\nFROM nba_analysis.TRANSFORMED.local_player_game_facts\nGROUP BY player_id, player_name\nORDER BY total_points DESC\nLIMIT 5",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 5,
+    "pred_sample": [
+      [
+        "2544",
+        "LeBron James",
+        "46612.0"
+      ],
+      [
+        "201142",
+        "Kevin Durant",
+        "32272.0"
+      ],
+      [
+        "2546",
+        "Carmelo Anthony",
+        "31658.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 10,
+    "category": "aggregate",
+    "question": "How many three-pointers were made in total in the 2015 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT SUM(three_pointers_made) AS total_three_pointers_made\nFROM nba_analysis.TRANSFORMED.local_player_game_facts\nWHERE season = 2015",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "24179.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 11,
+    "category": "aggregate",
+    "question": "Which player had the most assists in the 2010 season, counting every game in the data, preseason and playoffs included, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, SUM(assists) AS total_assists\nFROM nba_analysis.TRANSFORMED.local_player_game_facts\nWHERE season = 2010\nGROUP BY player_id, player_name\nORDER BY total_assists DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "959",
+        "Steve Nash",
+        "911.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 12,
+    "category": "aggregate",
+    "question": "How many points were scored in total in the 2012 season, counting both teams and counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT SUM(PTS_home + PTS_away) AS total_points\nFROM nba_analysis.RAW.raw_games\nWHERE SEASON = 2012",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "raw"
+    ],
+    "tables": [
+      "raw.raw_games"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of RAW.raw_games, which nobody has reviewed.",
+      "used AI-drafted descriptions of RAW.raw_games, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing in CONTEXT defines (a",
+      "used AI-drafted descriptions of RAW.raw_games, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "277604.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 13,
+    "category": "aggregate",
+    "question": "What is the most points one player scored in a single game in the data, and who scored them?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, pts, DETAILS_GAME_ID, game_date_est, season\nFROM nba_analysis.TRANSFORMED.int_player_stats\nWHERE pts = (SELECT MAX(pts) FROM nba_analysis.TRANSFORMED.int_player_stats)\nORDER BY player_name",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "int"
+    ],
+    "tables": [
+      "transformed.int_player_stats"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.int_player_stats, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.int_player_stats, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing in CON",
+      "used AI-drafted descriptions of TRANSFORMED.int_player_stats, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1626164",
+        "Devin Booker",
+        "70.0",
+        "21601076",
+        "2017-03-24",
+        "2016"
+      ]
+    ]
+  },
+  {
+    "question_id": 14,
+    "category": "aggregate",
+    "question": "Which season had the most games in the data?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT \"SEASON\" AS season, COUNT(DISTINCT \"GAME_ID\") AS game_count\nFROM nba_analysis.RAW.raw_games\nGROUP BY \"SEASON\"\nORDER BY game_count DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "raw"
+    ],
+    "tables": [
+      "raw.raw_games"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of RAW.raw_games, which nobody has reviewed.",
+      "used AI-drafted descriptions of RAW.raw_games, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing in CONTEXT defines (a",
+      "used AI-drafted descriptions of RAW.raw_games, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2005",
+        "1432"
+      ]
+    ]
+  },
+  {
+    "question_id": 15,
+    "category": "aggregate",
+    "question": "What was the average number of points a team scored per game in the 2021 season, counting every game in the data, preseason and playoffs included? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT ROUND(AVG(team_points), 2) AS avg_points_per_team_game\nFROM nba_analysis.TRANSFORMED.local_team_game_facts\nWHERE season = 2021",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_team_game_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_team_game_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_team_game_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing i",
+      "used AI-drafted descriptions of TRANSFORMED.local_team_game_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "110.21"
+      ]
+    ]
+  },
+  {
+    "question_id": 16,
+    "category": "aggregate",
+    "question": "Which player blocked the most shots in the 2008 season, counting every game in the data, preseason and playoffs included, and how many blocks?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, total_blocks\nFROM nba_analysis.TRANSFORMED.local_player_season_facts\nWHERE season = 2008 AND total_blocks IS NOT NULL\nORDER BY total_blocks DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothi",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2730",
+        "Dwight Howard",
+        "312.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 17,
+    "category": "layer",
+    "question": "How many games did LeBron James play in the 2017 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, COUNT(DISTINCT game_id) AS games_played\nFROM nba_analysis.TRANSFORMED.local_player_game_facts\nWHERE LOWER(player_name) = 'lebron james'\n  AND season = 2017\n  AND participated\nGROUP BY player_id, player_name",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2544",
+        "LeBron James",
+        "105"
+      ]
+    ]
+  },
+  {
+    "question_id": 18,
+    "category": "layer",
+    "question": "What were Stephen Curry's points per game in the 2019 season, counting every game in the data, preseason and playoffs included? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, season, ROUND(total_points / NULLIF(games_played, 0), 2) AS points_per_game\nFROM nba_analysis.TRANSFORMED.local_player_season_facts\nWHERE LOWER(player_name) = 'stephen curry' AND season = 2019",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothi",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "201939",
+        "Stephen Curry",
+        "2019",
+        "23.44"
+      ]
+    ]
+  },
+  {
+    "question_id": 19,
+    "category": "layer",
+    "question": "How many games were played in the 2020 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(DISTINCT GAME_ID) AS games_played\nFROM nba_analysis.RAW.raw_games\nWHERE SEASON = 2020",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "raw"
+    ],
+    "tables": [
+      "raw.raw_games"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of RAW.raw_games, which nobody has reviewed.",
+      "used AI-drafted descriptions of RAW.raw_games, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing in CONTEXT defines (a",
+      "used AI-drafted descriptions of RAW.raw_games, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1220"
+      ]
+    ]
+  },
+  {
+    "question_id": 20,
+    "category": "layer",
+    "question": "How many points did Jayson Tatum score in total in the 2020 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, season, SUM(total_points) AS total_points\nFROM nba_analysis.TRANSFORMED.local_player_season_facts\nWHERE LOWER(player_name) = 'jayson tatum' AND season = 2020\nGROUP BY player_id, player_name, season",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothi",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1628369",
+        "Jayson Tatum",
+        "2020",
+        "1924.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 21,
+    "category": "layer",
+    "question": "Which five players had the best field goal percentage in the 2017 season, counting every game in the data, preseason and playoffs included, among players with at least 100 field goal attempts? Give each name and the percentage as a fraction rounded to three decimals.",
+    "gold_rows": 5,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, ROUND(SUM(field_goals_made) / SUM(field_goals_attempted), 3) AS field_goal_pct\nFROM nba_analysis.TRANSFORMED.local_player_game_facts\nWHERE season = 2017\nGROUP BY player_id, player_name\nHAVING SUM(field_goals_attempted) >= 100\nORDER BY SUM(field_goals_made) / SUM(field_goals_attempted) DESC, player_name, player_id\nLIMIT 5",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 5,
+    "pred_sample": [
+      [
+        "1627751",
+        "Jakob Poeltl",
+        "0.66"
+      ],
+      [
+        "203186",
+        "Willie Reed",
+        "0.659"
+      ],
+      [
+        "203991",
+        "Clint Capela",
+        "0.649"
+      ]
+    ]
+  },
+  {
+    "question_id": 22,
+    "category": "layer",
+    "question": "How many players took the floor (not DNP) in at least one game in the 2021 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(DISTINCT player_id) AS players_played\nFROM nba_analysis.TRANSFORMED.local_player_game_facts\nWHERE season = 2021\n  AND participated = TRUE",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "641"
+      ]
+    ]
+  },
+  {
+    "question_id": 23,
+    "category": "layer",
+    "question": "How many players took the floor for more than one team in the 2019 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(*) AS players_with_multiple_teams\nFROM (\n  SELECT player_id\n  FROM nba_analysis.TRANSFORMED.local_player_game_facts\n  WHERE season = 2019\n    AND participated = TRUE\n  GROUP BY player_id\n  HAVING COUNT(DISTINCT team_id) > 1\n) t",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "76"
+      ]
+    ]
+  },
+  {
+    "question_id": 24,
+    "category": "layer",
+    "question": "Who scored the most points in the 2005 season, counting every game in the data, preseason and playoffs included, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, total_points\nFROM nba_analysis.TRANSFORMED.local_player_season_facts\nWHERE season = 2005\nORDER BY total_points DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothi",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "977",
+        "Kobe Bryant",
+        "3205.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 25,
+    "category": "layer",
+    "question": "Who had the highest points per game in the 2017 season among players with at least 20 games played, counting every game in the data, preseason and playoffs included? Give the name and points per game rounded to two decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, ROUND(points_per_game, 2) AS points_per_game\nFROM nba_analysis.TRANSFORMED.local_player_season_facts\nWHERE season = 2017 AND games_played >= 20\nORDER BY points_per_game DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothi",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "201935",
+        "James Harden",
+        "29.7"
+      ]
+    ]
+  },
+  {
+    "question_id": 26,
+    "category": "layer",
+    "question": "How many games did the Brooklyn Nets win in the 2020 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT t.team_id, t.team_nickname, COUNT(*) AS wins\nFROM nba_analysis.TRANSFORMED.local_team_game_facts g\nJOIN nba_analysis.TRANSFORMED.dim_teams_cleansed t ON g.team_id = t.team_id\nWHERE g.season = 2020\n  AND g.team_won\n  AND LOWER(t.city) = 'brooklyn'\n  AND LOWER(t.team_nickname) = 'nets'\nGROUP BY t.team_id, t.team_nickname",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.dim_teams_cleansed",
+      "transformed.local_team_game_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, TRANSFORMED.local_team_game_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, TRANSFORMED.local_team_game_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no l",
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, TRANSFORMED.local_team_game_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612751",
+        "Nets",
+        "57"
+      ]
+    ]
+  },
+  {
+    "question_id": 27,
+    "category": "vocabulary",
+    "question": "Who had the most double-doubles in the 2017 season, counting every game in the data, preseason and playoffs included, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "WITH totals AS (\n  SELECT player_id, player_name, SUM(double_double_games) AS double_doubles\n  FROM nba_analysis.TRANSFORMED.local_player_season_facts\n  WHERE season = 2017\n  GROUP BY player_id, player_name\n)\nSELECT player_id, player_name, double_doubles\nFROM totals\nWHERE double_doubles = (SELECT MAX(double_doubles) FROM totals)\nORDER BY player_name",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothi",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1626157",
+        "Karl-Anthony Towns",
+        "71"
+      ]
+    ]
+  },
+  {
+    "question_id": 28,
+    "category": "vocabulary",
+    "question": "What is the home win rate across all games in the data that have a final score, as a fraction rounded to three decimals?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT CAST(ROUND(CAST(SUM(home_team_wins) AS DECIMAL(18,6)) / CAST(COUNT(*) AS DECIMAL(18,6)), 3) AS DECIMAL(10,3)) AS home_win_rate\nFROM nba_analysis.TRANSFORMED.src_games\nWHERE pts_home IS NOT NULL AND pts_away IS NOT NULL AND home_team_wins IS NOT NULL",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "src"
+    ],
+    "tables": [
+      "transformed.src_games"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.src_games, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.src_games, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing in CONTEXT de",
+      "used AI-drafted descriptions of TRANSFORMED.src_games, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "0.589"
+      ]
+    ]
+  },
+  {
+    "question_id": 29,
+    "category": "vocabulary",
+    "question": "Which team had the best home win rate in the 2018 season, counting every game in the data, preseason and playoffs included? Give the team abbreviation and the rate as a fraction rounded to three decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT t.TEAM_ID, t.ABBREVIATION, ROUND(SUM(g.HOME_TEAM_WINS) * 1.0 / COUNT(*), 3) AS home_win_rate\nFROM nba_analysis.RAW.raw_games g\nJOIN nba_analysis.RAW.raw_teams t ON t.TEAM_ID = g.HOME_TEAM_ID\nWHERE g.SEASON = 2018\nGROUP BY t.TEAM_ID, t.ABBREVIATION\nORDER BY SUM(g.HOME_TEAM_WINS) * 1.0 / COUNT(*) DESC, t.ABBREVIATION\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "raw"
+    ],
+    "tables": [
+      "raw.raw_games",
+      "raw.raw_teams"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of RAW.raw_games, RAW.raw_teams, which nobody has reviewed.",
+      "used AI-drafted descriptions of RAW.raw_games, RAW.raw_teams, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing in CON",
+      "used AI-drafted descriptions of RAW.raw_games, RAW.raw_teams, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612749",
+        "MIL",
+        "0.804"
+      ]
+    ]
+  },
+  {
+    "question_id": 30,
+    "category": "vocabulary",
+    "question": "How many triple-doubles did Russell Westbrook have in the 2016 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, COUNT(*) AS triple_doubles\nFROM nba_analysis.TRANSFORMED.local_player_game_facts\nWHERE season = 2016\n  AND LOWER(player_name) = 'russell westbrook'\n  AND (CASE WHEN COALESCE(points, 0) >= 10 THEN 1 ELSE 0 END\n     + CASE WHEN COALESCE(rebounds, 0) >= 10 THEN 1 ELSE 0 END\n     + CASE WHEN COALESCE(assists, 0) >= 10 THEN 1 ELSE 0 END\n     + CASE WHEN COALESCE(steals, 0) >= 10 THEN 1 ELSE 0 END\n     + CASE WHEN COALESCE(blocks, 0) >= 10 THEN 1 ELSE 0 END) >= 3\nGROUP BY player_id, player_name",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "201566",
+        "Russell Westbrook",
+        "45"
+      ]
+    ]
+  },
+  {
+    "question_id": 31,
+    "category": "vocabulary",
+    "question": "What was Giannis Antetokounmpo's points per game in the 2019 season, counting every game in the data, preseason and playoffs included? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, season, ROUND(total_points / NULLIF(games_played, 0), 2) AS points_per_game\nFROM nba_analysis.TRANSFORMED.local_player_season_facts\nWHERE LOWER(player_name) = 'giannis antetokounmpo'\n  AND season = 2019",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothi",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "203507",
+        "Giannis Antetokounmpo",
+        "2019",
+        "28.79"
+      ]
+    ]
+  },
+  {
+    "question_id": 32,
+    "category": "vocabulary",
+    "question": "Which team had the biggest total point differential (points scored minus points allowed) in the 2016 season, counting every game in the data, preseason and playoffs included? Give the team abbreviation and the differential.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT t.team_id, d.team_abbreviation, SUM(t.team_points - t.opponent_points) AS point_differential\nFROM nba_analysis.TRANSFORMED.local_team_game_facts t\nJOIN nba_analysis.TRANSFORMED.dim_teams_cleansed d ON d.team_id = t.team_id\nWHERE t.season = 2016\nGROUP BY t.team_id, d.team_abbreviation\nORDER BY point_differential DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.dim_teams_cleansed",
+      "transformed.local_team_game_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, TRANSFORMED.local_team_game_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, TRANSFORMED.local_team_game_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no l",
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, TRANSFORMED.local_team_game_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612744",
+        "GSW",
+        "1262.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 33,
+    "category": "vocabulary",
+    "question": "Who had the most double-doubles across all seasons, counting every game in the data, preseason and playoffs included, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, SUM(double_double_games) AS total_double_doubles\nFROM nba_analysis.TRANSFORMED.local_player_season_facts\nGROUP BY player_id, player_name\nORDER BY total_double_doubles DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothi",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_season_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2730",
+        "Dwight Howard",
+        "850"
+      ]
+    ]
+  },
+  {
+    "question_id": 34,
+    "category": "vocabulary",
+    "question": "How many 50-point games were there across all seasons, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(*) AS fifty_point_games\nFROM (\n  SELECT DISTINCT game_id, player_id\n  FROM nba_analysis.TRANSFORMED.local_player_game_facts\n  WHERE points >= 50\n) AS t",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds and nothing",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "224"
+      ]
+    ]
+  },
+  {
+    "question_id": 35,
+    "category": "join",
+    "question": "Which team won the most games in the 2017 season, counting every game in the data, preseason and playoffs included? Give the team abbreviation and the number of wins.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT t.team_id, t.team_abbreviation, f.wins\nFROM nba_analysis.TRANSFORMED.local_team_season_facts AS f\nJOIN nba_analysis.TRANSFORMED.src_teams AS t\n  ON t.team_id = f.team_id\nWHERE f.season = 2017\nORDER BY f.wins DESC, t.team_abbreviation\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_team_season_facts",
+      "transformed.src_teams"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_team_season_facts, TRANSFORMED.src_teams, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_team_season_facts, TRANSFORMED.src_teams, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed c",
+      "used AI-drafted descriptions of TRANSFORMED.local_team_season_facts, TRANSFORMED.src_teams, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612745",
+        "HOU",
+        "79"
+      ]
+    ]
+  },
+  {
+    "question_id": 36,
+    "category": "join",
+    "question": "Who is listed as the head coach of the team that won the most games in the 2018 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT t.team_id, t.city, t.team_nickname, t.head_coach, s.wins\nFROM nba_analysis.TRANSFORMED.local_team_season_facts s\nJOIN nba_analysis.TRANSFORMED.dim_teams_cleansed t ON t.team_id = s.team_id\nWHERE s.season = 2018\n  AND s.wins = (\n    SELECT MAX(wins)\n    FROM nba_analysis.TRANSFORMED.local_team_season_facts\n    WHERE season = 2018\n  )\nORDER BY t.team_id",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.dim_teams_cleansed",
+      "transformed.local_team_season_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, TRANSFORMED.local_team_season_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, TRANSFORMED.local_team_season_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no",
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, TRANSFORMED.local_team_season_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612761",
+        "Toronto",
+        "Raptors",
+        "Nick Nurse",
+        "77"
+      ]
+    ]
+  },
+  {
+    "question_id": 37,
+    "category": "join",
+    "question": "Which arena hosted the most games in the 2019 season?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT t.arena, COUNT(DISTINCT g.GAME_ID) AS games_hosted\nFROM nba_analysis.RAW.raw_games g\nJOIN nba_analysis.TRANSFORMED.dim_teams_cleansed t ON g.HOME_TEAM_ID = t.team_id\nWHERE g.SEASON = 2019\n  AND t.arena IS NOT NULL\nGROUP BY t.arena\nORDER BY games_hosted DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "raw"
+    ],
+    "tables": [
+      "raw.raw_games",
+      "transformed.dim_teams_cleansed"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of RAW.raw_games, TRANSFORMED.dim_teams_cleansed, which nobody has reviewed.",
+      "used AI-drafted descriptions of RAW.raw_games, TRANSFORMED.dim_teams_cleansed, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed column holds a",
+      "used AI-drafted descriptions of RAW.raw_games, TRANSFORMED.dim_teams_cleansed, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "Staples Center",
+        "100"
+      ]
+    ]
+  },
+  {
+    "question_id": 38,
+    "category": "join",
+    "question": "What were LeBron James' points per game against the Boston Celtics across all seasons, counting every game in the data, preseason and playoffs included? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT g.player_id, g.player_name, ROUND(AVG(g.points), 2) AS points_per_game\nFROM nba_analysis.TRANSFORMED.local_player_game_facts g\nJOIN nba_analysis.TRANSFORMED.src_teams t ON t.team_id = g.opponent_team_id\nWHERE LOWER(g.player_name) = 'lebron james'\n  AND LOWER(t.city) = 'boston'\n  AND LOWER(t.team_nickname) = 'celtics'\n  AND g.participated = TRUE\nGROUP BY g.player_id, g.player_name",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts",
+      "transformed.src_teams"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, TRANSFORMED.src_teams, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, TRANSFORMED.src_teams, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed c",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, TRANSFORMED.src_teams, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2544",
+        "LeBron James",
+        "28.33"
+      ]
+    ]
+  },
+  {
+    "question_id": 39,
+    "category": "join",
+    "question": "Against which team did Kevin Durant score the most total points across all seasons, counting every game in the data, preseason and playoffs included? Give the team abbreviation and the points.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT f.player_id, f.opponent_team_id, t.team_abbreviation, SUM(f.points) AS total_points\nFROM nba_analysis.TRANSFORMED.local_player_game_facts f\nJOIN nba_analysis.TRANSFORMED.src_teams t ON t.team_id = f.opponent_team_id\nWHERE LOWER(f.player_name) = 'kevin durant'\nGROUP BY f.player_id, f.opponent_team_id, t.team_abbreviation\nORDER BY total_points DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts",
+      "transformed.src_teams"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, TRANSFORMED.src_teams, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, TRANSFORMED.src_teams, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no listed c",
+      "used AI-drafted descriptions of TRANSFORMED.local_player_game_facts, TRANSFORMED.src_teams, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "201142",
+        "1610612759",
+        "SAS",
+        "1742.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 40,
+    "category": "join",
+    "question": "Which team scored the most total points in the 2021 season, counting every game in the data, preseason and playoffs included? Give the team abbreviation and the points.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT t.team_id, d.team_abbreviation, SUM(t.team_points) AS total_points\nFROM nba_analysis.TRANSFORMED.local_team_game_facts t\nJOIN nba_analysis.TRANSFORMED.dim_teams_cleansed d ON d.team_id = t.team_id\nWHERE t.season = 2021\nGROUP BY t.team_id, d.team_abbreviation\nORDER BY total_points DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.dim_teams_cleansed",
+      "transformed.local_team_game_facts"
+    ],
+    "schema_path": "whole",
+    "chosen": [],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, TRANSFORMED.local_team_game_facts, which nobody has reviewed.",
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, TRANSFORMED.local_team_game_facts, which nobody has reviewed why no governed answer: nothing governed covers this project, so the SQL is written from the question itself. No reading was made: when the question uses a business term or grouping that no l",
+      "used AI-drafted descriptions of TRANSFORMED.dim_teams_cleansed, TRANSFORMED.local_team_game_facts, which nobody has reviewed"
+    ],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612744",
+        "GSW",
+        "12153.0"
+      ]
+    ]
+  }
+]

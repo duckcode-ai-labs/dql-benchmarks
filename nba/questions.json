@@ -1,0 +1,714 @@
+[
+ {
+  "question_id": 1,
+  "category": "lookup",
+  "question": "What arena do the Golden State Warriors play in?",
+  "SQL": "SELECT ARENA FROM RAW.raw_teams WHERE ABBREVIATION = 'GSW'",
+  "needs": [
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ]
+ },
+ {
+  "question_id": 2,
+  "category": "lookup",
+  "question": "Who is listed as the head coach of the Boston Celtics in the teams data?",
+  "SQL": "SELECT HEADCOACH FROM RAW.raw_teams WHERE ABBREVIATION = 'BOS'",
+  "needs": [
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ]
+ },
+ {
+  "question_id": 3,
+  "category": "lookup",
+  "question": "What founding year does the teams data list for the San Antonio Spurs?",
+  "SQL": "SELECT YEARFOUNDED FROM RAW.raw_teams WHERE ABBREVIATION = 'SAS'",
+  "needs": [
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ]
+ },
+ {
+  "question_id": 4,
+  "category": "lookup",
+  "question": "What are the earliest and latest game dates in the data?",
+  "SQL": "SELECT MIN(game_date) AS first_game, MAX(game_date) AS last_game FROM TRANSFORMED.local_team_game_facts",
+  "needs": [
+   [
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_player_game_facts"
+   ]
+  ],
+  "oracle": "calendar_coverage"
+ },
+ {
+  "question_id": 5,
+  "category": "lookup",
+  "question": "How many points did LeBron James score in the game on June 19, 2016?",
+  "SQL": "SELECT points FROM TRANSFORMED.local_player_game_facts WHERE player_name = 'LeBron James' AND game_date = DATE '2016-06-19'",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 6,
+  "category": "lookup",
+  "question": "Which team has the largest arena capacity? Give the team abbreviation and the capacity.",
+  "SQL": "SELECT ABBREVIATION, ARENACAPACITY FROM RAW.raw_teams ORDER BY ARENACAPACITY DESC NULLS LAST LIMIT 1",
+  "needs": [
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ]
+ },
+ {
+  "question_id": 7,
+  "category": "aggregate",
+  "question": "Who scored the most points in the 2017 season, counting every game in the data, preseason and playoffs included, and how many points?",
+  "SQL": "SELECT player_name, total_points FROM TRANSFORMED.local_player_season_facts WHERE season = 2017 ORDER BY total_points DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_season_facts",
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.fct_player_performance",
+    "transformed.fct_player_journey",
+    "transformed.int_season_stats",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "oracle": "top_scorers_2017"
+ },
+ {
+  "question_id": 8,
+  "category": "aggregate",
+  "question": "How many games were played in the 2019 season, counting every game in the data, preseason and playoffs included?",
+  "SQL": "SELECT COUNT(DISTINCT game_id) AS games FROM TRANSFORMED.local_team_game_facts WHERE season = 2019",
+  "needs": [
+   [
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_player_game_facts"
+   ]
+  ]
+ },
+ {
+  "question_id": 9,
+  "category": "aggregate",
+  "question": "Who are the top 5 scorers across all seasons by total points, counting every game in the data, preseason and playoffs included? Give each player's name and total points.",
+  "SQL": "SELECT MIN(player_name) AS player_name, SUM(total_points) AS total_points FROM TRANSFORMED.local_player_season_facts GROUP BY player_id ORDER BY total_points DESC LIMIT 5",
+  "needs": [
+   [
+    "transformed.local_player_season_facts",
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.fct_player_performance",
+    "transformed.fct_player_journey",
+    "transformed.int_season_stats",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "oracle": "multi_season_weighted_ppg"
+ },
+ {
+  "question_id": 10,
+  "category": "aggregate",
+  "question": "How many three-pointers were made in total in the 2015 season, counting every game in the data, preseason and playoffs included?",
+  "SQL": "SELECT SUM(total_three_pointers_made) AS threes FROM TRANSFORMED.local_player_season_facts WHERE season = 2015",
+  "needs": [
+   [
+    "transformed.local_player_season_facts",
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.fct_player_performance",
+    "transformed.fct_player_journey",
+    "transformed.int_season_stats",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 11,
+  "category": "aggregate",
+  "question": "Which player had the most assists in the 2010 season, counting every game in the data, preseason and playoffs included, and how many?",
+  "SQL": "SELECT player_name, total_assists FROM TRANSFORMED.local_player_season_facts WHERE season = 2010 ORDER BY total_assists DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_season_facts",
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.fct_player_performance",
+    "transformed.fct_player_journey",
+    "transformed.int_season_stats",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 12,
+  "category": "aggregate",
+  "question": "How many points were scored in total in the 2012 season, counting both teams and counting every game in the data, preseason and playoffs included?",
+  "SQL": "SELECT SUM(team_points) AS points FROM TRANSFORMED.local_team_game_facts WHERE season = 2012",
+  "needs": [
+   [
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_player_game_facts"
+   ]
+  ]
+ },
+ {
+  "question_id": 13,
+  "category": "aggregate",
+  "question": "What is the most points one player scored in a single game in the data, and who scored them?",
+  "SQL": "SELECT player_name, points FROM TRANSFORMED.local_player_game_facts WHERE participated ORDER BY points DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 14,
+  "category": "aggregate",
+  "question": "Which season had the most games in the data?",
+  "SQL": "SELECT season FROM TRANSFORMED.local_team_game_facts GROUP BY season ORDER BY COUNT(DISTINCT game_id) DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_player_game_facts"
+   ]
+  ]
+ },
+ {
+  "question_id": 15,
+  "category": "aggregate",
+  "question": "What was the average number of points a team scored per game in the 2021 season, counting every game in the data, preseason and playoffs included? Round to two decimals.",
+  "SQL": "SELECT ROUND(AVG(team_points), 2) AS avg_points FROM TRANSFORMED.local_team_game_facts WHERE season = 2021",
+  "needs": [
+   [
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_player_game_facts"
+   ]
+  ]
+ },
+ {
+  "question_id": 16,
+  "category": "aggregate",
+  "question": "Which player blocked the most shots in the 2008 season, counting every game in the data, preseason and playoffs included, and how many blocks?",
+  "SQL": "SELECT player_name, total_blocks FROM TRANSFORMED.local_player_season_facts WHERE season = 2008 ORDER BY total_blocks DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_season_facts",
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.fct_player_performance",
+    "transformed.fct_player_journey",
+    "transformed.int_season_stats",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "layer": "the fct_ and int_ tables hold only seasons 2009 to 2019"
+ },
+ {
+  "question_id": 17,
+  "category": "layer",
+  "question": "How many games did LeBron James play in the 2017 season, counting every game in the data, preseason and playoffs included?",
+  "SQL": "SELECT games_played FROM TRANSFORMED.local_player_season_facts WHERE player_name = 'LeBron James' AND season = 2017",
+  "needs": [
+   [
+    "transformed.local_player_season_facts",
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.fct_player_performance",
+    "transformed.fct_player_journey",
+    "transformed.int_season_stats",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "layer": "fct_player_performance and int_season_stats count DNP rows as games (108, not 105)",
+  "oracle": "top_scorers_2017"
+ },
+ {
+  "question_id": 18,
+  "category": "layer",
+  "question": "What were Stephen Curry's points per game in the 2019 season, counting every game in the data, preseason and playoffs included? Round to two decimals.",
+  "SQL": "SELECT ROUND(total_points / games_played, 2) AS ppg FROM TRANSFORMED.local_player_season_facts WHERE player_name = 'Stephen Curry' AND season = 2019",
+  "needs": [
+   [
+    "transformed.local_player_season_facts",
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.fct_player_performance",
+    "transformed.fct_player_journey",
+    "transformed.int_season_stats",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "layer": "fct_player_performance divides by 12 games including 3 DNPs (17.58, not 23.44)"
+ },
+ {
+  "question_id": 19,
+  "category": "layer",
+  "question": "How many games were played in the 2020 season, counting every game in the data, preseason and playoffs included?",
+  "SQL": "SELECT COUNT(DISTINCT game_id) AS games FROM TRANSFORMED.local_team_game_facts WHERE season = 2020",
+  "needs": [
+   [
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_player_game_facts"
+   ]
+  ],
+  "layer": "raw_games and src_games repeat 29 games of 2020 (1,249 rows for 1,220 games)"
+ },
+ {
+  "question_id": 20,
+  "category": "layer",
+  "question": "How many points did Jayson Tatum score in total in the 2020 season, counting every game in the data, preseason and playoffs included?",
+  "SQL": "SELECT total_points FROM TRANSFORMED.local_player_season_facts WHERE player_name = 'Jayson Tatum' AND season = 2020",
+  "needs": [
+   [
+    "transformed.local_player_season_facts",
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.fct_player_performance",
+    "transformed.fct_player_journey",
+    "transformed.int_season_stats",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "layer": "raw_games_details repeats 4 of his 2020 games (2,024, not 1,924); fct_ has no 2020"
+ },
+ {
+  "question_id": 21,
+  "category": "layer",
+  "question": "Which five players had the best field goal percentage in the 2017 season, counting every game in the data, preseason and playoffs included, among players with at least 100 field goal attempts? Give each name and the percentage as a fraction rounded to three decimals.",
+  "SQL": "SELECT player_name, ROUND(total_field_goals_made / total_field_goals_attempted, 3) AS fg_pct FROM TRANSFORMED.local_player_season_facts WHERE season = 2017 AND total_field_goals_attempted >= 100 ORDER BY total_field_goals_made / total_field_goals_attempted DESC, player_id LIMIT 5",
+  "needs": [
+   [
+    "transformed.local_player_season_facts",
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.fct_player_performance",
+    "transformed.fct_player_journey",
+    "transformed.int_season_stats",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "layer": "fct_ avg_field_goal_pct averages per-game percentages",
+  "oracle": "field_goal_leaders_2017"
+ },
+ {
+  "question_id": 22,
+  "category": "layer",
+  "question": "How many players took the floor (not DNP) in at least one game in the 2021 season, counting every game in the data, preseason and playoffs included?",
+  "SQL": "SELECT COUNT(*) AS players FROM TRANSFORMED.local_player_season_facts WHERE season = 2021 AND games_played > 0",
+  "needs": [
+   [
+    "transformed.local_player_season_facts",
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.fct_player_performance",
+    "transformed.fct_player_journey",
+    "transformed.int_season_stats",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "layer": "players with only DNP rows are in the game rows and in local_player_season_facts with games_played = 0"
+ },
+ {
+  "question_id": 23,
+  "category": "layer",
+  "question": "How many players took the floor for more than one team in the 2019 season, counting every game in the data, preseason and playoffs included?",
+  "SQL": "SELECT COUNT(*) AS players FROM TRANSFORMED.local_player_season_facts WHERE season = 2019 AND teams_played > 1",
+  "needs": [
+   [
+    "transformed.local_player_season_facts",
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.fct_player_performance",
+    "transformed.fct_player_journey",
+    "transformed.int_season_stats",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "layer": "a team counts only when the player took the floor for it"
+ },
+ {
+  "question_id": 24,
+  "category": "layer",
+  "question": "Who scored the most points in the 2005 season, counting every game in the data, preseason and playoffs included, and how many?",
+  "SQL": "SELECT player_name, total_points FROM TRANSFORMED.local_player_season_facts WHERE season = 2005 ORDER BY total_points DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_season_facts",
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.fct_player_performance",
+    "transformed.fct_player_journey",
+    "transformed.int_season_stats",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "layer": "the fct_ and int_ tables hold only seasons 2009 to 2019"
+ },
+ {
+  "question_id": 25,
+  "category": "layer",
+  "question": "Who had the highest points per game in the 2017 season among players with at least 20 games played, counting every game in the data, preseason and playoffs included? Give the name and points per game rounded to two decimals.",
+  "SQL": "SELECT player_name, ROUND(points_per_game, 2) AS ppg FROM TRANSFORMED.local_player_season_facts WHERE season = 2017 AND games_played >= 20 ORDER BY points_per_game DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_season_facts",
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.fct_player_performance",
+    "transformed.fct_player_journey",
+    "transformed.int_season_stats",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "layer": "games played must leave out DNP rows",
+  "oracle": "points_per_game_leaders_2017_min20"
+ },
+ {
+  "question_id": 26,
+  "category": "layer",
+  "question": "How many games did the Brooklyn Nets win in the 2020 season, counting every game in the data, preseason and playoffs included?",
+  "SQL": "SELECT ts.wins FROM TRANSFORMED.local_team_season_facts ts JOIN RAW.raw_teams t ON t.TEAM_ID = ts.team_id WHERE t.ABBREVIATION = 'BKN' AND ts.season = 2020",
+  "needs": [
+   [
+    "transformed.local_team_season_facts",
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games"
+   ],
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ],
+  "layer": "raw_games repeats 5 Brooklyn games of 2020 (59 wins counting rows, not 57)"
+ },
+ {
+  "question_id": 27,
+  "category": "vocabulary",
+  "question": "Who had the most double-doubles in the 2017 season, counting every game in the data, preseason and playoffs included, and how many?",
+  "SQL": "SELECT player_name, double_double_games FROM TRANSFORMED.local_player_season_facts WHERE season = 2017 ORDER BY double_double_games DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_season_facts",
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.fct_player_performance",
+    "transformed.fct_player_journey",
+    "transformed.int_season_stats",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "oracle": "double_double_leaders_2017"
+ },
+ {
+  "question_id": 28,
+  "category": "vocabulary",
+  "question": "What is the home win rate across all games in the data that have a final score, as a fraction rounded to three decimals?",
+  "SQL": "SELECT ROUND(AVG(CASE WHEN team_won THEN 1.0 ELSE 0.0 END), 3) AS home_win_rate FROM TRANSFORMED.local_team_game_facts WHERE is_home AND team_points IS NOT NULL AND opponent_points IS NOT NULL",
+  "needs": [
+   [
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_player_game_facts"
+   ]
+  ]
+ },
+ {
+  "question_id": 29,
+  "category": "vocabulary",
+  "question": "Which team had the best home win rate in the 2018 season, counting every game in the data, preseason and playoffs included? Give the team abbreviation and the rate as a fraction rounded to three decimals.",
+  "SQL": "SELECT t.ABBREVIATION, ROUND(ts.home_wins / ts.home_games, 3) AS home_win_rate FROM TRANSFORMED.local_team_season_facts ts JOIN RAW.raw_teams t ON t.TEAM_ID = ts.team_id WHERE ts.season = 2018 ORDER BY ts.home_wins / ts.home_games DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_team_season_facts",
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games"
+   ],
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ]
+ },
+ {
+  "question_id": 30,
+  "category": "vocabulary",
+  "question": "How many triple-doubles did Russell Westbrook have in the 2016 season, counting every game in the data, preseason and playoffs included?",
+  "SQL": "SELECT COUNT(*) AS triple_doubles FROM TRANSFORMED.local_player_game_facts WHERE player_name = 'Russell Westbrook' AND season = 2016 AND participated AND ((points >= 10)::INT + (rebounds >= 10)::INT + (assists >= 10)::INT + (steals >= 10)::INT + (blocks >= 10)::INT) >= 3",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 31,
+  "category": "vocabulary",
+  "question": "What was Giannis Antetokounmpo's points per game in the 2019 season, counting every game in the data, preseason and playoffs included? Round to two decimals.",
+  "SQL": "SELECT ROUND(points_per_game, 2) AS ppg FROM TRANSFORMED.local_player_season_facts WHERE player_name = 'Giannis Antetokounmpo' AND season = 2019",
+  "needs": [
+   [
+    "transformed.local_player_season_facts",
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.fct_player_performance",
+    "transformed.fct_player_journey",
+    "transformed.int_season_stats",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "layer": "fct_player_performance counts 2 DNP rows as games (28.08, not 28.79)"
+ },
+ {
+  "question_id": 32,
+  "category": "vocabulary",
+  "question": "Which team had the biggest total point differential (points scored minus points allowed) in the 2016 season, counting every game in the data, preseason and playoffs included? Give the team abbreviation and the differential.",
+  "SQL": "SELECT t.ABBREVIATION, ts.point_differential FROM TRANSFORMED.local_team_season_facts ts JOIN RAW.raw_teams t ON t.TEAM_ID = ts.team_id WHERE ts.season = 2016 ORDER BY ts.point_differential DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_team_season_facts",
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games"
+   ],
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ]
+ },
+ {
+  "question_id": 33,
+  "category": "vocabulary",
+  "question": "Who had the most double-doubles across all seasons, counting every game in the data, preseason and playoffs included, and how many?",
+  "SQL": "SELECT MIN(player_name) AS player_name, SUM(double_double_games) AS double_doubles FROM TRANSFORMED.local_player_season_facts GROUP BY player_id ORDER BY double_doubles DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_season_facts",
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.fct_player_performance",
+    "transformed.fct_player_journey",
+    "transformed.int_season_stats",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 34,
+  "category": "vocabulary",
+  "question": "How many 50-point games were there across all seasons, counting every game in the data, preseason and playoffs included?",
+  "SQL": "SELECT COUNT(*) AS fifty_point_games FROM TRANSFORMED.local_player_game_facts WHERE participated AND points >= 50",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 35,
+  "category": "join",
+  "question": "Which team won the most games in the 2017 season, counting every game in the data, preseason and playoffs included? Give the team abbreviation and the number of wins.",
+  "SQL": "SELECT t.ABBREVIATION, ts.wins FROM TRANSFORMED.local_team_season_facts ts JOIN RAW.raw_teams t ON t.TEAM_ID = ts.team_id WHERE ts.season = 2017 ORDER BY ts.wins DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_team_season_facts",
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games"
+   ],
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ],
+  "oracle": "team_win_leaders_2017"
+ },
+ {
+  "question_id": 36,
+  "category": "join",
+  "question": "Who is listed as the head coach of the team that won the most games in the 2018 season, counting every game in the data, preseason and playoffs included?",
+  "SQL": "SELECT t.HEADCOACH FROM TRANSFORMED.local_team_season_facts ts JOIN RAW.raw_teams t ON t.TEAM_ID = ts.team_id WHERE ts.season = 2018 ORDER BY ts.wins DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_team_season_facts",
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games"
+   ],
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ]
+ },
+ {
+  "question_id": 37,
+  "category": "join",
+  "question": "Which arena hosted the most games in the 2019 season?",
+  "SQL": "SELECT t.ARENA FROM TRANSFORMED.local_team_season_facts ts JOIN RAW.raw_teams t ON t.TEAM_ID = ts.team_id WHERE ts.season = 2019 GROUP BY t.ARENA ORDER BY SUM(ts.home_games) DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_team_season_facts",
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games"
+   ],
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ]
+ },
+ {
+  "question_id": 38,
+  "category": "join",
+  "question": "What were LeBron James' points per game against the Boston Celtics across all seasons, counting every game in the data, preseason and playoffs included? Round to two decimals.",
+  "SQL": "SELECT ROUND(AVG(pg.points), 2) AS ppg FROM TRANSFORMED.local_player_game_facts pg JOIN RAW.raw_teams t ON t.TEAM_ID = pg.opponent_team_id WHERE pg.player_name = 'LeBron James' AND t.ABBREVIATION = 'BOS' AND pg.participated",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ]
+ },
+ {
+  "question_id": 39,
+  "category": "join",
+  "question": "Against which team did Kevin Durant score the most total points across all seasons, counting every game in the data, preseason and playoffs included? Give the team abbreviation and the points.",
+  "SQL": "SELECT t.ABBREVIATION, SUM(pg.points) AS points FROM TRANSFORMED.local_player_game_facts pg JOIN RAW.raw_teams t ON t.TEAM_ID = pg.opponent_team_id WHERE pg.player_name = 'Kevin Durant' AND pg.participated GROUP BY t.ABBREVIATION ORDER BY points DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ]
+ },
+ {
+  "question_id": 40,
+  "category": "join",
+  "question": "Which team scored the most total points in the 2021 season, counting every game in the data, preseason and playoffs included? Give the team abbreviation and the points.",
+  "SQL": "SELECT t.ABBREVIATION, ts.total_points FROM TRANSFORMED.local_team_season_facts ts JOIN RAW.raw_teams t ON t.TEAM_ID = ts.team_id WHERE ts.season = 2021 ORDER BY ts.total_points DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_team_season_facts",
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games"
+   ],
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ]
+ }
+]
