@@ -1,0 +1,5043 @@
+{
+  "identity": {
+    "benchmark": "wwi",
+    "condition": "WL",
+    "repoCommit": "51d5fcfba458a80ea6a22a09a0cd4df755291d45",
+    "repoDirty": true,
+    "contentFingerprint": "7edbf4a7e4c2315b",
+    "dql": {
+      "version": "zlens 0.2.11",
+      "source": "env",
+      "commit": "d7d2f826521c7d01e8cba293ce37e2296df7ce16",
+      "dirty": true
+    },
+    "provider": "claude-code",
+    "model": "claude-sonnet-5-5",
+    "cassetteMode": "record",
+    "dataHash": "a7f95e358a4dba79cc168f933c9081f971f2968b",
+    "tools": {
+      "claudeCli": "2.1.285 (Claude Code)"
+    },
+    "node": "v22.18.0",
+    "createdAt": "2026-11-03T02:25:12.325Z",
+    "publishable": false,
+    "notPublishableBecause": [
+      "benchmark repo has uncommitted changes",
+      "DQL came from the DQL_CLI override, not a release",
+      "the DQL build has uncommitted changes"
+    ]
+  },
+  "outages": [],
+  "ok": false,
+  "passed": 0,
+  "total": 40,
+  "thresholds": {
+    "minToolRequirement": null,
+    "minExecutionMatch": null,
+    "minJudgePass": null,
+    "maxWrongCertified": null,
+    "maxFalseRefusal": null,
+    "minRefusalRecall": null,
+    "maxProviderDispatches": null,
+    "maxLatencyP95Ms": null,
+    "minGroundedNarration": null
+  },
+  "metrics": {
+    "certified_hit_rate": null,
+    "judge_mean_score": null,
+    "judge_pass_rate": null,
+    "generated_followup_pass_rate": null,
+    "safe_refusal_rate": null,
+    "execution_match_rate": null,
+    "tool_requirement_pass_rate": null,
+    "wrong_certified_count": 0,
+    "outside_context_rejection_count": 0,
+    "false_refusal_rate": 1,
+    "false_refusal_count": 40,
+    "runtime_error_count": 0,
+    "answerable_case_count": 40,
+    "clarification_rate": 0,
+    "meaning_resolved_rate": 0,
+    "latency_p50_ms": 12447,
+    "latency_p95_ms": 14858,
+    "latency_p95_answerable_ms": 14858,
+    "grounded_narration_rate": null,
+    "grounded_narration_attempted": 0,
+    "refusal_recall": null,
+    "refusal_required_case_count": 0,
+    "draft_saved_count": 0,
+    "tool_observed_case_count": 38,
+    "avg_tool_calls": 1.9,
+    "avg_provider_dispatches": 4.75,
+    "max_provider_dispatches": 5,
+    "avg_context_objects": 0,
+    "avg_execution_ms": null
+  },
+  "cassetteEvidence": {
+    "totalEntries": 190,
+    "recordedProviderEntries": 190,
+    "migratedLegacyDeterministicFixtureEntries": 0,
+    "syntheticDeterministicOrchestrationFixtureEntries": 0,
+    "unknownProvenanceEntries": 0,
+    "orchestrationReplayEligible": true,
+    "realProviderQualityEligible": true,
+    "realProviderQualityExclusionReasons": [],
+    "mode": "record"
+  },
+  "results": [
+    {
+      "name": "q101",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 11765,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:7b2eba60f49059e8395f97d31476376dd4891c541f741b5755cdb22008f61a3a"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:7b2eba60f49059e8395f97d31476376dd4891c541f741b5755cdb22008f61a3a"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 11765ms.",
+          "payload": {
+            "durationMs": 11765,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q102",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 11232,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:c2ccc6e336729ec7413ece3c4a6ee265fc22c0479cee84dca2dddc8860646ea1"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:c2ccc6e336729ec7413ece3c4a6ee265fc22c0479cee84dca2dddc8860646ea1"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 11232ms.",
+          "payload": {
+            "durationMs": 11232,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q103",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 13537,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:3900c931550996df9bb8d6d484e5e66d1fc1d4f8e275c4b00737284d6c5175c1"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:3900c931550996df9bb8d6d484e5e66d1fc1d4f8e275c4b00737284d6c5175c1"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 13537ms.",
+          "payload": {
+            "durationMs": 13537,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q104",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 10913,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:49bb22c2740edd693ddeeecdfe6ee11d5d02bdcbcc6d8b18c79cce2298821d88"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:49bb22c2740edd693ddeeecdfe6ee11d5d02bdcbcc6d8b18c79cce2298821d88"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 10913ms.",
+          "payload": {
+            "durationMs": 10913,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q105",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 16223,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:31cdcf52c6efa93790c3342e423bf7f834ee0e0ebdc0f3f86be053bc0e0a2560"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:31cdcf52c6efa93790c3342e423bf7f834ee0e0ebdc0f3f86be053bc0e0a2560"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 16223ms.",
+          "payload": {
+            "durationMs": 16223,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q106",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 12713,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:9c8cc5738e18ee0b8f74e2f055424e153521688e34d783fc018613f1c2179bdb"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:9c8cc5738e18ee0b8f74e2f055424e153521688e34d783fc018613f1c2179bdb"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 12713ms.",
+          "payload": {
+            "durationMs": 12713,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q107",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 10215,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:72b4ff03c168234b6f12896e40b6d369a74aac50d91e79a31a9747850a848332"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:72b4ff03c168234b6f12896e40b6d369a74aac50d91e79a31a9747850a848332"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 10215ms.",
+          "payload": {
+            "durationMs": 10215,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q108",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 13460,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:97af0ca374221afe03921881ff84d430b7aa4ff089f250ba57a4bac3d84e1e87"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:97af0ca374221afe03921881ff84d430b7aa4ff089f250ba57a4bac3d84e1e87"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 13460ms.",
+          "payload": {
+            "durationMs": 13460,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q109",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 12262,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:54003d8913041e2600999c3fdf820021f5d0e06102a65309c0307d83b48c32ad"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:54003d8913041e2600999c3fdf820021f5d0e06102a65309c0307d83b48c32ad"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 12262ms.",
+          "payload": {
+            "durationMs": 12262,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q110",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 13101,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:913fa62a1842ae33b0bfeb130c3f2e5c3c4653e69ff56463bcc34e4bfdbeedd9"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:913fa62a1842ae33b0bfeb130c3f2e5c3c4653e69ff56463bcc34e4bfdbeedd9"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 13101ms.",
+          "payload": {
+            "durationMs": 13101,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q111",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 11714,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:1cc8ce9854aecc13f2131234f75f6abb97216c96f392e6b431daec4fe1abd3cb"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:1cc8ce9854aecc13f2131234f75f6abb97216c96f392e6b431daec4fe1abd3cb"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 11714ms.",
+          "payload": {
+            "durationMs": 11714,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q112",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 14858,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:709b420ed6a6b324b4f69ac37174234d41d67c620dd38537622301223abdc3e8"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:709b420ed6a6b324b4f69ac37174234d41d67c620dd38537622301223abdc3e8"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 14858ms.",
+          "payload": {
+            "durationMs": 14858,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q113",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 13408,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:54f6311bdf7f48b503b4741fd1b3182c62a1719878814b84f52964a874a27055"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:54f6311bdf7f48b503b4741fd1b3182c62a1719878814b84f52964a874a27055"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 13408ms.",
+          "payload": {
+            "durationMs": 13408,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q114",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 14176,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:5171d5257b17141f4ba17d26ab860745416dfc4550cd117b1565b5b314815063"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:5171d5257b17141f4ba17d26ab860745416dfc4550cd117b1565b5b314815063"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 14176ms.",
+          "payload": {
+            "durationMs": 14176,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q115",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 14215,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:f6103c70da00aa11375ce2765e9011cb86944c02bafe64a54e991ceb9744bc42"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:f6103c70da00aa11375ce2765e9011cb86944c02bafe64a54e991ceb9744bc42"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 14215ms.",
+          "payload": {
+            "durationMs": 14215,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q116",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options (request-policy)"
+      ],
+      "durationMs": 240,
+      "kind": "no_answer",
+      "route": "blocked",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:388691602ffd8345c19051cd81aaef45493029c0ed48d608e246a9801f1aebec"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 0,
+      "providerDispatchCount": 0,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 0,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "passed",
+          "message": "Persisted route evidence recorded an unspecified number of retrieved candidate(s).",
+          "payload": {
+            "evidenceSource": "persisted_agent_run",
+            "sourceCoverage": [],
+            "terminalOutcome": {
+              "kind": "policy_blocked",
+              "code": "ANALYTICAL_POLICY_BLOCKED",
+              "message": "ZLens cannot retrieve or disclose direct payment, health, contact, or protected-attribute data about an individual.",
+              "candidateIds": []
+            }
+          }
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route blocked evaluated as blocked.",
+          "payload": {
+            "engineRoute": "blocked",
+            "evalRoute": "blocked",
+            "status": "blocked",
+            "trustState": "blocked",
+            "terminalOutcome": {
+              "kind": "policy_blocked",
+              "code": "ANALYTICAL_POLICY_BLOCKED",
+              "message": "ZLens cannot retrieve or disclose direct payment, health, contact, or protected-attribute data about an individual.",
+              "candidateIds": []
+            }
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "not_run",
+          "message": "No provider tool calls were observed for this answer.",
+          "payload": {
+            "observedToolCalls": 0,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none",
+            "refusalCode": "request-policy"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options (request-policy)"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:388691602ffd8345c19051cd81aaef45493029c0ed48d608e246a9801f1aebec"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 240ms.",
+          "payload": {
+            "durationMs": 240,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q117",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 13063,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:2e7210ae2464071173f05c2de95b1a95f5de64eec73172568fca869a33b33af8"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:2e7210ae2464071173f05c2de95b1a95f5de64eec73172568fca869a33b33af8"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 13063ms.",
+          "payload": {
+            "durationMs": 13063,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q118",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 12124,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:589ae636d2217f69bbcf264a538bb3fe3a0349b622ef931446c2ca3945fff68e"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:589ae636d2217f69bbcf264a538bb3fe3a0349b622ef931446c2ca3945fff68e"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 12124ms.",
+          "payload": {
+            "durationMs": 12124,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q119",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 13194,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:8c1e142ff6eca700b0ce96bce3b13e3d24b1739958cd7a5fcd2cd5d2032c7d06"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:8c1e142ff6eca700b0ce96bce3b13e3d24b1739958cd7a5fcd2cd5d2032c7d06"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 13194ms.",
+          "payload": {
+            "durationMs": 13194,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q120",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 11087,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:4edef40eeb8dda53880c93b34f8803f92e58e04335824413d1eed1ef4c696394"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:4edef40eeb8dda53880c93b34f8803f92e58e04335824413d1eed1ef4c696394"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 11087ms.",
+          "payload": {
+            "durationMs": 11087,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q121",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 13759,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:6fbf06aeeffc0d9abdde13bb9c90d1a16847d55557fd061f340db1d8e5ad4003"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:6fbf06aeeffc0d9abdde13bb9c90d1a16847d55557fd061f340db1d8e5ad4003"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 13759ms.",
+          "payload": {
+            "durationMs": 13759,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q122",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 12805,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:a5eb8c0dabce9cc5a7b113bb7674d5daa44cda25384b34e9f94d370d368e5c71"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:a5eb8c0dabce9cc5a7b113bb7674d5daa44cda25384b34e9f94d370d368e5c71"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 12805ms.",
+          "payload": {
+            "durationMs": 12805,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q123",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 9682,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:8b298d9204a4801273dc139816b96aef89f529050bf03b6ff9da71b9215e1905"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:8b298d9204a4801273dc139816b96aef89f529050bf03b6ff9da71b9215e1905"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 9682ms.",
+          "payload": {
+            "durationMs": 9682,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q124",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 9569,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:114fbaf5cdd9985068a06e5a698688467b6fd681b3e37d18cb69f2bc694d8dbc"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:114fbaf5cdd9985068a06e5a698688467b6fd681b3e37d18cb69f2bc694d8dbc"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 9569ms.",
+          "payload": {
+            "durationMs": 9569,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q125",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options (request-policy)"
+      ],
+      "durationMs": 93,
+      "kind": "no_answer",
+      "route": "blocked",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:0cad13273ce36e90438ced4805fd70905177d5037dfa2896bf34a6d8ad866dd1"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 0,
+      "providerDispatchCount": 0,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 0,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "passed",
+          "message": "Persisted route evidence recorded an unspecified number of retrieved candidate(s).",
+          "payload": {
+            "evidenceSource": "persisted_agent_run",
+            "sourceCoverage": [],
+            "terminalOutcome": {
+              "kind": "policy_blocked",
+              "code": "ANALYTICAL_POLICY_BLOCKED",
+              "message": "ZLens cannot retrieve or disclose direct payment, health, contact, or protected-attribute data about an individual.",
+              "candidateIds": []
+            }
+          }
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route blocked evaluated as blocked.",
+          "payload": {
+            "engineRoute": "blocked",
+            "evalRoute": "blocked",
+            "status": "blocked",
+            "trustState": "blocked",
+            "terminalOutcome": {
+              "kind": "policy_blocked",
+              "code": "ANALYTICAL_POLICY_BLOCKED",
+              "message": "ZLens cannot retrieve or disclose direct payment, health, contact, or protected-attribute data about an individual.",
+              "candidateIds": []
+            }
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "not_run",
+          "message": "No provider tool calls were observed for this answer.",
+          "payload": {
+            "observedToolCalls": 0,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none",
+            "refusalCode": "request-policy"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options (request-policy)"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:0cad13273ce36e90438ced4805fd70905177d5037dfa2896bf34a6d8ad866dd1"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 93ms.",
+          "payload": {
+            "durationMs": 93,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q126",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 11952,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:9215504c3a83465fc30ff880d15a6bb8f5c06d387ff3ecfd86f5f3308cfd8e92"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:9215504c3a83465fc30ff880d15a6bb8f5c06d387ff3ecfd86f5f3308cfd8e92"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 11952ms.",
+          "payload": {
+            "durationMs": 11952,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q127",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 12398,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:8e2d71f475eaab8e37cda016d27097acd55bfe8082514bdbc9bca4865f1d8fda"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:8e2d71f475eaab8e37cda016d27097acd55bfe8082514bdbc9bca4865f1d8fda"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 12398ms.",
+          "payload": {
+            "durationMs": 12398,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q128",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 10390,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:8b5b8665c7c646a813e4bb6cfa9b7b5428aa1881a14047b7435976d52df44019"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:8b5b8665c7c646a813e4bb6cfa9b7b5428aa1881a14047b7435976d52df44019"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 10390ms.",
+          "payload": {
+            "durationMs": 10390,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q129",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 10939,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:89e0fa6561cfcb057501df624ea7934e700105a2e3caa754a4bc3474b38b7b6d"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:89e0fa6561cfcb057501df624ea7934e700105a2e3caa754a4bc3474b38b7b6d"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 10939ms.",
+          "payload": {
+            "durationMs": 10939,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q130",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 10877,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:32955f4da42882e1106ef839c2997a119c97c7542a0963d552edae93ef9e01d8"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:32955f4da42882e1106ef839c2997a119c97c7542a0963d552edae93ef9e01d8"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 10877ms.",
+          "payload": {
+            "durationMs": 10877,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q131",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 13645,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:6aa222390a318713ca869d76c8289676099b2d4dda34096b86afd141d1ce1d5d"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:6aa222390a318713ca869d76c8289676099b2d4dda34096b86afd141d1ce1d5d"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 13645ms.",
+          "payload": {
+            "durationMs": 13645,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q132",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 12447,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:1876c6d18ad72208d16b0f482a2d2892485f8dfa4ab345ca70e0fc7c968e27a8"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:1876c6d18ad72208d16b0f482a2d2892485f8dfa4ab345ca70e0fc7c968e27a8"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 12447ms.",
+          "payload": {
+            "durationMs": 12447,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q133",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 14227,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:999576cb64fc197384e448a11158387e3dc5981fe58bae19e860e26884557ef9"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:999576cb64fc197384e448a11158387e3dc5981fe58bae19e860e26884557ef9"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 14227ms.",
+          "payload": {
+            "durationMs": 14227,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q134",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 12107,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:d29094ab64fa64f2ada687cf0e1129e6ed639ec60668315c31888074a33b495a"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:d29094ab64fa64f2ada687cf0e1129e6ed639ec60668315c31888074a33b495a"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 12107ms.",
+          "payload": {
+            "durationMs": 12107,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q135",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 11646,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:3940cb026f7648fec81acd1078b3eed6e6b6f797cf62ccd70b39ed44fa85293b"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:3940cb026f7648fec81acd1078b3eed6e6b6f797cf62ccd70b39ed44fa85293b"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 11646ms.",
+          "payload": {
+            "durationMs": 11646,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q136",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 13800,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:ebe41d88381e816f0cb4e66239e02c466f34d426d32f8c170a5c454030cf36a1"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:ebe41d88381e816f0cb4e66239e02c466f34d426d32f8c170a5c454030cf36a1"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 13800ms.",
+          "payload": {
+            "durationMs": 13800,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q137",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 13248,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:0eb3ffb4512860884824c653f201da2bd2f4a547591d4ef1e370344da1d3737d"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:0eb3ffb4512860884824c653f201da2bd2f4a547591d4ef1e370344da1d3737d"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 13248ms.",
+          "payload": {
+            "durationMs": 13248,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q138",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 13452,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:e27900493d10d7159cac37850c725f60c516383192c12119be586c8a28cfe6cf"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:e27900493d10d7159cac37850c725f60c516383192c12119be586c8a28cfe6cf"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 13452ms.",
+          "payload": {
+            "durationMs": 13452,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q139",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 16452,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:bd1b6e568852a8ee8a311a72e2257d54f1e95f5b4b1a7a06db932f3b01a09b69"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:bd1b6e568852a8ee8a311a72e2257d54f1e95f5b4b1a7a06db932f3b01a09b69"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 16452ms.",
+          "payload": {
+            "durationMs": 16452,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q140",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+      ],
+      "durationMs": 12658,
+      "kind": "no_answer",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:5021b7babde981cda308848bd5b63d477532229e7825dbe41bc6545d5c4f9609"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 5,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 5,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "blocked",
+            "trustState": "blocked"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:5021b7babde981cda308848bd5b63d477532229e7825dbe41bc6545d5c4f9609"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 12658ms.",
+          "payload": {
+            "durationMs": 12658,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

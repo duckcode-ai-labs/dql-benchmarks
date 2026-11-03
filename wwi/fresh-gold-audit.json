@@ -1,0 +1,242 @@
+[
+  {
+    "question_id": 101,
+    "verdict": "SOUND",
+    "reason": "issalesperson flags 10 distinct current employees, and the same 10 are the salespeople on orders and invoices.",
+    "fix": ""
+  },
+  {
+    "question_id": 102,
+    "verdict": "SOUND",
+    "reason": "extendedprice includes tax, extendedprice - taxamount equals quantity * unitprice on all 228,265 lines and matches the ledger's amountexcludingtax total, and there are no credit notes.",
+    "fix": ""
+  },
+  {
+    "question_id": 103,
+    "verdict": "SOUND",
+    "reason": "Holdings has exactly one row per product with no negative quantities, and it is the only record of on-hand stock because the movement ledger does not reconcile to it.",
+    "fix": ""
+  },
+  {
+    "question_id": 104,
+    "verdict": "SOUND",
+    "reason": "lineprofit equals (unitprice - lastcostprice) * quantity on every line, so it is tax-exclusive, and the total equals the yearly sums in question 131.",
+    "fix": ""
+  },
+  {
+    "question_id": 105,
+    "verdict": "SOUND",
+    "reason": "Invoices map 1:1 to orders so nothing double counts, the 84 undelivered invoices drop out, and the ::date cast is required because a raw timestamp comparison would wrongly call same-day deliveries late (52,672).",
+    "fix": ""
+  },
+  {
+    "question_id": 106,
+    "verdict": "SOUND",
+    "reason": "The sum reconciles exactly to invoices minus payments (198,043,439.45 - 197,776,428.01) and sits on 84 unfinalized invoices with no negative balances.",
+    "fix": ""
+  },
+  {
+    "question_id": 107,
+    "verdict": "SOUND",
+    "reason": "The sum reconciles exactly to supplier invoices minus payments (1,085,993,513.06 - 1,083,271,834.85) and sits on 2 unfinalized invoices with no negative balances.",
+    "fix": ""
+  },
+  {
+    "question_id": 108,
+    "verdict": "SOUND",
+    "reason": "ischillerstock is the only refrigeration field and flags 8 chocolate products; no unflagged product is a cold item.",
+    "fix": ""
+  },
+  {
+    "question_id": 109,
+    "verdict": "SOUND",
+    "reason": "specialdeals holds the only 2 promotions on record, and description, start date and end date map directly to its columns.",
+    "fix": ""
+  },
+  {
+    "question_id": 110,
+    "verdict": "SOUND",
+    "reason": "reorderlevel is the reorder point, and no product sits exactly at it, so < and <= both return the same 2 products.",
+    "fix": ""
+  },
+  {
+    "question_id": 111,
+    "verdict": "SOUND",
+    "reason": "All 7,538 backorderorderid values point forward to a distinct later order for the same customer and date, and the gold rightly avoids isundersupplybackordered, which is true on every row.",
+    "fix": ""
+  },
+  {
+    "question_id": 112,
+    "verdict": "SOUND",
+    "reason": "customfields parses on all 227 products with clean values (China 207, Japan 12, USA 8), and no other column mentions Japan.",
+    "fix": ""
+  },
+  {
+    "question_id": 113,
+    "verdict": "SOUND",
+    "reason": "No customer has a NULL category, counts sum to 663, and the inner join drops the 3 empty categories as the question asks.",
+    "fix": ""
+  },
+  {
+    "question_id": 114,
+    "verdict": "SOUND",
+    "reason": "USB Novelties has 14 distinct products with no bridge duplicates, and the name matches exactly one stock group.",
+    "fix": ""
+  },
+  {
+    "question_id": 115,
+    "verdict": "SOUND",
+    "reason": "Every product has a supplier, counts sum to 227, and purchase order suppliers never disagree with stockitems.supplierid.",
+    "fix": ""
+  },
+  {
+    "question_id": 116,
+    "verdict": "SOUND",
+    "reason": "Main contact maps to primarycontactpersonid rather than the alternate, and all 13 suppliers resolve to one person with an email.",
+    "fix": ""
+  },
+  {
+    "question_id": 117,
+    "verdict": "SOUND",
+    "reason": "Delivery city equals postal city for every customer, counts sum to 663, and every customer has invoices, so restricting to customers actually delivered to changes nothing.",
+    "fix": ""
+  },
+  {
+    "question_id": 118,
+    "verdict": "SOUND",
+    "reason": "Holdings is 1:1 with products so there is no fan-out, lastcostprice is per unit as lineprofit confirms, and the 99 NULL-color products drop out as the question asks.",
+    "fix": ""
+  },
+  {
+    "question_id": 119,
+    "verdict": "SOUND",
+    "reason": "The order flag, the line flag and received less than ordered all select the same 2 purchase orders (2073 and 2074).",
+    "fix": ""
+  },
+  {
+    "question_id": 120,
+    "verdict": "SOUND",
+    "reason": "Customer and bill-to customer give the same buying group on every invoice, there are no credit notes, and the 44,481 total shows no fan-out.",
+    "fix": ""
+  },
+  {
+    "question_id": 121,
+    "verdict": "SOUND",
+    "reason": "The inner join keeps all 236,667 rows across the 3 types in use, receipts are true units (outers * quantityperouter), and the question fixes the signed sum.",
+    "fix": ""
+  },
+  {
+    "question_id": 122,
+    "verdict": "SOUND",
+    "reason": "All 366 payments are negative, no supplier refunds exist, and the 7 supplier totals sum to the ledger's 1,083,271,834.85.",
+    "fix": ""
+  },
+  {
+    "question_id": 123,
+    "verdict": "SOUND",
+    "reason": "All 663 rows are distinct current customers and each store is its own customer row, so billing accounts (263) is a stretch reading rather than the plain one.",
+    "fix": ""
+  },
+  {
+    "question_id": 124,
+    "verdict": "SOUND",
+    "reason": "continent and region both give 43 and the four European subregions sum to 43, so every route to Europe agrees.",
+    "fix": ""
+  },
+  {
+    "question_id": 125,
+    "verdict": "SOUND",
+    "reason": "Only one supplier matches Contoso, and its phone and website map directly to columns.",
+    "fix": ""
+  },
+  {
+    "question_id": 126,
+    "verdict": "SOUND",
+    "reason": "The name matches exactly one product, and recommendedretailprice (37.38) is distinct from unitprice (25.00).",
+    "fix": ""
+  },
+  {
+    "question_id": 127,
+    "verdict": "SOUND",
+    "reason": "There is one vehicle with two sensors, every row is a distinct reading, the column matches the raw sensor data on all 65,998 rows, and above excludes the 302 readings at exactly 4.5.",
+    "fix": ""
+  },
+  {
+    "question_id": 128,
+    "verdict": "SOUND",
+    "reason": "NULL pickingcompletedwhen matches pickedquantity = 0 and the order-level NULL on exactly the same 3,147 lines, so all routes agree.",
+    "fix": ""
+  },
+  {
+    "question_id": 129,
+    "verdict": "SOUND",
+    "reason": "The strict comparison returns the 4 products at 20 days and rightly excludes the 96 at exactly 14.",
+    "fix": ""
+  },
+  {
+    "question_id": 130,
+    "verdict": "SOUND",
+    "reason": "MAX ignores the 402 NULL limits, and exactly one customer holds the 4,630.50 maximum.",
+    "fix": ""
+  },
+  {
+    "question_id": 131,
+    "verdict": "SOUND",
+    "reason": "The date column is stated, the header-to-line join is safe, the years sum to question 104, and 2016 is simply partial through May 31.",
+    "fix": ""
+  },
+  {
+    "question_id": 132,
+    "verdict": "SOUND",
+    "reason": "A plain count by orderdate is the natural answer, and dropping backorder rows (about 10% each month) would need a self-join the question gives no hint of.",
+    "fix": ""
+  },
+  {
+    "question_id": 133,
+    "verdict": "SOUND",
+    "reason": "49,929,487.20 to 53,991,490.45 is 8.135%, which rounds to 8.1, and the tax-inclusive basis gives the same rounded result.",
+    "fix": ""
+  },
+  {
+    "question_id": 134,
+    "verdict": "SOUND",
+    "reason": "All 2,118 payments are negative, no refunds exist, transactiondate is a date so BETWEEN keeps March 31, and finalizationdate gives the same total.",
+    "fix": ""
+  },
+  {
+    "question_id": 135,
+    "verdict": "SOUND",
+    "reason": "The archive is the right table because the current table holds only 4 readings from May 31 and validfrom gives the same count, but the archive is a partial load missing about 18 of February's 29 days, so 60,640 is correct for this database and understates the real month.",
+    "fix": ""
+  },
+  {
+    "question_id": 136,
+    "verdict": "SOUND",
+    "reason": "Customer names are unique, grouping is by shipping customer rather than bill-to as the question asks, and there is no tie at fifth (140,297.05 against 139,665.00).",
+    "fix": ""
+  },
+  {
+    "question_id": 137,
+    "verdict": "SOUND",
+    "reason": "extendedprice includes tax, the invoice salesperson equals the order salesperson on every invoice, and Lily Code leads by a clear margin on every basis tested.",
+    "fix": ""
+  },
+  {
+    "question_id": 138,
+    "verdict": "SOUND",
+    "reason": "SUM(quantity) is units invoiced, product names do not merge, and there is no tie at tenth (144,775 against 143,784).",
+    "fix": ""
+  },
+  {
+    "question_id": 139,
+    "verdict": "SOUND",
+    "reason": "1,142,515.20 of 172,261,341.20 is 0.66%, the join to stockitems cannot fan out, and the before-tax basis matches the question (0.63 with tax).",
+    "fix": ""
+  },
+  {
+    "question_id": 140,
+    "verdict": "SOUND",
+    "reason": "pickedbypersonid is the only picker field, all 19 pickers are distinct employees, and Amy Trefl wins 4,042 to 3,876, though 7,538 picked orders record no picker and no query can attribute them.",
+    "fix": ""
+  }
+]

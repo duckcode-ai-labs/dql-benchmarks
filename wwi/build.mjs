@@ -37,7 +37,7 @@ function updateConfig(dir, change) {
   writeFileSync(path, `${JSON.stringify(config, null, 2)}\n`);
 }
 
-function baseProject(cli, dir, record) {
+function baseProject(cli, dir, record, schemas = SCHEMAS) {
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
   zlens(cli, WORK, ['init', dir, '--warehouse-first'], record);
@@ -47,7 +47,7 @@ function baseProject(cli, dir, record) {
   });
   mkdirSync(join(dir, '.dql'), { recursive: true });
   symlinkSync(join(WORK, 'connectors'), join(dir, '.dql', 'connectors'), 'dir');
-  zlens(cli, dir, ['sync', 'warehouse', '.', '--schemas', SCHEMAS], record);
+  zlens(cli, dir, ['sync', 'warehouse', '.', '--schemas', schemas], record);
 }
 
 function modelFiles(dir) {
@@ -85,11 +85,12 @@ function writeCustomAnalyses() {
 function main() {
   const armFlag = process.argv.indexOf('--arm');
   const arm = process.argv[armFlag + 1];
-  if (armFlag < 0 || !['W0', 'W1a', 'WM'].includes(arm)) throw new Error('--arm W0|W1a|WM is required.');
+  if (armFlag < 0 || !['W0', 'W1a', 'WM', 'WL'].includes(arm)) throw new Error('--arm W0|W1a|WM|WL is required.');
   const cli = resolveDqlCli();
   const dir = join(WORK, 'projects', arm);
   const record = { arm, builtAt: new Date().toISOString(), cli: cli.entry, steps: [] };
-  baseProject(cli, dir, record);
+  // WL: W0 plus the legacy schema, too large to show whole, so search does the work.
+  baseProject(cli, dir, record, arm === 'WL' ? `${SCHEMAS},legacy` : SCHEMAS);
   // WM keeps one domain: a default draft splits domains by schema with no exports
   // between them, so it fails `zlens model validate` on this database. W1a keeps
   // that default, because it is what a new user gets.

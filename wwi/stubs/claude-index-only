@@ -1,0 +1,14 @@
+#!/bin/sh
+REAL=/opt/homebrew/bin/claude
+case "$1" in
+  --version) exec "$REAL" "$@";;
+  auth) printf '{"loggedIn":true,"authMethod":"stub"}\n'; exit 0;;
+esac
+tmp=$(mktemp)
+cat > "$tmp"
+case "$*" in
+  *"You choose which database tables"*) exec "$REAL" "$@" < "$tmp";;
+esac
+if grep -q 'You choose which database tables' "$tmp"; then exec "$REAL" "$@" < "$tmp"; fi
+rm -f "$tmp"
+printf '{"type":"result","is_error":false,"result":"NO_SQL: recall run","usage":{"input_tokens":1,"output_tokens":1}}\n'

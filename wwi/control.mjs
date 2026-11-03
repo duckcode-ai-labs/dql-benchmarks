@@ -66,13 +66,14 @@ function ask(prompt, model, system) {
 }
 
 function parseArgs(argv) {
-  const options = { run: null, pass: 1, model: 'claude-sonnet-5-5', limit: null, line: true };
+  const options = { run: null, pass: 1, model: 'claude-sonnet-5-5', limit: null, line: true, questions: null };
   for (let index = 0; index < argv.length; index += 1) {
     if (argv[index] === '--run') options.run = argv[++index];
     else if (argv[index] === '--pass') options.pass = Number(argv[++index]);
     else if (argv[index] === '--model') options.model = argv[++index];
     else if (argv[index] === '--limit') options.limit = Number(argv[++index]);
     else if (argv[index] === '--no-line') options.line = false;
+    else if (argv[index] === '--questions') options.questions = argv[++index];
     else throw new Error(`Unknown option ${argv[index]}`);
   }
   if (!options.run) throw new Error('--run <id> is required.');
@@ -89,7 +90,7 @@ async function main() {
     : []);
   const schema = schemaDump();
   const system = options.line ? SYSTEM_PROMPT : FIRST_LINE;
-  const questions = JSON.parse(readFileSync(join(DATASET, 'evaluation.json'), 'utf-8'))
+  const questions = JSON.parse(readFileSync(options.questions ?? join(DATASET, 'evaluation.json'), 'utf-8'))
     .slice(0, options.limit ?? undefined)
     .filter((question) => !done.has(question.question_id));
   writeFileSync(join(outDir, 'settings.json'), `${JSON.stringify({ model: options.model, systemPrompt: system, schemaChars: schema.length, tools: 'none', startedAt: new Date().toISOString() }, null, 2)}\n`);

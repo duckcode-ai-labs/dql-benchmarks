@@ -1,0 +1,429 @@
+[
+  {
+    "question_id": 101,
+    "category": "vocabulary",
+    "question": "How many sales reps do we have?",
+    "SQL": "SELECT COUNT(*) AS sales_reps FROM application.people WHERE issalesperson",
+    "tables": [
+      "application.people"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 102,
+    "category": "vocabulary",
+    "question": "What is our total invoiced revenue before tax to date?",
+    "SQL": "SELECT SUM(extendedprice - taxamount) AS revenue_before_tax FROM sales.invoicelines",
+    "tables": [
+      "sales.invoicelines"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 103,
+    "category": "vocabulary",
+    "question": "How much stock on hand do we have in total across all products, in units?",
+    "SQL": "SELECT SUM(quantityonhand) AS units_on_hand FROM warehouse.stockitemholdings",
+    "tables": [
+      "warehouse.stockitemholdings"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 104,
+    "category": "vocabulary",
+    "question": "What is our total gross margin in dollars on everything we have invoiced?",
+    "SQL": "SELECT SUM(lineprofit) AS gross_margin FROM sales.invoicelines",
+    "tables": [
+      "sales.invoicelines"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 105,
+    "category": "vocabulary",
+    "question": "How many orders arrived late? Count an order as late when its confirmed delivery date is after the expected delivery date on the order.",
+    "SQL": "SELECT COUNT(*) AS late_orders FROM sales.invoices i JOIN sales.orders o ON o.orderid = i.orderid WHERE i.confirmeddeliverytime::date > o.expecteddeliverydate",
+    "tables": [
+      "sales.invoices",
+      "sales.orders"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 106,
+    "category": "vocabulary",
+    "question": "What is our total accounts receivable right now, meaning what customers still owe us?",
+    "SQL": "SELECT SUM(outstandingbalance) AS accounts_receivable FROM sales.customertransactions",
+    "tables": [
+      "sales.customertransactions"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 107,
+    "category": "vocabulary",
+    "question": "How much do we currently owe our vendors in total?",
+    "SQL": "SELECT SUM(outstandingbalance) AS accounts_payable FROM purchasing.suppliertransactions",
+    "tables": [
+      "purchasing.suppliertransactions"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 108,
+    "category": "vocabulary",
+    "question": "How many products need to be kept refrigerated?",
+    "SQL": "SELECT COUNT(*) AS refrigerated_products FROM warehouse.stockitems WHERE ischillerstock",
+    "tables": [
+      "warehouse.stockitems"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 109,
+    "category": "vocabulary",
+    "question": "What promotions do we have on record? Show each promotion's description with its start date and end date.",
+    "SQL": "SELECT dealdescription, startdate, enddate FROM sales.specialdeals ORDER BY startdate",
+    "tables": [
+      "sales.specialdeals"
+    ],
+    "gold_rows": 2
+  },
+  {
+    "question_id": 110,
+    "category": "vocabulary",
+    "question": "Which products are below their reorder point right now? Show the product name, the units on hand and the reorder point.",
+    "SQL": "SELECT si.stockitemname, h.quantityonhand, h.reorderlevel FROM warehouse.stockitemholdings h JOIN warehouse.stockitems si ON si.stockitemid = h.stockitemid WHERE h.quantityonhand < h.reorderlevel ORDER BY si.stockitemname",
+    "tables": [
+      "warehouse.stockitemholdings",
+      "warehouse.stockitems"
+    ],
+    "gold_rows": 2
+  },
+  {
+    "question_id": 111,
+    "category": "vocabulary",
+    "question": "How many customer orders came up short and had the remainder moved to a backorder?",
+    "SQL": "SELECT COUNT(*) AS orders_with_backorder FROM sales.orders WHERE backorderorderid IS NOT NULL",
+    "tables": [
+      "sales.orders"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 112,
+    "category": "vocabulary",
+    "question": "How many of our products are made in Japan?",
+    "SQL": "SELECT COUNT(*) AS products_made_in_japan FROM warehouse.stockitems WHERE customfields::json->>'CountryOfManufacture' = 'Japan'",
+    "tables": [
+      "warehouse.stockitems"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 113,
+    "category": "join",
+    "question": "How many customers are in each customer category? Show the category name and the number of customers, and leave out categories with no customers.",
+    "SQL": "SELECT cc.customercategoryname, COUNT(*) AS customers FROM sales.customers c JOIN sales.customercategories cc ON cc.customercategoryid = c.customercategoryid GROUP BY cc.customercategoryname ORDER BY customers DESC, cc.customercategoryname",
+    "tables": [
+      "sales.customers",
+      "sales.customercategories"
+    ],
+    "gold_rows": 5
+  },
+  {
+    "question_id": 114,
+    "category": "join",
+    "question": "Which products are in the USB Novelties group? Just give me the product names.",
+    "SQL": "SELECT si.stockitemname FROM warehouse.stockitems si JOIN warehouse.stockitemstockgroups sg ON sg.stockitemid = si.stockitemid JOIN warehouse.stockgroups g ON g.stockgroupid = sg.stockgroupid WHERE g.stockgroupname = 'USB Novelties' ORDER BY si.stockitemname",
+    "tables": [
+      "warehouse.stockitems",
+      "warehouse.stockitemstockgroups",
+      "warehouse.stockgroups"
+    ],
+    "gold_rows": 14
+  },
+  {
+    "question_id": 115,
+    "category": "join",
+    "question": "For each supplier we carry products from, show the supplier name and how many products we carry from them.",
+    "SQL": "SELECT s.suppliername, COUNT(*) AS products FROM warehouse.stockitems si JOIN purchasing.suppliers s ON s.supplierid = si.supplierid GROUP BY s.suppliername ORDER BY products DESC, s.suppliername",
+    "tables": [
+      "warehouse.stockitems",
+      "purchasing.suppliers"
+    ],
+    "gold_rows": 7
+  },
+  {
+    "question_id": 116,
+    "category": "join",
+    "question": "Who is the main contact at each supplier? Show the supplier name, the contact's full name and the contact's email address.",
+    "SQL": "SELECT s.suppliername, p.fullname, p.emailaddress FROM purchasing.suppliers s JOIN application.people p ON p.personid = s.primarycontactpersonid ORDER BY s.suppliername",
+    "tables": [
+      "purchasing.suppliers",
+      "application.people"
+    ],
+    "gold_rows": 13
+  },
+  {
+    "question_id": 117,
+    "category": "join",
+    "question": "How many customers do we deliver to in each sales territory? Show the territory and the number of customers.",
+    "SQL": "SELECT sp.salesterritory, COUNT(*) AS customers FROM sales.customers c JOIN application.cities ci ON ci.cityid = c.deliverycityid JOIN application.stateprovinces sp ON sp.stateprovinceid = ci.stateprovinceid GROUP BY sp.salesterritory ORDER BY customers DESC, sp.salesterritory",
+    "tables": [
+      "sales.customers",
+      "application.cities",
+      "application.stateprovinces"
+    ],
+    "gold_rows": 9
+  },
+  {
+    "question_id": 118,
+    "category": "join",
+    "question": "What is our stock on hand worth for each product color, valued at last cost price? Show the color name and the value, and leave out products with no color.",
+    "SQL": "SELECT c.colorname, SUM(h.quantityonhand * h.lastcostprice) AS stock_value FROM warehouse.stockitemholdings h JOIN warehouse.stockitems si ON si.stockitemid = h.stockitemid JOIN warehouse.colors c ON c.colorid = si.colorid GROUP BY c.colorname ORDER BY stock_value DESC, c.colorname",
+    "tables": [
+      "warehouse.stockitemholdings",
+      "warehouse.stockitems",
+      "warehouse.colors"
+    ],
+    "gold_rows": 7
+  },
+  {
+    "question_id": 119,
+    "category": "join",
+    "question": "Which purchase orders are still open? Show the purchase order number, the supplier name and the expected delivery date.",
+    "SQL": "SELECT po.purchaseorderid, s.suppliername, po.expecteddeliverydate FROM purchasing.purchaseorders po JOIN purchasing.suppliers s ON s.supplierid = po.supplierid WHERE NOT po.isorderfinalized ORDER BY po.purchaseorderid",
+    "tables": [
+      "purchasing.purchaseorders",
+      "purchasing.suppliers"
+    ],
+    "gold_rows": 2
+  },
+  {
+    "question_id": 120,
+    "category": "join",
+    "question": "How many invoices went to customers in each buying group? Show the buying group name and the number of invoices, and leave out customers who are not in a group.",
+    "SQL": "SELECT bg.buyinggroupname, COUNT(*) AS invoices FROM sales.invoices i JOIN sales.customers c ON c.customerid = i.customerid JOIN sales.buyinggroups bg ON bg.buyinggroupid = c.buyinggroupid GROUP BY bg.buyinggroupname ORDER BY invoices DESC, bg.buyinggroupname",
+    "tables": [
+      "sales.invoices",
+      "sales.customers",
+      "sales.buyinggroups"
+    ],
+    "gold_rows": 2
+  },
+  {
+    "question_id": 121,
+    "category": "join",
+    "question": "How many units moved through the warehouse under each type of stock movement? Show the movement type name and the total quantity, with the sign as recorded.",
+    "SQL": "SELECT tt.transactiontypename, SUM(t.quantity) AS total_quantity FROM warehouse.stockitemtransactions t JOIN application.transactiontypes tt ON tt.transactiontypeid = t.transactiontypeid GROUP BY tt.transactiontypename ORDER BY tt.transactiontypename",
+    "tables": [
+      "warehouse.stockitemtransactions",
+      "application.transactiontypes"
+    ],
+    "gold_rows": 3
+  },
+  {
+    "question_id": 122,
+    "category": "join",
+    "question": "How much have we paid each supplier in total? Show the supplier name and the amount paid as a positive number, for suppliers we have paid.",
+    "SQL": "SELECT s.suppliername, -SUM(st.transactionamount) AS amount_paid FROM purchasing.suppliertransactions st JOIN application.transactiontypes tt ON tt.transactiontypeid = st.transactiontypeid JOIN purchasing.suppliers s ON s.supplierid = st.supplierid WHERE tt.transactiontypename = 'Supplier Payment Issued' GROUP BY s.suppliername ORDER BY amount_paid DESC, s.suppliername",
+    "tables": [
+      "purchasing.suppliertransactions",
+      "application.transactiontypes",
+      "purchasing.suppliers"
+    ],
+    "gold_rows": 7
+  },
+  {
+    "question_id": 123,
+    "category": "lookup",
+    "question": "How many customers do we have?",
+    "SQL": "SELECT COUNT(*) AS customers FROM sales.customers",
+    "tables": [
+      "sales.customers"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 124,
+    "category": "lookup",
+    "question": "How many countries are in Europe?",
+    "SQL": "SELECT COUNT(*) AS countries FROM application.countries WHERE continent = 'Europe'",
+    "tables": [
+      "application.countries"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 125,
+    "category": "lookup",
+    "question": "What are the phone number and website of our supplier Contoso?",
+    "SQL": "SELECT phonenumber, websiteurl FROM purchasing.suppliers WHERE suppliername = 'Contoso, Ltd.'",
+    "tables": [
+      "purchasing.suppliers"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 126,
+    "category": "lookup",
+    "question": "What is the recommended retail price of the USB rocket launcher (Gray)?",
+    "SQL": "SELECT recommendedretailprice FROM warehouse.stockitems WHERE stockitemname = 'USB rocket launcher (Gray)'",
+    "tables": [
+      "warehouse.stockitems"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 127,
+    "category": "lookup",
+    "question": "How many temperature readings above 4.5 degrees has our refrigerated delivery vehicle logged?",
+    "SQL": "SELECT COUNT(*) AS readings FROM warehouse.vehicletemperatures WHERE temperature > 4.5",
+    "tables": [
+      "warehouse.vehicletemperatures"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 128,
+    "category": "lookup",
+    "question": "How many order lines are still waiting to be picked?",
+    "SQL": "SELECT COUNT(*) AS unpicked_lines FROM sales.orderlines WHERE pickingcompletedwhen IS NULL",
+    "tables": [
+      "sales.orderlines"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 129,
+    "category": "lookup",
+    "question": "How many products have a lead time longer than 14 days?",
+    "SQL": "SELECT COUNT(*) AS products FROM warehouse.stockitems WHERE leadtimedays > 14",
+    "tables": [
+      "warehouse.stockitems"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 130,
+    "category": "lookup",
+    "question": "What is the highest credit limit we have given any customer?",
+    "SQL": "SELECT MAX(creditlimit) AS highest_credit_limit FROM sales.customers",
+    "tables": [
+      "sales.customers"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 131,
+    "category": "time",
+    "question": "What was our gross margin in dollars in each calendar year, going by invoice date? Show the year and the margin.",
+    "SQL": "SELECT EXTRACT(YEAR FROM i.invoicedate)::int AS year, SUM(l.lineprofit) AS gross_margin FROM sales.invoices i JOIN sales.invoicelines l ON l.invoiceid = i.invoiceid GROUP BY 1 ORDER BY 1",
+    "tables": [
+      "sales.invoices",
+      "sales.invoicelines"
+    ],
+    "gold_rows": 4
+  },
+  {
+    "question_id": 132,
+    "category": "time",
+    "question": "How many orders did we take in each month of 2015? Show the month number and the number of orders.",
+    "SQL": "SELECT EXTRACT(MONTH FROM orderdate)::int AS month, COUNT(*) AS orders FROM sales.orders WHERE orderdate >= DATE '2015-01-01' AND orderdate < DATE '2016-01-01' GROUP BY 1 ORDER BY 1",
+    "tables": [
+      "sales.orders"
+    ],
+    "gold_rows": 12
+  },
+  {
+    "question_id": 133,
+    "category": "time",
+    "question": "By what percentage did invoiced revenue before tax grow from 2014 to 2015, going by invoice date? Round to one decimal place.",
+    "SQL": "WITH y AS (SELECT SUM(l.extendedprice - l.taxamount) FILTER (WHERE EXTRACT(YEAR FROM i.invoicedate) = 2014) AS r14, SUM(l.extendedprice - l.taxamount) FILTER (WHERE EXTRACT(YEAR FROM i.invoicedate) = 2015) AS r15 FROM sales.invoices i JOIN sales.invoicelines l ON l.invoiceid = i.invoiceid) SELECT ROUND((r15 - r14) * 100.0 / r14, 1) AS growth_pct FROM y",
+    "tables": [
+      "sales.invoices",
+      "sales.invoicelines"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 134,
+    "category": "time",
+    "question": "How much money did we receive in customer payments between January 1 and March 31, 2016?",
+    "SQL": "SELECT -SUM(ct.transactionamount) AS payments_received FROM sales.customertransactions ct JOIN application.transactiontypes tt ON tt.transactiontypeid = ct.transactiontypeid WHERE tt.transactiontypename = 'Customer Payment Received' AND ct.transactiondate BETWEEN DATE '2016-01-01' AND DATE '2016-03-31'",
+    "tables": [
+      "sales.customertransactions",
+      "application.transactiontypes"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 135,
+    "category": "time",
+    "question": "How many cold room temperature readings went above 4.5 degrees in February 2016?",
+    "SQL": "SELECT COUNT(*) AS readings FROM warehouse.coldroomtemperatures_archive WHERE temperature > 4.5 AND recordedwhen >= TIMESTAMP '2016-02-01' AND recordedwhen < TIMESTAMP '2016-03-01'",
+    "tables": [
+      "warehouse.coldroomtemperatures_archive"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 136,
+    "category": "ranking",
+    "question": "Who were our top 5 customers by invoiced revenue before tax in 2015? Count each store on its own, not rolled up to its head office. Show the customer name and the revenue.",
+    "SQL": "SELECT c.customername, SUM(l.extendedprice - l.taxamount) AS revenue FROM sales.invoices i JOIN sales.invoicelines l ON l.invoiceid = i.invoiceid JOIN sales.customers c ON c.customerid = i.customerid WHERE i.invoicedate >= DATE '2015-01-01' AND i.invoicedate < DATE '2016-01-01' GROUP BY c.customername ORDER BY revenue DESC, c.customername LIMIT 5",
+    "tables": [
+      "sales.invoices",
+      "sales.invoicelines",
+      "sales.customers"
+    ],
+    "gold_rows": 5
+  },
+  {
+    "question_id": 137,
+    "category": "ranking",
+    "question": "Which sales rep brought in the most invoiced sales including tax in 2015? Show their full name and the amount.",
+    "SQL": "SELECT p.fullname, SUM(l.extendedprice) AS sales_including_tax FROM sales.invoices i JOIN sales.invoicelines l ON l.invoiceid = i.invoiceid JOIN application.people p ON p.personid = i.salespersonpersonid WHERE i.invoicedate >= DATE '2015-01-01' AND i.invoicedate < DATE '2016-01-01' GROUP BY p.fullname ORDER BY sales_including_tax DESC, p.fullname LIMIT 1",
+    "tables": [
+      "sales.invoices",
+      "sales.invoicelines",
+      "application.people"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 138,
+    "category": "ranking",
+    "question": "What are our top 10 products by units invoiced, all time? Show the product name and the units invoiced.",
+    "SQL": "SELECT si.stockitemname, SUM(l.quantity) AS units_invoiced FROM sales.invoicelines l JOIN warehouse.stockitems si ON si.stockitemid = l.stockitemid GROUP BY si.stockitemname ORDER BY units_invoiced DESC, si.stockitemname LIMIT 10",
+    "tables": [
+      "sales.invoicelines",
+      "warehouse.stockitems"
+    ],
+    "gold_rows": 10
+  },
+  {
+    "question_id": 139,
+    "category": "ranking",
+    "question": "What share of our invoiced revenue before tax comes from refrigerated products? Give it as a percentage rounded to two decimal places.",
+    "SQL": "SELECT ROUND(SUM(l.extendedprice - l.taxamount) FILTER (WHERE si.ischillerstock) * 100.0 / SUM(l.extendedprice - l.taxamount), 2) AS refrigerated_share_pct FROM sales.invoicelines l JOIN warehouse.stockitems si ON si.stockitemid = l.stockitemid",
+    "tables": [
+      "sales.invoicelines",
+      "warehouse.stockitems"
+    ],
+    "gold_rows": 1
+  },
+  {
+    "question_id": 140,
+    "category": "ranking",
+    "question": "Which employee has picked the most orders? Show their full name and the number of orders picked.",
+    "SQL": "SELECT p.fullname, COUNT(*) AS orders_picked FROM sales.orders o JOIN application.people p ON p.personid = o.pickedbypersonid GROUP BY p.fullname ORDER BY orders_picked DESC, p.fullname LIMIT 1",
+    "tables": [
+      "sales.orders",
+      "application.people"
+    ],
+    "gold_rows": 1
+  }
+]

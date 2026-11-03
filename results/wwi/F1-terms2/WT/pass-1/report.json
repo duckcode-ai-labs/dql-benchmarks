@@ -1,0 +1,5157 @@
+{
+  "identity": {
+    "benchmark": "wwi",
+    "condition": "WT",
+    "repoCommit": "51d5fcfba458a80ea6a22a09a0cd4df755291d45",
+    "repoDirty": true,
+    "contentFingerprint": "ab1c56f5999eaede",
+    "dql": {
+      "version": "zlens 0.2.11",
+      "source": "env",
+      "commit": "4082d69d925e79a1dba6e57affb2177f2a765050",
+      "dirty": true
+    },
+    "provider": "claude-code",
+    "model": "claude-sonnet-5-5",
+    "cassetteMode": "record",
+    "dataHash": "a7f95e358a4dba79cc168f933c9081f971f2968b",
+    "tools": {
+      "claudeCli": "2.1.285 (Claude Code)"
+    },
+    "node": "v22.18.0",
+    "createdAt": "2026-11-03T03:21:36.393Z",
+    "publishable": false,
+    "notPublishableBecause": [
+      "benchmark repo has uncommitted changes",
+      "DQL came from the DQL_CLI override, not a release",
+      "the DQL build has uncommitted changes"
+    ]
+  },
+  "outages": [],
+  "ok": false,
+  "passed": 38,
+  "total": 40,
+  "thresholds": {
+    "minToolRequirement": null,
+    "minExecutionMatch": null,
+    "minJudgePass": null,
+    "maxWrongCertified": null,
+    "maxFalseRefusal": null,
+    "minRefusalRecall": null,
+    "maxProviderDispatches": null,
+    "maxLatencyP95Ms": null,
+    "minGroundedNarration": null
+  },
+  "metrics": {
+    "certified_hit_rate": null,
+    "judge_mean_score": null,
+    "judge_pass_rate": null,
+    "generated_followup_pass_rate": null,
+    "safe_refusal_rate": null,
+    "execution_match_rate": null,
+    "tool_requirement_pass_rate": null,
+    "wrong_certified_count": 0,
+    "outside_context_rejection_count": 0,
+    "false_refusal_rate": 0.05,
+    "false_refusal_count": 2,
+    "runtime_error_count": 0,
+    "answerable_case_count": 40,
+    "clarification_rate": 0,
+    "meaning_resolved_rate": 0,
+    "latency_p50_ms": 18981,
+    "latency_p95_ms": 30192,
+    "latency_p95_answerable_ms": 30192,
+    "grounded_narration_rate": null,
+    "grounded_narration_attempted": 0,
+    "refusal_recall": null,
+    "refusal_required_case_count": 0,
+    "draft_saved_count": 0,
+    "tool_observed_case_count": 38,
+    "avg_tool_calls": 0.97,
+    "avg_provider_dispatches": 2.08,
+    "max_provider_dispatches": 3,
+    "avg_context_objects": 0,
+    "avg_execution_ms": null
+  },
+  "cassetteEvidence": {
+    "totalEntries": 83,
+    "recordedProviderEntries": 83,
+    "migratedLegacyDeterministicFixtureEntries": 0,
+    "syntheticDeterministicOrchestrationFixtureEntries": 0,
+    "unknownProvenanceEntries": 0,
+    "orchestrationReplayEligible": true,
+    "realProviderQualityEligible": true,
+    "realProviderQualityExclusionReasons": [],
+    "mode": "record"
+  },
+  "results": [
+    {
+      "name": "q101",
+      "passed": true,
+      "failures": [],
+      "durationMs": 18922,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:0e409654c873a0534693e698902647cd7009e290ad2ac749cfa0d2a49cf5f134"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 2 ms"
+        ],
+        "sql": "SELECT COUNT(*) AS sales_rep_count\nFROM wideworldimporters.application.people\nWHERE issalesperson = true\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:0e409654c873a0534693e698902647cd7009e290ad2ac749cfa0d2a49cf5f134"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 18922ms.",
+          "payload": {
+            "durationMs": 18922,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q102",
+      "passed": true,
+      "failures": [],
+      "durationMs": 19342,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:a7cb22f63210573bbb6a4a3ff1cbbef0114034e23f5920185028f3f522169d56"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 69 ms"
+        ],
+        "sql": "SELECT SUM(il.extendedprice - il.taxamount) AS total_invoiced_revenue_before_tax\nFROM wideworldimporters.sales.invoicelines il\nJOIN wideworldimporters.sales.invoices i ON i.invoiceid = il.invoiceid\nWHERE i.invoicedate <= CURRENT_DATE\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:a7cb22f63210573bbb6a4a3ff1cbbef0114034e23f5920185028f3f522169d56"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 19342ms.",
+          "payload": {
+            "durationMs": 19342,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q103",
+      "passed": true,
+      "failures": [],
+      "durationMs": 16652,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:667d477f73a13ac69467d6b5f5514e9777321fb94b35b43addc8be38ed29f48b"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 2 ms"
+        ],
+        "sql": "SELECT SUM(quantityonhand) AS total_quantity_on_hand FROM wideworldimporters.warehouse.stockitemholdings\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:667d477f73a13ac69467d6b5f5514e9777321fb94b35b43addc8be38ed29f48b"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 16652ms.",
+          "payload": {
+            "durationMs": 16652,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q104",
+      "passed": true,
+      "failures": [],
+      "durationMs": 17147,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:73f480bb0329fdbb839cf8968b02c60cfb4aa146462c5c56735ee5abe30a4540"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 19 ms"
+        ],
+        "sql": "SELECT SUM(lineprofit) AS total_gross_margin\nFROM wideworldimporters.sales.invoicelines\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:73f480bb0329fdbb839cf8968b02c60cfb4aa146462c5c56735ee5abe30a4540"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 17147ms.",
+          "payload": {
+            "durationMs": 17147,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q105",
+      "passed": true,
+      "failures": [],
+      "durationMs": 21524,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:ae6e81a346e94c2e422c161a761335b993c586a9b667f70f0d5f32dfb13ab140"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 32 ms"
+        ],
+        "sql": "SELECT COUNT(DISTINCT o.orderid) AS late_orders\nFROM wideworldimporters.sales.orders o\nJOIN wideworldimporters.sales.invoices i ON i.orderid = o.orderid\nWHERE i.confirmeddeliverytime IS NOT NULL\n  AND o.expecteddeliverydate IS NOT NULL\n  AND i.confirmeddeliverytime::date > o.expecteddeliverydate\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:ae6e81a346e94c2e422c161a761335b993c586a9b667f70f0d5f32dfb13ab140"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 21524ms.",
+          "payload": {
+            "durationMs": 21524,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q106",
+      "passed": true,
+      "failures": [],
+      "durationMs": 18221,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:8344412f65f785c3be02f7166bd01e6ebf84ca6b7f67e20c046b3572ee955046"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 11 ms"
+        ],
+        "sql": "SELECT SUM(outstandingbalance) AS total_accounts_receivable\nFROM wideworldimporters.sales.customertransactions\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:8344412f65f785c3be02f7166bd01e6ebf84ca6b7f67e20c046b3572ee955046"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 18221ms.",
+          "payload": {
+            "durationMs": 18221,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q107",
+      "passed": true,
+      "failures": [],
+      "durationMs": 19068,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:ca2954f88d8ae80b13329fb218d48686ed71289939ce514de6a8aaad1656eb33"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 2 ms"
+        ],
+        "sql": "SELECT SUM(outstandingbalance) AS total_owed_to_vendors\nFROM wideworldimporters.purchasing.suppliertransactions\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:ca2954f88d8ae80b13329fb218d48686ed71289939ce514de6a8aaad1656eb33"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 19068ms.",
+          "payload": {
+            "durationMs": 19068,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q108",
+      "passed": true,
+      "failures": [],
+      "durationMs": 16600,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:aba4c7e1c24b7a2b2f1531a63cb9a1307967d22be9500f169d86d1b5b325d554"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 2 ms"
+        ],
+        "sql": "SELECT COUNT(*) AS refrigerated_product_count\nFROM wideworldimporters.warehouse.stockitems\nWHERE ischillerstock = TRUE\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:aba4c7e1c24b7a2b2f1531a63cb9a1307967d22be9500f169d86d1b5b325d554"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 16600ms.",
+          "payload": {
+            "durationMs": 16600,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q109",
+      "passed": true,
+      "failures": [],
+      "durationMs": 18599,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:d3f4ad1ee05b4b89b8af6d019fabae4fa1b58eb86e62d3cb016833257fb04d8a"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 2 rows in 2 ms"
+        ],
+        "sql": "SELECT specialdealid, dealdescription, startdate, enddate\nFROM wideworldimporters.sales.specialdeals\nORDER BY startdate, specialdealid\nLIMIT 501",
+        "rowCount": 2,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 2 row(s).",
+          "payload": {
+            "rowCount": 2,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:d3f4ad1ee05b4b89b8af6d019fabae4fa1b58eb86e62d3cb016833257fb04d8a"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 18599ms.",
+          "payload": {
+            "durationMs": 18599,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q110",
+      "passed": true,
+      "failures": [],
+      "durationMs": 19387,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:131975f71f05088ed7d40ec9d57e5bdd9843e427a8d48fa953b56b6aa03f72fe"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 2 rows in 2 ms"
+        ],
+        "sql": "SELECT si.stockitemid, si.stockitemname, h.quantityonhand, h.reorderlevel\nFROM wideworldimporters.warehouse.stockitemholdings h\nJOIN wideworldimporters.warehouse.stockitems si ON si.stockitemid = h.stockitemid\nWHERE h.quantityonhand < h.reorderlevel\nORDER BY si.stockitemname\nLIMIT 501",
+        "rowCount": 2,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 2 row(s).",
+          "payload": {
+            "rowCount": 2,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:131975f71f05088ed7d40ec9d57e5bdd9843e427a8d48fa953b56b6aa03f72fe"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 19387ms.",
+          "payload": {
+            "durationMs": 19387,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q111",
+      "passed": true,
+      "failures": [],
+      "durationMs": 24165,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:96bbac551f861aeb3a2db81bf19c733453f6a71316cd0ba3bc8e7431b9276a29"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 3,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 6 ms"
+        ],
+        "sql": "SELECT COUNT(*) AS backordered_order_count\nFROM wideworldimporters.sales.orders\nWHERE isundersupplybackordered = TRUE\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 3,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:96bbac551f861aeb3a2db81bf19c733453f6a71316cd0ba3bc8e7431b9276a29"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 24165ms.",
+          "payload": {
+            "durationMs": 24165,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q112",
+      "passed": true,
+      "failures": [],
+      "durationMs": 20128,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:c09fd60311fe2a2685c961c2ffa04edcf7ebc737d7158090bc2f6d891e01c431"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 2 ms"
+        ],
+        "sql": "SELECT COUNT(DISTINCT stockitemid) AS product_count\nFROM wideworldimporters.warehouse.stockitems\nWHERE customfields ILIKE '%CountryOfManufacture%Japan%'\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:c09fd60311fe2a2685c961c2ffa04edcf7ebc737d7158090bc2f6d891e01c431"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 20128ms.",
+          "payload": {
+            "durationMs": 20128,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q113",
+      "passed": true,
+      "failures": [],
+      "durationMs": 19068,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:7bbc7b1499df397cf3ca4b76b6120de395753150c031308ae07f9c89abb8cae4"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 5 rows in 2 ms"
+        ],
+        "sql": "SELECT cc.customercategoryid, cc.customercategoryname, COUNT(c.customerid) AS customer_count\nFROM wideworldimporters.sales.customercategories cc\nJOIN wideworldimporters.sales.customers c ON c.customercategoryid = cc.customercategoryid\nGROUP BY cc.customercategoryid, cc.customercategoryname\nHAVING COUNT(c.customerid) > 0\nORDER BY customer_count DESC, cc.customercategoryname\nLIMIT 501",
+        "rowCount": 5,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 5 row(s).",
+          "payload": {
+            "rowCount": 5,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:7bbc7b1499df397cf3ca4b76b6120de395753150c031308ae07f9c89abb8cae4"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 19068ms.",
+          "payload": {
+            "durationMs": 19068,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q114",
+      "passed": true,
+      "failures": [],
+      "durationMs": 20988,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:6da4aacd60433025fc46b2b6673f51237cbb6f408c738aa85f7c774bbbebc90f"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 14 rows in 2 ms"
+        ],
+        "sql": "SELECT si.stockitemname\nFROM wideworldimporters.warehouse.stockitems si\nJOIN wideworldimporters.warehouse.stockitemstockgroups sisg ON sisg.stockitemid = si.stockitemid\nJOIN wideworldimporters.warehouse.stockgroups sg ON sg.stockgroupid = sisg.stockgroupid\nWHERE LOWER(sg.stockgroupname) = 'usb novelties'\nORDER BY si.stockitemname\nLIMIT 501",
+        "rowCount": 14,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 14 row(s).",
+          "payload": {
+            "rowCount": 14,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:6da4aacd60433025fc46b2b6673f51237cbb6f408c738aa85f7c774bbbebc90f"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 20988ms.",
+          "payload": {
+            "durationMs": 20988,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q115",
+      "passed": true,
+      "failures": [],
+      "durationMs": 18117,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:494225aaec59098e55cac2f407fed53e20612c852cc7cf9e5cb4c7ea9911b3f7"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 7 rows in 1 ms"
+        ],
+        "sql": "SELECT s.supplierid, s.suppliername, COUNT(si.stockitemid) AS product_count\nFROM wideworldimporters.purchasing.suppliers s\nJOIN wideworldimporters.warehouse.stockitems si ON si.supplierid = s.supplierid\nGROUP BY s.supplierid, s.suppliername\nORDER BY product_count DESC, s.suppliername\nLIMIT 501",
+        "rowCount": 7,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 7 row(s).",
+          "payload": {
+            "rowCount": 7,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:494225aaec59098e55cac2f407fed53e20612c852cc7cf9e5cb4c7ea9911b3f7"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 18117ms.",
+          "payload": {
+            "durationMs": 18117,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q116",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options (request-policy)"
+      ],
+      "durationMs": 367,
+      "kind": "no_answer",
+      "route": "blocked",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:ede37b0179266d0f2e665410757b46428ed01e4e6c6987c95eeebaaca9128581"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 0,
+      "providerDispatchCount": 0,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 0,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "passed",
+          "message": "Persisted route evidence recorded an unspecified number of retrieved candidate(s).",
+          "payload": {
+            "evidenceSource": "persisted_agent_run",
+            "sourceCoverage": [],
+            "terminalOutcome": {
+              "kind": "policy_blocked",
+              "code": "ANALYTICAL_POLICY_BLOCKED",
+              "message": "ZLens cannot retrieve or disclose direct payment, health, contact, or protected-attribute data about an individual.",
+              "candidateIds": []
+            }
+          }
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route blocked evaluated as blocked.",
+          "payload": {
+            "engineRoute": "blocked",
+            "evalRoute": "blocked",
+            "status": "blocked",
+            "trustState": "blocked",
+            "terminalOutcome": {
+              "kind": "policy_blocked",
+              "code": "ANALYTICAL_POLICY_BLOCKED",
+              "message": "ZLens cannot retrieve or disclose direct payment, health, contact, or protected-attribute data about an individual.",
+              "candidateIds": []
+            }
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "not_run",
+          "message": "No provider tool calls were observed for this answer.",
+          "payload": {
+            "observedToolCalls": 0,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none",
+            "refusalCode": "request-policy"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options (request-policy)"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:ede37b0179266d0f2e665410757b46428ed01e4e6c6987c95eeebaaca9128581"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 367ms.",
+          "payload": {
+            "durationMs": 367,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q117",
+      "passed": true,
+      "failures": [],
+      "durationMs": 18569,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:23af79770ff76da324b180038d302000db57b26c46a378f81cfd462194be4a1a"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 9 rows in 5 ms"
+        ],
+        "sql": "SELECT sp.salesterritory, COUNT(DISTINCT c.customerid) AS customer_count\nFROM wideworldimporters.sales.customers c\nJOIN wideworldimporters.application.cities ci ON ci.cityid = c.deliverycityid\nJOIN wideworldimporters.application.stateprovinces sp ON sp.stateprovinceid = ci.stateprovinceid\nGROUP BY sp.salesterritory\nORDER BY customer_count DESC\nLIMIT 501",
+        "rowCount": 9,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 9 row(s).",
+          "payload": {
+            "rowCount": 9,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:23af79770ff76da324b180038d302000db57b26c46a378f81cfd462194be4a1a"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 18569ms.",
+          "payload": {
+            "durationMs": 18569,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q118",
+      "passed": true,
+      "failures": [],
+      "durationMs": 19221,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:2f8edfdfc27d7a41f31866b2ecd29221e4b3e17a70ec1cc0df958faeeb65b06a"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 7 rows in 1 ms"
+        ],
+        "sql": "SELECT c.colorid, c.colorname, SUM(h.quantityonhand * h.lastcostprice) AS stock_value\nFROM wideworldimporters.warehouse.stockitemholdings h\nJOIN wideworldimporters.warehouse.stockitems s ON s.stockitemid = h.stockitemid\nJOIN wideworldimporters.warehouse.colors c ON c.colorid = s.colorid\nGROUP BY c.colorid, c.colorname\nORDER BY stock_value DESC\nLIMIT 501",
+        "rowCount": 7,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 7 row(s).",
+          "payload": {
+            "rowCount": 7,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:2f8edfdfc27d7a41f31866b2ecd29221e4b3e17a70ec1cc0df958faeeb65b06a"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 19221ms.",
+          "payload": {
+            "durationMs": 19221,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q119",
+      "passed": true,
+      "failures": [],
+      "durationMs": 18370,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:58b9da52c1db30d4ea8c80828521cb113e0df5cf3da7dc592338a4e84f12e5b0"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 2 rows in 2 ms"
+        ],
+        "sql": "SELECT po.purchaseorderid, s.suppliername, po.expecteddeliverydate\nFROM wideworldimporters.purchasing.purchaseorders po\nJOIN wideworldimporters.purchasing.suppliers s ON s.supplierid = po.supplierid\nWHERE po.isorderfinalized = FALSE\nORDER BY po.expecteddeliverydate, po.purchaseorderid\nLIMIT 501",
+        "rowCount": 2,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 2 row(s).",
+          "payload": {
+            "rowCount": 2,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:58b9da52c1db30d4ea8c80828521cb113e0df5cf3da7dc592338a4e84f12e5b0"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 18370ms.",
+          "payload": {
+            "durationMs": 18370,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q120",
+      "passed": true,
+      "failures": [],
+      "durationMs": 19750,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:f92a701477a7fc95de1630c0d1db85f56a736c85b7b3cb328f232b02d06fc324"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 2 rows in 18 ms"
+        ],
+        "sql": "SELECT bg.buyinggroupid, bg.buyinggroupname, COUNT(i.invoiceid) AS invoice_count\nFROM wideworldimporters.sales.invoices i\nJOIN wideworldimporters.sales.customers c ON c.customerid = i.customerid\nJOIN wideworldimporters.sales.buyinggroups bg ON bg.buyinggroupid = c.buyinggroupid\nWHERE c.buyinggroupid IS NOT NULL\nGROUP BY bg.buyinggroupid, bg.buyinggroupname\nORDER BY invoice_count DESC\nLIMIT 501",
+        "rowCount": 2,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 2 row(s).",
+          "payload": {
+            "rowCount": 2,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:f92a701477a7fc95de1630c0d1db85f56a736c85b7b3cb328f232b02d06fc324"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 19750ms.",
+          "payload": {
+            "durationMs": 19750,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q121",
+      "passed": true,
+      "failures": [],
+      "durationMs": 18981,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:26961be2f0b8909d4779791e2abe1168942ab70166816f4c2157ddde3d3caa49"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 3 rows in 41 ms"
+        ],
+        "sql": "SELECT tt.transactiontypeid, tt.transactiontypename, SUM(sit.quantity) AS total_quantity\nFROM wideworldimporters.warehouse.stockitemtransactions sit\nJOIN wideworldimporters.application.transactiontypes tt ON tt.transactiontypeid = sit.transactiontypeid\nGROUP BY tt.transactiontypeid, tt.transactiontypename\nORDER BY tt.transactiontypename\nLIMIT 501",
+        "rowCount": 3,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 3 row(s).",
+          "payload": {
+            "rowCount": 3,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:26961be2f0b8909d4779791e2abe1168942ab70166816f4c2157ddde3d3caa49"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 18981ms.",
+          "payload": {
+            "durationMs": 18981,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q122",
+      "passed": true,
+      "failures": [],
+      "durationMs": 23393,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:315f3b97a89d26c04184a8113fb656431eaba7e0a638afd36ce03d3f88e4fa25"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 7 rows in 2 ms"
+        ],
+        "sql": "SELECT s.supplierid, s.suppliername, -SUM(t.transactionamount) AS amount_paid\nFROM wideworldimporters.purchasing.suppliertransactions t\nJOIN wideworldimporters.purchasing.suppliers s ON s.supplierid = t.supplierid\nWHERE t.transactiontypeid = 7\nGROUP BY s.supplierid, s.suppliername\nHAVING -SUM(t.transactionamount) > 0\nORDER BY amount_paid DESC\nLIMIT 501",
+        "rowCount": 7,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 7 row(s).",
+          "payload": {
+            "rowCount": 7,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:315f3b97a89d26c04184a8113fb656431eaba7e0a638afd36ce03d3f88e4fa25"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 23393ms.",
+          "payload": {
+            "durationMs": 23393,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q123",
+      "passed": true,
+      "failures": [],
+      "durationMs": 17604,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:4c90c6c1cce5dc54103320c0b04072417cd721cb59609903544f83656bce6afd"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 2 ms"
+        ],
+        "sql": "SELECT COUNT(DISTINCT customerid) AS customer_count FROM wideworldimporters.sales.customers\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:4c90c6c1cce5dc54103320c0b04072417cd721cb59609903544f83656bce6afd"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 17604ms.",
+          "payload": {
+            "durationMs": 17604,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q124",
+      "passed": true,
+      "failures": [],
+      "durationMs": 23894,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:694adfda72eddfd1e91e4997611d4d9a8285cde9fd3dc8dd3cf1313450a0e848"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 3,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 1 ms"
+        ],
+        "sql": "SELECT COUNT(*) AS country_count FROM wideworldimporters.application.countries WHERE continent ILIKE 'Europe'\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 3,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:694adfda72eddfd1e91e4997611d4d9a8285cde9fd3dc8dd3cf1313450a0e848"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 23894ms.",
+          "payload": {
+            "durationMs": 23894,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q125",
+      "passed": false,
+      "failures": [
+        "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options (request-policy)"
+      ],
+      "durationMs": 247,
+      "kind": "no_answer",
+      "route": "blocked",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:c2ca16fab807ff9c2d0792cc6586fd7b911032381d9e96c432b07c7e33094281"
+      },
+      "reviewStatus": "none",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 0,
+      "providerDispatchCount": 0,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "blocked",
+        "egress": {
+          "receipts": 0,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "passed",
+          "message": "Persisted route evidence recorded an unspecified number of retrieved candidate(s).",
+          "payload": {
+            "evidenceSource": "persisted_agent_run",
+            "sourceCoverage": [],
+            "terminalOutcome": {
+              "kind": "policy_blocked",
+              "code": "ANALYTICAL_POLICY_BLOCKED",
+              "message": "ZLens cannot retrieve or disclose direct payment, health, contact, or protected-attribute data about an individual.",
+              "candidateIds": []
+            }
+          }
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route blocked evaluated as blocked.",
+          "payload": {
+            "engineRoute": "blocked",
+            "evalRoute": "blocked",
+            "status": "blocked",
+            "trustState": "blocked",
+            "terminalOutcome": {
+              "kind": "policy_blocked",
+              "code": "ANALYTICAL_POLICY_BLOCKED",
+              "message": "ZLens cannot retrieve or disclose direct payment, health, contact, or protected-attribute data about an individual.",
+              "candidateIds": []
+            }
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "not_run",
+          "message": "No provider tool calls were observed for this answer.",
+          "payload": {
+            "observedToolCalls": 0,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "failed",
+          "message": "Answer kind no_answer.",
+          "payload": {
+            "kind": "no_answer",
+            "certification": "analyst_review_required",
+            "reviewStatus": "none",
+            "refusalCode": "request-policy"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": [
+              "FALSE REFUSAL: this question is answerable, but the run dead-ended with no answer and no options (request-policy)"
+            ]
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "not_run",
+          "message": "No SQL/block execution result was captured.",
+          "payload": {
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:c2ca16fab807ff9c2d0792cc6586fd7b911032381d9e96c432b07c7e33094281"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "failed",
+          "message": "Case failed 1 check(s) in 247ms.",
+          "payload": {
+            "durationMs": 247,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q126",
+      "passed": true,
+      "failures": [],
+      "durationMs": 23073,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:6ffa3f6d8853caeaf8def8944ef020bf3165e7a9181142bff459751cb519e272"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 3,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 1 ms"
+        ],
+        "sql": "SELECT stockitemid, stockitemname, recommendedretailprice\nFROM wideworldimporters.warehouse.stockitems\nWHERE stockitemname ILIKE '%USB rocket launcher%(Gray)%'\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 3,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:6ffa3f6d8853caeaf8def8944ef020bf3165e7a9181142bff459751cb519e272"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 23073ms.",
+          "payload": {
+            "durationMs": 23073,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q127",
+      "passed": true,
+      "failures": [],
+      "durationMs": 17417,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:00ffa798cb78a614dbba4844720902b1f040fcb8b3636f70b447f2189b0b8654"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 12 ms"
+        ],
+        "sql": "SELECT COUNT(*) AS readings_above_threshold\nFROM wideworldimporters.warehouse.vehicletemperatures\nWHERE temperature > 4.5\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:00ffa798cb78a614dbba4844720902b1f040fcb8b3636f70b447f2189b0b8654"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 17417ms.",
+          "payload": {
+            "durationMs": 17417,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q128",
+      "passed": true,
+      "failures": [],
+      "durationMs": 17401,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:e0aec6bcedfac323a113d12d70ee527bd066ca63c40350fa3667284ead30a8b0"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 2 ms"
+        ],
+        "sql": "SELECT COUNT(*) AS order_lines_waiting_to_be_picked\nFROM wideworldimporters.sales.orderlines\nWHERE pickingcompletedwhen IS NULL\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:e0aec6bcedfac323a113d12d70ee527bd066ca63c40350fa3667284ead30a8b0"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 17401ms.",
+          "payload": {
+            "durationMs": 17401,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q129",
+      "passed": true,
+      "failures": [],
+      "durationMs": 18123,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:97653a6c6850d59ba5246eee0834fc88010a45eaa710bdafe6cd2c678c96fd2f"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 1 ms"
+        ],
+        "sql": "SELECT COUNT(*) AS product_count\nFROM wideworldimporters.warehouse.stockitems\nWHERE leadtimedays > 14\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:97653a6c6850d59ba5246eee0834fc88010a45eaa710bdafe6cd2c678c96fd2f"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 18123ms.",
+          "payload": {
+            "durationMs": 18123,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q130",
+      "passed": true,
+      "failures": [],
+      "durationMs": 17185,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:0125d4caa372f0d5b872a21ba8eb964eec40a2de74d03f2e4474b1eac6ccaa17"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 9 ms"
+        ],
+        "sql": "SELECT MAX(creditlimit) AS highest_credit_limit\nFROM wideworldimporters.sales.customers\nWHERE creditlimit IS NOT NULL\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:0125d4caa372f0d5b872a21ba8eb964eec40a2de74d03f2e4474b1eac6ccaa17"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 17185ms.",
+          "payload": {
+            "durationMs": 17185,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q131",
+      "passed": true,
+      "failures": [],
+      "durationMs": 19363,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:e1375bbaa93e0d0997c9f2246e77db0e11804d9c7f68cab7aebc3c802b785881"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 4 rows in 71 ms"
+        ],
+        "sql": "SELECT EXTRACT(YEAR FROM i.invoicedate)::int AS year, SUM(il.lineprofit) AS gross_margin\nFROM wideworldimporters.sales.invoicelines il\nJOIN wideworldimporters.sales.invoices i ON i.invoiceid = il.invoiceid\nGROUP BY EXTRACT(YEAR FROM i.invoicedate)\nORDER BY year\nLIMIT 501",
+        "rowCount": 4,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 4 row(s).",
+          "payload": {
+            "rowCount": 4,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:e1375bbaa93e0d0997c9f2246e77db0e11804d9c7f68cab7aebc3c802b785881"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 19363ms.",
+          "payload": {
+            "durationMs": 19363,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q132",
+      "passed": true,
+      "failures": [],
+      "durationMs": 17615,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:f5ead6cb24750dce37b42222c5874eaecd0844036090da2c18280d7ba06750a9"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 12 rows in 8 ms"
+        ],
+        "sql": "SELECT EXTRACT(MONTH FROM orderdate)::int AS month_number, COUNT(*) AS order_count\nFROM wideworldimporters.sales.orders\nWHERE orderdate >= DATE '2015-01-01' AND orderdate < DATE '2016-01-01'\nGROUP BY EXTRACT(MONTH FROM orderdate)\nORDER BY month_number\nLIMIT 501",
+        "rowCount": 12,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 12 row(s).",
+          "payload": {
+            "rowCount": 12,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:f5ead6cb24750dce37b42222c5874eaecd0844036090da2c18280d7ba06750a9"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 17615ms.",
+          "payload": {
+            "durationMs": 17615,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q133",
+      "passed": true,
+      "failures": [],
+      "durationMs": 30711,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:bad96f46bcf166c165c35e489019aa6247e2ba5e832f1a55c44e57b72c8e40ab"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 3,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 74 ms"
+        ],
+        "sql": "WITH line_totals AS (\n  SELECT invoiceid, SUM(extendedprice - taxamount) AS net_revenue\n  FROM wideworldimporters.sales.invoicelines\n  GROUP BY invoiceid\n),\ninvoice_dates AS (\n  SELECT invoiceid, invoicedate\n  FROM wideworldimporters.sales.invoices\n  WHERE invoicedate >= DATE '2014-01-01' AND invoicedate < DATE '2016-01-01'\n),\nyearly AS (\n  SELECT\n    SUM(CASE WHEN EXTRACT(YEAR FROM i.invoicedate) = 2014 THEN l.net_revenue END) AS revenue_2014,\n    SUM(CASE WHEN EXTRACT(YEAR FROM i.invoicedate) = 2015 THEN l.net_revenue END) AS revenue_2015\n  FROM invoice_dates i\n  JOIN line_totals l ON l.invoiceid = i.invoiceid\n)\nSELECT ROUND((revenue_2015 - revenue_2014) / NULLIF(revenue_2014, 0) * 100, 1) AS growth_pct\nFROM yearly\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 3,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:bad96f46bcf166c165c35e489019aa6247e2ba5e832f1a55c44e57b72c8e40ab"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 30711ms.",
+          "payload": {
+            "durationMs": 30711,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q134",
+      "passed": true,
+      "failures": [],
+      "durationMs": 34918,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:4c1e81aa7e85ceaaaa91067787912952c0469cee75436627422f2130f7a7d62f"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 3,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 3 ms"
+        ],
+        "sql": "SELECT -SUM(transactionamount) AS total_payments_received\nFROM wideworldimporters.sales.customertransactions\nWHERE paymentmethodid IS NOT NULL\n  AND transactiondate >= DATE '2016-01-01'\n  AND transactiondate <= DATE '2016-03-31'\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 3,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:4c1e81aa7e85ceaaaa91067787912952c0469cee75436627422f2130f7a7d62f"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 34918ms.",
+          "payload": {
+            "durationMs": 34918,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q135",
+      "passed": true,
+      "failures": [],
+      "durationMs": 29526,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:388c61508d2602ce394994e9c41fb6d7c00b6fbcca0e9ea60d83e4beb87a5728"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 2,
+      "providerDispatchCount": 3,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 2 ms"
+        ],
+        "sql": "SELECT COUNT(*) AS readings_above_threshold\nFROM wideworldimporters.warehouse.coldroomtemperatures\nWHERE temperature > 4.5\n  AND EXTRACT(YEAR FROM recordedwhen) = 2016\n  AND EXTRACT(MONTH FROM recordedwhen) = 2\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 3,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 2 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 2,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:388c61508d2602ce394994e9c41fb6d7c00b6fbcca0e9ea60d83e4beb87a5728"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 29526ms.",
+          "payload": {
+            "durationMs": 29526,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q136",
+      "passed": true,
+      "failures": [],
+      "durationMs": 21471,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:1d0a9c4066b5efeb2c42327e4dc1a3bc5688735f07b140784393ffc9239e14f1"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 5 rows in 43 ms"
+        ],
+        "sql": "SELECT c.customerid, c.customername, SUM(il.extendedprice - il.taxamount) AS revenue_before_tax\nFROM wideworldimporters.sales.invoices i\nJOIN wideworldimporters.sales.invoicelines il ON il.invoiceid = i.invoiceid\nJOIN wideworldimporters.sales.customers c ON c.customerid = i.customerid\nWHERE i.invoicedate >= DATE '2015-01-01' AND i.invoicedate < DATE '2016-01-01'\nGROUP BY c.customerid, c.customername\nORDER BY revenue_before_tax DESC\nLIMIT 5",
+        "rowCount": 5,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 5 row(s).",
+          "payload": {
+            "rowCount": 5,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:1d0a9c4066b5efeb2c42327e4dc1a3bc5688735f07b140784393ffc9239e14f1"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 21471ms.",
+          "payload": {
+            "durationMs": 21471,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q137",
+      "passed": true,
+      "failures": [],
+      "durationMs": 20552,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:55d203c8d20294fae94a0bb0011375fdd1fb70ae6866c80198497c1b42458a7f"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 39 ms"
+        ],
+        "sql": "SELECT p.personid, p.fullname, SUM(il.extendedprice) AS total_sales_including_tax\nFROM wideworldimporters.sales.invoices i\nJOIN wideworldimporters.sales.invoicelines il ON il.invoiceid = i.invoiceid\nJOIN wideworldimporters.application.people p ON p.personid = i.salespersonpersonid\nWHERE i.invoicedate >= DATE '2015-01-01' AND i.invoicedate < DATE '2016-01-01'\nGROUP BY p.personid, p.fullname\nORDER BY total_sales_including_tax DESC\nLIMIT 1",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:55d203c8d20294fae94a0bb0011375fdd1fb70ae6866c80198497c1b42458a7f"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 20552ms.",
+          "payload": {
+            "durationMs": 20552,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q138",
+      "passed": true,
+      "failures": [],
+      "durationMs": 18834,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:10afaeca539429562c16aa2f1595d26b85f4ed17d207d28121040b2259793764"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 10 rows in 38 ms"
+        ],
+        "sql": "SELECT si.stockitemid, si.stockitemname, SUM(il.quantity) AS units_invoiced\nFROM wideworldimporters.sales.invoicelines il\nJOIN wideworldimporters.warehouse.stockitems si ON si.stockitemid = il.stockitemid\nGROUP BY si.stockitemid, si.stockitemname\nORDER BY units_invoiced DESC\nLIMIT 10",
+        "rowCount": 10,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 10 row(s).",
+          "payload": {
+            "rowCount": 10,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:10afaeca539429562c16aa2f1595d26b85f4ed17d207d28121040b2259793764"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 18834ms.",
+          "payload": {
+            "durationMs": 18834,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q139",
+      "passed": true,
+      "failures": [],
+      "durationMs": 30192,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:5542b7ce0ddba1faf85984aab456d0e54dc21b5aa69f13e0b9617df316d90a62"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 3,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 46 ms"
+        ],
+        "sql": "WITH chill AS (\n  SELECT stockitemid, BOOL_OR(ischillerstock) AS ischillerstock\n  FROM wideworldimporters.warehouse.stockitems\n  GROUP BY stockitemid\n)\nSELECT ROUND(\n  100.0 * SUM(CASE WHEN c.ischillerstock THEN il.extendedprice - il.taxamount ELSE 0 END)\n  / NULLIF(SUM(il.extendedprice - il.taxamount), 0),\n  2\n) AS refrigerated_revenue_share_pct\nFROM wideworldimporters.sales.invoicelines il\nLEFT JOIN chill c ON c.stockitemid = il.stockitemid\nLIMIT 501",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 3,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:5542b7ce0ddba1faf85984aab456d0e54dc21b5aa69f13e0b9617df316d90a62"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 30192ms.",
+          "payload": {
+            "durationMs": 30192,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "q140",
+      "passed": true,
+      "failures": [],
+      "durationMs": 18421,
+      "kind": "uncertified",
+      "route": "generated_sql",
+      "clarificationOptionCount": 0,
+      "conversational": false,
+      "conversationalAnswer": false,
+      "meaningResolved": false,
+      "observability": {
+        "recordingStatus": "complete",
+        "storeSchemaVersion": 1,
+        "traceFingerprint": "sha256:e9b71d79cf3fe8d1df4c2bc8ae845e381b642b72d4de2630d8681c73616e94c7"
+      },
+      "reviewStatus": "analyst_review_required",
+      "followUp": false,
+      "draftSaved": false,
+      "toolCalls": 1,
+      "providerDispatchCount": 2,
+      "expected": {
+        "answerable": true
+      },
+      "answer": {
+        "trustState": "review_required",
+        "tier": "exploratory",
+        "proofs": [
+          "executed on the warehouse: 1 row in 10 ms"
+        ],
+        "sql": "SELECT p.personid, p.fullname, COUNT(o.orderid) AS orders_picked\nFROM wideworldimporters.sales.orders o\nJOIN wideworldimporters.application.people p ON p.personid = o.pickedbypersonid\nWHERE p.isemployee = true\nGROUP BY p.personid, p.fullname\nORDER BY orders_picked DESC\nLIMIT 1",
+        "rowCount": 1,
+        "egress": {
+          "receipts": 2,
+          "resultRows": 0
+        }
+      },
+      "trace": [
+        {
+          "stage": "context",
+          "status": "not_run",
+          "message": "No context pack was attached to the answer."
+        },
+        {
+          "stage": "rewrite",
+          "status": "not_run",
+          "message": "No follow-up rewrite/context was supplied for this case."
+        },
+        {
+          "stage": "lane",
+          "status": "passed",
+          "message": "Persisted engine route generated_answer evaluated as generated_sql.",
+          "payload": {
+            "engineRoute": "generated_answer",
+            "evalRoute": "generated_sql",
+            "status": "completed",
+            "trustState": "review_required"
+          }
+        },
+        {
+          "stage": "tools",
+          "status": "passed",
+          "message": "Observed 1 provider tool call(s).",
+          "payload": {
+            "observedToolCalls": 1,
+            "evidenceSource": "persisted_agent_run.telemetry",
+            "providerToolCalls": [],
+            "routeEvidence": []
+          }
+        },
+        {
+          "stage": "answer",
+          "status": "passed",
+          "message": "Answer kind uncertified.",
+          "payload": {
+            "kind": "uncertified",
+            "certification": "analyst_review_required",
+            "reviewStatus": "analyst_review_required"
+          }
+        },
+        {
+          "stage": "validation",
+          "status": "not_run",
+          "message": "SQL context validation was not required by this case.",
+          "payload": {
+            "failures": []
+          }
+        },
+        {
+          "stage": "execution",
+          "status": "passed",
+          "message": "Executed and returned 1 row(s).",
+          "payload": {
+            "rowCount": 1,
+            "columns": []
+          }
+        },
+        {
+          "stage": "draft",
+          "status": "not_run",
+          "message": "No generated draft was captured.",
+          "payload": {}
+        },
+        {
+          "stage": "observability",
+          "status": "passed",
+          "message": "Local Ask trace recording complete.",
+          "payload": {
+            "recordingStatus": "complete",
+            "storeSchemaVersion": 1,
+            "traceFingerprint": "sha256:e9b71d79cf3fe8d1df4c2bc8ae845e381b642b72d4de2630d8681c73616e94c7"
+          }
+        },
+        {
+          "stage": "scoring",
+          "status": "passed",
+          "message": "Case passed in 18421ms.",
+          "payload": {
+            "durationMs": 18421,
+            "expected": {
+              "answerable": true
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

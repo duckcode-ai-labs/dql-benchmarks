@@ -135,8 +135,11 @@ def extract_sql(text):
     return re.sub(r"^\*\*.*\*\*", "", answer).strip(), cut
 
 
+GOLD_FILE = {"path": GOLD}
+
+
 def gold_cases():
-    return json.loads(GOLD.read_text())
+    return json.loads(GOLD_FILE["path"].read_text())
 
 
 def check_gold():
@@ -218,7 +221,10 @@ def main():
     parser.add_argument("--gold", action="store_true")
     parser.add_argument("--arm")
     parser.add_argument("--out")
+    parser.add_argument("--gold-file", help="grade against this question file, not NVIDIA's")
     args = parser.parse_args()
+    if args.gold_file:
+        GOLD_FILE["path"] = Path(args.gold_file)
     if args.gold:
         check_gold()
     elif args.arm and args.out:
