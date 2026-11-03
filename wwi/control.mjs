@@ -66,7 +66,7 @@ function ask(prompt, model, system) {
 }
 
 function parseArgs(argv) {
-  const options = { run: null, pass: 1, model: 'claude-sonnet-5-5', limit: null, line: true, questions: null };
+  const options = { run: null, pass: 1, model: 'claude-sonnet-5-5', limit: null, line: true, questions: null, ddl: null };
   for (let index = 0; index < argv.length; index += 1) {
     if (argv[index] === '--run') options.run = argv[++index];
     else if (argv[index] === '--pass') options.pass = Number(argv[++index]);
@@ -74,6 +74,7 @@ function parseArgs(argv) {
     else if (argv[index] === '--limit') options.limit = Number(argv[++index]);
     else if (argv[index] === '--no-line') options.line = false;
     else if (argv[index] === '--questions') options.questions = argv[++index];
+    else if (argv[index] === '--ddl-dir') options.ddl = argv[++index];
     else throw new Error(`Unknown option ${argv[index]}`);
   }
   if (!options.run) throw new Error('--run <id> is required.');
@@ -88,7 +89,7 @@ async function main() {
   const done = new Set(existsSync(outPath)
     ? readFileSync(outPath, 'utf-8').split('\n').filter(Boolean).map((line) => JSON.parse(line)).filter((row) => row.reply).map((row) => row.question_id)
     : []);
-  const schema = schemaDump();
+  const schema = options.ddl ? schemaDump(options.ddl) : schemaDump();
   const system = options.line ? SYSTEM_PROMPT : FIRST_LINE;
   const questions = JSON.parse(readFileSync(options.questions ?? join(DATASET, 'evaluation.json'), 'utf-8'))
     .slice(0, options.limit ?? undefined)

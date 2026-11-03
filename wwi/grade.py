@@ -35,6 +35,7 @@ from pathlib import Path
 import psycopg
 
 DSN = "host=127.0.0.1 port=55432 user=wwi_reader dbname=wideworldimporters"
+DB = {"dsn": DSN}
 GOLD = Path(__file__).resolve().parent.parent / "work" / "wwi" / "dataset" / "evaluation.json"
 TIMEOUT_S = 30.0  # PostgresExecutor's default
 TOLERANCE_DIGITS = 6
@@ -44,7 +45,7 @@ def run(sql):
     """_run_postgres, plus the cap PostgresExecutor puts around it."""
 
     def go():
-        with psycopg.connect(DSN) as conn, conn.cursor() as cur:
+        with psycopg.connect(DB["dsn"]) as conn, conn.cursor() as cur:
             cur.execute(sql)
             return cur.fetchall(), [d.name for d in cur.description]
 
@@ -222,7 +223,10 @@ def main():
     parser.add_argument("--arm")
     parser.add_argument("--out")
     parser.add_argument("--gold-file", help="grade against this question file, not NVIDIA's")
+    parser.add_argument("--db", help="the database to run on (default wideworldimporters)")
     args = parser.parse_args()
+    if args.db:
+        DB["dsn"] = DSN.replace("dbname=wideworldimporters", f"dbname={args.db}")
     if args.gold_file:
         GOLD_FILE["path"] = Path(args.gold_file)
     if args.gold:

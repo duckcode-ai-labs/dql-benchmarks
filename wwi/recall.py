@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 WORK = ROOT / "work" / "wwi"
 TABLE = re.compile(r"\b(?:from|join)\s+([a-z_]+\.[a-z_]+)", re.I)
-CHOSEN = re.compile(r"[a-z_]+\.[a-z_]+\.[a-z_]+")
+CHOSEN = re.compile(r"[a-z0-9_]+\.[a-z0-9_]+\.[a-z0-9_]+")
 
 
 def catalog_tables(arm):
@@ -25,8 +25,8 @@ def catalog_tables(arm):
 
 
 def questions(name):
-    if name == "fresh":
-        rows = json.loads((ROOT / "wwi" / "fresh-questions.json").read_text())
+    if name in ("fresh", "cryptic"):
+        rows = json.loads((ROOT / "wwi" / ("fresh-questions-cryptic.json" if name == "cryptic" else "fresh-questions.json")).read_text())
         return {r["question"].strip(): {t.lower() for t in r["tables"]} for r in rows}
     rows = json.loads((WORK / "dataset" / "evaluation.json").read_text())
     return {r["question"].strip(): set(TABLE.findall(r["SQL"].lower())) for r in rows if r["question_id"] not in (4, 27)}
