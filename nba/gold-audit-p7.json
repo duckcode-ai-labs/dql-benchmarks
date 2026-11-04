@@ -1,0 +1,1080 @@
+{
+  "set": "P7",
+  "policy": "nba/make_questions.py docstring",
+  "method": "Each gold query re-derived from RAW tables only (raw_games and raw_games_details de-duplicated by GAME_ID / GAME_ID+PLAYER_ID, DNP = COMMENT present or no stats), runner-up checked at every LIMIT/most, wording read for alternative readings. Round 1 found 3 not SOUND; fixed and re-run; round 2 all 40 SOUND.",
+  "replaced_while_drafting": [
+    "Fewest points allowed per game 2003-04: DET and SAS tie exactly (6,909) -> dropped (2020-21 points-allowed trap kept as Q19).",
+    "Highest score by one team in a game: CHI 2019 and DEN 2008 tie at 168 -> replaced by biggest margin of victory (Q12).",
+    "Team most threes in a 2018-19 game: too close to P6 Q14/Q36 (HOU 2018-19) -> replaced by fewest points in a regular-season game (Q14).",
+    "Best effective FG% 2018-19: same shape as P6 Q29 (true shooting) -> replaced by games started (Q29).",
+    "League triple-doubles 2016-17: same season as P1 Q30 -> moved to 2012-13 (Q27).",
+    "LeBron James' first game for Miami: preseason vs regular-season reading -> replaced by Chris Paul's first regular-season game for Houston (Q6).",
+    "Warriors players 2021-22: no DNP-only players, so the trap did not bite -> Cavaliers 2019-20 (Q18).",
+    "2021 playoffs game count overlapped the 2021 play-in question -> 2020 playoffs (Q23).",
+    "Seattle SuperSonics 2004-05 record: second copy of the snapshot trap -> dropped for New Orleans Hornets (Q40)."
+  ],
+  "questions": [
+    {
+      "question_id": 1,
+      "category": "lookup",
+      "question": "Who is the Houston Rockets' general manager in the data?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "HOU",
+          "Daryl Morey"
+        ]
+      ],
+      "independent_check": [
+        [
+          "HOU",
+          "Daryl Morey"
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "One teams row per franchise (2019 snapshot); the question says \"in the data\"."
+    },
+    {
+      "question_id": 2,
+      "category": "lookup",
+      "question": "Which teams list Staples Center as their home arena in the data?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "LAC",
+          "Los Angeles",
+          "Clippers"
+        ],
+        [
+          "LAL",
+          "Los Angeles",
+          "Lakers"
+        ]
+      ],
+      "independent_check": [
+        [
+          "LAC",
+          "Los Angeles",
+          "Clippers"
+        ],
+        [
+          "LAL",
+          "Los Angeles",
+          "Lakers"
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "Two teams list the arena; a short list, not a tie problem.",
+      "round1_verdict": "AMBIGUOUS",
+      "round1_issue": "Asked without \"in the data\": the arena has since been renamed and the Clippers moved, so a real-world reading differs from the 2019 snapshot. Fixed by adding \"in the data\"."
+    },
+    {
+      "question_id": 3,
+      "category": "lookup",
+      "question": "How many rebounds did Kevin Love grab in his game on November 12, 2010?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "Kevin Love",
+          "2010-11-12",
+          31
+        ]
+      ],
+      "independent_check": [
+        [
+          "Kevin Love",
+          "2010-11-12",
+          31
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "One row for Kevin Love that day (31 points, 31 rebounds)."
+    },
+    {
+      "question_id": 4,
+      "category": "lookup",
+      "question": "Who were the Toronto Raptors' five starters on June 13, 2019?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "Danny Green",
+          "G"
+        ],
+        [
+          "Kawhi Leonard",
+          "F"
+        ],
+        [
+          "Kyle Lowry",
+          "G"
+        ],
+        [
+          "Marc Gasol",
+          "C"
+        ],
+        [
+          "Pascal Siakam",
+          "F"
+        ]
+      ],
+      "independent_check": [
+        [
+          "Danny Green",
+          "G"
+        ],
+        [
+          "Kawhi Leonard",
+          "F"
+        ],
+        [
+          "Kyle Lowry",
+          "G"
+        ],
+        [
+          "Marc Gasol",
+          "C"
+        ],
+        [
+          "Pascal Siakam",
+          "F"
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "Exactly five TOR rows that day carry a START_POSITION (C, F, F, G, G); start position exists only in raw_games_details/src_games_details."
+    },
+    {
+      "question_id": 5,
+      "category": "lookup",
+      "question": "When was Karl-Anthony Towns born, according to the data?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "Karl-Anthony Towns",
+          "1995-11-15"
+        ]
+      ],
+      "independent_check": [
+        [
+          "Karl-Anthony Towns",
+          "NOV 15, 1995"
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "Player information covers only 2016-17 and lists him once; raw text \"NOV 15, 1995\"."
+    },
+    {
+      "question_id": 6,
+      "category": "lookup",
+      "question": "On what date did Chris Paul play his first regular-season game for the Houston Rockets?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "2017-10-17"
+        ]
+      ],
+      "independent_check": [
+        [
+          "2017-10-17"
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "He played (not DNP) on opening night 2017-10-17; earliest preseason HOU game is not regular season."
+    },
+    {
+      "question_id": 7,
+      "category": "aggregate",
+      "question": "Who committed the most personal fouls in the 2013-14 regular season, and how many?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "Andre Drummond",
+          273
+        ]
+      ],
+      "independent_check": [
+        [
+          "Andre Drummond",
+          273
+        ],
+        [
+          "Amir Johnson",
+          271
+        ],
+        [
+          "DeMarcus Cousins",
+          270
+        ]
+      ],
+      "tie_at_limit": false,
+      "notes": "Runner-up Amir Johnson 271: no tie."
+    },
+    {
+      "question_id": 8,
+      "category": "aggregate",
+      "question": "How many players averaged at least 25 points per game in the 2019-20 regular season, among those who played at least 40 games?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          12
+        ]
+      ],
+      "independent_check": [
+        [
+          12
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "Nobody sits between 24.0 and 25.0 PPG with 40+ games, so the threshold is not knife-edge; KAT (26.5 PPG, 35 games) is excluded by the stated 40-game floor.",
+      "trap": "games played must leave out DNP rows: dividing by box-score rows gives 10 (not 12); fct_player_performance (every game type, DNP rows as games) gives 6"
+    },
+    {
+      "question_id": 9,
+      "category": "aggregate",
+      "question": "Which team scored 120 or more points in the most games of the 2017-18 regular season, and in how many games?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "GSW",
+          30
+        ]
+      ],
+      "independent_check": [
+        [
+          "GSW",
+          30
+        ],
+        [
+          "TOR",
+          24
+        ],
+        [
+          "NOP",
+          23
+        ]
+      ],
+      "tie_at_limit": false,
+      "notes": "Runner-up TOR 24: no tie."
+    },
+    {
+      "question_id": 10,
+      "category": "aggregate",
+      "question": "What was the league-wide free-throw percentage in the 2008-09 regular season? Give it as a fraction rounded to three decimals.",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          0.771
+        ]
+      ],
+      "independent_check": [
+        [
+          0.771,
+          0.7707487799668086
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "Totals ratio 0.77075; averaging per-game team FT_PCT is not the league percentage."
+    },
+    {
+      "question_id": 11,
+      "category": "aggregate",
+      "question": "Which month of the 2018-19 regular season had the most games?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "2019-03",
+          224
+        ]
+      ],
+      "independent_check": [
+        [
+          "2019-03",
+          224
+        ],
+        [
+          "2019-01",
+          221
+        ],
+        [
+          "2018-12",
+          219
+        ]
+      ],
+      "tie_at_limit": false,
+      "notes": "March 2019 has 224 games, January 221: no tie."
+    },
+    {
+      "question_id": 12,
+      "category": "aggregate",
+      "question": "What was the biggest margin of victory in any game in the data? Give the winner, the loser, the date and the margin.",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "MEM",
+          "OKC",
+          "2021-12-02",
+          73
+        ]
+      ],
+      "independent_check": [
+        [
+          "MEM",
+          "OKC",
+          "2021-12-02",
+          73
+        ],
+        [
+          "DAL",
+          "CHA",
+          "2021-10-13",
+          68
+        ],
+        [
+          "CHA",
+          "MEM",
+          "2018-03-22",
+          61
+        ]
+      ],
+      "tie_at_limit": false,
+      "notes": "Next biggest margin is 68: no tie."
+    },
+    {
+      "question_id": 13,
+      "category": "aggregate",
+      "question": "In how many games in the data did Dirk Nowitzki score 30 or more points?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          222
+        ]
+      ],
+      "independent_check": [
+        [
+          222,
+          188
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "\"In the data\" counts every game type (188 in the regular season alone); 2003 preseason box scores are missing, which is the data as it is."
+    },
+    {
+      "question_id": 14,
+      "category": "aggregate",
+      "question": "What is the fewest points a team scored in a regular-season game in the data? Give the team, the opponent, the date and the points.",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "MIA",
+          "TOR",
+          "2008-03-19",
+          54
+        ]
+      ],
+      "independent_check": [
+        [
+          "MIA",
+          "TOR",
+          "2008-03-19",
+          54
+        ],
+        [
+          "MIL",
+          "BOS",
+          "2011-03-13",
+          56
+        ],
+        [
+          "TOR",
+          "MIN",
+          "2003-11-01",
+          56
+        ]
+      ],
+      "tie_at_limit": false,
+      "notes": "Next lowest is 56 (three teams): no tie at 54."
+    },
+    {
+      "question_id": 15,
+      "category": "aggregate",
+      "question": "How many players scored at least 1,000 points in the 2010-11 regular season?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          84
+        ]
+      ],
+      "independent_check": [
+        [
+          84
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "Count of player totals >= 1,000 in regular season."
+    },
+    {
+      "question_id": 16,
+      "category": "aggregate",
+      "question": "Who had the most 30-point games in the 2005-06 regular season, and how many?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "Kobe Bryant",
+          56
+        ]
+      ],
+      "independent_check": [
+        [
+          "Kobe Bryant",
+          56
+        ],
+        [
+          "Allen Iverson",
+          49
+        ],
+        [
+          "LeBron James",
+          49
+        ]
+      ],
+      "tie_at_limit": false,
+      "notes": "Runner-up LeBron James and Allen Iverson 49: no tie."
+    },
+    {
+      "question_id": 17,
+      "category": "layer",
+      "question": "How many rebounds per game did Pau Gasol average in the 2013-14 regular season? Round to two decimals.",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "Pau Gasol",
+          9.67
+        ]
+      ],
+      "independent_check": [
+        [
+          9.67,
+          9.666666666666666,
+          82,
+          60
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "580 rebounds in 60 games played = 9.667.",
+      "trap": "he has 82 regular-season rows but played 60 (22 DNP): dividing by rows gives 7.07; fct_player_performance gives 7.01 and local_player_season_facts 9.31 (every game type)"
+    },
+    {
+      "question_id": 18,
+      "category": "layer",
+      "question": "How many different players played for the Cleveland Cavaliers in the 2019-20 regular season?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          21
+        ]
+      ],
+      "independent_check": [
+        [
+          21,
+          25
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "21 took the floor; 25 have any row (4 DNP-only); raw_players roster lists 22.",
+      "trap": "4 players have only DNP rows (25 with any row, not 21); the raw_players roster lists 22"
+    },
+    {
+      "question_id": 19,
+      "category": "layer",
+      "question": "Which team gave up the fewest points in the 2020-21 regular season, and how many?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "NYK",
+          7540
+        ]
+      ],
+      "independent_check": [
+        [
+          "NYK",
+          72,
+          7540
+        ],
+        [
+          "LAL",
+          72,
+          7686
+        ],
+        [
+          "UTA",
+          72,
+          7716
+        ]
+      ],
+      "tie_at_limit": false,
+      "notes": "Runner-up LAL 7,686: no tie; every team played 72 games, so total and per-game rank agree.",
+      "trap": "raw_games repeats 29 games of 2020-21, two of them New York games: counting rows gives LAL 7,686 first and NYK 7,747 (the Knicks really allowed 7,540)"
+    },
+    {
+      "question_id": 20,
+      "category": "layer",
+      "question": "Who were the top four rebounders in the 2020-21 regular season by total rebounds?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "Rudy Gobert",
+          960
+        ],
+        [
+          "Clint Capela",
+          903
+        ],
+        [
+          "Nikola Vucevic",
+          817
+        ],
+        [
+          "Enes Kanter",
+          795
+        ]
+      ],
+      "independent_check": [
+        [
+          "Rudy Gobert",
+          960
+        ],
+        [
+          "Clint Capela",
+          903
+        ],
+        [
+          "Nikola Vucevic",
+          817
+        ],
+        [
+          "Enes Kanter",
+          795
+        ],
+        [
+          "Nikola Jokic",
+          780
+        ]
+      ],
+      "tie_at_limit": false,
+      "notes": "5th is Nikola Jokic 780: no tie at 4th.",
+      "trap": "raw_games_details repeats 289 player rows of 2020-21: counting rows puts Jonas Valanciunas fourth with 801 (really 776) ahead of Enes Kanter (795); fct_/int_ have no 2020"
+    },
+    {
+      "question_id": 21,
+      "category": "layer",
+      "question": "In which regular season in the data did Tim Duncan score the most points, and how many?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "2006-07",
+          1599
+        ]
+      ],
+      "independent_check": [
+        [
+          2006,
+          1599
+        ],
+        [
+          2003,
+          1538
+        ],
+        [
+          2007,
+          1508
+        ]
+      ],
+      "tie_at_limit": false,
+      "notes": "Runner-up 2003-04 with 1,538: no tie.",
+      "trap": "the fct_ and int_ tables hold only seasons 2009 to 2019 and every game type: they give 2012 (1,674); local_player_season_facts counts every game type (2006 with 2,076)",
+      "round1_verdict": "WRONG",
+      "round1_issue": "Asked without \"in the data\": Duncan's real career-best scoring season (2001-02) is before the data starts in 2003. Fixed by asking for the best regular season in the data."
+    },
+    {
+      "question_id": 22,
+      "category": "layer",
+      "question": "Which team played the most games in the 2008 playoffs?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "BOS",
+          26
+        ]
+      ],
+      "independent_check": [
+        [
+          "BOS",
+          26
+        ],
+        [
+          "LAL",
+          21
+        ],
+        [
+          "SAS",
+          17
+        ]
+      ],
+      "tie_at_limit": false,
+      "notes": "Runner-up LAL 21: no tie.",
+      "trap": "the 2008 playoffs are in season 2007; season = 2008 gives ORL with 24 (the 2009 playoffs)"
+    },
+    {
+      "question_id": 23,
+      "category": "layer",
+      "question": "How many games were played in the 2020 playoffs?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          83
+        ]
+      ],
+      "independent_check": [
+        [
+          83,
+          "2020-08-17",
+          "2020-10-11",
+          1
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "83 playoff games (2020-08-17 to 2020-10-11) plus one play-in game, which is not a playoff game.",
+      "trap": "the 2020 playoffs are in season 2019; season = 2020 gives 85 (the 2021 playoffs); the play-in game (type 5) is not a playoff game (84 with it)"
+    },
+    {
+      "question_id": 24,
+      "category": "layer",
+      "question": "How many games in the 2015-16 regular season were decided by 20 or more points?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          175
+        ]
+      ],
+      "independent_check": [
+        [
+          175
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "Counted per game, not per team row.",
+      "trap": "the team game rows hold two rows per game: counting rows with a 20-point gap gives 350, not 175"
+    },
+    {
+      "question_id": 25,
+      "category": "layer",
+      "question": "What was the Golden State Warriors' winning percentage in the 2016-17 regular season? Give it as a fraction rounded to three decimals.",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "GSW",
+          67,
+          82,
+          0.817
+        ]
+      ],
+      "independent_check": [
+        [
+          67,
+          82,
+          0.817
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "67-15 regular season.",
+      "trap": "local_team_season_facts counts every game type: 89-17 and 0.840, not 67-15 and 0.817"
+    },
+    {
+      "question_id": 26,
+      "category": "layer",
+      "question": "Who had the most assists in the 2017-18 regular season, and how many?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "Russell Westbrook",
+          820
+        ]
+      ],
+      "independent_check": [
+        [
+          "Russell Westbrook",
+          820
+        ],
+        [
+          "LeBron James",
+          747
+        ],
+        [
+          "Ben Simmons",
+          661
+        ]
+      ],
+      "tie_at_limit": false,
+      "notes": "Runner-up 747 (margin 73): no tie.",
+      "trap": "counting every game (local_player_season_facts, fct_player_performance) gives LeBron James 948; in the regular season Russell Westbrook leads with 820"
+    },
+    {
+      "question_id": 27,
+      "category": "vocabulary",
+      "question": "How many triple-doubles were recorded in the 2012-13 regular season?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          42
+        ]
+      ],
+      "independent_check": [
+        [
+          42,
+          39
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "Three of points, rebounds, assists, steals, blocks at 10+ (the policy and the usual definition); points-rebounds-assists only gives 39 (three points-rebounds-blocks games by Sanders, Noah, Hibbert)."
+    },
+    {
+      "question_id": 28,
+      "category": "vocabulary",
+      "question": "How many 20-20 games did Dwight Howard have in the data?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          57
+        ]
+      ],
+      "independent_check": [
+        [
+          57,
+          51
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "All game types (\"in the data\"); 51 in the regular season."
+    },
+    {
+      "question_id": 29,
+      "category": "vocabulary",
+      "question": "How many games did Andre Iguodala start in the 2015-16 regular season?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          1
+        ]
+      ],
+      "independent_check": [
+        [
+          1,
+          65,
+          68
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "Every 2015-16 team game has exactly five starters marked; he started 1 of 65 games played."
+    },
+    {
+      "question_id": 30,
+      "category": "vocabulary",
+      "question": "How many back-to-backs did the Denver Nuggets play in the 2017-18 regular season?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          14
+        ]
+      ],
+      "independent_check": [
+        [
+          14
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "Games played the day after the previous game; the NBA never schedules three nights in a row, so pairs = second games."
+    },
+    {
+      "question_id": 31,
+      "category": "vocabulary",
+      "question": "Which teams were swept in the 2017 playoffs?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "IND"
+        ],
+        [
+          "POR"
+        ],
+        [
+          "SAS"
+        ],
+        [
+          "TOR"
+        ],
+        [
+          "UTA"
+        ]
+      ],
+      "independent_check": [
+        [
+          "IND"
+        ],
+        [
+          "POR"
+        ],
+        [
+          "SAS"
+        ],
+        [
+          "TOR"
+        ],
+        [
+          "UTA"
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "Series = the team pair within one playoffs; 5 series ended 4-0.",
+      "trap": "the 2017 playoffs are in season 2016; season = 2017 gives CLE, POR and TOR (the 2018 sweeps)"
+    },
+    {
+      "question_id": 32,
+      "category": "vocabulary",
+      "question": "What was the longest winning streak in the 2012-13 regular season, and which team had it?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "MIA",
+          27,
+          "2013-02-03",
+          "2013-03-25"
+        ]
+      ],
+      "independent_check": [
+        [
+          "MIA",
+          27
+        ],
+        [
+          "LAC",
+          17
+        ],
+        [
+          "DEN",
+          15
+        ]
+      ],
+      "tie_at_limit": false,
+      "notes": "Runner-up LAC 17: no tie."
+    },
+    {
+      "question_id": 33,
+      "category": "vocabulary",
+      "question": "Which teams made the 2021 playoffs through the play-in?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "BOS"
+        ],
+        [
+          "LAL"
+        ],
+        [
+          "MEM"
+        ],
+        [
+          "WAS"
+        ]
+      ],
+      "independent_check": [
+        [
+          "BOS"
+        ],
+        [
+          "LAL"
+        ],
+        [
+          "MEM"
+        ],
+        [
+          "WAS"
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "Play-in teams that also have 2021 playoff games.",
+      "trap": "the 2021 playoffs are in season 2020; season = 2021 gives ATL, BKN, MIN and NOP (the 2022 play-in)"
+    },
+    {
+      "question_id": 34,
+      "category": "vocabulary",
+      "question": "In how many of his 2016-17 regular-season games did Draymond Green score in double figures?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          39
+        ]
+      ],
+      "independent_check": [
+        [
+          39,
+          76
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "39 of 76 games played."
+    },
+    {
+      "question_id": 35,
+      "category": "join",
+      "question": "What was the 2018-19 regular-season record of the team that lists Masai Ujiri as its general manager?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "TOR",
+          58,
+          24
+        ]
+      ],
+      "independent_check": [
+        [
+          "TOR",
+          58,
+          24
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "One team lists that general manager.",
+      "round1_verdict": "AMBIGUOUS",
+      "round1_issue": "Said \"whose general manager is Masai Ujiri\"; in 2018-19 his title was president. Fixed to \"the team that lists Masai Ujiri as its general manager\"."
+    },
+    {
+      "question_id": 36,
+      "category": "join",
+      "question": "Who scored the most points against the San Antonio Spurs in the 2013-14 regular season, and how many?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "Kevin Durant",
+          105
+        ]
+      ],
+      "independent_check": [
+        [
+          "Kevin Durant",
+          105
+        ],
+        [
+          "Damian Lillard",
+          100
+        ],
+        [
+          "Mike Conley",
+          90
+        ]
+      ],
+      "tie_at_limit": false,
+      "notes": "Runner-up Damian Lillard 100: no tie."
+    },
+    {
+      "question_id": 37,
+      "category": "join",
+      "question": "For which team has Paul George scored the most points in the data, and how many?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "IND",
+          9816
+        ]
+      ],
+      "independent_check": [
+        [
+          "IND",
+          9816
+        ],
+        [
+          "LAC",
+          4518
+        ],
+        [
+          "OKC",
+          4314
+        ]
+      ],
+      "tie_at_limit": false,
+      "notes": "IND 9,816 vs LAC 4,518 and OKC 4,314."
+    },
+    {
+      "question_id": 38,
+      "category": "join",
+      "question": "How many games did Eastern Conference teams win against Western Conference teams in the 2016-17 regular season?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          204
+        ]
+      ],
+      "independent_check": [
+        [
+          204,
+          450
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "450 inter-conference games; West won 246."
+    },
+    {
+      "question_id": 39,
+      "category": "join",
+      "question": "What is the most points a player has scored in a single game at Madison Square Garden in the data, and who scored them?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "Carmelo Anthony",
+          62,
+          "2014-01-24"
+        ]
+      ],
+      "independent_check": [
+        [
+          "Carmelo Anthony",
+          "2014-01-24",
+          62
+        ],
+        [
+          "Kobe Bryant",
+          "2009-02-02",
+          61
+        ],
+        [
+          "James Harden",
+          "2019-01-23",
+          61
+        ]
+      ],
+      "tie_at_limit": false,
+      "notes": "Runner-up 61 (Harden, Kobe): no tie at 62. Home games of the team whose arena is Madison Square Garden."
+    },
+    {
+      "question_id": 40,
+      "category": "join",
+      "question": "How many games did the New Orleans Hornets win in the 2007-08 regular season?",
+      "verdict": "SOUND",
+      "gold": [
+        [
+          "NOP",
+          "Pelicans",
+          56
+        ]
+      ],
+      "independent_check": [
+        [
+          "NOH",
+          "New Orleans",
+          56
+        ]
+      ],
+      "tie_at_limit": null,
+      "notes": "Box scores label the franchise NOH (New Orleans) in 2007-08; it is the team the snapshot lists as New Orleans Pelicans.",
+      "trap": "the teams table is a single 2019 snapshot: the franchise is listed as the New Orleans Pelicans, and the nickname Hornets belongs to Charlotte (the 2007-08 Bobcats, 32 wins); the 2007-08 New Orleans Hornets (NOH) won 56"
+    }
+  ]
+}

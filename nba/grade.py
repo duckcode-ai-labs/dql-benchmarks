@@ -29,6 +29,8 @@ import duckdb
 
 ROOT = Path(__file__).resolve().parent.parent
 DB = ROOT / "work" / "nba" / "source" / "nba_analysis.duckdb"
+# F1: BENCH_MODEL_PROJECT is the arm's project, to know which tables "the whole model" showed.
+MODEL_PROJECT = os.environ.get("BENCH_MODEL_PROJECT")
 # P6: BENCH_QUESTIONS points at another question file (nba/questions-p6.json).
 QUESTIONS = Path(os.environ["BENCH_QUESTIONS"]) if os.environ.get("BENCH_QUESTIONS") else ROOT / "nba" / "questions.json"
 TIMEOUT_S = 30.0
@@ -94,13 +96,14 @@ def normal(value):
     return f"str:{str(value).strip()}"
 
 
-def form_match(gold, pred):
+def form_match(gold, pred, norm=None):
+    norm = norm or normal
     if not gold:
         return not pred
     if not pred or len(pred[0]) < len(gold[0]):
         return False
-    gold_rows = [tuple(normal(v) for v in row) for row in gold]
-    pred_rows = [tuple(normal(v) for v in row) for row in pred]
+    gold_rows = [tuple(norm(v) for v in row) for row in gold]
+    pred_rows = [tuple(norm(v) for v in row) for row in pred]
     if set(gold_rows) == set(pred_rows):
         return True
     wanted = collections.Counter(gold_rows)
@@ -117,10 +120,66 @@ def form_match(gold, pred):
     return assign(0, [])
 
 
-def shape_match(gold, pred):
-    if form_match(gold, pred):
+def shape_match(gold, pred, norm=None):
+    if form_match(gold, pred, norm):
         return True
-    return bool(gold) and bool(pred) and len(pred[0]) < len(gold[0]) and form_match(pred, gold)
+    return bool(gold) and bool(pred) and len(pred[0]) < len(gold[0]) and form_match(pred, gold, norm)
+
+
+# ------------------------------------------------------------------ the same thing by another name
+# P7: "right in substance" compared names word for word, so an answer naming the
+# Rockets by team_id where the gold wrote HOU, or the 2006 season where the gold
+# wrote "2006-07", scored wrong with every number right. This second measure maps
+# each cell to what it names before the same comparison: a team by its id,
+# abbreviation, nickname, full name or (when only one team has it) city; a
+# player by name (when only one player has it); a season label by its start
+# year; a "YYYY-MM" month by its first day. Player ids stay numbers: they could
+# be a points total. Reported beside the plain measure, for every arm alike.
+_ALIASES = {}
+
+
+def aliases():
+    if _ALIASES:
+        return _ALIASES
+    con = connection()
+    try:
+        teams = con.execute("SELECT team_id, team_abbreviation, team_nickname, city FROM TRANSFORMED.dim_teams_cleansed").fetchall()
+        players = con.execute("SELECT player_id, MIN(player_name) FROM TRANSFORMED.local_player_season_facts GROUP BY player_id").fetchall()
+    except Exception:
+        _ALIASES["none"] = None
+        return _ALIASES
+    cities = collections.Counter(str(city).strip().lower() for _, _, _, city in teams)
+    for team_id, abbreviation, nickname, city in teams:
+        token = f"team:{team_id}"
+        _ALIASES[f"id:{team_id}"] = token
+        for name in [abbreviation, nickname, f"{city} {nickname}"] + ([city] if cities[str(city).strip().lower()] == 1 else []):
+            if name:
+                _ALIASES[str(name).strip().lower()] = token
+    names = collections.Counter(str(name).strip().lower() for _, name in players)
+    for player_id, name in players:
+        if name and names[str(name).strip().lower()] == 1:
+            _ALIASES.setdefault(str(name).strip().lower(), f"player:{player_id}")
+    return _ALIASES
+
+
+def entity_normal(value):
+    table = aliases()
+    if isinstance(value, str):
+        text = value.strip()
+        label = re.fullmatch(r"(\d{4})-(\d{2})", text)
+        if label:
+            start, end = int(label.group(1)), int(label.group(2))
+            if end == (start + 1) % 100:
+                return f"num:{float(start)}"
+            if 1 <= end <= 12:
+                return f"date:{start:04d}-{end:02d}-01"
+        if text.isdigit() and f"id:{text}" in table:
+            return table[f"id:{text}"]
+        if text.lower() in table:
+            return table[text.lower()]
+    if isinstance(value, (int, float, decimal.Decimal)) and not isinstance(value, bool) and float(value).is_integer() and f"id:{int(value)}" in table:
+        return table[f"id:{int(value)}"]
+    return normal(value)
 
 
 def extract_sql(text):
@@ -173,7 +232,24 @@ def chosen_tables(title):
 def recalled(needs, chosen, whole):
     if whole:
         return True
-    return all(any(option in chosen for option in group) for group in needs)
+    names = {table.split(".")[-1] for table in chosen}
+    return all(any(option in chosen or option.split(".")[-1] in names for option in group) for group in needs)
+
+
+def model_tables(project):
+    """F1 (RFC 0012): the tables a model answers from, when Ask showed "the whole model":
+    its entities' tables, less deprecated ones and drafted look-alikes (use_instead)."""
+    import yaml
+    tables = set()
+    for path in Path(project).glob("domains/**/modeling/**/*.yaml"):
+        document = yaml.safe_load(path.read_text()) or {}
+        for entity in document.get("entities") or []:
+            if entity.get("status") == "deprecated" or entity.get("use_instead"):
+                continue
+            bound = entity.get("dbt_model") or entity.get("relation") or ""
+            if bound:
+                tables.add(bound.split(".")[-1].lower())
+    return tables
 
 
 def grade(path, out):
@@ -197,6 +273,9 @@ def grade(path, out):
         failure = (record or {}).get("failure") or ("no_model_output" if record is None else None)
         title = (record or {}).get("schemaTitle")
         whole = bool(title and title.startswith("Showed the whole schema"))
+        if title and title.startswith("Showed the whole model") and MODEL_PROJECT:
+            # The model's tables were all shown, plus any the question named (not listed).
+            title = title + " " + " ".join(f'"db"."m"."{table}"' for table in sorted(model_tables(MODEL_PROJECT)))
         chosen = chosen_tables(title)
         item = {
             "question_id": qid,
@@ -206,6 +285,7 @@ def grade(path, out):
             "strict": False,
             "form": False,
             "shape": False,
+            "entities": False,
             "failure_reason": failure,
             "sql": sql,
             "comment_cut": comment_cut,
@@ -228,6 +308,7 @@ def grade(path, out):
                 item["strict"] = strict_match(gold_rows, rows)
                 item["form"] = form_match(gold_rows, rows)
                 item["shape"] = shape_match(gold_rows, rows)
+                item["entities"] = item["shape"] or shape_match(gold_rows, rows, entity_normal)
                 item["pred_rows"] = len(rows)
                 item["pred_sample"] = [list(map(str, r)) for r in rows[:3]]
                 item["failure_reason"] = None if item["strict"] else "wrong_result"
@@ -236,7 +317,7 @@ def grade(path, out):
         results.append(item)
     Path(out).write_text(json.dumps(results, indent=2, default=str) + "\n")
     scored = [r for r in results if "excluded" not in r]
-    print(f"{Path(path).parent.parent.name}: strict {sum(r['strict'] for r in scored)}/{len(scored)}, shape {sum(r['shape'] for r in scored)}/{len(scored)}")
+    print(f"{Path(path).parent.parent.name}: strict {sum(r['strict'] for r in scored)}/{len(scored)}, shape {sum(r['shape'] for r in scored)}/{len(scored)}, any name {sum(bool(r.get('entities')) for r in scored)}/{len(scored)}")
     print("  ", dict(collections.Counter(r["failure_reason"] for r in scored if not r["strict"])))
 
 

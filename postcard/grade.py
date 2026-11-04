@@ -29,6 +29,8 @@ import duckdb
 
 ROOT = Path(__file__).resolve().parent.parent
 DB = ROOT / "work" / "postcard" / "source" / "datamart.duckdb"
+# F1: BENCH_MODEL_PROJECT is the arm's project, to know which tables "the whole model" showed.
+MODEL_PROJECT = os.environ.get("BENCH_MODEL_PROJECT")
 # P6: BENCH_QUESTIONS points at another question file (nba/questions-p6.json).
 QUESTIONS = Path(os.environ["BENCH_QUESTIONS"]) if os.environ.get("BENCH_QUESTIONS") else ROOT / "postcard" / "questions.json"
 TIMEOUT_S = 30.0
@@ -173,7 +175,24 @@ def chosen_tables(title):
 def recalled(needs, chosen, whole):
     if whole:
         return True
-    return all(any(option in chosen for option in group) for group in needs)
+    names = {table.split(".")[-1] for table in chosen}
+    return all(any(option in chosen or option.split(".")[-1] in names for option in group) for group in needs)
+
+
+def model_tables(project):
+    """F1 (RFC 0012): the tables a model answers from, when Ask showed "the whole model":
+    its entities' tables, less deprecated ones and drafted look-alikes (use_instead)."""
+    import yaml
+    tables = set()
+    for path in Path(project).glob("domains/**/modeling/**/*.yaml"):
+        document = yaml.safe_load(path.read_text()) or {}
+        for entity in document.get("entities") or []:
+            if entity.get("status") == "deprecated" or entity.get("use_instead"):
+                continue
+            bound = entity.get("dbt_model") or entity.get("relation") or ""
+            if bound:
+                tables.add(bound.split(".")[-1].lower())
+    return tables
 
 
 def grade(path, out):
@@ -197,6 +216,9 @@ def grade(path, out):
         failure = (record or {}).get("failure") or ("no_model_output" if record is None else None)
         title = (record or {}).get("schemaTitle")
         whole = bool(title and title.startswith("Showed the whole schema"))
+        if title and title.startswith("Showed the whole model") and MODEL_PROJECT:
+            # The model's tables were all shown, plus any the question named (not listed).
+            title = title + " " + " ".join(f'"db"."m"."{table}"' for table in sorted(model_tables(MODEL_PROJECT)))
         chosen = chosen_tables(title)
         item = {
             "question_id": qid,

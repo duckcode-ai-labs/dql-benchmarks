@@ -98,7 +98,7 @@ function schemaStep(projectDir) {
   for (const row of JSON.parse(result.stdout)) {
     const payload = JSON.parse(row.payload_json);
     const story = payload.diagnosticReceiptV9?.story ?? [];
-    const schema = story.find((step) => /^(Chose the table|Showed the whole schema)/.test(step.title ?? ''));
+    const schema = story.find((step) => /^(Chose the table|Showed the whole schema|Showed the whole model)/.test(step.title ?? ''));
     const answerText = JSON.stringify(payload).match(/used AI-drafted [^"\\]{0,300}/g) ?? [];
     if (!steps.has(row.question)) steps.set(row.question, { schemaTitle: schema?.title ?? null, schemaDetail: schema?.detail ?? null, draftedNotes: [...new Set(answerText)].slice(0, 4) });
   }
