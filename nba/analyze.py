@@ -70,6 +70,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--run", default="R1")
     parser.add_argument("--arms", default="C,D0,D1,D2,W0,W1")
+    parser.add_argument("--baseline-run", help="compare each arm with the same arm of this run (run-to-run change)")
     args = parser.parse_args()
     arms = {arm: load(args.run, arm) for arm in args.arms.split(",")}
     arms = {arm: rows for arm, rows in arms.items() if rows}
@@ -106,6 +107,23 @@ def main():
             p = mcnemar(b, c)
             summary["mcnemar"][f"{first}-{second}-{measure}"] = {"b": b, "c": c, "p": p}
             print(f"| {first} vs {second} | {'exactly right' if measure == 'strict' else 'in substance'} | {b} | {c} | {p:.2f} |")
+
+    if args.baseline_run:
+        print(f"\nAgainst {args.baseline_run} (same arm, McNemar exact)")
+        print(f"| Arm | {args.baseline_run} exactly / in substance | {args.run} exactly / in substance | Exactly right: only {args.baseline_run} / only {args.run}, p | In substance: only {args.baseline_run} / only {args.run}, p |")
+        print("|---|---|---|---|---|")
+        summary["baseline"] = {}
+        for arm, rows in arms.items():
+            base = load(args.baseline_run, arm)
+            if not base:
+                continue
+            cells = []
+            for measure in ("strict", "shape"):
+                b = sum(base[q][measure] and not rows[q][measure] for q in QUESTIONS)
+                c = sum(rows[q][measure] and not base[q][measure] for q in QUESTIONS)
+                summary["baseline"][f"{arm}-{measure}"] = {"b": b, "c": c, "p": mcnemar(b, c)}
+                cells.append(f"{b} / {c}, p = {mcnemar(b, c):.2f}")
+            print(f"| {arm} | {sum(r['strict'] for r in base.values())} / {sum(r['shape'] for r in base.values())} | {sum(r['strict'] for r in rows.values())} / {sum(r['shape'] for r in rows.values())} | {cells[0]} | {cells[1]} |")
 
     print("\nSearch: what reached the drafter")
     print("| Arm | Path | Gold's own tables shown | Some table that could answer shown | Right in substance when gold's tables shown / not shown | Answers that said they used AI drafts |")

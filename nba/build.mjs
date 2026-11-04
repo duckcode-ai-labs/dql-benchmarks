@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Build one arm's ZLens project on the owner's NBA dbt project (a copy).
 //
-//   DQL_CLI=<zlens dist/index.js> node nba/build.mjs --arm D0|D1|D2|W0|W1 [--dry-run-only]
+//   DQL_CLI=<zlens dist/index.js> node nba/build.mjs --arm D0|D1|D2|W0|W1 [--sync-warehouse] [--out <dir>]
 //
 // Arms add up, and nothing in them is written by hand:
 //   D0  the dbt project as a new user sets it up: `zlens init ./dql` from the dbt
@@ -28,6 +28,10 @@ export const DBT = join(WORK, 'dbt');
 export const SOURCE_DB = join(WORK, 'source', 'nba_analysis.duckdb');
 const ENV = { ...process.env, DQL_TELEMETRY_DISABLED: '1', DQL_EMBEDDINGS_AUTODETECT: 'off' };
 export const MODEL = 'claude-sonnet-5-5';
+/** `--sync-warehouse`: run `zlens sync warehouse` after `sync dbt` (R2 on). */
+const SYNC_WAREHOUSE = process.argv.includes('--sync-warehouse');
+/** `--out <dir>`: where the build record goes (default work/nba). */
+const RECORD_DIR = process.argv.includes('--out') ? process.argv[process.argv.indexOf('--out') + 1] : null;
 
 function zlens(cli, dir, args, record, timeout = 600_000, { mayFail = false } = {}) {
   const started = Date.now();
@@ -77,6 +81,9 @@ function dbtProject(cli, dir, record) {
   });
   linkConnectors(dir);
   zlens(cli, dir, ['sync', 'dbt', '.'], record);
+  // R2 (zlens#245): the documented step before drafting on dbt, so a draft sees every
+  // column. R1 ran without it. Every dbt arm gets it, D0 too, so they start alike.
+  if (SYNC_WAREHOUSE) record.syncWarehouse = zlens(cli, dir, ['sync', 'warehouse', '.', '--schemas', 'RAW,TRANSFORMED,dev'], record);
 }
 
 /** W0: the same database with no dbt, the way no-dbt.md sets it up. */
@@ -111,6 +118,8 @@ function draftMeanings(cli, dir, record) {
   record.draft = zlens(cli, dir, ['model', 'draft-meanings', '.', '--format', 'json'], record, 1_800_000);
   record.draftSeconds = Math.round((Date.now() - started) / 1000);
   record.status = zlens(cli, dir, ['model', 'meanings', '.'], record, 120_000, { mayFail: true });
+  // What a second run would send: nothing, when every table was drafted or had nothing to add.
+  record.rerunPlan = zlens(cli, dir, ['model', 'draft-meanings', '.', '--dry-run', '--format', 'json'], record);
 }
 
 function main() {
@@ -140,7 +149,7 @@ function main() {
     record.termsSeconds = Math.round((Date.now() - started) / 1000);
     zlens(cli, dir, ['sync', 'dbt', '.'], record);
   }
-  writeFileSync(join(WORK, `build-${arm}.json`), `${JSON.stringify(record, null, 2)}\n`);
+  writeFileSync(join(RECORD_DIR ?? WORK, `build-${arm}.json`), `${JSON.stringify(record, null, 2)}\n`);
   console.log(`${arm}: ${record.steps.length} steps`);
 }
 

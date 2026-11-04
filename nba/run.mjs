@@ -3,7 +3,7 @@
 // each answer ran, for nba/grade.py. Adapted from wwi/run.mjs.
 //
 //   DQL_CLI=<zlens dist/index.js> node nba/run.mjs --arm D0 --run <id> [--pass 1]
-//        [--only 3,5] [--questions <file.json>] [--model claude-sonnet-5-5]
+//        [--only 3,5] [--questions <file.json>] [--model claude-sonnet-5-5] [--keep-cache]
 //
 // Each run asks on a fresh copy of the built project and a fresh copy of the
 // database (DuckDB lets one process open a file), so nothing one run leaves
@@ -27,7 +27,7 @@ const HOST_ROW_GUARD = /\nLIMIT 501\s*$/;
 const RUN_ENV = { DQL_EMBEDDINGS_AUTODETECT: 'off', DQL_TELEMETRY_DISABLED: '1' };
 
 function parseArgs(argv) {
-  const options = { arm: null, run: null, pass: 1, only: null, questions: join(REPO_ROOT, 'nba', 'questions.json'), model: 'claude-sonnet-5-5' };
+  const options = { arm: null, run: null, pass: 1, only: null, questions: join(REPO_ROOT, 'nba', 'questions.json'), model: 'claude-sonnet-5-5', keepCache: false };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--arm') options.arm = argv[++index];
@@ -36,16 +36,19 @@ function parseArgs(argv) {
     else if (arg === '--only') options.only = new Set(argv[++index].split(',').map(Number));
     else if (arg === '--questions') options.questions = argv[++index];
     else if (arg === '--model') options.model = argv[++index];
+    else if (arg === '--keep-cache') options.keepCache = true;
     else throw new Error(`Unknown option ${arg}`);
   }
   if (!options.arm || !options.run) throw new Error('--arm and --run are required.');
   return options;
 }
 
-function freshProject(arm, workDir) {
+function freshProject(arm, workDir, keepCache) {
   const target = join(workDir, 'project');
   rmSync(target, { recursive: true, force: true });
-  const copy = spawnSync('rsync', ['-a', '--exclude', '.dql/local', '--exclude', '.dql/cache', '--exclude', 'logs', `${join(WORK, 'projects', arm)}/`, `${target}/`], { encoding: 'utf-8' });
+  // R2 keeps .dql/cache: on a dbt project the drafts are checked against the schema sync
+  // stored there, and without it every draft reads as stale until a new sync (R1 left it out).
+  const copy = spawnSync('rsync', ['-a', '--exclude', '.dql/local', ...(keepCache ? [] : ['--exclude', '.dql/cache']), '--exclude', 'logs', `${join(WORK, 'projects', arm)}/`, `${target}/`], { encoding: 'utf-8' });
   if (copy.status !== 0) throw new Error(`copying the ${arm} project failed: ${copy.stderr}`);
   // This run's own database file.
   const database = join(workDir, 'nba_analysis.duckdb');
@@ -125,7 +128,7 @@ async function main() {
   writeFileSync(evalPath, `${JSON.stringify({ cases: questions.map((question) => ({ name: `q${question.question_id}`, question: question.question, expected: { answerable: true } })) }, null, 2)}\n`);
 
   const cli = resolveDqlCli();
-  const projectDir = freshProject(options.arm, workDir);
+  const projectDir = freshProject(options.arm, workDir, options.keepCache);
   writeProviderSettings(projectDir, options.model);
   const dataHash = createHash('sha256').update(readFileSync(SOURCE_DB)).digest('hex');
   const identity = buildIdentity({ cli, dqlVersion: dqlVersion(cli), benchmark: 'nba', condition: options.arm, provider: 'claude-code', model: options.model, cassetteMode: 'record', dataHash, tools: { claudeCli: spawnSync('claude', ['--version'], { encoding: 'utf-8' }).stdout.trim() } });
