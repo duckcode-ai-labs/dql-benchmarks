@@ -1,0 +1,522 @@
+[
+ {
+  "question_id": 1,
+  "verdict": "SOUND",
+  "reason": "0.14; raw_resellers, staging_resellers and dim_sales_agent agree; 'as a fraction' rules out 14%. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    0.14
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 2,
+  "verdict": "SOUND",
+  "reason": "'Eastern Europe'; Zagreb is one row in the geography seed. The question says 'in our geography', so the seed's grouping is the answer even though many would call Croatia southern or central Europe. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    "Eastern Europe"
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 3,
+  "verdict": "SOUND",
+  "reason": "2024-10-25 and 2026-10-26 over all 300,000 sales; matches the generator window ending on DATA_END_DATE 2026-10-26. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    "2024-10-25",
+    "2026-10-26"
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 4,
+  "verdict": "SOUND",
+  "reason": "4. dim_sales_agent has 5 rows because of the synthetic 'Direct Sales' agent (key 0); 'resellers' excludes it. raw_resellers also has 4. Trap: dim_sales_agent also holds a synthetic 'Direct Sales' agent (key 0), so its row count is 5, not 4. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    4
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 5,
+  "verdict": "SOUND",
+  "reason": "Transaction ids are unique across feeds (one row with 150000); it is a European Example Press Corporation sale of 22.2 (6 cards at 3.7). Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    "European Example Press Corporation",
+    22.2
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 6,
+  "verdict": "SOUND",
+  "reason": "'Greece'; 'direct customer number' is the source customer_id (original_customer_id), and raw_customers agrees. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    "Greece"
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 7,
+  "verdict": "SOUND",
+  "reason": "1,474,704.80. Revenue is gross total_amount (policy 2); all three feeds are included. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    1474704.8
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 8,
+  "verdict": "SOUND",
+  "reason": "36,870 sales (rows) dated 2026-01-01 to 2026-03-31. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    36870
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 9,
+  "verdict": "SOUND",
+  "reason": "mobile app 590,700.90 against web 587,809.30, so no tie. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    "mobile app",
+    590700.9
+   ]
+  ],
+  "first_pass_verdict": "AMBIGUOUS",
+  "first_pass_reason": "'Which sales channel' could be read as direct versus reseller, which would give 'reseller'.",
+  "fix": "Which brought in the most revenue in 2025: in-store, web or mobile app sales? Give the channel and the revenue rounded to two decimals.",
+  "applied": "question reworded as proposed; gold SQL and answer unchanged"
+ },
+ {
+  "question_id": 10,
+  "verdict": "SOUND",
+  "reason": "December 126,784.10 against August 126,019.70; the month name is unique within 2025. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    "December",
+    126784.1
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 11,
+  "verdict": "SOUND",
+  "reason": "1,199 / 1,188 / 1,172 cards; the 4th is 1,165, so no tie at 3. Product names are unique (500 names for 500 products). Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    "4.25x6 - Ryazan - Networked intangible monitoring",
+    1199
+   ],
+   [
+    "5.5x8.5 - Milano (Milan) - Reverse-engineered full-range attitude",
+    1188
+   ],
+   [
+    "4x6 - Izhevsk - Multi-tiered fresh-thinking data-warehouse",
+    1172
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 12,
+  "verdict": "SOUND",
+  "reason": "159,875.67, the sum of commissionpaid on 2025 reseller sales (direct sales carry NULL, meaning no commission). Rounding after the sum. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    159875.67
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 13,
+  "verdict": "SOUND",
+  "reason": "AVG(qty) over 122,413 sales in 2026 = 3.33. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    3.33
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 14,
+  "verdict": "SOUND",
+  "reason": "373,413.40 for October to December 2025 (calendar quarter). Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    373413.4
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 15,
+  "verdict": "SOUND",
+  "reason": "20,960.30. There is one Donetsk in the seed, stored as 'Donetsk ' with a trailing space in every layer; TRIM gives the only sensible match. The question is about postcards of Donetsk; no customer lives in a city named Donetsk, so there is no second reading. Trap: the city is stored as 'Donetsk ' with a trailing space in every layer, so city = 'Donetsk' matches nothing. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    20960.3
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 16,
+  "verdict": "SOUND",
+  "reason": "Imaginary Street Press Company with 88,148 cards against 87,768. Direct sales (149,742) are not a reseller. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    "Imaginary Street Press Company",
+    88148
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 17,
+  "verdict": "SOUND",
+  "reason": "499,284 cards (SUM(qty)) over all feeds in 2025. Trap: raw_transactions and staging_transactions_main hold direct sales only (149,742 cards); counting sale rows instead of cards gives 149,716. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    499284
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 18,
+  "verdict": "SOUND",
+  "reason": "243,270 customer keys with at least one sale. Customer means the data mart's documented key (policy 4). Counting emails (187,405) would merge different direct customer numbers that share an email, so it is not a valid reading. Trap: dim_customer also lists 36,793 direct customers who never bought (280,063 rows, not 243,270). Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    243270
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 19,
+  "verdict": "SOUND",
+  "reason": "63,207 distinct direct customer numbers with a sale; raw_transactions agrees. Trap: raw_customers lists all 100,000 direct customers on file, 36,793 of whom never ordered. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    63207
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 20,
+  "verdict": "SOUND",
+  "reason": "23,723 customer keys for reseller 1001 in 2025, which equals the distinct emails in its raw feed. A reseller customer is (reseller, email) per schema.yml. Trap: reseller feeds repeat the customer on every sale row; a reseller customer is one email at that reseller (23,723), while counting rows or phone numbers gives 25,144. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    23723
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 21,
+  "verdict": "SOUND",
+  "reason": "442,931.60 from direct sales (agent key 0); the same as SUM(amount) in raw_transactions for 2025. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    442931.6
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 22,
+  "verdict": "SOUND",
+  "reason": "(1,474,704.80 − 442,931.60) / 1,474,704.80 = 0.6996, which rounds to 0.700 (returned as 0.7). Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    0.7
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 23,
+  "verdict": "SOUND",
+  "reason": "8,791 web sales by reseller 1003 in 2026; the type-2 raw feed agrees. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    8791
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 24,
+  "verdict": "SOUND",
+  "reason": "41,343 customer keys with 2 or more sales. 31 of them have all their sales on one day; they still made more than one purchase, and the reworded question says 'purchase', which settles it. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    41343
+   ]
+  ],
+  "first_pass_verdict": "AMBIGUOUS",
+  "first_pass_reason": "'Bought from us more than once': 31 customers have 2 or more sales on a single day, so it could mean 41,343 (sales) or 41,312 (separate days).",
+  "fix": "How many customers have made more than one purchase with us?",
+  "applied": "question reworded as proposed; gold SQL and answer unchanged"
+ },
+ {
+  "question_id": 25,
+  "verdict": "SOUND",
+  "reason": "5,021 web sales and 49,988.10 in March 2026. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    5021,
+    49988.1
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 26,
+  "verdict": "SOUND",
+  "reason": "36,793 customers on file with no sale; all are direct customers (reseller customers exist only through sales). raw_customers minus raw_transactions gives the same. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    36793
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 27,
+  "verdict": "SOUND",
+  "reason": "1,314,829.13 = gross 1,474,704.80 − commission 159,875.67; direct sales pay no commission (NULL counts as 0). Trap: commission is NULL on direct sales, so SUM(total_amount - commissionpaid) drops every direct sale (871,897.53, not 1,314,829.13). Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    1314829.13
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 28,
+  "verdict": "SOUND",
+  "reason": "420,425.80 = Saturday 210,354.60 + Sunday 210,071.20 in 2025. Trap: dim_date.day_of_week runs Sunday = 0 to Saturday = 6, so day_of_week IN (6, 7) catches Saturday only (210,354.60, not 420,425.80). Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    420425.8
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 29,
+  "verdict": "SOUND",
+  "reason": "+0.2%: 1,207,689.30 (2026-01-01 to 2026-10-26) against 1,205,577.90 (2025-01-01 to 2025-10-26). Robust: comparing January to September, or stopping on 25 October, also gives 0.2. The question anchors on 'our most recent sale', not today's date. Trap: sales stop on 2026-10-26, so comparing all of 2026 with all of 2025 gives -18.1% instead of +0.2%. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    0.2
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 30,
+  "verdict": "SOUND",
+  "reason": "164,972.80 from postcards whose depicted city is in Germany (12 seed cities). The phrase 'postcards of German cities' rules out customer location. Trap: the sale's geography is the city the postcard shows; filtering on customers who live in Germany gives 6,710.20. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    164972.8
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 31,
+  "verdict": "SOUND",
+  "reason": "6x11 with 94,924 cards against 5.5x8.5 with 94,449. Size is the product-name prefix, the only place the size is recorded. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    "6x11",
+    94924
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 32,
+  "verdict": "SOUND",
+  "reason": "442,931.60 / 49,876 direct sales = 8.88 (one sale is one order). Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    8.88
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 33,
+  "verdict": "SOUND",
+  "reason": "9,565 customer keys whose first sale is in January 2026. Sales start 14 months earlier, so a first sale in the data is a real first purchase. Customer identity follows policy 4. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    9565
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 34,
+  "verdict": "SOUND",
+  "reason": "European Example Press Corporation with 43,645.44 (rate 0.17) against 40,939.90; 'partner' means reseller. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    "European Example Press Corporation",
+    43645.44
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 35,
+  "verdict": "SOUND",
+  "reason": "Four resellers in 2025 (direct sales excluded because they are not a reseller): 260,779.80 / 258,381.10 / 256,737.90 / 255,874.40. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    "Imaginary Street Press Company",
+    260779.8
+   ],
+   [
+    "Scandinavian Legendary Printing Company",
+    258381.1
+   ],
+   [
+    "European Example Press Corporation",
+    256737.9
+   ],
+   [
+    "Mediterranean Postcard Press Association",
+    255874.4
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 36,
+  "verdict": "SOUND",
+  "reason": "Eastern Europe with 523,248.10 of 2025 reseller revenue, far ahead of Central Europe at 183,574.60. 'Region's postcards' means the region of the depicted city. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    "Eastern Europe",
+    523248.1
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 37,
+  "verdict": "SOUND",
+  "reason": "Customer 10711, Jennifer Cooper, 87.10 over 8 sales; the next is 82.30. Grouping by customer number; names are not unique. Trap: names repeat across direct customers; grouping by name crowns 'Michael Smith' (37 customers, 505.80) instead of customer 10711. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    10711,
+    "Jennifer",
+    "Cooper",
+    87.1
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 38,
+  "verdict": "SOUND",
+  "reason": "Tuesday 212,261.20 against Monday 212,004.30; no tie. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    "Tuesday",
+    212261.2
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 39,
+  "verdict": "SOUND",
+  "reason": "Bremen with 6,175.10 against 5,503.20 for 1004's 2025 sales; the depicted city. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    "Bremen",
+    6175.1
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ },
+ {
+  "question_id": 40,
+  "verdict": "SOUND",
+  "reason": "1,609.20 from 194 direct sales in 2025 to customers whose country is exactly 'France' (French Guiana and French Polynesia are separate values). Direct customers have one country each, so this is unambiguous. Re-derived independently from the three raw feeds unioned by hand (raw products, geography seed, resellers, channels): same rows.",
+  "gold": [
+   [
+    1609.2
+   ]
+  ],
+  "fix": "",
+  "applied": "none needed"
+ }
+]

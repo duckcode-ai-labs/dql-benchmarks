@@ -1,0 +1,615 @@
+[
+ {
+  "question_id": 1,
+  "category": "lookup",
+  "question": "What commission rate do we pay the Scandinavian Legendary Printing Company? Give it as a fraction.",
+  "SQL": "SELECT commission_pct FROM postcard_company_core.dim_sales_agent WHERE reseller_name = 'Scandinavian Legendary Printing Company'",
+  "needs": [
+   [
+    "postcard_company_core.dim_sales_agent",
+    "postcard_company_staging.staging_resellers",
+    "postcard_company_raw.raw_resellers"
+   ]
+  ]
+ },
+ {
+  "question_id": 2,
+  "category": "lookup",
+  "question": "Which region does Zagreb belong to in our geography?",
+  "SQL": "SELECT region_name FROM postcard_company_core.dim_geography WHERE city_name = 'Zagreb'",
+  "needs": [
+   [
+    "postcard_company_core.dim_geography",
+    "postcard_company_raw.geography"
+   ]
+  ]
+ },
+ {
+  "question_id": 3,
+  "category": "lookup",
+  "question": "On what dates did we record our first and our last sale?",
+  "SQL": "SELECT MIN(d.date_value) AS first_sale, MAX(d.date_value) AS last_sale FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ]
+  ]
+ },
+ {
+  "question_id": 4,
+  "category": "lookup",
+  "question": "How many resellers sell our postcards?",
+  "SQL": "SELECT COUNT(*) AS resellers FROM postcard_company_core.dim_sales_agent WHERE sales_agent_key <> 0",
+  "needs": [
+   [
+    "postcard_company_core.dim_sales_agent",
+    "postcard_company_staging.staging_resellers",
+    "postcard_company_raw.raw_resellers"
+   ]
+  ],
+  "layer": "dim_sales_agent also holds a synthetic 'Direct Sales' agent (key 0), so its row count is 5, not 4"
+ },
+ {
+  "question_id": 5,
+  "category": "lookup",
+  "question": "Which reseller handled transaction 150000, and what was the sale amount?",
+  "SQL": "SELECT a.reseller_name, f.total_amount FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_sales_agent a ON a.sales_agent_key = f.sales_agent_key WHERE f.transaction_id = 150000",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions",
+    "postcard_company_staging.staging_reseller_type1_sales",
+    "postcard_company_raw.raw_reseller_type1_sales"
+   ],
+   [
+    "postcard_company_core.dim_sales_agent",
+    "postcard_company_staging.staging_resellers",
+    "postcard_company_raw.raw_resellers"
+   ]
+  ]
+ },
+ {
+  "question_id": 6,
+  "category": "lookup",
+  "question": "Which country does direct customer number 40493 live in?",
+  "SQL": "SELECT customer_country FROM postcard_company_core.dim_customer WHERE original_customer_id = 40493",
+  "needs": [
+   [
+    "postcard_company_core.dim_customer",
+    "postcard_company_staging.staging_customers",
+    "postcard_company_raw.raw_customers"
+   ]
+  ]
+ },
+ {
+  "question_id": 7,
+  "category": "aggregate",
+  "question": "What was our total revenue in 2025? Round to two decimals.",
+  "SQL": "SELECT ROUND(SUM(f.total_amount), 2) AS revenue FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key WHERE d.year_key = 2025",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ]
+  ]
+ },
+ {
+  "question_id": 8,
+  "category": "aggregate",
+  "question": "How many sales did we make in the first quarter of 2026?",
+  "SQL": "SELECT COUNT(*) AS sales FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key WHERE d.year_key = 2026 AND d.quarter_of_year = 1",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ]
+  ]
+ },
+ {
+  "question_id": 9,
+  "category": "aggregate",
+  "question": "Which brought in the most revenue in 2025: in-store, web or mobile app sales? Give the channel and the revenue rounded to two decimals.",
+  "SQL": "SELECT ch.channel_name, ROUND(SUM(f.total_amount), 2) AS revenue FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key JOIN postcard_company_core.dim_channel ch ON ch.channel_key = f.channel_key WHERE d.year_key = 2025 GROUP BY ch.channel_name ORDER BY revenue DESC LIMIT 1",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ],
+   [
+    "postcard_company_core.dim_channel",
+    "postcard_company_staging.staging_channels",
+    "postcard_company_raw.raw_channels"
+   ]
+  ]
+ },
+ {
+  "question_id": 10,
+  "category": "aggregate",
+  "question": "Which month of 2025 had the highest revenue? Give the month's name and the revenue rounded to two decimals.",
+  "SQL": "SELECT d.month_name, ROUND(SUM(f.total_amount), 2) AS revenue FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key WHERE d.year_key = 2025 GROUP BY d.month_name ORDER BY revenue DESC LIMIT 1",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ]
+  ]
+ },
+ {
+  "question_id": 11,
+  "category": "aggregate",
+  "question": "What were our three best-selling postcards in 2025 by number of cards sold? Give each postcard's name and the number sold.",
+  "SQL": "SELECT p.product_name, SUM(f.qty) AS cards_sold FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key JOIN postcard_company_core.dim_product p ON p.product_key = f.product_key WHERE d.year_key = 2025 GROUP BY p.product_name ORDER BY cards_sold DESC LIMIT 3",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ],
+   [
+    "postcard_company_core.dim_product",
+    "postcard_company_staging.staging_products",
+    "postcard_company_raw.raw_products"
+   ]
+  ]
+ },
+ {
+  "question_id": 12,
+  "category": "aggregate",
+  "question": "How much commission did we pay our resellers in total in 2025? Round to two decimals.",
+  "SQL": "SELECT ROUND(SUM(f.commissionpaid), 2) AS commission FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key WHERE d.year_key = 2025",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ]
+  ]
+ },
+ {
+  "question_id": 13,
+  "category": "aggregate",
+  "question": "On average, how many postcards were in a single sale in 2026? Round to two decimals.",
+  "SQL": "SELECT ROUND(AVG(f.qty), 2) AS cards_per_sale FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key WHERE d.year_key = 2026",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ]
+  ]
+ },
+ {
+  "question_id": 14,
+  "category": "aggregate",
+  "question": "What was our revenue in the fourth quarter of 2025? Round to two decimals.",
+  "SQL": "SELECT ROUND(SUM(f.total_amount), 2) AS revenue FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key WHERE d.year_key = 2025 AND d.quarter_of_year = 4",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ]
+  ]
+ },
+ {
+  "question_id": 15,
+  "category": "aggregate",
+  "question": "How much revenue did our Donetsk postcards bring in during 2025? Round to two decimals.",
+  "SQL": "SELECT ROUND(SUM(f.total_amount), 2) AS revenue FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key JOIN postcard_company_core.dim_geography g ON g.geography_key = f.geography_key WHERE TRIM(g.city_name) = 'Donetsk' AND d.year_key = 2025",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ],
+   [
+    "postcard_company_core.dim_geography",
+    "postcard_company_raw.geography",
+    "postcard_company_core.dim_product",
+    "postcard_company_staging.staging_products",
+    "postcard_company_raw.raw_products"
+   ]
+  ],
+  "layer": "the city is stored as 'Donetsk ' with a trailing space in every layer, so city = 'Donetsk' matches nothing"
+ },
+ {
+  "question_id": 16,
+  "category": "aggregate",
+  "question": "Which reseller sold the most postcards in 2025, and how many?",
+  "SQL": "SELECT a.reseller_name, SUM(f.qty) AS cards_sold FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key JOIN postcard_company_core.dim_sales_agent a ON a.sales_agent_key = f.sales_agent_key WHERE d.year_key = 2025 AND f.sales_agent_key <> 0 GROUP BY a.reseller_name ORDER BY cards_sold DESC LIMIT 1",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ],
+   [
+    "postcard_company_core.dim_sales_agent",
+    "postcard_company_staging.staging_resellers",
+    "postcard_company_raw.raw_resellers"
+   ]
+  ]
+ },
+ {
+  "question_id": 17,
+  "category": "layer",
+  "question": "How many postcards did we sell in 2025?",
+  "SQL": "SELECT SUM(f.qty) AS cards_sold FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key WHERE d.year_key = 2025",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ]
+  ],
+  "layer": "raw_transactions and staging_transactions_main hold direct sales only (149,742 cards); counting sale rows instead of cards gives 149,716"
+ },
+ {
+  "question_id": 18,
+  "category": "layer",
+  "question": "How many customers have bought from us so far?",
+  "SQL": "SELECT COUNT(DISTINCT f.customer_key) AS customers FROM postcard_company_core.fact_sales f",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ]
+  ],
+  "layer": "dim_customer also lists 36,793 direct customers who never bought (280,063 rows, not 243,270)"
+ },
+ {
+  "question_id": 19,
+  "category": "layer",
+  "question": "How many of our direct customers have placed at least one order?",
+  "SQL": "SELECT COUNT(DISTINCT f.customer_key) AS customers FROM postcard_company_core.fact_sales f WHERE f.sales_agent_key = 0",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions",
+    "postcard_company_staging.staging_transactions_main",
+    "postcard_company_raw.raw_transactions"
+   ]
+  ],
+  "layer": "raw_customers lists all 100,000 direct customers on file, 36,793 of whom never ordered"
+ },
+ {
+  "question_id": 20,
+  "category": "layer",
+  "question": "How many different customers bought from the Imaginary Street Press Company in 2025?",
+  "SQL": "SELECT COUNT(DISTINCT f.customer_key) AS customers FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key JOIN postcard_company_core.dim_sales_agent a ON a.sales_agent_key = f.sales_agent_key WHERE a.reseller_name = 'Imaginary Street Press Company' AND d.year_key = 2025",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions",
+    "postcard_company_staging.staging_reseller_type1_sales",
+    "postcard_company_raw.raw_reseller_type1_sales"
+   ],
+   [
+    "postcard_company_core.dim_sales_agent",
+    "postcard_company_staging.staging_resellers",
+    "postcard_company_raw.raw_resellers"
+   ]
+  ],
+  "layer": "reseller feeds repeat the customer on every sale row; a reseller customer is one email at that reseller (23,723), while counting rows or phone numbers gives 25,144"
+ },
+ {
+  "question_id": 21,
+  "category": "layer",
+  "question": "What was our direct-sales revenue in 2025? Round to two decimals.",
+  "SQL": "SELECT ROUND(SUM(f.total_amount), 2) AS revenue FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key WHERE f.sales_agent_key = 0 AND d.year_key = 2025",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions",
+    "postcard_company_staging.staging_transactions_main",
+    "postcard_company_raw.raw_transactions"
+   ]
+  ]
+ },
+ {
+  "question_id": 22,
+  "category": "layer",
+  "question": "What share of our 2025 revenue came through resellers? Give it as a fraction rounded to three decimals.",
+  "SQL": "SELECT ROUND(SUM(f.total_amount) FILTER (WHERE f.sales_agent_key <> 0) / SUM(f.total_amount), 3) AS reseller_share FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key WHERE d.year_key = 2025",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ]
+  ]
+ },
+ {
+  "question_id": 23,
+  "category": "layer",
+  "question": "How many sales did the Scandinavian Legendary Printing Company make through the web in 2026?",
+  "SQL": "SELECT COUNT(*) AS sales FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key JOIN postcard_company_core.dim_sales_agent a ON a.sales_agent_key = f.sales_agent_key JOIN postcard_company_core.dim_channel ch ON ch.channel_key = f.channel_key WHERE a.reseller_name = 'Scandinavian Legendary Printing Company' AND ch.channel_name = 'web' AND d.year_key = 2026",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions",
+    "postcard_company_staging.staging_reseller_type2_sales",
+    "postcard_company_raw.raw_reseller_type2_sales"
+   ],
+   [
+    "postcard_company_core.dim_sales_agent",
+    "postcard_company_staging.staging_resellers",
+    "postcard_company_raw.raw_resellers"
+   ],
+   [
+    "postcard_company_core.dim_channel",
+    "postcard_company_staging.staging_channels",
+    "postcard_company_raw.raw_channels",
+    "postcard_company_raw.raw_reseller_type2_sales"
+   ]
+  ]
+ },
+ {
+  "question_id": 24,
+  "category": "layer",
+  "question": "How many customers have made more than one purchase with us?",
+  "SQL": "SELECT COUNT(*) AS repeat_customers FROM (SELECT f.customer_key FROM postcard_company_core.fact_sales f GROUP BY f.customer_key HAVING COUNT(*) > 1) t",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ]
+  ]
+ },
+ {
+  "question_id": 25,
+  "category": "layer",
+  "question": "How many web sales did we make in March 2026, and how much revenue did they bring in? Round the revenue to two decimals.",
+  "SQL": "SELECT COUNT(*) AS sales, ROUND(SUM(f.total_amount), 2) AS revenue FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key JOIN postcard_company_core.dim_channel ch ON ch.channel_key = f.channel_key WHERE ch.channel_name = 'web' AND d.year_key = 2026 AND d.month_of_year = 3",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ],
+   [
+    "postcard_company_core.dim_channel",
+    "postcard_company_staging.staging_channels",
+    "postcard_company_raw.raw_channels"
+   ]
+  ]
+ },
+ {
+  "question_id": 26,
+  "category": "layer",
+  "question": "How many customers on our books have never bought anything?",
+  "SQL": "SELECT COUNT(*) AS never_bought FROM postcard_company_core.dim_customer c WHERE NOT EXISTS (SELECT 1 FROM postcard_company_core.fact_sales f WHERE f.customer_key = c.customer_key)",
+  "needs": [
+   [
+    "postcard_company_core.dim_customer",
+    "postcard_company_staging.staging_customers",
+    "postcard_company_raw.raw_customers"
+   ],
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions",
+    "postcard_company_staging.staging_transactions_main",
+    "postcard_company_raw.raw_transactions"
+   ]
+  ]
+ },
+ {
+  "question_id": 27,
+  "category": "vocabulary",
+  "question": "After paying reseller commissions, how much did we keep from our 2025 sales? Round to two decimals.",
+  "SQL": "SELECT ROUND(SUM(f.total_amount) - SUM(COALESCE(f.commissionpaid, 0)), 2) AS net_revenue FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key WHERE d.year_key = 2025",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ]
+  ],
+  "layer": "commission is NULL on direct sales, so SUM(total_amount - commissionpaid) drops every direct sale (871,897.53, not 1,314,829.13)"
+ },
+ {
+  "question_id": 28,
+  "category": "vocabulary",
+  "question": "How much revenue did we take on weekends in 2025? Round to two decimals.",
+  "SQL": "SELECT ROUND(SUM(f.total_amount), 2) AS revenue FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key WHERE d.year_key = 2025 AND d.day_name IN ('Saturday', 'Sunday')",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ]
+  ],
+  "layer": "dim_date.day_of_week runs Sunday = 0 to Saturday = 6, so day_of_week IN (6, 7) catches Saturday only (210,354.60, not 420,425.80)"
+ },
+ {
+  "question_id": 29,
+  "category": "vocabulary",
+  "question": "Up to our most recent sale, how is 2026 revenue tracking against the same dates in 2025? Give the change as a percentage rounded to one decimal place.",
+  "SQL": "WITH last_sale AS (SELECT MAX(d.date_value) AS last_day FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key) SELECT ROUND(100 * (SUM(f.total_amount) FILTER (WHERE d.date_value BETWEEN DATE '2026-01-01' AND l.last_day) / SUM(f.total_amount) FILTER (WHERE d.date_value BETWEEN DATE '2025-01-01' AND CAST(l.last_day - INTERVAL 1 YEAR AS DATE)) - 1), 1) AS pct_change FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key CROSS JOIN last_sale l",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ]
+  ],
+  "layer": "sales stop on 2026-10-26, so comparing all of 2026 with all of 2025 gives -18.1% instead of +0.2%"
+ },
+ {
+  "question_id": 30,
+  "category": "vocabulary",
+  "question": "How much revenue did postcards of German cities bring in during 2025? Round to two decimals.",
+  "SQL": "SELECT ROUND(SUM(f.total_amount), 2) AS revenue FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key JOIN postcard_company_core.dim_geography g ON g.geography_key = f.geography_key WHERE g.country_name = 'Germany' AND d.year_key = 2025",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ],
+   [
+    "postcard_company_core.dim_geography",
+    "postcard_company_raw.geography"
+   ]
+  ],
+  "layer": "the sale's geography is the city the postcard shows; filtering on customers who live in Germany gives 6,710.20"
+ },
+ {
+  "question_id": 31,
+  "category": "vocabulary",
+  "question": "Which postcard size sold the most cards in 2025, and how many cards?",
+  "SQL": "SELECT split_part(p.product_name, ' - ', 1) AS postcard_size, SUM(f.qty) AS cards_sold FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key JOIN postcard_company_core.dim_product p ON p.product_key = f.product_key WHERE d.year_key = 2025 GROUP BY postcard_size ORDER BY cards_sold DESC LIMIT 1",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ],
+   [
+    "postcard_company_core.dim_product",
+    "postcard_company_staging.staging_products",
+    "postcard_company_raw.raw_products"
+   ]
+  ]
+ },
+ {
+  "question_id": 32,
+  "category": "vocabulary",
+  "question": "What was the average order value of our direct sales in 2025? Round to two decimals.",
+  "SQL": "SELECT ROUND(AVG(f.total_amount), 2) AS average_order_value FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key WHERE f.sales_agent_key = 0 AND d.year_key = 2025",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions",
+    "postcard_company_staging.staging_transactions_main",
+    "postcard_company_raw.raw_transactions"
+   ]
+  ]
+ },
+ {
+  "question_id": 33,
+  "category": "vocabulary",
+  "question": "How many new customers did we win in January 2026?",
+  "SQL": "SELECT COUNT(*) AS new_customers FROM (SELECT f.customer_key, MIN(f.bought_date_key) AS first_sale FROM postcard_company_core.fact_sales f GROUP BY f.customer_key) t WHERE t.first_sale BETWEEN 20260101 AND 20260131",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ]
+  ]
+ },
+ {
+  "question_id": 34,
+  "category": "vocabulary",
+  "question": "Which partner earned the most commission from us in 2025, and how much? Round to two decimals.",
+  "SQL": "SELECT a.reseller_name, ROUND(SUM(f.commissionpaid), 2) AS commission FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key JOIN postcard_company_core.dim_sales_agent a ON a.sales_agent_key = f.sales_agent_key WHERE d.year_key = 2025 AND f.sales_agent_key <> 0 GROUP BY a.reseller_name ORDER BY commission DESC LIMIT 1",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ],
+   [
+    "postcard_company_core.dim_sales_agent",
+    "postcard_company_staging.staging_resellers",
+    "postcard_company_raw.raw_resellers"
+   ]
+  ]
+ },
+ {
+  "question_id": 35,
+  "category": "join",
+  "question": "How much revenue did each reseller bring in during 2025? Give each reseller's name and its revenue rounded to two decimals.",
+  "SQL": "SELECT a.reseller_name, ROUND(SUM(f.total_amount), 2) AS revenue FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key JOIN postcard_company_core.dim_sales_agent a ON a.sales_agent_key = f.sales_agent_key WHERE d.year_key = 2025 AND f.sales_agent_key <> 0 GROUP BY a.reseller_name ORDER BY revenue DESC",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ],
+   [
+    "postcard_company_core.dim_sales_agent",
+    "postcard_company_staging.staging_resellers",
+    "postcard_company_raw.raw_resellers"
+   ]
+  ]
+ },
+ {
+  "question_id": 36,
+  "category": "join",
+  "question": "Through our resellers, which region's postcards earned the most revenue in 2025, and how much? Round to two decimals.",
+  "SQL": "SELECT g.region_name, ROUND(SUM(f.total_amount), 2) AS revenue FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key JOIN postcard_company_core.dim_geography g ON g.geography_key = f.geography_key WHERE f.sales_agent_key <> 0 AND d.year_key = 2025 GROUP BY g.region_name ORDER BY revenue DESC LIMIT 1",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ],
+   [
+    "postcard_company_core.dim_geography",
+    "postcard_company_raw.geography"
+   ]
+  ]
+ },
+ {
+  "question_id": 37,
+  "category": "join",
+  "question": "Which direct customer has spent the most with us over all their purchases? Give the customer number, first name, last name and the total spent, rounded to two decimals.",
+  "SQL": "SELECT c.original_customer_id, c.customer_first_name, c.customer_last_name, ROUND(SUM(f.total_amount), 2) AS total_spent FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_customer c ON c.customer_key = f.customer_key WHERE f.sales_agent_key = 0 GROUP BY c.original_customer_id, c.customer_first_name, c.customer_last_name ORDER BY total_spent DESC LIMIT 1",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions",
+    "postcard_company_staging.staging_transactions_main",
+    "postcard_company_raw.raw_transactions"
+   ],
+   [
+    "postcard_company_core.dim_customer",
+    "postcard_company_staging.staging_customers",
+    "postcard_company_raw.raw_customers"
+   ]
+  ],
+  "layer": "names repeat across direct customers; grouping by name crowns 'Michael Smith' (37 customers, 505.80) instead of customer 10711"
+ },
+ {
+  "question_id": 38,
+  "category": "join",
+  "question": "Which day of the week brought in the most revenue in 2025, and how much? Round to two decimals.",
+  "SQL": "SELECT d.day_name, ROUND(SUM(f.total_amount), 2) AS revenue FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key WHERE d.year_key = 2025 GROUP BY d.day_name ORDER BY revenue DESC LIMIT 1",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions"
+   ]
+  ]
+ },
+ {
+  "question_id": 39,
+  "category": "join",
+  "question": "For the Mediterranean Postcard Press Association, which city's postcards earned the most revenue in 2025, and how much? Round to two decimals.",
+  "SQL": "SELECT g.city_name, ROUND(SUM(f.total_amount), 2) AS revenue FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key JOIN postcard_company_core.dim_geography g ON g.geography_key = f.geography_key JOIN postcard_company_core.dim_sales_agent a ON a.sales_agent_key = f.sales_agent_key WHERE a.reseller_name = 'Mediterranean Postcard Press Association' AND d.year_key = 2025 GROUP BY g.city_name ORDER BY revenue DESC LIMIT 1",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions",
+    "postcard_company_staging.staging_reseller_type2_sales",
+    "postcard_company_raw.raw_reseller_type2_sales"
+   ],
+   [
+    "postcard_company_core.dim_sales_agent",
+    "postcard_company_staging.staging_resellers",
+    "postcard_company_raw.raw_resellers"
+   ],
+   [
+    "postcard_company_core.dim_geography",
+    "postcard_company_raw.geography",
+    "postcard_company_core.dim_product",
+    "postcard_company_staging.staging_products",
+    "postcard_company_raw.raw_products",
+    "postcard_company_raw.raw_reseller_type2_sales"
+   ]
+  ]
+ },
+ {
+  "question_id": 40,
+  "category": "join",
+  "question": "How much did direct customers living in France spend with us in 2025? Round to two decimals.",
+  "SQL": "SELECT ROUND(SUM(f.total_amount), 2) AS revenue FROM postcard_company_core.fact_sales f JOIN postcard_company_core.dim_date d ON d.date_key = f.bought_date_key JOIN postcard_company_core.dim_customer c ON c.customer_key = f.customer_key WHERE f.sales_agent_key = 0 AND c.customer_country = 'France' AND d.year_key = 2025",
+  "needs": [
+   [
+    "postcard_company_core.fact_sales",
+    "postcard_company_staging.staging_transactions",
+    "postcard_company_staging.staging_transactions_main",
+    "postcard_company_raw.raw_transactions"
+   ],
+   [
+    "postcard_company_core.dim_customer",
+    "postcard_company_staging.staging_customers",
+    "postcard_company_raw.raw_customers"
+   ]
+  ]
+ }
+]

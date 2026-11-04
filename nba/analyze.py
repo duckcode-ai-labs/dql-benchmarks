@@ -12,12 +12,14 @@ dedupes raw_ itself), so the right-in-substance count among them is shown too.
 import argparse
 import collections
 import json
+import os
 import math
 import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-QUESTIONS = {q["question_id"]: q for q in json.loads((ROOT / "nba" / "questions.json").read_text())}
+# P6: BENCH_QUESTIONS points at another question file; BENCH names the results folder (nba, postcard).
+QUESTIONS = {q["question_id"]: q for q in json.loads((Path(os.environ["BENCH_QUESTIONS"]) if os.environ.get("BENCH_QUESTIONS") else ROOT / "nba" / "questions.json").read_text())}
 CATEGORIES = ["lookup", "aggregate", "layer", "vocabulary", "join"]
 
 
@@ -40,7 +42,7 @@ def wilson(k, n, z=1.959963984540054):
 
 
 def load(run, arm):
-    path = ROOT / "results" / "nba" / run / arm / "pass-1" / "graded.json"
+    path = ROOT / "results" / os.environ.get("BENCH", "nba") / run / arm / "pass-1" / "graded.json"
     return {r["question_id"]: r for r in json.loads(path.read_text())} if path.exists() else None
 
 
@@ -175,7 +177,7 @@ def main():
             layer = "/".join(r["fact_layers"]) if r["fact_layers"] else ""
             marks.append(f"{mark} {layer}".strip())
         print(f"| {qid} | {q['category']} | " + " | ".join(marks) + " |")
-    out = ROOT / "results" / "nba" / args.run / "summary.json"
+    out = ROOT / "results" / os.environ.get("BENCH", "nba") / args.run / "summary.json"
     out.write_text(json.dumps(summary, indent=1) + "\n")
 
 

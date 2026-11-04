@@ -1,0 +1,1456 @@
+[
+  {
+    "question_id": 1,
+    "category": "lookup",
+    "question": "Who is listed as the owner of the Dallas Mavericks in the data?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT team_id, team_nickname, city, team_owner\nFROM \"nba_analysis\".\"TRANSFORMED\".\"dim_teams_cleansed\"\nWHERE LOWER(team_nickname) LIKE '%mavericks%'\n  AND LOWER(city) LIKE '%dallas%'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [],
+    "tables": [
+      "transformed.dim_teams_cleansed"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "raw.raw_players",
+      "transformed.dim_seasons",
+      "transformed.dim_teams_cleansed",
+      "transformed.local_player_game_facts",
+      "transformed.src_games"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612742",
+        "Mavericks",
+        "Dallas",
+        "Mark Cuban"
+      ]
+    ]
+  },
+  {
+    "question_id": 2,
+    "category": "lookup",
+    "question": "Which G League team is the Toronto Raptors' affiliate?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT team_id, city, team_nickname, dleague_affiliation\nFROM \"nba_analysis\".\"TRANSFORMED\".\"dim_teams_cleansed\"\nWHERE LOWER(team_nickname) = 'raptors'\n  AND LOWER(city) LIKE '%toronto%'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [],
+    "tables": [
+      "transformed.dim_teams_cleansed"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.dim_teams_cleansed",
+      "transformed.local_team_game_facts",
+      "transformed.local_team_season_facts",
+      "transformed.src_player_information"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612761",
+        "Toronto",
+        "Raptors",
+        "Raptors 905"
+      ]
+    ]
+  },
+  {
+    "question_id": 3,
+    "category": "lookup",
+    "question": "How many minutes did Klay Thompson play in his game on December 5, 2016?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, game_id, game_date, minutes_text\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_game_facts\"\nWHERE LOWER(player_name) = 'klay thompson'\n  AND game_date = DATE '2016-12-05'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "202691",
+        "Klay Thompson",
+        "21600314",
+        "2016-12-05",
+        "29:03"
+      ]
+    ]
+  },
+  {
+    "question_id": 4,
+    "category": "lookup",
+    "question": "Which college did Damian Lillard play for?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT DISTINCT player_id, player_name, school\nFROM \"nba_analysis\".\"TRANSFORMED\".\"fct_player_journey\"\nWHERE LOWER(player_name) = 'damian lillard'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "fct"
+    ],
+    "tables": [
+      "transformed.fct_player_journey"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.local_player_season_facts",
+      "transformed.src_ranking"
+    ],
+    "recalled": false,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 2,
+    "pred_sample": [
+      [
+        "203081",
+        "Damian Lillard",
+        "None"
+      ],
+      [
+        "203081",
+        "Damian Lillard",
+        "Weber State"
+      ]
+    ]
+  },
+  {
+    "question_id": 5,
+    "category": "lookup",
+    "question": "What was the final score when the Phoenix Suns played the Boston Celtics on March 24, 2017? Give the home team, the away team and each side's points.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT g.games_game_id, g.home_team_id, h.city AS home_city, h.team_nickname AS home_team, g.visitor_team_id, v.city AS away_city, v.team_nickname AS away_team, MAX(g.pts_home) AS home_points, MAX(g.pts_away) AS away_points\nFROM \"nba_analysis\".\"TRANSFORMED\".\"src_games\" g\nJOIN \"nba_analysis\".\"TRANSFORMED\".\"dim_teams_cleansed\" h ON g.home_team_id = h.team_id\nJOIN \"nba_analysis\".\"TRANSFORMED\".\"dim_teams_cleansed\" v ON g.visitor_team_id = v.team_id\nWHERE g.game_date_est = DATE '2017-03-24'\nAND (\n(LOWER(h.city) LIKE '%phoenix%' AND LOWER(h.team_nickname) LIKE '%suns%' AND LOWER(v.city) LIKE '%boston%' AND LOWER(v.team_nickname) LIKE '%celtics%')\nOR\n(LOWER(v.city) LIKE '%phoenix%' AND LOWER(v.team_nickname) LIKE '%suns%' AND LOWER(h.city) LIKE '%boston%' AND LOWER(h.team_nickname) LIKE '%celtics%')\n)\nGROUP BY g.games_game_id, g.home_team_id, h.city, h.team_nickname, g.visitor_team_id, v.city, v.team_nickname",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "src"
+    ],
+    "tables": [
+      "transformed.dim_teams_cleansed",
+      "transformed.src_games"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.dim_teams_cleansed",
+      "transformed.local_team_game_facts",
+      "transformed.local_team_season_facts",
+      "transformed.src_games"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "21601076",
+        "1610612738",
+        "Boston",
+        "Celtics",
+        "1610612756",
+        "Phoenix",
+        "Suns",
+        "130.0",
+        "120.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 6,
+    "category": "lookup",
+    "question": "How tall is Rudy Gobert listed in the data?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, MAX(height_cm) AS height_cm\nFROM \"nba_analysis\".\"TRANSFORMED\".\"fct_player_journey\"\nWHERE LOWER(player_name) = 'rudy gobert'\nGROUP BY player_id, player_name",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "fct"
+    ],
+    "tables": [
+      "transformed.fct_player_journey"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "raw.raw_players",
+      "raw.raw_teams",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts"
+    ],
+    "recalled": false,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "203497",
+        "Rudy Gobert",
+        "215.90"
+      ]
+    ]
+  },
+  {
+    "question_id": 7,
+    "category": "aggregate",
+    "question": "Who made the most three-pointers in the 2015-16 regular season, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, SUM(three_pointers_made) AS three_pointers_made\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_game_facts\"\nWHERE season = 2015\n  AND CAST(game_id AS VARCHAR) LIKE '2%'\nGROUP BY player_id, player_name\nORDER BY three_pointers_made DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.local_team_season_facts"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "201939",
+        "Stephen Curry",
+        "402.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 8,
+    "category": "aggregate",
+    "question": "Who had the most steals in the 2011-12 regular season, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, total_steals\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_season_facts\"\nWHERE season = 2011\n  AND total_steals = (\n    SELECT MAX(total_steals)\n    FROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_season_facts\"\n    WHERE season = 2011\n  )\nORDER BY player_name",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.local_player_season_facts"
+    ],
+    "recalled": false,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "101108",
+        "Chris Paul",
+        "187.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 9,
+    "category": "aggregate",
+    "question": "How many free throws did James Harden make in the 2018-19 regular season?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, SUM(total_free_throws_made) AS free_throws_made\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_season_facts\"\nWHERE LOWER(player_name) = 'james harden' AND season = 2018\nGROUP BY player_id, player_name",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_teams_cleansed",
+      "transformed.local_player_season_facts"
+    ],
+    "recalled": false,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "201935",
+        "James Harden",
+        "859.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 10,
+    "category": "aggregate",
+    "question": "Who committed the most turnovers in the 2016-17 regular season, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, SUM(turnovers) AS total_turnovers\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_game_facts\"\nWHERE season = 2016\n  AND CAST(game_id AS VARCHAR) LIKE '2%'\nGROUP BY player_id, player_name\nORDER BY total_turnovers DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "raw.raw_games_details",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "201935",
+        "James Harden",
+        "464.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 11,
+    "category": "aggregate",
+    "question": "How many different players scored 40 or more points in a regular-season game in 2007-08?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(DISTINCT player_id) AS players_with_40_point_game\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_game_facts\"\nWHERE points >= 40\n  AND season = 2007\n  AND CAST(game_id AS VARCHAR) LIKE '2%'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.local_team_game_facts",
+      "transformed.local_team_season_facts"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "31"
+      ]
+    ]
+  },
+  {
+    "question_id": 12,
+    "category": "aggregate",
+    "question": "In how many 2018-19 regular-season games did at least one team score 140 or more points?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(DISTINCT game_id) AS games_with_140_plus\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_team_game_facts\"\nWHERE team_points >= 140\n  AND season = 2018\n  AND CAST(game_id AS VARCHAR) LIKE '2%'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_team_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.local_team_game_facts",
+      "transformed.local_team_season_facts"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "36"
+      ]
+    ]
+  },
+  {
+    "question_id": 13,
+    "category": "aggregate",
+    "question": "Which college had the most players on the 2016-17 rosters in the data, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [
+      "raw.raw_players",
+      "raw.raw_teams",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts"
+    ],
+    "recalled": false,
+    "local_offered": true,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 14,
+    "category": "aggregate",
+    "question": "What is the most three-pointers one player made in a single game in the data, and who made them?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT game_id, player_id, player_name, game_date, three_pointers_made\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_game_facts\"\nWHERE three_pointers_made = (\n  SELECT MAX(three_pointers_made)\n  FROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_game_facts\"\n)\nORDER BY game_date, player_id",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.dim_teams_cleansed",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.local_team_season_facts",
+      "transformed.src_games"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "21800091",
+        "202691",
+        "Klay Thompson",
+        "2018-10-29",
+        "14.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 15,
+    "category": "aggregate",
+    "question": "Who had the most offensive rebounds in the 2012-13 regular season, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, SUM(offensive_rebounds) AS total_offensive_rebounds\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_game_facts\"\nWHERE season = 2012\n  AND CAST(game_id AS VARCHAR) LIKE '2%'\n  AND participated = true\nGROUP BY player_id, player_name\nORDER BY total_offensive_rebounds DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.local_team_game_facts"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2216",
+        "Zach Randolph",
+        "310.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 16,
+    "category": "aggregate",
+    "question": "Who attempted the most free throws in the 2005-06 regular season, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, SUM(total_free_throws_attempted) AS free_throws_attempted\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_season_facts\"\nWHERE season = 2005\nGROUP BY player_id, player_name\nORDER BY free_throws_attempted DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.local_player_season_facts"
+    ],
+    "recalled": false,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2548",
+        "Dwyane Wade",
+        "1095.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 17,
+    "category": "layer",
+    "question": "How many games did Kawhi Leonard play in the 2018-19 regular season?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, SUM(games_played) AS games_played\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_season_facts\"\nWHERE LOWER(player_name) = 'kawhi leonard' AND season = 2018\nGROUP BY player_id, player_name",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "raw.raw_games",
+      "transformed.local_player_season_facts",
+      "transformed.src_ranking"
+    ],
+    "recalled": false,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "202695",
+        "Kawhi Leonard",
+        "87"
+      ]
+    ]
+  },
+  {
+    "question_id": 18,
+    "category": "layer",
+    "question": "What was Joel Embiid's scoring average in the 2016-17 regular season? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, ROUND(AVG(points), 2) AS points_per_game\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_game_facts\"\nWHERE LOWER(player_name) = 'joel embiid'\n  AND season = 2016\n  AND participated = true\n  AND CAST(game_id AS VARCHAR) LIKE '2%'\nGROUP BY player_id, player_name",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.local_team_season_facts"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "203954",
+        "Joel Embiid",
+        "20.23"
+      ]
+    ]
+  },
+  {
+    "question_id": 19,
+    "category": "layer",
+    "question": "How many three-pointers did Stephen Curry make in the 2020-21 regular season?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, SUM(three_pointers_made) AS three_pointers_made\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_game_facts\"\nWHERE LOWER(player_name) = 'stephen curry'\n  AND season = 2020\n  AND CAST(game_id AS VARCHAR) LIKE '2%'\nGROUP BY player_id, player_name",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.local_team_season_facts"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "201939",
+        "Stephen Curry",
+        "337.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 20,
+    "category": "layer",
+    "question": "What was the Phoenix Suns' regular-season record in 2020-21?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT t.team_id, t.city, t.team_nickname,\n  SUM(CASE WHEN g.team_won THEN 1 ELSE 0 END) AS wins,\n  SUM(CASE WHEN g.team_lost THEN 1 ELSE 0 END) AS losses\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_team_game_facts\" g\nJOIN \"nba_analysis\".\"TRANSFORMED\".\"dim_teams_cleansed\" t ON g.team_id = t.team_id\nWHERE g.season = 2020\n  AND CAST(g.game_id AS VARCHAR) LIKE '2%'\n  AND LOWER(t.city) = 'phoenix'\n  AND LOWER(t.team_nickname) = 'suns'\nGROUP BY t.team_id, t.city, t.team_nickname",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.dim_teams_cleansed",
+      "transformed.local_team_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_teams_cleansed",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.local_team_game_facts",
+      "transformed.src_games"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612756",
+        "Phoenix",
+        "Suns",
+        "51",
+        "21"
+      ]
+    ]
+  },
+  {
+    "question_id": 21,
+    "category": "layer",
+    "question": "Who has the most regular-season assists across all the seasons in the data, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, SUM(assists) AS total_assists\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_game_facts\"\nWHERE CAST(game_id AS VARCHAR) LIKE '2%'\n  AND participated = true\nGROUP BY player_id, player_name\nORDER BY total_assists DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.dim_teams_cleansed",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.local_team_season_facts",
+      "transformed.src_games"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "101108",
+        "Chris Paul",
+        "11140.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 22,
+    "category": "layer",
+    "question": "Who scored the most points in the 2015-16 regular season, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, SUM(points) AS total_points\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_game_facts\"\nWHERE season = 2015\n  AND CAST(game_id AS VARCHAR) LIKE '2%'\n  AND participated = true\nGROUP BY player_id, player_name\nORDER BY total_points DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.local_team_season_facts"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "201935",
+        "James Harden",
+        "2376.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 23,
+    "category": "layer",
+    "question": "Who scored the most points in the 2016 playoffs, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, SUM(points) AS total_points\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_game_facts\"\nWHERE season = 2016\n  AND CAST(game_id AS VARCHAR) LIKE '4%'\nGROUP BY player_id, player_name\nORDER BY total_points DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "raw.raw_games",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2544",
+        "LeBron James",
+        "591.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 24,
+    "category": "layer",
+    "question": "How many playoff games did the San Antonio Spurs win in the 2014 playoffs?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.local_team_game_facts",
+      "transformed.local_team_season_facts"
+    ],
+    "recalled": false,
+    "local_offered": true,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 25,
+    "category": "layer",
+    "question": "In the 2016-17 regular season, how many of the games in which Kevin Durant scored 30 or more points did the Warriors win?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(DISTINCT f.game_id) AS games_won_with_30_plus\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_game_facts\" f\nJOIN \"nba_analysis\".\"TRANSFORMED\".\"dim_teams_cleansed\" t ON f.team_id = t.team_id\nWHERE LOWER(f.player_name) = 'kevin durant'\n  AND f.season = 2016\n  AND CAST(f.game_id AS VARCHAR) LIKE '2%'\n  AND f.participated = true\n  AND f.points >= 30\n  AND LOWER(t.team_nickname) LIKE '%warriors%'\n  AND ((f.is_home = true AND f.home_team_wins = 1) OR (f.is_home = false AND f.home_team_wins = 0))",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.dim_teams_cleansed",
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.dim_teams_cleansed",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.src_games"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "13"
+      ]
+    ]
+  },
+  {
+    "question_id": 26,
+    "category": "layer",
+    "question": "Who grabbed the most rebounds in the 2016-17 regular season, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, total_rebounds\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_season_facts\"\nWHERE season = 2016\nORDER BY total_rebounds DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.local_player_season_facts"
+    ],
+    "recalled": false,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "201599",
+        "DeAndre Jordan",
+        "1251.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 27,
+    "category": "vocabulary",
+    "question": "How many triple-doubles did Nikola Jokic record in the 2021-22 regular season?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.src_games"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 28,
+    "category": "vocabulary",
+    "question": "How many double-doubles did Andre Drummond have in the 2015-16 regular season?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, COUNT(*) AS double_doubles\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_game_facts\"\nWHERE LOWER(player_name) = 'andre drummond'\n  AND season = 2015\n  AND participated = true\n  AND CAST(game_id AS VARCHAR) LIKE '2%'\n  AND (CASE WHEN points >= 10 THEN 1 ELSE 0 END\n     + CASE WHEN rebounds >= 10 THEN 1 ELSE 0 END\n     + CASE WHEN assists >= 10 THEN 1 ELSE 0 END\n     + CASE WHEN steals >= 10 THEN 1 ELSE 0 END\n     + CASE WHEN blocks >= 10 THEN 1 ELSE 0 END) >= 2\nGROUP BY player_id, player_name",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "203083",
+        "Andre Drummond",
+        "66"
+      ]
+    ]
+  },
+  {
+    "question_id": 29,
+    "category": "vocabulary",
+    "question": "Among players with at least 1,000 field goal attempts, who had the best true shooting percentage in the 2016-17 regular season? Give it as a fraction rounded to three decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, ROUND(SUM(points) / (2 * (SUM(field_goals_attempted) + 0.44 * SUM(free_throws_attempted))), 3) AS true_shooting_pct\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_game_facts\"\nWHERE season = 2016 AND participated = true AND CAST(game_id AS VARCHAR) LIKE '2%'\nGROUP BY player_id, player_name\nHAVING SUM(field_goals_attempted) >= 1000\nORDER BY SUM(points) / (2 * (SUM(field_goals_attempted) + 0.44 * SUM(free_throws_attempted))) DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "201142",
+        "Kevin Durant",
+        "0.651"
+      ]
+    ]
+  },
+  {
+    "question_id": 30,
+    "category": "vocabulary",
+    "question": "Among players with at least 500 assists, who had the best assist-to-turnover ratio in the 2014-15 regular season? Round the ratio to two decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, SUM(assists) AS total_assists, ROUND(SUM(assists) / NULLIF(SUM(turnovers), 0), 2) AS assist_to_turnover_ratio\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_game_facts\"\nWHERE season = 2014\n  AND CAST(game_id AS VARCHAR) LIKE '2%'\n  AND participated = true\nGROUP BY player_id, player_name\nHAVING SUM(assists) >= 500\nORDER BY SUM(assists) / NULLIF(SUM(turnovers), 0) DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.stg_player_information"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "101108",
+        "Chris Paul",
+        "838.0",
+        "4.41"
+      ]
+    ]
+  },
+  {
+    "question_id": 31,
+    "category": "vocabulary",
+    "question": "What was the Golden State Warriors' road record in the 2015-16 regular season?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT team, season_id, standings_date, road_record\nFROM \"nba_analysis\".\"TRANSFORMED\".\"src_ranking\"\nWHERE (team ILIKE '%Warriors%' OR team ILIKE '%Golden State%')\n  AND season_id = 22015\nORDER BY standings_date DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "src"
+    ],
+    "tables": [
+      "transformed.src_ranking"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "raw.raw_ranking",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.src_ranking"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "Golden State",
+        "22015",
+        "2016-09-30",
+        "34-7"
+      ]
+    ]
+  },
+  {
+    "question_id": 32,
+    "category": "vocabulary",
+    "question": "Which team had the worst winning percentage in the 2011-12 regular season? Give the team abbreviation and the percentage as a fraction rounded to three decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT t.team_id, d.team_abbreviation, ROUND(SUM(CASE WHEN t.team_won THEN 1 ELSE 0 END) * 1.0 / COUNT(*), 3) AS win_pct\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_team_game_facts\" t\nJOIN \"nba_analysis\".\"TRANSFORMED\".\"dim_teams_cleansed\" d ON t.team_id = d.team_id\nWHERE t.season = 2011 AND CAST(t.game_id AS VARCHAR) LIKE '2%'\nGROUP BY t.team_id, d.team_abbreviation\nORDER BY SUM(CASE WHEN t.team_won THEN 1 ELSE 0 END) * 1.0 / COUNT(*) ASC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.dim_teams_cleansed",
+      "transformed.local_team_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.dim_teams_cleansed",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.local_team_game_facts",
+      "transformed.local_team_season_facts",
+      "transformed.src_games"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612766",
+        "CHA",
+        "0.106"
+      ]
+    ]
+  },
+  {
+    "question_id": 33,
+    "category": "vocabulary",
+    "question": "Who had the best total plus-minus in the 2015-16 regular season, and what was it?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, SUM(plus_minus) AS total_plus_minus\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_game_facts\"\nWHERE season = 2015\n  AND CAST(game_id AS VARCHAR) LIKE '2%'\n  AND participated = true\nGROUP BY player_id, player_name\nORDER BY total_plus_minus DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.local_team_season_facts"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "203110",
+        "Draymond Green",
+        "1072.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 34,
+    "category": "vocabulary",
+    "question": "Which team's bench scored the most points in the 2018-19 regular season, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT\n  g.team_id,\n  MAX(p.team_abbreviation) AS team_abbreviation,\n  MAX(p.team_city) AS team_city,\n  SUM(g.points) AS bench_points\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_player_game_facts\" g\nJOIN (\n  SELECT\n    details_game_id,\n    player_id,\n    MAX(COALESCE(TRIM(player_start_position), '')) AS start_position,\n    MAX(team_abbreviation) AS team_abbreviation,\n    MAX(team_city) AS team_city\n  FROM \"nba_analysis\".\"TRANSFORMED\".\"src_games_details\"\n  GROUP BY details_game_id, player_id\n) p\n  ON g.game_id = p.details_game_id\n AND g.player_id = p.player_id\nWHERE g.season = 2018\n  AND CAST(g.game_id AS VARCHAR) LIKE '2%'\n  AND g.participated = true\n  AND p.start_position = ''\nGROUP BY g.team_id\nORDER BY bench_points DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local",
+      "src"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts",
+      "transformed.src_games_details"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.local_team_game_facts",
+      "transformed.local_team_season_facts"
+    ],
+    "recalled": false,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612746",
+        "LAC",
+        "LA",
+        "4364.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 35,
+    "category": "join",
+    "question": "Which 2018-19 regular-season game had the highest combined score? Give the date, the home and away teams and the final score.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT\n  t.game_id,\n  t.game_date,\n  t.team_id AS home_team_id,\n  CONCAT(h.city, ' ', h.team_nickname) AS home_team,\n  t.opponent_team_id AS away_team_id,\n  CONCAT(a.city, ' ', a.team_nickname) AS away_team,\n  t.team_points AS home_points,\n  t.opponent_points AS away_points,\n  t.team_points + t.opponent_points AS combined_score\nFROM \"nba_analysis\".\"TRANSFORMED\".\"local_team_game_facts\" AS t\nJOIN \"nba_analysis\".\"TRANSFORMED\".\"dim_teams_cleansed\" AS h\n  ON t.team_id = h.team_id\nJOIN \"nba_analysis\".\"TRANSFORMED\".\"dim_teams_cleansed\" AS a\n  ON t.opponent_team_id = a.team_id\nWHERE t.is_home = true\n  AND t.season = 2018\n  AND CAST(t.game_id AS VARCHAR) LIKE '2%'\nORDER BY combined_score DESC, t.game_date\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.dim_teams_cleansed",
+      "transformed.local_team_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.dim_teams_cleansed",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.local_team_game_facts",
+      "transformed.src_games"
+    ],
+    "recalled": true,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "21800928",
+        "2019-03-01",
+        "1610612737",
+        "Atlanta Hawks",
+        "1610612741",
+        "Chicago Bulls",
+        "161.0",
+        "168.0",
+        "329.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 36,
+    "category": "join",
+    "question": "Which team made the most three-pointers in the 2018-19 regular season, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT f.team_id, t.city, t.team_nickname, SUM(f.total_three_points_made) AS three_pointers_made\nFROM \"nba_analysis\".\"TRANSFORMED\".\"fct_player_journey\" f\nLEFT JOIN \"nba_analysis\".\"TRANSFORMED\".\"dim_teams_cleansed\" t ON CAST(f.team_id AS BIGINT) = CAST(t.team_id AS BIGINT)\nWHERE CAST(f.season AS INTEGER) = 2018 AND f.team_id IS NOT NULL\nGROUP BY f.team_id, t.city, t.team_nickname\nORDER BY three_pointers_made DESC NULLS LAST\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [
+      "fct"
+    ],
+    "tables": [
+      "transformed.dim_teams_cleansed",
+      "transformed.fct_player_journey"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "raw.raw_teams",
+      "transformed.dim_teams_cleansed",
+      "transformed.local_player_season_facts"
+    ],
+    "recalled": false,
+    "local_offered": true,
+    "drafted_notes": [],
+    "pred_rows": 0,
+    "pred_sample": []
+  },
+  {
+    "question_id": 37,
+    "category": "join",
+    "question": "Who scored the most points for the Toronto Raptors in the 2019 playoffs, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.local_team_game_facts",
+      "transformed.local_team_season_facts"
+    ],
+    "recalled": false,
+    "local_offered": true,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 38,
+    "category": "join",
+    "question": "What was the Los Angeles Lakers' record against the Los Angeles Clippers in the 2019-20 regular season?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.local_team_game_facts",
+      "transformed.local_team_season_facts"
+    ],
+    "recalled": false,
+    "local_offered": true,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 39,
+    "category": "join",
+    "question": "How many Western Conference teams won at least 50 games in the 2013-14 regular season?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.dim_teams_cleansed",
+      "transformed.local_player_game_facts",
+      "transformed.local_team_game_facts",
+      "transformed.local_team_season_facts",
+      "transformed.src_games"
+    ],
+    "recalled": false,
+    "local_offered": true,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 40,
+    "category": "join",
+    "question": "What was the Golden State Warriors' record in the 2019-20 regular season in the games Stephen Curry did not play?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [
+      "transformed.dim_seasons",
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts",
+      "transformed.local_team_season_facts",
+      "transformed.src_games"
+    ],
+    "recalled": false,
+    "local_offered": true,
+    "drafted_notes": []
+  }
+]

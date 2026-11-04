@@ -19,6 +19,7 @@ import collections
 import datetime
 import decimal
 import json
+import os
 import re
 import sys
 import threading
@@ -28,7 +29,8 @@ import duckdb
 
 ROOT = Path(__file__).resolve().parent.parent
 DB = ROOT / "work" / "nba" / "source" / "nba_analysis.duckdb"
-QUESTIONS = ROOT / "nba" / "questions.json"
+# P6: BENCH_QUESTIONS points at another question file (nba/questions-p6.json).
+QUESTIONS = Path(os.environ["BENCH_QUESTIONS"]) if os.environ.get("BENCH_QUESTIONS") else ROOT / "nba" / "questions.json"
 TIMEOUT_S = 30.0
 TOLERANCE_DIGITS = 6
 

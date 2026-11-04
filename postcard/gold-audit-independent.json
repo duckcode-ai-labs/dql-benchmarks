@@ -1,0 +1,242 @@
+[
+ {
+  "question_id": 1,
+  "verdict": "SOUND",
+  "reason": "raw_resellers gives 0.14 for Scandinavian Legendary Printing Company; raw, staging and core agree.",
+  "fix": null
+ },
+ {
+  "question_id": 2,
+  "verdict": "SOUND",
+  "reason": "Seed raw.geography lists Zagreb (Croatia) under 'Eastern Europe'; 'in our geography' points to the seed, not a textbook atlas.",
+  "fix": null
+ },
+ {
+  "question_id": 3,
+  "verdict": "SOUND",
+  "reason": "The union of the three raw feeds runs from 2024-10-25 to 2026-10-26, matching the gold rows.",
+  "fix": null
+ },
+ {
+  "question_id": 4,
+  "verdict": "SOUND",
+  "reason": "raw_resellers has 4 rows, and 4 distinct non-zero reseller ids appear in the sales feeds. Gold correctly drops the synthetic Direct Sales row (key 0).",
+  "fix": null
+ },
+ {
+  "question_id": 5,
+  "verdict": "SOUND",
+  "reason": "Transaction 150000 is in raw_reseller_type1_sales with Reseller ID 1002 (European Example Press Corporation): qty 6, total 22.2. Ids are globally unique, so there is no second match.",
+  "fix": null
+ },
+ {
+  "question_id": 6,
+  "verdict": "SOUND",
+  "reason": "raw_customers id 40493 has country 'Greece'; there is one dim_customer row with that original_customer_id.",
+  "fix": null
+ },
+ {
+  "question_id": 7,
+  "verdict": "SOUND",
+  "reason": "Summing the raw feeds over the 2025 dates gives 1,474,704.80. Gross revenue is the natural reading, and the question set asks for net separately in Q27. Amounts are multiples of 0.1, so there is no rounding edge.",
+  "fix": null
+ },
+ {
+  "question_id": 8,
+  "verdict": "SOUND",
+  "reason": "Counting raw-feed rows dated 2026-01-01..2026-03-31 gives 36,870. 'Sales' means transactions, not cards.",
+  "fix": null
+ },
+ {
+  "question_id": 9,
+  "verdict": "SOUND",
+  "reason": "Raw feeds, 2025: mobile app 590,700.90, web 587,809.30, in-store 296,194.60. No tie.",
+  "fix": null
+ },
+ {
+  "question_id": 10,
+  "verdict": "SOUND",
+  "reason": "Raw feeds, 2025: December 126,784.10, then August 126,019.70. No tie.",
+  "fix": null
+ },
+ {
+  "question_id": 11,
+  "verdict": "SOUND",
+  "reason": "Raw feeds, 2025 SUM(qty) by product name: 1199, 1188, 1172; the 4th is 1165, so there is no tie at LIMIT 3. Product names are unique (500/500), so grouping by name is safe.",
+  "fix": null
+ },
+ {
+  "question_id": 12,
+  "verdict": "SOUND",
+  "reason": "Raw reseller amounts × raw_resellers rates for 2025 = 159,875.671 (exact decimal), which rounds to 159,875.67.",
+  "fix": null
+ },
+ {
+  "question_id": 13,
+  "verdict": "SOUND",
+  "reason": "Raw feeds, 2026: AVG(qty) = 3.3324, rounds to 3.33.",
+  "fix": null
+ },
+ {
+  "question_id": 14,
+  "verdict": "SOUND",
+  "reason": "Raw feeds dated 2025-10-01..2025-12-31 give 373,413.40.",
+  "fix": null
+ },
+ {
+  "question_id": 15,
+  "verdict": "SOUND",
+  "reason": "Raw feeds, 2025, with city/Series City 'Donetsk ' (trailing space): 20,960.30 over 2,127 sales. Gold's TRIM handles the space; matching product names with '% - Donetsk %' gives the same total.",
+  "fix": null
+ },
+ {
+  "question_id": 16,
+  "verdict": "SOUND",
+  "reason": "Raw feeds, 2025 SUM(qty): Imaginary 88,148, Scandinavian 87,768. Counting rows instead gives the same winner (25,144 rows).",
+  "fix": null
+ },
+ {
+  "question_id": 17,
+  "verdict": "SOUND",
+  "reason": "Raw feeds, 2025: 499,284 cards (149,716 rows). 'Postcards sold' means units.",
+  "fix": null
+ },
+ {
+  "question_id": 18,
+  "verdict": "SOUND",
+  "reason": "Raw recomputation with customer = direct customer_id or (reseller, email): 63,207 + 180,063 = 243,270. This follows the mart's documented customer_key. Caveat: reseller rows that share an email have different phones and addresses, so a person-level count would be higher, but no analyst could get that from the mart.",
+  "fix": null
+ },
+ {
+  "question_id": 19,
+  "verdict": "SOUND",
+  "reason": "Distinct customer_id in raw_transactions = 63,207. Minor policy slip with no effect on any answer: randrange(1,100000) excludes only customer 0; customer 1 simply never bought.",
+  "fix": null
+ },
+ {
+  "question_id": 20,
+  "verdict": "SOUND",
+  "reason": "Distinct emails among reseller 1001's 2025 rows = 23,723 (also case-insensitive). This follows the mart's (reseller, email) customer key. Rows and phones give 25,144, but the mart documents email as the key, so 23,723 is the reading an analyst would take.",
+  "fix": null
+ },
+ {
+  "question_id": 21,
+  "verdict": "SOUND",
+  "reason": "raw_transactions, 2025 dates: 442,931.60.",
+  "fix": null
+ },
+ {
+  "question_id": 22,
+  "verdict": "SOUND",
+  "reason": "Raw feeds, 2025: reseller share = 0.69965, rounds to 0.700 (gold 0.7). Gross share is the natural reading.",
+  "fix": null
+ },
+ {
+  "question_id": 23,
+  "verdict": "SOUND",
+  "reason": "raw_reseller_type2_sales, reseller 1003, salesChannel 'web', 2026 dates: 8,791.",
+  "fix": null
+ },
+ {
+  "question_id": 24,
+  "verdict": "SOUND",
+  "reason": "Raw recomputation with the mart's customer key: 41,343 customers have more than one sale (26,433 direct + 14,910 reseller). Counting distinct days instead gives 41,312, because 31 customers made several separate transactions on one day. Each transaction is a purchase, so 41,343 stands.",
+  "fix": null
+ },
+ {
+  "question_id": 25,
+  "verdict": "SOUND",
+  "reason": "Raw feeds, channel 'web', 2026-03-01..2026-03-31: 5,021 sales, 49,988.10.",
+  "fix": null
+ },
+ {
+  "question_id": 26,
+  "verdict": "SOUND",
+  "reason": "raw_customers with no row in raw_transactions = 36,793. Every reseller customer exists only because of a sale, so the answer is the same whether 'on our books' means dim_customer or the direct customer file.",
+  "fix": null
+ },
+ {
+  "question_id": 27,
+  "verdict": "SOUND",
+  "reason": "Exact decimals: 1,474,704.8 − 159,875.671 = 1,314,829.129, which rounds to 1,314,829.13. Gold's COALESCE keeps the direct sales in.",
+  "fix": null
+ },
+ {
+  "question_id": 28,
+  "verdict": "SOUND",
+  "reason": "Raw dates with dayname Saturday/Sunday (and isodow 6, 7) in 2025: 420,425.80.",
+  "fix": null
+ },
+ {
+  "question_id": 29,
+  "verdict": "SOUND",
+  "reason": "Raw feeds: 2026-01-01..2026-10-26 = 1,207,689.30 against 2025-01-01..2025-10-26 = 1,205,577.90, a change of +0.175%, which rounds to 0.2. Neither year is a leap year.",
+  "fix": null
+ },
+ {
+  "question_id": 30,
+  "verdict": "SOUND",
+  "reason": "Raw feeds joined to the seed by depicted city, country 'Germany', 2025: 164,972.80. 'Postcards of German cities' is clearly the depicted city, not where the buyer lives.",
+  "fix": null
+ },
+ {
+  "question_id": 31,
+  "verdict": "SOUND",
+  "reason": "Size taken from the name by regex, 2025 SUM(qty): 6x11 94,924, then 5.5x8.5 94,449. No tie.",
+  "fix": null
+ },
+ {
+  "question_id": 32,
+  "verdict": "SOUND",
+  "reason": "raw_transactions, 2025: AVG(amount) = 8.8807, which rounds to 8.88. There is no order header, so one transaction = one order.",
+  "fix": null
+ },
+ {
+  "question_id": 33,
+  "verdict": "SOUND",
+  "reason": "Raw first-sale dates with the mart's customer key: 9,565 first purchases in January 2026 (2,228 direct + 7,337 reseller). Unqualified 'customers' includes reseller customers, consistent with Q18.",
+  "fix": null
+ },
+ {
+  "question_id": 34,
+  "verdict": "SOUND",
+  "reason": "Exact decimals, 2025: European 43,645.443, Mediterranean 40,939.904. Rounds to 43,645.44. 'Partner' = reseller.",
+  "fix": null
+ },
+ {
+  "question_id": 35,
+  "verdict": "SOUND",
+  "reason": "Raw feeds, 2025: Imaginary 260,779.80, Scandinavian 258,381.10, European 256,737.90, Mediterranean 255,874.40. All four match. Gross 'revenue' fits the mart's definition.",
+  "fix": null
+ },
+ {
+  "question_id": 36,
+  "verdict": "SOUND",
+  "reason": "Raw reseller feeds joined to the seed via Series City, 2025: Eastern Europe 523,248.10, then Central Europe 183,574.60.",
+  "fix": null
+ },
+ {
+  "question_id": 37,
+  "verdict": "SOUND",
+  "reason": "raw_transactions joined to raw_customers by id: 10711 Jennifer Cooper 87.10, then 13270 at 82.30. No tie. Grouping by id avoids the repeated-name trap.",
+  "fix": null
+ },
+ {
+  "question_id": 38,
+  "verdict": "SOUND",
+  "reason": "Raw dates, 2025: Tuesday 212,261.20, then Monday 212,004.30. No tie.",
+  "fix": null
+ },
+ {
+  "question_id": 39,
+  "verdict": "SOUND",
+  "reason": "raw_reseller_type2_sales, reseller 1004, 2025, by seriesCity: Bremen 6,175.10, then Bucharest 5,503.20. No tie, and 'Bremen' has no stray spaces.",
+  "fix": null
+ },
+ {
+  "question_id": 40,
+  "verdict": "SOUND",
+  "reason": "raw_transactions joined to raw_customers, country exactly 'France', 2025: 1,609.20 over 194 sales. French Guiana, French Polynesia and French Southern Territories are separate Faker countries and are rightly left out. No case or space variants exist.",
+  "fix": null
+ }
+]

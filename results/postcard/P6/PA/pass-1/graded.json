@@ -1,0 +1,1593 @@
+[
+  {
+    "question_id": 1,
+    "category": "lookup",
+    "question": "What commission rate do we pay the Scandinavian Legendary Printing Company? Give it as a fraction.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "blocked",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": null,
+    "chosen": [],
+    "recalled": null,
+    "local_offered": null,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 2,
+    "category": "lookup",
+    "question": "Which region does Zagreb belong to in our geography?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT geography_key, city_name, region_name\nFROM \"datamart\".\"postcard_company_core\".\"dim_geography\"\nWHERE LOWER(city_name) = 'zagreb'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim"
+    ],
+    "tables": [
+      "postcard_company_core.dim_geography"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_geography",
+      "postcard_company_raw.geography",
+      "postcard_company_staging.staging_products",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "43",
+        "Zagreb",
+        "Eastern Europe"
+      ]
+    ]
+  },
+  {
+    "question_id": 3,
+    "category": "lookup",
+    "question": "On what dates did we record our first and our last sale?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT MIN(d.date_value) AS first_sale_date, MAX(d.date_value) AS last_sale_date\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2024-10-25",
+        "2026-10-26"
+      ]
+    ]
+  },
+  {
+    "question_id": 4,
+    "category": "lookup",
+    "question": "How many resellers sell our postcards?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(DISTINCT reseller_id) AS reseller_count FROM \"datamart\".\"postcard_company_staging\".\"staging_resellers\"",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "other"
+    ],
+    "tables": [
+      "postcard_company_staging.staging_resellers"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales",
+      "postcard_company_staging.staging_resellers",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "4"
+      ]
+    ]
+  },
+  {
+    "question_id": 5,
+    "category": "lookup",
+    "question": "Which reseller handled transaction 150000, and what was the sale amount?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT\n  a.sales_agent_key,\n  a.reseller_name,\n  f.transaction_id,\n  t2.product_name,\n  SUM(f.total_amount) AS sale_amount\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_sales_agent\" a\n  ON f.sales_agent_key = a.sales_agent_key\nLEFT JOIN \"datamart\".\"postcard_company_staging\".\"staging_reseller_type2_sales\" t2\n  ON f.transaction_id = t2.transaction_id\nWHERE f.transaction_id = 150000\nGROUP BY a.sales_agent_key, a.reseller_name, f.transaction_id, t2.product_name",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type2_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1002",
+        "European Example Press Corporation",
+        "150000",
+        "None",
+        "22.2"
+      ]
+    ]
+  },
+  {
+    "question_id": 6,
+    "category": "lookup",
+    "question": "Which country does direct customer number 40493 live in?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT customer_key, original_customer_id, customer_country\nFROM \"datamart\".\"postcard_company_core\".\"dim_customer\"\nWHERE original_customer_id = 40493",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim"
+    ],
+    "tables": [
+      "postcard_company_core.dim_customer"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_customers"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "c8601877631e5c3135b2709516daeb8f",
+        "40493",
+        "Greece"
+      ]
+    ]
+  },
+  {
+    "question_id": 7,
+    "category": "aggregate",
+    "question": "What was our total revenue in 2025? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT ROUND(SUM(f.total_amount), 2) AS total_revenue\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key\nWHERE d.date_value >= DATE '2025-01-01' AND d.date_value < DATE '2026-01-01'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_channel",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1474704.8"
+      ]
+    ]
+  },
+  {
+    "question_id": 8,
+    "category": "aggregate",
+    "question": "How many sales did we make in the first quarter of 2026?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(DISTINCT f.transaction_id) AS sales_count\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key\nWHERE d.date_value >= DATE '2026-01-01' AND d.date_value < DATE '2026-04-01'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "36870"
+      ]
+    ]
+  },
+  {
+    "question_id": 9,
+    "category": "aggregate",
+    "question": "Which brought in the most revenue in 2025: in-store, web or mobile app sales? Give the channel and the revenue rounded to two decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "blocked",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": null,
+    "chosen": [],
+    "recalled": null,
+    "local_offered": null,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 10,
+    "category": "aggregate",
+    "question": "Which month of 2025 had the highest revenue? Give the month's name and the revenue rounded to two decimals.",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT d.month_name, ROUND(SUM(f.total_amount), 2) AS revenue\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key\nWHERE d.date_value >= DATE '2025-01-01' AND d.date_value < DATE '2026-01-01'\nGROUP BY d.first_day_of_month, d.month_name\nORDER BY SUM(f.total_amount) DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_channel",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_product",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_resellers"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "December",
+        "126784.1"
+      ]
+    ]
+  },
+  {
+    "question_id": 11,
+    "category": "aggregate",
+    "question": "What were our three best-selling postcards in 2025 by number of cards sold? Give each postcard's name and the number sold.",
+    "gold_rows": 3,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT p.product_key, p.product_name, SUM(f.qty) AS cards_sold\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_product\" p ON f.product_key = p.product_key\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key\nWHERE d.date_value >= DATE '2025-01-01' AND d.date_value < DATE '2026-01-01'\nGROUP BY p.product_key, p.product_name\nORDER BY cards_sold DESC\nLIMIT 3",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_product",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_product",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_resellers"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 3,
+    "pred_sample": [
+      [
+        "ac4e57ec55134881ab9a90f220655281",
+        "4.25x6 - Ryazan - Networked intangible monitoring",
+        "1199"
+      ],
+      [
+        "aa260b05abb8b406b7cd1d3970bc2f59",
+        "5.5x8.5 - Milano (Milan) - Reverse-engineered full-range attitude",
+        "1188"
+      ],
+      [
+        "8e6b6051f79e75f1ed3385ee91ab2f64",
+        "4x6 - Izhevsk - Multi-tiered fresh-thinking data-warehouse",
+        "1172"
+      ]
+    ]
+  },
+  {
+    "question_id": 12,
+    "category": "aggregate",
+    "question": "How much commission did we pay our resellers in total in 2025? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "blocked",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": null,
+    "chosen": [],
+    "recalled": null,
+    "local_offered": null,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 13,
+    "category": "aggregate",
+    "question": "On average, how many postcards were in a single sale in 2026? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT ROUND(AVG(fs.qty), 2) AS avg_postcards_per_sale\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" fs\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON fs.bought_date_key = d.date_key\nWHERE d.date_value >= DATE '2026-01-01' AND d.date_value < DATE '2027-01-01'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "3.33"
+      ]
+    ]
+  },
+  {
+    "question_id": 14,
+    "category": "aggregate",
+    "question": "What was our revenue in the fourth quarter of 2025? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT ROUND(SUM(f.total_amount), 2) AS revenue\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key\nWHERE d.date_value >= DATE '2025-10-01' AND d.date_value < DATE '2026-01-01'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_product",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "373413.4"
+      ]
+    ]
+  },
+  {
+    "question_id": 15,
+    "category": "aggregate",
+    "question": "How much revenue did our Donetsk postcards bring in during 2025? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT ROUND(SUM(f.total_amount), 2) AS donetsk_revenue_2025\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_geography\" g ON f.geography_key = g.geography_key\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key\nWHERE LOWER(g.city_name) LIKE '%donetsk%'\n  AND d.date_value >= DATE '2025-01-01'\n  AND d.date_value < DATE '2026-01-01'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_geography",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_geography",
+      "postcard_company_core.fact_sales",
+      "postcard_company_raw.geography",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_resellers"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "20960.3"
+      ]
+    ]
+  },
+  {
+    "question_id": 16,
+    "category": "aggregate",
+    "question": "Which reseller sold the most postcards in 2025, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT\n  a.original_reseller_id,\n  a.reseller_name,\n  SUM(f.qty) AS postcards_sold\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_sales_agent\" a\n  ON f.sales_agent_key = a.sales_agent_key\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d\n  ON f.bought_date_key = d.date_key\nWHERE d.date_value >= DATE '2025-01-01'\n  AND d.date_value < DATE '2026-01-01'\nGROUP BY a.original_reseller_id, a.reseller_name\nORDER BY postcards_sold DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales",
+      "postcard_company_staging.staging_resellers",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "0",
+        "Direct Sales",
+        "149742"
+      ]
+    ]
+  },
+  {
+    "question_id": 17,
+    "category": "layer",
+    "question": "How many postcards did we sell in 2025?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT COUNT(fs.sales_key) AS postcards_sold\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" fs\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d\n  ON fs.bought_date_key = d.date_key\nWHERE d.date_value >= DATE '2025-01-01'\n  AND d.date_value < DATE '2026-01-01'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_resellers",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "149716"
+      ]
+    ]
+  },
+  {
+    "question_id": 18,
+    "category": "layer",
+    "question": "How many customers have bought from us so far?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(DISTINCT customer_key) AS customers_who_bought\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\"",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "243270"
+      ]
+    ]
+  },
+  {
+    "question_id": 19,
+    "category": "layer",
+    "question": "How many of our direct customers have placed at least one order?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(DISTINCT f.customer_key) AS customers_with_orders\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_customer\" c\n  ON f.customer_key = c.customer_key\nWHERE c.sales_agent_key = 0",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "63207"
+      ]
+    ]
+  },
+  {
+    "question_id": 20,
+    "category": "layer",
+    "question": "How many different customers bought from the Imaginary Street Press Company in 2025?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(DISTINCT f.customer_key) AS distinct_customers\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_sales_agent\" a ON f.sales_agent_key = a.sales_agent_key\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key\nWHERE LOWER(a.reseller_name) = LOWER('Imaginary Street Press Company')\n  AND d.date_value >= DATE '2025-01-01'\n  AND d.date_value < DATE '2026-01-01'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_channel",
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "23723"
+      ]
+    ]
+  },
+  {
+    "question_id": 21,
+    "category": "layer",
+    "question": "What was our direct-sales revenue in 2025? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT ROUND(SUM(f.total_amount), 2) AS direct_sales_revenue\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_sales_agent\" a ON f.sales_agent_key = a.sales_agent_key\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key\nWHERE a.original_reseller_id = 0\n  AND d.date_value >= DATE '2025-01-01'\n  AND d.date_value < DATE '2026-01-01'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "442931.6"
+      ]
+    ]
+  },
+  {
+    "question_id": 22,
+    "category": "layer",
+    "question": "What share of our 2025 revenue came through resellers? Give it as a fraction rounded to three decimals.",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT ROUND(SUM(CASE WHEN t.reseller_id > 0 THEN t.total_amount ELSE 0 END) / SUM(t.total_amount), 3) AS reseller_revenue_share\nFROM \"datamart\".\"postcard_company_staging\".\"staging_transactions\" t\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON t.bought_date_key = d.date_key\nWHERE d.date_value >= DATE '2025-01-01' AND d.date_value < DATE '2026-01-01'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_resellers",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "0.7"
+      ]
+    ]
+  },
+  {
+    "question_id": 23,
+    "category": "layer",
+    "question": "How many sales did the Scandinavian Legendary Printing Company make through the web in 2026?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_channel",
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 24,
+    "category": "layer",
+    "question": "How many customers have made more than one purchase with us?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(*) AS customer_count\nFROM (\n  SELECT customer_key\n  FROM \"datamart\".\"postcard_company_core\".\"fact_sales\"\n  GROUP BY customer_key\n  HAVING COUNT(DISTINCT sales_key) > 1\n) t",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_channel",
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "41343"
+      ]
+    ]
+  },
+  {
+    "question_id": 25,
+    "category": "layer",
+    "question": "How many web sales did we make in March 2026, and how much revenue did they bring in? Round the revenue to two decimals.",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(DISTINCT f.sales_key) AS web_sales_count,\n       ROUND(SUM(f.total_amount), 2) AS web_revenue\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_channel\" c ON f.channel_key = c.channel_key\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key\nWHERE LOWER(c.channel_name) = 'web'\n  AND d.date_value >= DATE '2026-03-01'\n  AND d.date_value < DATE '2026-04-01'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_channel",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_channel",
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "5021",
+        "49988.1"
+      ]
+    ]
+  },
+  {
+    "question_id": 26,
+    "category": "layer",
+    "question": "How many customers on our books have never bought anything?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(*) AS customers_never_bought\nFROM \"datamart\".\"postcard_company_core\".\"dim_customer\" c\nWHERE NOT EXISTS (\n  SELECT 1\n  FROM \"datamart\".\"postcard_company_core\".\"fact_sales\" s\n  WHERE s.customer_key = c.customer_key\n)",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "36793"
+      ]
+    ]
+  },
+  {
+    "question_id": 27,
+    "category": "vocabulary",
+    "question": "After paying reseller commissions, how much did we keep from our 2025 sales? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT ROUND(SUM(f.total_amount) - COALESCE(SUM(f.commissionpaid), 0), 2) AS net_kept_2025\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key\nWHERE d.date_value >= DATE '2025-01-01' AND d.date_value < DATE '2026-01-01'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales",
+      "postcard_company_staging.staging_resellers",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1314829.13"
+      ]
+    ]
+  },
+  {
+    "question_id": 28,
+    "category": "vocabulary",
+    "question": "How much revenue did we take on weekends in 2025? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT ROUND(SUM(f.total_amount), 2) AS weekend_revenue_2025\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key\nWHERE d.date_value >= DATE '2025-01-01'\n  AND d.date_value < DATE '2026-01-01'\n  AND LOWER(d.day_name) IN ('saturday', 'sunday')",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "420425.8"
+      ]
+    ]
+  },
+  {
+    "question_id": 29,
+    "category": "vocabulary",
+    "question": "Up to our most recent sale, how is 2026 revenue tracking against the same dates in 2025? Give the change as a percentage rounded to one decimal place.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "WITH daily AS (\n  SELECT bought_date_key, SUM(total_amount) AS revenue\n  FROM \"datamart\".\"postcard_company_core\".\"fact_sales\"\n  GROUP BY bought_date_key\n),\ndated AS (\n  SELECT d.date_value, daily.revenue\n  FROM daily\n  JOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d\n    ON d.date_key = daily.bought_date_key\n),\nbounds AS (\n  SELECT MAX(date_value) AS last_sale FROM dated\n),\ntotals AS (\n  SELECT\n    SUM(CASE WHEN dated.date_value >= make_date(YEAR(b.last_sale), 1, 1)\n              AND dated.date_value <= b.last_sale\n             THEN dated.revenue END) AS revenue_2026_ytd,\n    SUM(CASE WHEN dated.date_value >= make_date(YEAR(b.last_sale) - 1, 1, 1)\n              AND dated.date_value <= CAST(b.last_sale - INTERVAL 1 YEAR AS DATE)\n             THEN dated.revenue END) AS revenue_2025_same_dates\n  FROM dated\n  CROSS JOIN bounds b\n)\nSELECT\n  revenue_2026_ytd,\n  revenue_2025_same_dates,\n  ROUND(100.0 * (revenue_2026_ytd - revenue_2025_same_dates) / NULLIF(revenue_2025_same_dates, 0), 1) AS revenue_change_pct\nFROM totals",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1207689.3",
+        "1205577.9000000004",
+        "0.2"
+      ]
+    ]
+  },
+  {
+    "question_id": 30,
+    "category": "vocabulary",
+    "question": "How much revenue did postcards of German cities bring in during 2025? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT ROUND(SUM(f.total_amount), 2) AS revenue\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_product\" p ON f.product_key = p.product_key\nJOIN \"datamart\".\"postcard_company_core\".\"dim_geography\" g ON p.geography_key = g.geography_key\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key\nWHERE LOWER(g.country_name) = 'germany'\n  AND d.date_value >= DATE '2025-01-01'\n  AND d.date_value < DATE '2026-01-01'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_geography",
+      "postcard_company_core.dim_product",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_geography",
+      "postcard_company_core.dim_product",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "164972.8"
+      ]
+    ]
+  },
+  {
+    "question_id": 31,
+    "category": "vocabulary",
+    "question": "Which postcard size sold the most cards in 2025, and how many cards?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT p.product_key, p.product_name, SUM(f.qty) AS cards_sold\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key\nJOIN \"datamart\".\"postcard_company_core\".\"dim_product\" p ON f.product_key = p.product_key\nWHERE d.date_value >= DATE '2025-01-01' AND d.date_value < DATE '2026-01-01'\nGROUP BY p.product_key, p.product_name\nORDER BY cards_sold DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_product",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_channel",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_product",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "ac4e57ec55134881ab9a90f220655281",
+        "4.25x6 - Ryazan - Networked intangible monitoring",
+        "1199"
+      ]
+    ]
+  },
+  {
+    "question_id": 32,
+    "category": "vocabulary",
+    "question": "What was the average order value of our direct sales in 2025? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT ROUND(SUM(f.total_amount) / COUNT(DISTINCT f.transaction_id), 2) AS average_order_value\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_sales_agent\" a ON f.sales_agent_key = a.sales_agent_key\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key\nWHERE a.original_reseller_id = 0\n  AND d.date_value >= DATE '2025-01-01'\n  AND d.date_value < DATE '2026-01-01'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "8.88"
+      ]
+    ]
+  },
+  {
+    "question_id": 33,
+    "category": "vocabulary",
+    "question": "How many new customers did we win in January 2026?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "WITH first_purchase AS (\n  SELECT f.customer_key, MIN(d.date_value) AS first_purchase_date\n  FROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\n  JOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d\n    ON f.bought_date_key = d.date_key\n  WHERE f.customer_key IS NOT NULL\n  GROUP BY f.customer_key\n)\nSELECT COUNT(DISTINCT customer_key) AS new_customers\nFROM first_purchase\nWHERE first_purchase_date >= DATE '2026-01-01'\n  AND first_purchase_date < DATE '2026-02-01'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales",
+      "postcard_company_raw.raw_customers",
+      "postcard_company_raw.raw_reseller_type2_sales",
+      "postcard_company_staging.staging_customers"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "9565"
+      ]
+    ]
+  },
+  {
+    "question_id": 34,
+    "category": "vocabulary",
+    "question": "Which partner earned the most commission from us in 2025, and how much? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT a.sales_agent_key, a.reseller_name, ROUND(SUM(f.commissionpaid), 2) AS total_commission_paid\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_sales_agent\" a ON f.sales_agent_key = a.sales_agent_key\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key\nWHERE d.date_value >= DATE '2025-01-01' AND d.date_value < DATE '2026-01-01'\n  AND f.commissionpaid IS NOT NULL\nGROUP BY a.sales_agent_key, a.reseller_name\nORDER BY SUM(f.commissionpaid) DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_resellers",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1002",
+        "European Example Press Corporation",
+        "43645.44"
+      ]
+    ]
+  },
+  {
+    "question_id": 35,
+    "category": "join",
+    "question": "How much revenue did each reseller bring in during 2025? Give each reseller's name and its revenue rounded to two decimals.",
+    "gold_rows": 4,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT\n  a.original_reseller_id,\n  a.reseller_name,\n  ROUND(SUM(f.total_amount), 2) AS revenue\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_sales_agent\" a\n  ON f.sales_agent_key = a.sales_agent_key\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d\n  ON f.bought_date_key = d.date_key\nWHERE d.date_value >= DATE '2025-01-01'\n  AND d.date_value < DATE '2026-01-01'\nGROUP BY a.original_reseller_id, a.reseller_name\nORDER BY a.original_reseller_id",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales",
+      "postcard_company_staging.staging_resellers",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 5,
+    "pred_sample": [
+      [
+        "0",
+        "Direct Sales",
+        "442931.6"
+      ],
+      [
+        "1001",
+        "Imaginary Street Press Company",
+        "260779.8"
+      ],
+      [
+        "1002",
+        "European Example Press Corporation",
+        "256737.9"
+      ]
+    ]
+  },
+  {
+    "question_id": 36,
+    "category": "join",
+    "question": "Through our resellers, which region's postcards earned the most revenue in 2025, and how much? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT g.region_name, ROUND(SUM(f.total_amount), 2) AS revenue\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_sales_agent\" a ON f.sales_agent_key = a.sales_agent_key\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key\nJOIN \"datamart\".\"postcard_company_core\".\"dim_geography\" g ON f.geography_key = g.geography_key\nWHERE a.original_reseller_id > 0\n  AND d.date_value >= DATE '2025-01-01'\n  AND d.date_value < DATE '2026-01-01'\nGROUP BY g.region_name\nORDER BY SUM(f.total_amount) DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_geography",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_geography",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_resellers",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "Eastern Europe",
+        "523248.1"
+      ]
+    ]
+  },
+  {
+    "question_id": 37,
+    "category": "join",
+    "question": "Which direct customer has spent the most with us over all their purchases? Give the customer number, first name, last name and the total spent, rounded to two decimals.",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT dc.original_customer_id AS customer_number, dc.customer_first_name, dc.customer_last_name, ROUND(SUM(fs.total_amount), 2) AS total_spent\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" fs\nJOIN \"datamart\".\"postcard_company_core\".\"dim_customer\" dc ON fs.customer_key = dc.customer_key\nWHERE fs.commissionpct IS NULL\nGROUP BY dc.customer_key, dc.original_customer_id, dc.customer_first_name, dc.customer_last_name\nORDER BY SUM(fs.total_amount) DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "10711",
+        "Jennifer",
+        "Cooper",
+        "87.1"
+      ]
+    ]
+  },
+  {
+    "question_id": 38,
+    "category": "join",
+    "question": "Which day of the week brought in the most revenue in 2025, and how much? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT d.day_of_week, d.day_name, ROUND(SUM(f.total_amount), 2) AS revenue\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key\nWHERE d.date_value >= DATE '2025-01-01' AND d.date_value < DATE '2026-01-01'\nGROUP BY d.day_of_week, d.day_name\nORDER BY SUM(f.total_amount) DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_geography",
+      "postcard_company_core.dim_product",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2",
+        "Tuesday",
+        "212261.2"
+      ]
+    ]
+  },
+  {
+    "question_id": 39,
+    "category": "join",
+    "question": "For the Mediterranean Postcard Press Association, which city's postcards earned the most revenue in 2025, and how much? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT g.geography_key, g.city_name, ROUND(SUM(f.total_amount), 2) AS revenue\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_sales_agent\" a ON f.sales_agent_key = a.sales_agent_key\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key\nJOIN \"datamart\".\"postcard_company_core\".\"dim_geography\" g ON f.geography_key = g.geography_key\nWHERE LOWER(a.reseller_name) = LOWER('Mediterranean Postcard Press Association')\n  AND d.date_value >= DATE '2025-01-01' AND d.date_value < DATE '2026-01-01'\nGROUP BY g.geography_key, g.city_name\nORDER BY SUM(f.total_amount) DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_geography",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.dim_geography",
+      "postcard_company_core.dim_sales_agent",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_transactions"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "85",
+        "Bremen",
+        "6175.1"
+      ]
+    ]
+  },
+  {
+    "question_id": 40,
+    "category": "join",
+    "question": "How much did direct customers living in France spend with us in 2025? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "failure_reason": null,
+    "sql": "SELECT ROUND(SUM(f.total_amount), 2) AS total_spend\nFROM \"datamart\".\"postcard_company_core\".\"fact_sales\" f\nJOIN \"datamart\".\"postcard_company_core\".\"dim_customer\" c ON c.customer_key = f.customer_key\nJOIN \"datamart\".\"postcard_company_core\".\"dim_date\" d ON f.bought_date_key = d.date_key\nWHERE LOWER(c.customer_country) = 'france'\n  AND d.year_key = 2025\n  AND f.commissionpct IS NULL\n  AND f.commissionpaid IS NULL",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "dim",
+      "other"
+    ],
+    "tables": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales"
+    ],
+    "schema_path": "chosen",
+    "chosen": [
+      "postcard_company_core.dim_customer",
+      "postcard_company_core.dim_date",
+      "postcard_company_core.fact_sales",
+      "postcard_company_staging.staging_reseller_type1_sales",
+      "postcard_company_staging.staging_reseller_type2_sales"
+    ],
+    "recalled": true,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1609.2"
+      ]
+    ]
+  }
+]

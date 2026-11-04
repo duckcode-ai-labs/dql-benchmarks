@@ -1,0 +1,822 @@
+[
+ {
+  "question_id": 1,
+  "category": "lookup",
+  "question": "Who is listed as the owner of the Dallas Mavericks in the data?",
+  "SQL": "SELECT OWNER FROM RAW.raw_teams WHERE ABBREVIATION = 'DAL'",
+  "needs": [
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ]
+ },
+ {
+  "question_id": 2,
+  "category": "lookup",
+  "question": "Which G League team is the Toronto Raptors' affiliate?",
+  "SQL": "SELECT DLEAGUEAFFILIATION FROM RAW.raw_teams WHERE ABBREVIATION = 'TOR'",
+  "needs": [
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ]
+ },
+ {
+  "question_id": 3,
+  "category": "lookup",
+  "question": "How many minutes did Klay Thompson play in his game on December 5, 2016?",
+  "SQL": "SELECT minutes_text FROM TRANSFORMED.local_player_game_facts WHERE player_name = 'Klay Thompson' AND game_date = DATE '2016-12-05'",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 4,
+  "category": "lookup",
+  "question": "Which college did Damian Lillard play for?",
+  "SQL": "SELECT SCHOOL FROM RAW.raw_player_information WHERE PLAYER = 'Damian Lillard'",
+  "needs": [
+   [
+    "raw.raw_player_information",
+    "transformed.src_player_information",
+    "transformed.stg_player_information",
+    "transformed.fct_player_performance",
+    "transformed.fct_player_journey"
+   ]
+  ]
+ },
+ {
+  "question_id": 5,
+  "category": "lookup",
+  "question": "What was the final score when the Phoenix Suns played the Boston Celtics on March 24, 2017? Give the home team, the away team and each side's points.",
+  "SQL": "SELECT h.ABBREVIATION AS home_team, a.ABBREVIATION AS away_team, g.team_points AS home_points, g.opponent_points AS away_points FROM TRANSFORMED.local_team_game_facts g JOIN RAW.raw_teams h ON h.TEAM_ID = g.team_id JOIN RAW.raw_teams a ON a.TEAM_ID = g.opponent_team_id WHERE g.game_date = DATE '2017-03-24' AND g.is_home AND 'PHX' IN (h.ABBREVIATION, a.ABBREVIATION) AND 'BOS' IN (h.ABBREVIATION, a.ABBREVIATION)",
+  "needs": [
+   [
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_player_game_facts"
+   ],
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ]
+ },
+ {
+  "question_id": 6,
+  "category": "lookup",
+  "question": "How tall is Rudy Gobert listed in the data?",
+  "SQL": "SELECT HEIGHT FROM RAW.raw_player_information WHERE PLAYER = 'Rudy Gobert'",
+  "needs": [
+   [
+    "raw.raw_player_information",
+    "transformed.src_player_information",
+    "transformed.stg_player_information",
+    "transformed.fct_player_performance",
+    "transformed.fct_player_journey"
+   ]
+  ]
+ },
+ {
+  "question_id": 7,
+  "category": "aggregate",
+  "question": "Who made the most three-pointers in the 2015-16 regular season, and how many?",
+  "SQL": "SELECT MIN(player_name) AS player_name, SUM(three_pointers_made) AS threes FROM TRANSFORMED.local_player_game_facts WHERE season = 2015 AND game_id // 10000000 = 2 AND participated GROUP BY player_id ORDER BY threes DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 8,
+  "category": "aggregate",
+  "question": "Who had the most steals in the 2011-12 regular season, and how many?",
+  "SQL": "SELECT MIN(player_name) AS player_name, SUM(steals) AS steals FROM TRANSFORMED.local_player_game_facts WHERE season = 2011 AND game_id // 10000000 = 2 AND participated GROUP BY player_id ORDER BY steals DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 9,
+  "category": "aggregate",
+  "question": "How many free throws did James Harden make in the 2018-19 regular season?",
+  "SQL": "SELECT SUM(free_throws_made) AS free_throws_made FROM TRANSFORMED.local_player_game_facts WHERE player_name = 'James Harden' AND season = 2018 AND game_id // 10000000 = 2 AND participated",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 10,
+  "category": "aggregate",
+  "question": "Who committed the most turnovers in the 2016-17 regular season, and how many?",
+  "SQL": "SELECT MIN(player_name) AS player_name, SUM(turnovers) AS turnovers FROM TRANSFORMED.local_player_game_facts WHERE season = 2016 AND game_id // 10000000 = 2 AND participated GROUP BY player_id ORDER BY turnovers DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 11,
+  "category": "aggregate",
+  "question": "How many different players scored 40 or more points in a regular-season game in 2007-08?",
+  "SQL": "SELECT COUNT(DISTINCT player_id) AS players FROM TRANSFORMED.local_player_game_facts WHERE season = 2007 AND game_id // 10000000 = 2 AND participated AND points >= 40",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 12,
+  "category": "aggregate",
+  "question": "In how many 2018-19 regular-season games did at least one team score 140 or more points?",
+  "SQL": "SELECT COUNT(DISTINCT game_id) AS games FROM TRANSFORMED.local_team_game_facts WHERE season = 2018 AND game_id // 10000000 = 2 AND team_points >= 140",
+  "needs": [
+   [
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_player_game_facts"
+   ]
+  ],
+  "layer": "the team game rows hold two rows per game: counting rows gives 45 team performances in 36 games"
+ },
+ {
+  "question_id": 13,
+  "category": "aggregate",
+  "question": "Which college had the most players on the 2016-17 rosters in the data, and how many?",
+  "SQL": "SELECT SCHOOL, COUNT(*) AS players FROM RAW.raw_player_information WHERE SEASON = 2016 GROUP BY SCHOOL ORDER BY players DESC LIMIT 1",
+  "needs": [
+   [
+    "raw.raw_player_information",
+    "transformed.src_player_information",
+    "transformed.stg_player_information",
+    "transformed.fct_player_performance",
+    "transformed.fct_player_journey"
+   ]
+  ]
+ },
+ {
+  "question_id": 14,
+  "category": "aggregate",
+  "question": "What is the most three-pointers one player made in a single game in the data, and who made them?",
+  "SQL": "SELECT player_name, three_pointers_made FROM TRANSFORMED.local_player_game_facts WHERE participated ORDER BY three_pointers_made DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 15,
+  "category": "aggregate",
+  "question": "Who had the most offensive rebounds in the 2012-13 regular season, and how many?",
+  "SQL": "SELECT MIN(player_name) AS player_name, SUM(offensive_rebounds) AS offensive_rebounds FROM TRANSFORMED.local_player_game_facts WHERE season = 2012 AND game_id // 10000000 = 2 AND participated GROUP BY player_id ORDER BY offensive_rebounds DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 16,
+  "category": "aggregate",
+  "question": "Who attempted the most free throws in the 2005-06 regular season, and how many?",
+  "SQL": "SELECT MIN(player_name) AS player_name, SUM(free_throws_attempted) AS free_throws_attempted FROM TRANSFORMED.local_player_game_facts WHERE season = 2005 AND game_id // 10000000 = 2 AND participated GROUP BY player_id ORDER BY free_throws_attempted DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 17,
+  "category": "layer",
+  "question": "How many games did Kawhi Leonard play in the 2018-19 regular season?",
+  "SQL": "SELECT COUNT(*) AS games FROM TRANSFORMED.local_player_game_facts WHERE player_name = 'Kawhi Leonard' AND season = 2018 AND game_id // 10000000 = 2 AND participated",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "layer": "he has 4 DNP rows that regular season (64 rows, 60 games); fct_player_performance and int_season_stats say 92 (every game type, DNP rows included)"
+ },
+ {
+  "question_id": 18,
+  "category": "layer",
+  "question": "What was Joel Embiid's scoring average in the 2016-17 regular season? Round to two decimals.",
+  "SQL": "SELECT ROUND(SUM(points) / COUNT(*), 2) AS ppg FROM TRANSFORMED.local_player_game_facts WHERE player_name = 'Joel Embiid' AND season = 2016 AND game_id // 10000000 = 2 AND participated",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "layer": "he played 31 of his 59 regular-season rows (28 DNP); dividing by rows gives 10.63 and fct_player_performance gives 10.71"
+ },
+ {
+  "question_id": 19,
+  "category": "layer",
+  "question": "How many three-pointers did Stephen Curry make in the 2020-21 regular season?",
+  "SQL": "SELECT SUM(three_pointers_made) AS threes FROM TRANSFORMED.local_player_game_facts WHERE player_name = 'Stephen Curry' AND season = 2020 AND game_id // 10000000 = 2 AND participated",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "layer": "raw_games_details repeats 3 of his 2020-21 games (348 counting rows, not 337); SELECT DISTINCT does not remove them (the copies differ in padding); fct_/int_ have no 2020"
+ },
+ {
+  "question_id": 20,
+  "category": "layer",
+  "question": "What was the Phoenix Suns' regular-season record in 2020-21?",
+  "SQL": "SELECT SUM(g.team_won::INT) AS wins, SUM(g.team_lost::INT) AS losses FROM TRANSFORMED.local_team_game_facts g JOIN RAW.raw_teams t ON t.TEAM_ID = g.team_id WHERE t.ABBREVIATION = 'PHX' AND g.season = 2020 AND g.game_id // 10000000 = 2",
+  "needs": [
+   [
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_player_game_facts",
+    "raw.raw_ranking",
+    "transformed.src_ranking"
+   ],
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams",
+    "raw.raw_ranking",
+    "transformed.src_ranking"
+   ]
+  ],
+  "layer": "raw_games repeats 3 Phoenix games of 2020-21 (53-22 counting rows, not 51-21)"
+ },
+ {
+  "question_id": 21,
+  "category": "layer",
+  "question": "Who has the most regular-season assists across all the seasons in the data, and how many?",
+  "SQL": "SELECT MIN(player_name) AS player_name, SUM(assists) AS assists FROM TRANSFORMED.local_player_game_facts WHERE game_id // 10000000 = 2 AND participated GROUP BY player_id ORDER BY assists DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "layer": "the fct_ and int_ tables hold only seasons 2009 to 2019 and every game type: they give Russell Westbrook 7,952"
+ },
+ {
+  "question_id": 22,
+  "category": "layer",
+  "question": "Who scored the most points in the 2015-16 regular season, and how many?",
+  "SQL": "SELECT MIN(player_name) AS player_name, SUM(points) AS points FROM TRANSFORMED.local_player_game_facts WHERE season = 2015 AND game_id // 10000000 = 2 AND participated GROUP BY player_id ORDER BY points DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "layer": "counting every game (or season tables) gives Stephen Curry 2,947; in the regular season Curry (2,375) trails Harden by one point"
+ },
+ {
+  "question_id": 23,
+  "category": "layer",
+  "question": "Who scored the most points in the 2016 playoffs, and how many?",
+  "SQL": "SELECT MIN(player_name) AS player_name, SUM(points) AS points FROM TRANSFORMED.local_player_game_facts WHERE season = 2015 AND game_id // 10000000 = 4 AND participated GROUP BY player_id ORDER BY points DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "layer": "the 2016 playoffs are in season 2015; season = 2016 gives the 2017 playoffs (LeBron James 591)"
+ },
+ {
+  "question_id": 24,
+  "category": "layer",
+  "question": "How many playoff games did the San Antonio Spurs win in the 2014 playoffs?",
+  "SQL": "SELECT SUM(g.team_won::INT) AS wins FROM TRANSFORMED.local_team_game_facts g JOIN RAW.raw_teams t ON t.TEAM_ID = g.team_id WHERE t.ABBREVIATION = 'SAS' AND g.season = 2013 AND g.game_id // 10000000 = 4",
+  "needs": [
+   [
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_player_game_facts"
+   ],
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ],
+  "layer": "the 2014 playoffs are in season 2013; season = 2014 gives 3 (the 2015 first-round exit)"
+ },
+ {
+  "question_id": 25,
+  "category": "layer",
+  "question": "In the 2016-17 regular season, how many of the games in which Kevin Durant scored 30 or more points did the Warriors win?",
+  "SQL": "SELECT SUM(tg.team_won::INT) AS wins FROM TRANSFORMED.local_player_game_facts pg JOIN TRANSFORMED.local_team_game_facts tg ON tg.game_id = pg.game_id AND tg.team_id = pg.team_id WHERE pg.player_name = 'Kevin Durant' AND pg.season = 2016 AND pg.game_id // 10000000 = 2 AND pg.participated AND pg.points >= 30",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_player_game_facts"
+   ]
+  ],
+  "layer": "joining his rows to team rows on game_id alone matches both teams of each game and counts 15 wins (every one of the 15 games), not 13"
+ },
+ {
+  "question_id": 26,
+  "category": "layer",
+  "question": "Who grabbed the most rebounds in the 2016-17 regular season, and how many?",
+  "SQL": "SELECT MIN(player_name) AS player_name, SUM(rebounds) AS rebounds FROM TRANSFORMED.local_player_game_facts WHERE season = 2016 AND game_id // 10000000 = 2 AND participated GROUP BY player_id ORDER BY rebounds DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ],
+  "layer": "counting every game (or season tables) gives DeAndre Jordan 1,251; in the regular season Jordan (1,114) trails Drummond by one"
+ },
+ {
+  "question_id": 27,
+  "category": "vocabulary",
+  "question": "How many triple-doubles did Nikola Jokic record in the 2021-22 regular season?",
+  "SQL": "SELECT COUNT(*) AS triple_doubles FROM TRANSFORMED.local_player_game_facts WHERE player_name = 'Nikola Jokic' AND season = 2021 AND game_id // 10000000 = 2 AND participated AND ((points >= 10)::INT + (rebounds >= 10)::INT + (assists >= 10)::INT + (steals >= 10)::INT + (blocks >= 10)::INT) >= 3",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 28,
+  "category": "vocabulary",
+  "question": "How many double-doubles did Andre Drummond have in the 2015-16 regular season?",
+  "SQL": "SELECT COUNT(*) AS double_doubles FROM TRANSFORMED.local_player_game_facts WHERE player_name = 'Andre Drummond' AND season = 2015 AND game_id // 10000000 = 2 AND participated AND ((points >= 10)::INT + (rebounds >= 10)::INT + (assists >= 10)::INT + (steals >= 10)::INT + (blocks >= 10)::INT) >= 2",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 29,
+  "category": "vocabulary",
+  "question": "Among players with at least 1,000 field goal attempts, who had the best true shooting percentage in the 2016-17 regular season? Give it as a fraction rounded to three decimals.",
+  "SQL": "SELECT MIN(player_name) AS player_name, ROUND(SUM(points) / (2 * (SUM(field_goals_attempted) + 0.44 * SUM(free_throws_attempted))), 3) AS ts_pct FROM TRANSFORMED.local_player_game_facts WHERE season = 2016 AND game_id // 10000000 = 2 AND participated GROUP BY player_id HAVING SUM(field_goals_attempted) >= 1000 ORDER BY SUM(points) / (2 * (SUM(field_goals_attempted) + 0.44 * SUM(free_throws_attempted))) DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 30,
+  "category": "vocabulary",
+  "question": "Among players with at least 500 assists, who had the best assist-to-turnover ratio in the 2014-15 regular season? Round the ratio to two decimals.",
+  "SQL": "SELECT MIN(player_name) AS player_name, ROUND(SUM(assists) / SUM(turnovers), 2) AS ast_to_ratio FROM TRANSFORMED.local_player_game_facts WHERE season = 2014 AND game_id // 10000000 = 2 AND participated GROUP BY player_id HAVING SUM(assists) >= 500 ORDER BY SUM(assists) / SUM(turnovers) DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 31,
+  "category": "vocabulary",
+  "question": "What was the Golden State Warriors' road record in the 2015-16 regular season?",
+  "SQL": "SELECT SUM(g.team_won::INT) AS road_wins, SUM(g.team_lost::INT) AS road_losses FROM TRANSFORMED.local_team_game_facts g JOIN RAW.raw_teams t ON t.TEAM_ID = g.team_id WHERE t.ABBREVIATION = 'GSW' AND g.season = 2015 AND g.game_id // 10000000 = 2 AND NOT g.is_home",
+  "needs": [
+   [
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_player_game_facts",
+    "raw.raw_ranking",
+    "transformed.src_ranking"
+   ],
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams",
+    "raw.raw_ranking",
+    "transformed.src_ranking"
+   ]
+  ]
+ },
+ {
+  "question_id": 32,
+  "category": "vocabulary",
+  "question": "Which team had the worst winning percentage in the 2011-12 regular season? Give the team abbreviation and the percentage as a fraction rounded to three decimals.",
+  "SQL": "SELECT t.ABBREVIATION, ROUND(AVG(g.team_won::INT), 3) AS win_pct FROM TRANSFORMED.local_team_game_facts g JOIN RAW.raw_teams t ON t.TEAM_ID = g.team_id WHERE g.season = 2011 AND g.game_id // 10000000 = 2 GROUP BY t.ABBREVIATION ORDER BY AVG(g.team_won::INT) ASC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_player_game_facts",
+    "raw.raw_ranking",
+    "transformed.src_ranking"
+   ],
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ]
+ },
+ {
+  "question_id": 33,
+  "category": "vocabulary",
+  "question": "Who had the best total plus-minus in the 2015-16 regular season, and what was it?",
+  "SQL": "SELECT MIN(player_name) AS player_name, SUM(plus_minus) AS plus_minus FROM TRANSFORMED.local_player_game_facts WHERE season = 2015 AND game_id // 10000000 = 2 AND participated GROUP BY player_id ORDER BY plus_minus DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 34,
+  "category": "vocabulary",
+  "question": "Which team's bench scored the most points in the 2018-19 regular season, and how many?",
+  "SQL": "SELECT d.TEAM_ABBREVIATION, SUM(d.PTS) AS bench_points FROM RAW.raw_games_details d JOIN (SELECT DISTINCT game_id, season FROM TRANSFORMED.local_team_game_facts) g ON g.game_id = d.GAME_ID WHERE g.season = 2018 AND d.GAME_ID // 10000000 = 2 AND d.START_POSITION IS NULL GROUP BY d.TEAM_ABBREVIATION ORDER BY bench_points DESC LIMIT 1",
+  "needs": [
+   [
+    "raw.raw_games_details",
+    "transformed.src_games_details"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ]
+  ]
+ },
+ {
+  "question_id": 35,
+  "category": "join",
+  "question": "Which 2018-19 regular-season game had the highest combined score? Give the date, the home and away teams and the final score.",
+  "SQL": "SELECT g.game_date, h.ABBREVIATION AS home_team, a.ABBREVIATION AS away_team, g.team_points AS home_points, g.opponent_points AS away_points FROM TRANSFORMED.local_team_game_facts g JOIN RAW.raw_teams h ON h.TEAM_ID = g.team_id JOIN RAW.raw_teams a ON a.TEAM_ID = g.opponent_team_id WHERE g.season = 2018 AND g.game_id // 10000000 = 2 AND g.is_home ORDER BY g.team_points + g.opponent_points DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_player_game_facts"
+   ],
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ]
+ },
+ {
+  "question_id": 36,
+  "category": "join",
+  "question": "Which team made the most three-pointers in the 2018-19 regular season, and how many?",
+  "SQL": "SELECT t.ABBREVIATION, SUM(pg.three_pointers_made) AS threes FROM TRANSFORMED.local_player_game_facts pg JOIN RAW.raw_teams t ON t.TEAM_ID = pg.team_id WHERE pg.season = 2018 AND pg.game_id // 10000000 = 2 AND pg.participated GROUP BY t.ABBREVIATION ORDER BY threes DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ],
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams",
+    "raw.raw_games_details",
+    "transformed.src_games_details"
+   ]
+  ]
+ },
+ {
+  "question_id": 37,
+  "category": "join",
+  "question": "Who scored the most points for the Toronto Raptors in the 2019 playoffs, and how many?",
+  "SQL": "SELECT MIN(pg.player_name) AS player_name, SUM(pg.points) AS points FROM TRANSFORMED.local_player_game_facts pg JOIN RAW.raw_teams t ON t.TEAM_ID = pg.team_id WHERE t.ABBREVIATION = 'TOR' AND pg.season = 2018 AND pg.game_id // 10000000 = 4 AND pg.participated GROUP BY pg.player_id ORDER BY points DESC LIMIT 1",
+  "needs": [
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_team_game_facts",
+    "transformed.int_player_stats"
+   ],
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams",
+    "raw.raw_games_details",
+    "transformed.src_games_details"
+   ]
+  ],
+  "layer": "the 2019 playoffs are in season 2018; season = 2019 gives Fred VanVleet 216 (the 2020 bubble playoffs)"
+ },
+ {
+  "question_id": 38,
+  "category": "join",
+  "question": "What was the Los Angeles Lakers' record against the Los Angeles Clippers in the 2019-20 regular season?",
+  "SQL": "SELECT SUM(g.team_won::INT) AS wins, SUM(g.team_lost::INT) AS losses FROM TRANSFORMED.local_team_game_facts g JOIN RAW.raw_teams t ON t.TEAM_ID = g.team_id JOIN RAW.raw_teams o ON o.TEAM_ID = g.opponent_team_id WHERE t.ABBREVIATION = 'LAL' AND o.ABBREVIATION = 'LAC' AND g.season = 2019 AND g.game_id // 10000000 = 2",
+  "needs": [
+   [
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_player_game_facts"
+   ],
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ]
+ },
+ {
+  "question_id": 39,
+  "category": "join",
+  "question": "How many Western Conference teams won at least 50 games in the 2013-14 regular season?",
+  "SQL": "WITH conf AS (SELECT DISTINCT TEAM_ID, CONFERENCE FROM RAW.raw_ranking WHERE SEASON_ID = 22013), w AS (SELECT team_id, SUM(team_won::INT) AS wins FROM TRANSFORMED.local_team_game_facts WHERE season = 2013 AND game_id // 10000000 = 2 GROUP BY team_id) SELECT COUNT(*) AS teams FROM w JOIN conf c ON c.TEAM_ID = w.team_id WHERE c.CONFERENCE = 'West' AND w.wins >= 50",
+  "needs": [
+   [
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_player_game_facts",
+    "raw.raw_ranking",
+    "transformed.src_ranking"
+   ],
+   [
+    "raw.raw_ranking",
+    "transformed.src_ranking"
+   ]
+  ]
+ },
+ {
+  "question_id": 40,
+  "category": "join",
+  "question": "What was the Golden State Warriors' record in the 2019-20 regular season in the games Stephen Curry did not play?",
+  "SQL": "SELECT SUM(g.team_won::INT) AS wins, SUM(g.team_lost::INT) AS losses FROM TRANSFORMED.local_team_game_facts g JOIN RAW.raw_teams t ON t.TEAM_ID = g.team_id WHERE t.ABBREVIATION = 'GSW' AND g.season = 2019 AND g.game_id // 10000000 = 2 AND g.game_id NOT IN (SELECT game_id FROM TRANSFORMED.local_player_game_facts WHERE player_name = 'Stephen Curry' AND participated)",
+  "needs": [
+   [
+    "transformed.local_team_game_facts",
+    "raw.raw_games",
+    "transformed.src_games",
+    "transformed.local_player_game_facts"
+   ],
+   [
+    "transformed.local_player_game_facts",
+    "raw.raw_games_details",
+    "transformed.src_games_details",
+    "transformed.int_player_stats"
+   ],
+   [
+    "raw.raw_teams",
+    "transformed.dim_teams_cleansed",
+    "transformed.src_teams",
+    "dev.scd_raw_teams"
+   ]
+  ],
+  "layer": "Curry has a box-score row in only 7 of the 65 games (5 played, 2 DNP); the other 58 absences have no row, so counting his DNP rows gives 0-2"
+ }
+]

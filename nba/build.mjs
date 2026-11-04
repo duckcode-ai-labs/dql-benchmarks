@@ -11,6 +11,8 @@
 //   D2  D1 + `zlens model draft-terms`.
 //   W0  the same DuckDB file, warehouse-first (no dbt): init --warehouse-first,
 //       sync warehouse. W1 = W0 + draft-meanings.
+//   DA  D0 + `zlens model draft --apply --passed-only`: the model ZLens drafts, as drafted (P6).
+//   DM  D0 + the hand-built model from R3 (nba/dm-model), for reference (P6).
 //
 // The dbt project is work/nba/dbt, a copy of /Users/Kranthi_1/dbt-projects/nba_analysis
 // (models, macros, snapshots, dbt_project.yml), with local_duckdb/target as its target/
@@ -125,7 +127,7 @@ function draftMeanings(cli, dir, record) {
 function main() {
   const armFlag = process.argv.indexOf('--arm');
   const arm = process.argv[armFlag + 1];
-  if (armFlag < 0 || !['D0', 'D1', 'D2', 'W0', 'W1'].includes(arm)) throw new Error('--arm D0|D1|D2|W0|W1 is required.');
+  if (armFlag < 0 || !['D0', 'D1', 'D2', 'W0', 'W1', 'DA', 'DM'].includes(arm)) throw new Error('--arm D0|D1|D2|W0|W1|DA|DM is required.');
   const cli = resolveDqlCli();
   const dir = join(WORK, 'projects', arm);
   const record = { arm, builtAt: new Date().toISOString(), cli: cli.entry, steps: [] };
@@ -148,6 +150,26 @@ function main() {
     record.terms = zlens(cli, dir, ['model', 'draft-terms', '.', '--format', 'json'], record, 1_800_000);
     record.termsSeconds = Math.round((Date.now() - started) / 1000);
     zlens(cli, dir, ['sync', 'dbt', '.'], record);
+  }
+  // P6 (design "ZLens drafts the whole business model"): DA is D0 plus the model ZLens
+  // drafts, applied as drafted (everything whose checks passed, no edits); DM is D0
+  // plus the business model built blind by hand in R3 (nba/dm-model).
+  if (arm === 'DA' || arm === 'DM') {
+    const base = join(WORK, 'projects', 'D0');
+    if (!existsSync(base)) throw new Error('Build D0 first.');
+    rmSync(dir, { recursive: true, force: true });
+    cpSync(base, dir, { recursive: true, verbatimSymlinks: true });
+    if (arm === 'DA') {
+      const started = Date.now();
+      record.draft = zlens(cli, dir, ['model', 'draft', '.'], record, 1_800_000);
+      record.apply = zlens(cli, dir, ['model', 'draft', '.', '--apply', '--passed-only'], record, 1_800_000);
+      record.draftSeconds = Math.round((Date.now() - started) / 1000);
+    } else {
+      mkdirSync(join(dir, 'domains', 'nba', 'modeling'), { recursive: true });
+      cpSync(join(REPO_ROOT, 'nba', 'dm-model', 'domain.dql'), join(dir, 'domains', 'nba', 'domain.dql'));
+      cpSync(join(REPO_ROOT, 'nba', 'dm-model', 'model.dql.yaml'), join(dir, 'domains', 'nba', 'modeling', 'model.dql.yaml'));
+    }
+    record.validate = zlens(cli, dir, ['model', 'validate', '.'], record, 300_000, { mayFail: true });
   }
   writeFileSync(join(RECORD_DIR ?? WORK, `build-${arm}.json`), `${JSON.stringify(record, null, 2)}\n`);
   console.log(`${arm}: ${record.steps.length} steps`);
