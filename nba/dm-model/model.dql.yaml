@@ -1,0 +1,987 @@
+entities:
+  - id: player_game
+    dbt_model: model.nba_analysis.local_player_game_facts
+    business_name: Player game line
+    business_context: 'A player''s box-score line in one game: one row per game_id, team_id, player_id, seasons 2003-2022, all game types, deduplicated. Keeps DNP rows: filter participated = true for games played and stats. 668,339 rows (one per key in the source); 558,670 have participated = true and 109,669 are DNP/DND/NWT rows (comment_text set, every stat NULL). Duplicate source records were resolved to one canonical row (lexicographically smallest serialized source row). season is the start year (2017 = 2017-18). Game type is the first digit of game_id: 1 preseason, 2 regular season, 4 playoffs, 5 play-in. Columns: points, rebounds, assists, steals, blocks, turnovers, field_goals_made/attempted, three_pointers_*, free_throws_*, plus_minus, minutes_text, is_home, opponent_team_id, game_date. The player''s team in the game is team_id; player_name is the spelling on that row (8 players have more than one spelling).'
+    grain: one row per player per team per game (game_id, team_id, player_id)
+    keys:
+      - game_id
+      - team_id
+      - player_id
+    analytical_role: event
+    concept_refs:
+      - player
+    owner: Kranthi
+    status: certified
+  - id: team_game
+    dbt_model: model.nba_analysis.local_team_game_facts
+    business_name: Team game line
+    business_context: 'A team''s result in one game: one row per game_id and team_id (two rows per game), seasons 2003-2022, all game types, deduplicated. is_home = true gives exactly one row per game. 26,622 games, 53,244 rows. team_points, opponent_points, team_won, team_lost (from home_team_wins), is_home, opponent_team_id, game_date, season (start year). Game type is the first digit of game_id: 1 preseason, 2 regular season, 4 playoffs, 5 play-in. 99 preseason games of season 2003 have no score (team_points NULL) and are recorded as home losses.'
+    grain: one row per team per game (game_id, team_id)
+    keys:
+      - game_id
+      - team_id
+    analytical_role: event
+    owner: Kranthi
+    status: certified
+  - id: player_season
+    dbt_model: model.nba_analysis.local_player_season_facts
+    business_name: Player season
+    business_context: 'A player''s totals for one season: one row per player_id and season (2003-2022, all game types combined). Counts only games the player played (participated). Use for season leaders, per-game averages and shooting percentages. games_played = distinct participated games; teams_played = distinct teams; total_* sums; points/assists/rebounds_per_game = total / games_played; field_goal_pct, three_point_pct, free_throw_pct = total made / total attempted (not an average of game percentages); double_double_games = participated games with at least two of points, rebounds, assists, steals, blocks >= 10; ten_point_games etc. count single categories. 11,356 rows; 265 have games_played = 0 (only DNP rows). For multi-season or career figures, sum the totals across rows and recompute ratios from the sums. Includes preseason and playoff games; filter player_game on game_id for one game type.'
+    grain: one row per player per season (player_id, season)
+    keys:
+      - player_id
+      - season
+    analytical_role: snapshot
+    concept_refs:
+      - player
+    owner: Kranthi
+    status: certified
+  - id: team_season
+    dbt_model: model.nba_analysis.local_team_season_facts
+    business_name: Team season
+    business_context: 'A team''s record for one season: one row per team_id and season (2003-2022), built only from team_game, all game types combined (preseason, regular season, play-in, playoffs). wins, losses, win_pct = wins / games_played, home_games, away_games, home_wins, away_wins, total_points, opponent_points, point_differential, first/last game date. 599 rows (29 teams in 2003, 30 after). For a regular-season-only record, aggregate team_game rows whose game_id starts with 2.'
+    grain: one row per team per season (team_id, season)
+    keys:
+      - team_id
+      - season
+    analytical_role: snapshot
+    owner: Kranthi
+    status: certified
+  - id: team
+    dbt_model: model.nba_analysis.dim_teams_cleansed
+    business_name: Team
+    business_context: 'An NBA franchise: one row per team_id (30 teams). Name = city + team_nickname (e.g. Boston Celtics); team_abbreviation (BOS). Attributes (arena, arena_capacity, team_owner, general_manager, head_coach, dleague_affiliation, min_year, max_year, year_founded) are a single snapshot as of 2019, not season history. team_id stays with a franchise through relocations and renames (New Jersey to Brooklyn, Seattle to Oklahoma City, Charlotte Bobcats to Hornets).'
+    grain: one row per franchise (team_id)
+    keys:
+      - team_id
+    analytical_role: dimension
+    owner: Kranthi
+    status: certified
+  - id: season
+    dbt_model: model.nba_analysis.dim_seasons
+    business_name: Season
+    business_context: 'An NBA season: one row per season_id (2003-2022, 20 rows). season_id = season_name = the start year (2017 = 2017-18 season). start_date and end_date span every game of the season including preseason and playoffs. Season 2022 is partial (games through 2022-12-22). Shortened seasons: 2011 (lockout, 66 games per team), 2019 (suspended, bubble), 2020 (72 games per team).'
+    grain: one row per season (season_id)
+    keys:
+      - season_id
+    analytical_role: dimension
+    owner: Kranthi
+    status: certified
+  - id: game
+    dbt_model: model.nba_analysis.src_games
+    business_name: Game
+    business_context: 'One game with home and visitor team, final score and team box totals (pct, assists, rebounds). Not deduplicated: 29 season-2020 games appear twice (exact duplicates). Count games with COUNT(DISTINCT games_game_id), or use team_game WHERE is_home for game-level questions. 26,651 rows, 26,622 games, seasons 2003-2022, all game types (first digit of games_game_id: 1 preseason, 2 regular season, 4 playoffs, 5 play-in). home_team_wins = 1 when the home team won. pts_home and pts_away are NULL for 99 preseason 2003 games. There is no fg_pct_home column (the view drops it).'
+    grain: one row per game (games_game_id); 29 games duplicated
+    keys:
+      - games_game_id
+    analytical_role: event
+    owner: Kranthi
+    status: reviewed
+  - id: team_standing
+    dbt_model: model.nba_analysis.src_ranking
+    business_name: Team standing
+    business_context: 'Daily league standings: one row per team, season_id and standings_date, with conference (East/West), g, w, l, w_pct, home_record, road_record. season_id = game-type digit + start year: 22017 = 2017-18 regular season, 12017 = its preseason (regular seasons 2002-2022, preseasons 2003-2022). The final regular-season standings are the rows with the latest standings_date of a 2YYYY season_id. No team_id: team is a city label ("L.A. Lakers", "LA Clippers", "New Jersey", "Seattle"), so it does not join to team by key. 29 rows are exact duplicates of another row.'
+    grain: one row per team per standings_date per season_id (season_id, standings_date, team); 29 duplicate rows
+    keys:
+      - season_id
+      - standings_date
+      - team
+    analytical_role: snapshot
+    owner: Kranthi
+    status: reviewed
+  - id: legacy_player_season_stats
+    dbt_model: model.nba_analysis.int_season_stats
+    business_name: Legacy player season stats (do not use)
+    business_context: 'Not for analysis: seasons 2009-2019 only, players listed in raw_players only, and games_played counts DNP games. Use player_season (local_player_season_facts). 6,305 player-seasons; games_played is higher than the participated count for 5,352 of them (64,014 extra games), so per-game figures and efficiency_rating are understated. Percentages are averages of game percentages.'
+    grain: one row per player per season (player_id, season), 2009-2019 only
+    keys:
+      - player_id
+      - season
+    analytical_role: snapshot
+    owner: Kranthi
+    status: deprecated
+  - id: legacy_player_game_stats
+    dbt_model: model.nba_analysis.int_player_stats
+    business_name: Legacy player game stats (do not use)
+    business_context: 'Not for analysis: seasons 2009-2019 only, no team_id, game id stored as text, and DNP rows turned into zero-stat rows. Use player_game (local_player_game_facts). 383,704 rows against 383,958 player-game rows for the same seasons in player_game.'
+    grain: one row per game per player (details_game_id, player_id), 2009-2019 only
+    keys:
+      - details_game_id
+      - player_id
+    analytical_role: event
+    owner: Kranthi
+    status: deprecated
+  - id: legacy_player_journey
+    dbt_model: model.nba_analysis.fct_player_journey
+    business_name: Legacy player journey (do not use)
+    business_context: 'Not for analysis: built on int_season_stats, so it covers 2009-2019 only and counts DNP games as played; career totals and career_season_number start in 2009. Use player_season. Bio and team columns come from a 2016-only sample matched by name. For career or season-over-season figures, sum or compare player_season rows.'
+    grain: one row per player per season (player_id, season), 2009-2019 only
+    keys:
+      - player_id
+      - season
+    analytical_role: snapshot
+    owner: Kranthi
+    status: deprecated
+  - id: legacy_player_performance
+    dbt_model: model.nba_analysis.fct_player_performance
+    business_name: Legacy player performance (do not use)
+    business_context: 'Not for analysis: seasons 2009-2019 only and per-game averages divide by games that include DNP games. Use player_season and compute ratios from its totals. True shooting = total_points / (2 * (total_field_goals_attempted + 0.44 * total_free_throws_attempted)); effective FG% = (total_field_goals_made + 0.5 * total_three_pointers_made) / total_field_goals_attempted.'
+    grain: one row per player per season (player_id, season), 2009-2019 only
+    keys:
+      - player_id
+      - season
+    analytical_role: snapshot
+    owner: Kranthi
+    status: deprecated
+  - id: legacy_player_roster
+    dbt_model: model.nba_analysis.dim_players_cleansed
+    business_name: Legacy player roster (do not use)
+    business_context: 'Not for analysis: player-team-season list for seasons 2009-2019 only (7,228 stints). Use SELECT DISTINCT player_id, team_id, season FROM local_player_game_facts for all 20 seasons. Every row here also appears in player_game; player_game holds 93 more stints for the same seasons.'
+    grain: one row per player per team per season (player_id, team_id, season), 2009-2019 only
+    keys:
+      - player_id
+      - team_id
+      - season
+    analytical_role: bridge
+    owner: Kranthi
+    status: deprecated
+  - id: raw_player_box_scores
+    dbt_model: model.nba_analysis.src_games_details
+    business_name: Raw player box scores (do not use)
+    business_context: 'Not for analysis: raw player box scores with 289 duplicate (game, team, player) keys, 26 of them with differing values, and no participation flag. Use player_game (local_player_game_facts). 668,628 rows for 668,339 keys; no season or game date.'
+    grain: player box-score rows (details_game_id, details_team_id, player_id); 289 keys duplicated
+    keys:
+      - details_game_id
+      - details_team_id
+      - player_id
+    analytical_role: event
+    owner: Kranthi
+    status: deprecated
+  - id: player_bio_2016
+    dbt_model: model.nba_analysis.stg_player_information
+    business_name: Player bio sample 2016 (do not use)
+    business_context: 'Not for analysis: 451 player bios (position, height_cm, weight, birth_date, age, school) for season 2016 only, keyed by player_name with no player_id. Matching to other tables by name is unreliable; there is no bio for other seasons.'
+    grain: one row per player name per team for season 2016 (player_name, team_id, season)
+    keys:
+      - player_name
+      - team_id
+      - season
+    analytical_role: dimension
+    owner: Kranthi
+    status: deprecated
+concepts:
+  - id: player
+    name: Player
+    description: 'An NBA player, identified by player_id in every table. The project has no one-row-per-player table: list players from player_season (local_player_season_facts) with MIN(player_name) per player_id.'
+    synonyms:
+      - athlete
+    bindings:
+      - entity: player_season
+        role: canonical
+        grain: player_id, season
+      - entity: player_game
+        role: conformed
+        grain: game_id, team_id, player_id
+    rule: player_id has the same meaning in player_game and player_season; a player's season row holds exactly the participated games of their player_game rows for that season (558,670 played games, 5,412,407 points on both sides).
+    owner: Kranthi
+    status: reviewed
+rules:
+  - id: participation_counts_only_played_games
+    kind: custom
+    expression: A player-game counts as played only when local_player_game_facts.participated = true (blank comment and at least one of points, field goals made, field goals attempted, assists, rebounds populated). The 109,669 rows with participated = false (DNP, DND, NWT) must not count toward games played, per-game averages or statistical counts.
+  - id: one_canonical_row_per_key
+    kind: custom
+    expression: 'Sources repeat records: raw_games holds 29 duplicate game rows (season 2020) and raw_games_details 289 duplicate (game_id, team_id, player_id) keys, 26 with differing values. The local_* tables keep one canonical row per key (lexicographically smallest serialized source row); raw_*, src_games and src_games_details do not.'
+  - id: season_is_start_year
+    kind: custom
+    expression: 'season is the year a season starts: 2017 means the 2017-18 season, played from autumn 2017 into 2018. Seasons 2003-2022 are present; 2022 is partial (through 2022-12-22). Standings season_id prefixes the type digit: 22017.'
+  - id: game_type_from_game_id
+    kind: custom
+    expression: 'The first digit of game_id gives the game type: 1 preseason, 2 regular season, 4 playoffs, 5 play-in (2020 on). Every local_* table includes all game types; restrict with CAST(game_id AS VARCHAR) LIKE ''2%'' for regular season or LIKE ''4%'' for playoffs. local_player_season_facts and local_team_season_facts combine all types.'
+  - id: team_game_needs_team_key
+    kind: fanout
+    expression: A game has two team_game rows. Join player_game to team_game on (game_id, team_id) for the player's own team, or team_game to itself on (game_id, opponent_team_id) = (game_id, team_id) for the opponent; never on game_id alone.
+  - id: team_attributes_are_a_2019_snapshot
+    kind: custom
+    expression: dim_teams_cleansed has one current row per franchise (attributes as of 2019). It does not record a team's name, city, coach or arena in earlier seasons.
+relationships:
+  - id: player_game_to_team_game
+    from: player_game
+    to: team_game
+    keys:
+      - from: game_id
+        to: game_id
+      - from: team_id
+        to: team_id
+    cardinality: many_to_one
+    fanout: safe
+    verb: is part of
+    description: 'A player''s line belongs to their team''s line in the same game, on game_id and team_id: gives the team result (team_won, team_points) for each player-game.'
+    rationale: team_game is unique on (game_id, team_id); 668,338 of 668,339 player rows match (one preseason 2005 row names a team that is not in that game).
+    join_types:
+      - left
+    owner: Kranthi
+    status: certified
+    validation:
+      status: passed
+      checked_at: '2026-11-04T02:56:45.800Z'
+      query_fingerprint: aa69564cdb89fdbd43bb9d36f2897035c29664032eb9e7efc1a4eecaf0828d19
+      proof_fingerprint: 7b8deac77c2410ade98020a5d7b77993d0d5705cb17699a41ef177b89af72ad0
+      from_rows: 668339
+      to_rows: 53244
+      joined_rows: 668338
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 1
+      max_from_per_key: 22
+      max_to_per_key: 1
+      unmatched_keyed_from: 1
+      unmatched_key_values: 1
+      unmatched_share: 0.000001
+      max_unmatched_share: 0.05
+      max_to_per_referenced_key: 1
+      max_from_per_referenced_key: 22
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy. 1 of 668,339 local_player_game_facts rows with a key (0.00%) find no local_team_game_facts row (within the 5% allowed); a join that must keep them needs a LEFT JOIN.
+    certifiedAgainst:
+      from:
+        grain: one row per player per team per game (game_id, team_id, player_id)
+        keys:
+          - game_id
+          - team_id
+          - player_id
+      to:
+        grain: one row per team per game (game_id, team_id)
+        keys:
+          - game_id
+          - team_id
+  - id: player_game_to_player_season
+    from: player_game
+    to: player_season
+    keys:
+      - from: player_id
+        to: player_id
+      - from: season
+        to: season
+    cardinality: many_to_one
+    fanout: safe
+    verb: rolls up to
+    description: A player's game lines roll up to that player's season row on player_id and season.
+    rationale: player_season is built from player_game and is unique on (player_id, season); every player-game row matches.
+    join_types:
+      - left
+    owner: Kranthi
+    status: certified
+    validation:
+      status: passed
+      checked_at: '2026-11-04T02:56:45.765Z'
+      query_fingerprint: f4d4f53d71944f9c07acc13fffdcc226472a182bc4d7b8d195bde7123198c0cc
+      proof_fingerprint: c6681d8a25ad5711fc230b5aaa84bee884c3250a09b3638c2d1f981c2f0d64db
+      from_rows: 668339
+      to_rows: 11356
+      joined_rows: 668339
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 115
+      max_to_per_key: 1
+      unmatched_keyed_from: 0
+      unmatched_key_values: 0
+      unmatched_share: 0
+      max_unmatched_share: 0.05
+      max_to_per_referenced_key: 1
+      max_from_per_referenced_key: 115
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+    certifiedAgainst:
+      from:
+        grain: one row per player per team per game (game_id, team_id, player_id)
+        keys:
+          - game_id
+          - team_id
+          - player_id
+      to:
+        grain: one row per player per season (player_id, season)
+        keys:
+          - player_id
+          - season
+  - id: player_game_to_team
+    from: player_game
+    to: team
+    keys:
+      - from: team_id
+        to: team_id
+    cardinality: many_to_one
+    fanout: safe
+    verb: played for
+    description: The team the player played for in that game, on team_id.
+    roles:
+      from: player game line
+      to: player's team
+    join_types:
+      - left
+    owner: Kranthi
+    status: certified
+    validation:
+      status: passed
+      checked_at: '2026-11-04T02:56:45.793Z'
+      query_fingerprint: 881d3adbb612c20adfaaf1e604e6ebd35bc31bf17c4790ac3b91eb08b097ca12
+      proof_fingerprint: 3599ebe71ec4eee60778b3e606fb4c56d6b3f6e1c86ce6eed0fb6daca7ca30ce
+      from_rows: 668339
+      to_rows: 30
+      joined_rows: 668339
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 24005
+      max_to_per_key: 1
+      unmatched_keyed_from: 0
+      unmatched_key_values: 0
+      unmatched_share: 0
+      max_unmatched_share: 0.05
+      max_to_per_referenced_key: 1
+      max_from_per_referenced_key: 24005
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+    certifiedAgainst:
+      from:
+        grain: one row per player per team per game (game_id, team_id, player_id)
+        keys:
+          - game_id
+          - team_id
+          - player_id
+      to:
+        grain: one row per franchise (team_id)
+        keys:
+          - team_id
+  - id: player_game_to_opponent_team
+    from: player_game
+    to: team
+    keys:
+      - from: opponent_team_id
+        to: team_id
+    cardinality: many_to_one
+    fanout: safe
+    verb: played against
+    description: The opposing team in that game, on opponent_team_id = team.team_id.
+    roles:
+      from: player game line
+      to: opponent
+    rationale: One player-game row has a NULL opponent_team_id (the preseason 2005 row whose team is not in the game).
+    join_types:
+      - left
+    owner: Kranthi
+    status: certified
+    validation:
+      status: passed
+      checked_at: '2026-11-04T02:56:45.758Z'
+      query_fingerprint: 505f7060ed6aa2544ee9cc3914cde4a12827574993e6f2d7c6a6e26cc7dd4f76
+      proof_fingerprint: e5f8007ae7b73b3c02a81fa3b185e6ec48a6c0972070d263dffd6cdf5d0b1e46
+      from_rows: 668339
+      to_rows: 30
+      joined_rows: 668338
+      from_null_keys: 1
+      to_null_keys: 0
+      unmatched_from: 1
+      max_from_per_key: 23932
+      max_to_per_key: 1
+      unmatched_keyed_from: 0
+      unmatched_key_values: 0
+      unmatched_share: 0
+      max_unmatched_share: 0.05
+      max_to_per_referenced_key: 1
+      max_from_per_referenced_key: 23932
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+    certifiedAgainst:
+      from:
+        grain: one row per player per team per game (game_id, team_id, player_id)
+        keys:
+          - game_id
+          - team_id
+          - player_id
+      to:
+        grain: one row per franchise (team_id)
+        keys:
+          - team_id
+  - id: player_game_to_season
+    from: player_game
+    to: season
+    keys:
+      - from: season
+        to: season_id
+    cardinality: many_to_one
+    fanout: safe
+    verb: played in
+    description: The season of the game, on season = season_id.
+    join_types:
+      - left
+    owner: Kranthi
+    status: certified
+    validation:
+      status: passed
+      checked_at: '2026-11-04T02:56:45.775Z'
+      query_fingerprint: b2bdc95d828f2e614f9c62053918b2bacef29912b78f4570d84605385deaa9fc
+      proof_fingerprint: 242d984b0116473f57cfde963a12ba96b24d38582b18ee349e91c7f1d9c1382a
+      from_rows: 668339
+      to_rows: 20
+      joined_rows: 668339
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 37244
+      max_to_per_key: 1
+      unmatched_keyed_from: 0
+      unmatched_key_values: 0
+      unmatched_share: 0
+      max_unmatched_share: 0.05
+      max_to_per_referenced_key: 1
+      max_from_per_referenced_key: 37244
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+    certifiedAgainst:
+      from:
+        grain: one row per player per team per game (game_id, team_id, player_id)
+        keys:
+          - game_id
+          - team_id
+          - player_id
+      to:
+        grain: one row per season (season_id)
+        keys:
+          - season_id
+  - id: team_game_to_team_season
+    from: team_game
+    to: team_season
+    keys:
+      - from: team_id
+        to: team_id
+      - from: season
+        to: season
+    cardinality: many_to_one
+    fanout: safe
+    verb: rolls up to
+    description: A team's game lines roll up to its season row on team_id and season.
+    rationale: team_season is built only from team_game and is unique on (team_id, season).
+    join_types:
+      - left
+    owner: Kranthi
+    status: certified
+    validation:
+      status: passed
+      checked_at: '2026-11-04T02:56:45.869Z'
+      query_fingerprint: 6e48d9edeb5bd632ccf0573f049817479cc9ed9acf59228cbd168c4d3e7d1b5c
+      proof_fingerprint: 1389cc0075948065abba9ea6b2f725ccdeb6a602c7e61d0a586fb0204255669d
+      from_rows: 53244
+      to_rows: 599
+      joined_rows: 53244
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 115
+      max_to_per_key: 1
+      unmatched_keyed_from: 0
+      unmatched_key_values: 0
+      unmatched_share: 0
+      max_unmatched_share: 0.05
+      max_to_per_referenced_key: 1
+      max_from_per_referenced_key: 115
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+    certifiedAgainst:
+      from:
+        grain: one row per team per game (game_id, team_id)
+        keys:
+          - game_id
+          - team_id
+      to:
+        grain: one row per team per season (team_id, season)
+        keys:
+          - team_id
+          - season
+  - id: team_game_to_team
+    from: team_game
+    to: team
+    keys:
+      - from: team_id
+        to: team_id
+    cardinality: many_to_one
+    fanout: safe
+    verb: is played by
+    description: The team whose line this is, on team_id.
+    roles:
+      from: team game line
+      to: team
+    join_types:
+      - left
+    owner: Kranthi
+    status: certified
+    validation:
+      status: passed
+      checked_at: '2026-11-04T02:56:45.861Z'
+      query_fingerprint: a0afa1f0bf18197cd4abc4cb6628372f6e3f55e16ab5662e48d982af1023f824
+      proof_fingerprint: aa352d820f956c65dbbc699d6252571a69950ea0856590077eafd8a270770c77
+      from_rows: 53244
+      to_rows: 30
+      joined_rows: 53244
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1897
+      max_to_per_key: 1
+      unmatched_keyed_from: 0
+      unmatched_key_values: 0
+      unmatched_share: 0
+      max_unmatched_share: 0.05
+      max_to_per_referenced_key: 1
+      max_from_per_referenced_key: 1897
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+    certifiedAgainst:
+      from:
+        grain: one row per team per game (game_id, team_id)
+        keys:
+          - game_id
+          - team_id
+      to:
+        grain: one row per franchise (team_id)
+        keys:
+          - team_id
+  - id: team_game_to_opponent_team
+    from: team_game
+    to: team
+    keys:
+      - from: opponent_team_id
+        to: team_id
+    cardinality: many_to_one
+    fanout: safe
+    verb: is played against
+    description: The opposing team in that game, on opponent_team_id = team.team_id.
+    roles:
+      from: team game line
+      to: opponent
+    join_types:
+      - left
+    owner: Kranthi
+    status: certified
+    validation:
+      status: passed
+      checked_at: '2026-11-04T02:56:45.846Z'
+      query_fingerprint: 0d4bd935e6e6796bbe42fdb81414f3aa60b28a8b4d9a1519c527292eacbb6ffd
+      proof_fingerprint: f9d9250fecb7ee496a443d4c5fb6da714187f3337800880584dfb2e2f5ac960f
+      from_rows: 53244
+      to_rows: 30
+      joined_rows: 53244
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1897
+      max_to_per_key: 1
+      unmatched_keyed_from: 0
+      unmatched_key_values: 0
+      unmatched_share: 0
+      max_unmatched_share: 0.05
+      max_to_per_referenced_key: 1
+      max_from_per_referenced_key: 1897
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+    certifiedAgainst:
+      from:
+        grain: one row per team per game (game_id, team_id)
+        keys:
+          - game_id
+          - team_id
+      to:
+        grain: one row per franchise (team_id)
+        keys:
+          - team_id
+  - id: team_game_to_opponent_line
+    from: team_game
+    to: team_game
+    keys:
+      - from: game_id
+        to: game_id
+      - from: opponent_team_id
+        to: team_id
+    cardinality: one_to_one
+    fanout: safe
+    verb: faces
+    description: Each team line pairs with the opponent's line in the same game, on game_id and opponent_team_id = team_id (self join).
+    roles:
+      from: team
+      to: opponent
+    rationale: Every one of the 53,244 rows finds exactly one opponent row, whose points and result mirror its own.
+    join_types:
+      - left
+    owner: Kranthi
+    status: certified
+    validation:
+      status: passed
+      checked_at: '2026-11-04T02:56:45.835Z'
+      query_fingerprint: a2ec6b3659a723cc02b7e3e196f5cda1c91f87c974ed4d9091d8dff2d98431f9
+      proof_fingerprint: b69d24f1965793963548c2baa48eef5c4e884be946a7c1b5a956f3fb86a8553e
+      from_rows: 53244
+      to_rows: 53244
+      joined_rows: 53244
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1
+      max_to_per_key: 1
+      unmatched_keyed_from: 0
+      unmatched_key_values: 0
+      unmatched_share: 0
+      max_unmatched_share: 0.05
+      max_to_per_referenced_key: 1
+      max_from_per_referenced_key: 1
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+    certifiedAgainst:
+      from:
+        grain: one row per team per game (game_id, team_id)
+        keys:
+          - game_id
+          - team_id
+      to:
+        grain: one row per team per game (game_id, team_id)
+        keys:
+          - game_id
+          - team_id
+  - id: team_game_to_season
+    from: team_game
+    to: season
+    keys:
+      - from: season
+        to: season_id
+    cardinality: many_to_one
+    fanout: safe
+    verb: played in
+    description: The season of the game, on season = season_id.
+    join_types:
+      - left
+    owner: Kranthi
+    status: certified
+    validation:
+      status: passed
+      checked_at: '2026-11-04T02:56:45.854Z'
+      query_fingerprint: d1c7310c2f4f2af280a31430502338b63a1b92d421959395ee872fa50a2477e3
+      proof_fingerprint: 822a07fba11a6b5077ba135510499f57f74233796039f128f84d0ef1b574f80a
+      from_rows: 53244
+      to_rows: 20
+      joined_rows: 53244
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 2864
+      max_to_per_key: 1
+      unmatched_keyed_from: 0
+      unmatched_key_values: 0
+      unmatched_share: 0
+      max_unmatched_share: 0.05
+      max_to_per_referenced_key: 1
+      max_from_per_referenced_key: 2864
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+    certifiedAgainst:
+      from:
+        grain: one row per team per game (game_id, team_id)
+        keys:
+          - game_id
+          - team_id
+      to:
+        grain: one row per season (season_id)
+        keys:
+          - season_id
+  - id: team_game_to_game
+    from: team_game
+    to: game
+    keys:
+      - from: game_id
+        to: games_game_id
+    cardinality: many_to_one
+    fanout: dedupe_required
+    verb: is a side of
+    description: A team line belongs to its game in src_games, on game_id = games_game_id. src_games repeats 29 games, so deduplicate it (SELECT DISTINCT) before joining.
+    rationale: Declared, not certifiable. The "one" side is not unique (29 games appear twice in src_games).
+    join_types:
+      - left
+    owner: Kranthi
+    status: draft
+    validation:
+      status: failed
+      checked_at: '2026-11-04T02:56:45.825Z'
+      query_fingerprint: 9f0696067476b6b97234ec7cce54c027d96bc26f4a816f464fd049c1a73f2a98
+      proof_fingerprint: 2a3ed3105d4f1f22b3704e39ed6c90399749c1853c6f1ce67f8bb36d28207c80
+      from_rows: 53244
+      to_rows: 26651
+      joined_rows: 53302
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 2
+      max_to_per_key: 2
+      unmatched_keyed_from: 0
+      unmatched_key_values: 0
+      unmatched_share: 0
+      max_unmatched_share: 0.05
+      max_to_per_referenced_key: 2
+      max_from_per_referenced_key: 2
+      message: 'Warehouse evidence does not prove the declared cardinality and safe fanout policy. Only a join with the safe fanout policy can pass (declared: dedupe_required). The declared many_to_one does not hold: src_games holds up to 2 rows for one key.'
+  - id: player_season_to_season
+    from: player_season
+    to: season
+    keys:
+      - from: season
+        to: season_id
+    cardinality: many_to_one
+    fanout: safe
+    verb: belongs to
+    description: The season of a player-season row, on season = season_id.
+    join_types:
+      - left
+    owner: Kranthi
+    status: certified
+    validation:
+      status: passed
+      checked_at: '2026-11-04T02:56:45.817Z'
+      query_fingerprint: d1ca39974a5ea6bf5dd6c8692bbb51b0860d13d4632af7502703ec343979b3c2
+      proof_fingerprint: 9d842d8e0bf8c311e52f372c2475e4222e4b867e01b5b649aa619f1f21c439cc
+      from_rows: 11356
+      to_rows: 20
+      joined_rows: 11356
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 673
+      max_to_per_key: 1
+      unmatched_keyed_from: 0
+      unmatched_key_values: 0
+      unmatched_share: 0
+      max_unmatched_share: 0.05
+      max_to_per_referenced_key: 1
+      max_from_per_referenced_key: 673
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+    certifiedAgainst:
+      from:
+        grain: one row per player per season (player_id, season)
+        keys:
+          - player_id
+          - season
+      to:
+        grain: one row per season (season_id)
+        keys:
+          - season_id
+  - id: team_season_to_team
+    from: team_season
+    to: team
+    keys:
+      - from: team_id
+        to: team_id
+    cardinality: many_to_one
+    fanout: safe
+    verb: belongs to
+    description: The team of a team-season row, on team_id.
+    join_types:
+      - left
+    owner: Kranthi
+    status: certified
+    validation:
+      status: passed
+      checked_at: '2026-11-04T02:56:45.883Z'
+      query_fingerprint: df25717129639b10bac13b99e6944678f67298987de26d71d1f326039872bf4e
+      proof_fingerprint: 8b2d12a866ba8f1d64abf96b90373d73455ac912a2345b77e225adc74464eb0b
+      from_rows: 599
+      to_rows: 30
+      joined_rows: 599
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 20
+      max_to_per_key: 1
+      unmatched_keyed_from: 0
+      unmatched_key_values: 0
+      unmatched_share: 0
+      max_unmatched_share: 0.05
+      max_to_per_referenced_key: 1
+      max_from_per_referenced_key: 20
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+    certifiedAgainst:
+      from:
+        grain: one row per team per season (team_id, season)
+        keys:
+          - team_id
+          - season
+      to:
+        grain: one row per franchise (team_id)
+        keys:
+          - team_id
+  - id: team_season_to_season
+    from: team_season
+    to: season
+    keys:
+      - from: season
+        to: season_id
+    cardinality: many_to_one
+    fanout: safe
+    verb: belongs to
+    description: The season of a team-season row, on season = season_id.
+    join_types:
+      - left
+    owner: Kranthi
+    status: certified
+    validation:
+      status: passed
+      checked_at: '2026-11-04T02:56:45.875Z'
+      query_fingerprint: ad0d3b8fe38314b6fe30db538b41a8cbad18791926900843ef58dd95f532cfef
+      proof_fingerprint: a3224da535f8b3e14148ee4b4b24443dbf88f57504afaef4c3b1d700f0142adf
+      from_rows: 599
+      to_rows: 20
+      joined_rows: 599
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 30
+      max_to_per_key: 1
+      unmatched_keyed_from: 0
+      unmatched_key_values: 0
+      unmatched_share: 0
+      max_unmatched_share: 0.05
+      max_to_per_referenced_key: 1
+      max_from_per_referenced_key: 30
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+    certifiedAgainst:
+      from:
+        grain: one row per team per season (team_id, season)
+        keys:
+          - team_id
+          - season
+      to:
+        grain: one row per season (season_id)
+        keys:
+          - season_id
+  - id: game_to_season
+    from: game
+    to: season
+    keys:
+      - from: season
+        to: season_id
+    cardinality: many_to_one
+    fanout: safe
+    verb: played in
+    description: The season of a game, on season = season_id.
+    join_types:
+      - left
+    owner: Kranthi
+    status: certified
+    validation:
+      status: passed
+      checked_at: '2026-11-04T02:56:45.741Z'
+      query_fingerprint: 48383b4e582252338f3907592f252f3da05451de14609a79530c9b4783076302
+      proof_fingerprint: 1fdc7b4287fb01f4af7da0d8144bef1089b90858575ecfa8b006733efb4a1627
+      from_rows: 26651
+      to_rows: 20
+      joined_rows: 26651
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 1432
+      max_to_per_key: 1
+      unmatched_keyed_from: 0
+      unmatched_key_values: 0
+      unmatched_share: 0
+      max_unmatched_share: 0.05
+      max_to_per_referenced_key: 1
+      max_from_per_referenced_key: 1432
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+    certifiedAgainst:
+      from:
+        grain: one row per game (games_game_id); 29 games duplicated
+        keys:
+          - games_game_id
+      to:
+        grain: one row per season (season_id)
+        keys:
+          - season_id
+  - id: game_to_home_team
+    from: game
+    to: team
+    keys:
+      - from: home_team_id
+        to: team_id
+    cardinality: many_to_one
+    fanout: safe
+    verb: hosted by
+    description: The home team of a game, on home_team_id = team.team_id.
+    roles:
+      from: game
+      to: home team
+    join_types:
+      - left
+    owner: Kranthi
+    status: certified
+    validation:
+      status: passed
+      checked_at: '2026-11-04T02:56:45.691Z'
+      query_fingerprint: a0993d887c51e020635a4f8dd2361901821e1dbaafee111b9ca90546c36fdd0b
+      proof_fingerprint: fa2cfb23ae8d480d8c085ad08fb5cb55ae2b9baf5789e6bd03edb5eb0be092d6
+      from_rows: 26651
+      to_rows: 30
+      joined_rows: 26651
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 969
+      max_to_per_key: 1
+      unmatched_keyed_from: 0
+      unmatched_key_values: 0
+      unmatched_share: 0
+      max_unmatched_share: 0.05
+      max_to_per_referenced_key: 1
+      max_from_per_referenced_key: 969
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+    certifiedAgainst:
+      from:
+        grain: one row per game (games_game_id); 29 games duplicated
+        keys:
+          - games_game_id
+      to:
+        grain: one row per franchise (team_id)
+        keys:
+          - team_id
+  - id: game_to_visitor_team
+    from: game
+    to: team
+    keys:
+      - from: visitor_team_id
+        to: team_id
+    cardinality: many_to_one
+    fanout: safe
+    verb: visited by
+    description: The visiting team of a game, on visitor_team_id = team.team_id.
+    roles:
+      from: game
+      to: visitor team
+    join_types:
+      - left
+    owner: Kranthi
+    status: certified
+    validation:
+      status: passed
+      checked_at: '2026-11-04T02:56:45.750Z'
+      query_fingerprint: a968b20219a098cc70ecb7b3f3d91dc2705e5978d0a6ed915cffdb3ea30a1fbf
+      proof_fingerprint: cb22aaf1cf3b52c732a6354d3a390e32f7e605c3d2f9b18861a0d27a426a7ed2
+      from_rows: 26651
+      to_rows: 30
+      joined_rows: 26651
+      from_null_keys: 0
+      to_null_keys: 0
+      unmatched_from: 0
+      max_from_per_key: 939
+      max_to_per_key: 1
+      unmatched_keyed_from: 0
+      unmatched_key_values: 0
+      unmatched_share: 0
+      max_unmatched_share: 0.05
+      max_to_per_referenced_key: 1
+      max_from_per_referenced_key: 939
+      message: Warehouse evidence matches the declared cardinality and safe fanout policy.
+    certifiedAgainst:
+      from:
+        grain: one row per game (games_game_id); 29 games duplicated
+        keys:
+          - games_game_id
+      to:
+        grain: one row per franchise (team_id)
+        keys:
+          - team_id
