@@ -13,7 +13,7 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { appendFileSync, copyFileSync, chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { basename, join, relative } from 'node:path';
 import { REPO_ROOT, dqlVersion, resolveDqlCli } from '../lib/dql.mjs';
 import { buildIdentity } from '../lib/build-identity.mjs';
 import { startRuntime } from '../lib/runtime.mjs';
@@ -27,7 +27,7 @@ const HOST_ROW_GUARD = /\nLIMIT 501\s*$/;
 const RUN_ENV = { DQL_EMBEDDINGS_AUTODETECT: 'off', DQL_TELEMETRY_DISABLED: '1' };
 
 function parseArgs(argv) {
-  const options = { arm: null, run: null, pass: 1, only: null, questions: join(REPO_ROOT, 'nba', 'questions.json'), model: 'claude-sonnet-5-5', keepCache: false };
+  const options = { arm: null, run: null, pass: 1, only: null, questions: join(REPO_ROOT, 'nba', 'questions.json'), model: 'claude-sonnet-5-5', keepCache: false, sourceDb: null };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--arm') options.arm = argv[++index];
@@ -36,6 +36,8 @@ function parseArgs(argv) {
     else if (arg === '--only') options.only = new Set(argv[++index].split(',').map(Number));
     else if (arg === '--questions') options.questions = argv[++index];
     else if (arg === '--model') options.model = argv[++index];
+    // Q5: an arm with its own warehouse (the NBA tables plus decoy schemas); the copy keeps the file name, which names the database.
+    else if (arg === '--source-db') options.sourceDb = argv[++index];
     else if (arg === '--keep-cache') options.keepCache = true;
     else throw new Error(`Unknown option ${arg}`);
   }
@@ -43,7 +45,7 @@ function parseArgs(argv) {
   return options;
 }
 
-function freshProject(arm, workDir, keepCache) {
+function freshProject(arm, workDir, keepCache, sourceDb = SOURCE_DB) {
   const target = join(workDir, 'project');
   rmSync(target, { recursive: true, force: true });
   // R2 keeps .dql/cache: on a dbt project the drafts are checked against the schema sync
@@ -51,8 +53,8 @@ function freshProject(arm, workDir, keepCache) {
   const copy = spawnSync('rsync', ['-a', '--exclude', '.dql/local', ...(keepCache ? [] : ['--exclude', '.dql/cache']), '--exclude', 'logs', `${join(WORK, 'projects', arm)}/`, `${target}/`], { encoding: 'utf-8' });
   if (copy.status !== 0) throw new Error(`copying the ${arm} project failed: ${copy.stderr}`);
   // This run's own database file.
-  const database = join(workDir, 'nba_analysis.duckdb');
-  copyFileSync(SOURCE_DB, database);
+  const database = join(workDir, basename(sourceDb));
+  copyFileSync(sourceDb, database);
   chmodSync(database, 0o644);
   const configPath = join(target, 'dql.config.json');
   const config = JSON.parse(readFileSync(configPath, 'utf-8'));
@@ -98,7 +100,7 @@ function schemaStep(projectDir) {
   for (const row of JSON.parse(result.stdout)) {
     const payload = JSON.parse(row.payload_json);
     const story = payload.diagnosticReceiptV9?.story ?? [];
-    const schema = story.find((step) => /^(Chose the table|Showed the whole schema|Showed the whole model)/.test(step.title ?? ''));
+    const schema = story.find((step) => /^(Chose the table|Showed the whole schema|Showed the whole model|Showed the .+ areas?:)/.test(step.title ?? ''));
     const answerText = JSON.stringify(payload).match(/used AI-drafted [^"\\]{0,300}/g) ?? [];
     if (!steps.has(row.question)) steps.set(row.question, { schemaTitle: schema?.title ?? null, schemaDetail: schema?.detail ?? null, draftedNotes: [...new Set(answerText)].slice(0, 4) });
   }
@@ -128,7 +130,7 @@ async function main() {
   writeFileSync(evalPath, `${JSON.stringify({ cases: questions.map((question) => ({ name: `q${question.question_id}`, question: question.question, expected: { answerable: true } })) }, null, 2)}\n`);
 
   const cli = resolveDqlCli();
-  const projectDir = freshProject(options.arm, workDir, options.keepCache);
+  const projectDir = freshProject(options.arm, workDir, options.keepCache, options.sourceDb ?? undefined);
   writeProviderSettings(projectDir, options.model);
   const dataHash = createHash('sha256').update(readFileSync(SOURCE_DB)).digest('hex');
   const identity = buildIdentity({ cli, dqlVersion: dqlVersion(cli), benchmark: 'nba', condition: options.arm, provider: 'claude-code', model: options.model, cassetteMode: 'record', dataHash, tools: { claudeCli: spawnSync('claude', ['--version'], { encoding: 'utf-8' }).stdout.trim() } });

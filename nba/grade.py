@@ -29,6 +29,9 @@ import duckdb
 
 ROOT = Path(__file__).resolve().parent.parent
 DB = ROOT / "work" / "nba" / "source" / "nba_analysis.duckdb"
+# Q5: an arm on its own warehouse (DX: the NBA tables plus decoys) is graded on it, by the name its SQL uses.
+if os.environ.get("BENCH_DB"):
+    DB = Path(os.environ["BENCH_DB"])
 # F1: BENCH_MODEL_PROJECT is the arm's project, to know which tables "the whole model" showed.
 MODEL_PROJECT = os.environ.get("BENCH_MODEL_PROJECT")
 # P6: BENCH_QUESTIONS points at another question file (nba/questions-p6.json).
