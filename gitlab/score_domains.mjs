@@ -49,9 +49,33 @@ function majorityMap(key, truthKey) {
   return new Map([...counts].map(([proposed, inner]) => [proposed, [...inner].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0][0]]));
 }
 
+// One-to-one: each true domain is matched to at most one proposed domain,
+// largest overlap first, so splitting a true domain over many proposals is
+// not rewarded. Tables in an unmatched proposal count as wrong.
+function oneToOne(key, truthKey) {
+  const overlap = new Map();
+  for (const row of rows) {
+    if (!row[key]) continue;
+    const pair = `${row[key]}\u0000${row[truthKey]}`;
+    overlap.set(pair, (overlap.get(pair) ?? 0) + 1);
+  }
+  const usedProposed = new Set();
+  const usedTruth = new Set();
+  const match = new Map();
+  for (const [pair] of [...overlap].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))) {
+    const [proposed, truthName] = pair.split('\u0000');
+    if (usedProposed.has(proposed) || usedTruth.has(truthName)) continue;
+    usedProposed.add(proposed);
+    usedTruth.add(truthName);
+    match.set(proposed, truthName);
+  }
+  return rows.filter((row) => row[key] && match.get(row[key]) === row[truthKey]).length;
+}
+
 function measure(key, truthKey) {
   const mapping = majorityMap(key, truthKey);
   const right = rows.filter((row) => row[key] && mapping.get(row[key]) === row[truthKey]).length;
+  const strict = oneToOne(key, truthKey);
   const placed = rows.filter((row) => row[key]).length;
   const proposedNames = new Set(rows.map((row) => row[key]).filter(Boolean));
   const perTruth = new Map();
@@ -66,6 +90,8 @@ function measure(key, truthKey) {
     placed,
     right,
     accuracy: +(right / rows.length).toFixed(3),
+    strict,
+    strictAccuracy: +(strict / rows.length).toFixed(3),
     proposed: proposedNames.size,
     truth: new Set(rows.map((row) => row[truthKey])).size,
     split: Object.fromEntries([...perTruth].map(([name, set]) => [name, set.size]).sort((a, b) => b[1] - a[1])),
@@ -79,8 +105,8 @@ const allProposals = report.proposals.map((proposal) => ({ id: proposal.id, mode
 const wrong = rows.filter((row) => !row.proposedDomain || domain.mapping[row.proposedDomain] !== row.domain);
 
 console.log(`Domain finder on GitLab (${rows.length} business tables with a clear label; ${ms} ms)`);
-console.log(`  domains: ${domain.right}/${domain.tables} right (${(domain.accuracy * 100).toFixed(1)}%), ${domain.placed} placed, ${domain.proposed} proposed for ${domain.truth} true`);
-console.log(`  areas:   ${area.right}/${area.tables} right (${(area.accuracy * 100).toFixed(1)}%), ${area.proposed} proposed for ${area.truth} true`);
+console.log(`  domains: ${domain.right}/${domain.tables} right by majority (${(domain.accuracy * 100).toFixed(1)}%), ${domain.strict} one-to-one (${(domain.strictAccuracy * 100).toFixed(1)}%), ${domain.placed} placed, ${domain.proposed} proposed for ${domain.truth} true`);
+console.log(`  areas:   ${area.right}/${area.tables} right by majority (${(area.accuracy * 100).toFixed(1)}%), ${area.strict} one-to-one (${(area.strictAccuracy * 100).toFixed(1)}%), ${area.proposed} proposed for ${area.truth} true`);
 console.log(`  proposals over the whole project: ${allProposals.length}; top: ${allProposals.slice(0, 12).map((item) => `${item.id} ${item.models}`).join(', ')}`);
 console.log(`  true domain → how many proposed domains its tables are split over: ${JSON.stringify(domain.split)}`);
 const byCause = new Map();

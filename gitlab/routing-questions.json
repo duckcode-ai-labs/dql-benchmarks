@@ -1,0 +1,414 @@
+{
+  "version": 1,
+  "source": "gitlab tables.json (442 business tables)",
+  "written_by": "blind agent, 2026-11-04",
+  "questions": [
+    {
+      "id": 1,
+      "question": "Which top-level GitLab.com groups had the most people using Plan-stage features in August 2026, and which plan were those groups on that month?",
+      "subject": "product usage",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.mart_event_namespace_monthly",
+        "model.gitlab_snowflake.dim_namespace"
+      ],
+      "why": "stage_name, user_count and plan_name_at_event_month per dim_ultimate_parent_namespace_id and event_calendar_month; dim_namespace adds namespace_name."
+    },
+    {
+      "id": 2,
+      "question": "On GitLab.com, how did stage monthly active users split between paid and free for each month of 2026?",
+      "subject": "product usage",
+      "overlap": false,
+      "gold": [
+        "model.gitlab_snowflake.rpt_event_xmau_metric_monthly"
+      ],
+      "why": "user_group (total/free/paid), is_smau, stage_name and user_count by event_calendar_month."
+    },
+    {
+      "id": 3,
+      "question": "How many namespaces on GitLab.com ran past their included CI compute minutes in October 2026, and how many of them were burning purchased extra minutes?",
+      "subject": "product usage",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.fct_usage_ci_minutes"
+      ],
+      "why": "snapshot_month, shared_runners_minutes_used_overall vs limit, status, used_purchased and limit_purchased per namespace."
+    },
+    {
+      "id": 4,
+      "question": "How many top-level groups are storing more than their free storage allowance, and how is that storage split between container images, build artifacts and packages?",
+      "subject": "product usage",
+      "overlap": false,
+      "gold": [
+        "model.gitlab_snowflake.fct_usage_storage"
+      ],
+      "why": "has_repositories_above_free_limit, total_free_storage_limit_gib, container_registry_size, build_artifacts_bytes, packages_bytes by snapshot_month and namespace."
+    },
+    {
+      "id": 5,
+      "question": "For October 2026, how many paid Duo seats did each customer have, how many of those seats were assigned, and how many seat holders were actually active?",
+      "subject": "product usage",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.rpt_duo_license_utilization_monthly"
+      ],
+      "why": "reporting_month, crm_account_name, paid_duo_seats, count_seats_assigned, duo_active_users, pct_usage_seat_utilization."
+    },
+    {
+      "id": 6,
+      "question": "What share of shown code suggestions were accepted in FY2027 Q2, by programming language and IDE?",
+      "subject": "product usage",
+      "overlap": false,
+      "gold": [
+        "model.gitlab_snowflake.rpt_behavior_code_suggestion_outcome"
+      ],
+      "why": "one row per suggestion_id with was_shown, was_accepted, language, ide_name and requested_at."
+    },
+    {
+      "id": 7,
+      "question": "How many groups started their very first trial each month in 2026, split by company size and country?",
+      "subject": "product usage",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.fct_trial_first"
+      ],
+      "why": "first trial per namespace with trial_start_date, company_size, country and namespace_type."
+    },
+    {
+      "id": 8,
+      "question": "In September 2026, how many active users versus licensed users did each Self-Managed subscription report, and which subscriptions were over their licensed count?",
+      "subject": "product usage",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.fct_usage_self_managed_seat_link"
+      ],
+      "why": "snapshot_month, dim_subscription_id, active_user_count, license_user_count, max_historical_user_count from self-managed seat reports."
+    },
+    {
+      "id": 9,
+      "question": "What percent of Self-Managed instances reported each stage's monthly active user metric in September 2026, and what is the estimated total once non-reporting instances are counted?",
+      "subject": "product usage",
+      "overlap": false,
+      "gold": [
+        "model.gitlab_snowflake.rpt_ping_metric_totals_w_estimates_monthly"
+      ],
+      "why": "percent_reporting, recorded_usage, estimated_usage, total_usage_with_estimate by stage_name, ping_deployment_type and ping_created_date_month."
+    },
+    {
+      "id": 10,
+      "question": "How much recurring revenue did we have from Ultimate customers in July 2026?",
+      "subject": "revenue and finance",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.mart_arr"
+      ],
+      "why": "arr summed by arr_month, filtered on product_tier_name, with dim_crm_account_id / crm_account_name for the customer."
+    },
+    {
+      "id": 11,
+      "question": "In FY2027 Q2, how much ARR did we add from new logos versus lose to churn compared with the prior quarter, by sales segment and geo?",
+      "subject": "revenue and finance",
+      "overlap": false,
+      "gold": [
+        "model.gitlab_snowflake.rpt_delta_arr_parent_quarter_on_quarter"
+      ],
+      "why": "new_arr, churn_arr, prior_quarter_arr, current_quarter_arr, fiscal_quarter_name_fy, parent_crm_account_sales_segment_live, parent_crm_account_geo_live."
+    },
+    {
+      "id": 12,
+      "question": "What was gross dollar retention for our parent accounts in EMEA as of January 2026, measured against their ARR a year earlier?",
+      "subject": "revenue and finance",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.rpt_retention_parent_account"
+      ],
+      "why": "gross_retention_arr, churn_arr, prior_year_arr, parent_crm_account_geo and is_arr_month_finalized per parent account."
+    },
+    {
+      "id": 13,
+      "question": "How much ARR comes up for renewal in FY2027 Q4, broken out by the sales rep's region?",
+      "subject": "revenue and finance",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.fct_available_to_renew"
+      ],
+      "why": "available-to-renew arr by fiscal_quarter_name_fy and atr_term_end_date, with crm_user_region / crm_user_geo of the owner."
+    },
+    {
+      "id": 14,
+      "question": "Which customer invoices are overdue right now, and how much open balance sits in each aging bucket and payment term?",
+      "subject": "revenue and finance",
+      "overlap": false,
+      "gold": [
+        "model.gitlab_snowflake.mart_current_ar_by_aging_payment_terms"
+      ],
+      "why": "currently overdue invoices (dim_invoice_id, balance) carried with aging bucket and payment terms."
+    },
+    {
+      "id": 15,
+      "question": "What were days sales outstanding and the collection effectiveness index for each month of FY2026?",
+      "subject": "revenue and finance",
+      "overlap": false,
+      "gold": [
+        "model.gitlab_snowflake.rpt_dso_cei_monthly"
+      ],
+      "why": "period and fiscal_quarter with the DSO and CEI calculations (average AR, billing, collections)."
+    },
+    {
+      "id": 16,
+      "question": "What average discount off list price did end customers get on Premium seats bought through resale partners in FY2026 Q4, by geo?",
+      "subject": "revenue and finance",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.mart_arr_discount"
+      ],
+      "why": "list_price, arr, quantity, end_user_discount_buckets, resale_partner_name, product_tier_name, parent_crm_account_geo, fiscal_quarter_name_fy."
+    },
+    {
+      "id": 17,
+      "question": "For each month of FY2026, how did total bookings compare with what we billed and what we actually collected?",
+      "subject": "revenue and finance",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.rpt_booking_billing_collections_monthly"
+      ],
+      "why": "period with booking_amount, invoice_amount_without_tax, total_current_collected and variance_booking_billing."
+    },
+    {
+      "id": 18,
+      "question": "What was our Google Cloud spend in September 2026 by P&L category and product component, after adjustments for pre-purchased usage?",
+      "subject": "revenue and finance",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.rpt_gcp_billing_line_item_with_lookback"
+      ],
+      "why": "final GCP allocation after lookback: date_day, net_cost, pl_category, product_component, finance_sku_type."
+    },
+    {
+      "id": 19,
+      "question": "How many deals did we win in FY2027 Q2 where we were up against a named competitor, by competitor?",
+      "subject": "sales",
+      "overlap": false,
+      "gold": [
+        "model.gitlab_snowflake.mart_crm_opportunity"
+      ],
+      "why": "single-pane opportunity mart with competitors, forecast_category_name, opportunity_category and the won/close fields."
+    },
+    {
+      "id": 20,
+      "question": "On average, how many days do opportunities spend in each sales stage before they are won or lost?",
+      "subject": "sales",
+      "overlap": false,
+      "gold": [
+        "model.gitlab_snowflake.rpt_stage_progression"
+      ],
+      "why": "one row per dim_crm_opportunity_id with stage entry dates, days in each stage and final stage category (Won/Lost/Open)."
+    },
+    {
+      "id": 21,
+      "question": "What is our pipeline coverage against target for the current quarter, by sales segment?",
+      "subject": "sales",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.rpt_pipeline_coverage_daily"
+      ],
+      "why": "combines daily and quarterly sales targets with pipeline actuals (rpt_pipeline_coverage_daily_pk grain)."
+    },
+    {
+      "id": 22,
+      "question": "What net ARR did each sales leader call in their latest weekly forecast for FY2027 Q3?",
+      "subject": "sales",
+      "overlap": false,
+      "gold": [
+        "model.gitlab_snowflake.rpt_sales_clari_net_arr_forecast"
+      ],
+      "why": "forecast_value by user_full_name, sales_team_role, field_name, fiscal_quarter and week_number."
+    },
+    {
+      "id": 23,
+      "question": "How many opportunities came through partner deal registrations in FY2026, broken out by partner and partner track?",
+      "subject": "sales",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.fct_crm_opportunity",
+        "model.gitlab_snowflake.dim_crm_opportunity_partner",
+        "model.gitlab_snowflake.dim_date"
+      ],
+      "why": "fct_crm_opportunity links each deal to dim_crm_opportunity_partner_sk (dr_status, dr_deal_id, partner_account_account_name, partner_track) and created_date_id to dim_date for the fiscal year."
+    },
+    {
+      "id": 24,
+      "question": "Which accounts have the highest propensity-to-expand scores and are in the Decision or Purchase buying stage?",
+      "subject": "sales",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.mart_crm_account"
+      ],
+      "why": "pte_score, pte_decile, pte_score_group and six_sense_account_buying_stage per dim_crm_account_id."
+    },
+    {
+      "id": 25,
+      "question": "Which renewal deals closing in FY2027 Q4 are flagged at risk, how much swing ARR do they carry, and who is the renewal manager on each?",
+      "subject": "sales",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.mart_crm_opportunity_stamped_hierarchy_hist"
+      ],
+      "why": "renewal_risk_category, renewal_swing_arr, renewal_forecast_health, renewal_manager, auto_renewal_status per opportunity."
+    },
+    {
+      "id": 26,
+      "question": "How many customer meetings were held with each account in October 2026, by meeting type?",
+      "subject": "sales",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.mart_crm_event"
+      ],
+      "why": "Salesforce events with dim_crm_account_id, event_date, event_type and outreach_meeting_type."
+    },
+    {
+      "id": 27,
+      "question": "How many MQLs did each geo generate per quarter in FY2027, and how does that compare with the MQL target?",
+      "subject": "marketing",
+      "overlap": false,
+      "gold": [
+        "model.gitlab_snowflake.rpt_l2r_leading_indicators",
+        "model.gitlab_snowflake.rpt_mql_fy_targets"
+      ],
+      "why": "mqls by geo and date_range_quarter; mql_target by report_geo and fiscal_quarter."
+    },
+    {
+      "id": 28,
+      "question": "How much revenue did each marketing campaign get credit for under W-shaped attribution in FY2026?",
+      "subject": "marketing",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.mart_crm_attribution_touchpoint"
+      ],
+      "why": "attribution touchpoints with campaign details, bizible_count_w_shaped, w_net_arr and net_arr_per_campaign."
+    },
+    {
+      "id": 29,
+      "question": "For the email campaigns we sent in September 2026, what were the delivered, open, click and unsubscribe totals per campaign?",
+      "subject": "marketing",
+      "overlap": false,
+      "gold": [
+        "model.gitlab_snowflake.fct_iterable_campaign_metrics",
+        "model.gitlab_snowflake.dim_iterable_campaign"
+      ],
+      "why": "campaign-level iterable_campaign_email_delivered/opened/clicked_total and unsubscribes_total by iterable_campaign_date; campaign name from the dimension."
+    },
+    {
+      "id": 30,
+      "question": "Of the people who became inquiries in FY2027 Q1, how many went on to MQL and to a sales-accepted opportunity, by lead source?",
+      "subject": "marketing",
+      "overlap": false,
+      "gold": [
+        "model.gitlab_snowflake.rpt_lead_to_revenue"
+      ],
+      "why": "true_inquiry_date, is_inquiry, is_mql, mql_date_first_pt, accepted_date, dim_crm_opportunity_id and lead_source per person."
+    },
+    {
+      "id": 31,
+      "question": "How many contacts are opted in to marketing email and own a free GitLab.com group or personal namespace?",
+      "subject": "marketing",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.mart_marketing_contact"
+      ],
+      "why": "is_marketo_opted_in, is_individual_namespace_owner, individual_namespace_is_saas_free_tier, group_owner_of_saas_free_tier per dim_marketing_contact_id."
+    },
+    {
+      "id": 32,
+      "question": "Which marketing channels get the most credit for pushing deals forward in the forecast, from pipeline to best case or commit, in FY2027 Q2?",
+      "subject": "marketing",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.fct_marketing_progressed_pipeline_touchpoint"
+      ],
+      "why": "bizible_marketing_channel, mpp_model_weight, is_mpp_touchpoint_flag and first_forecast_progression_date per touchpoint and opportunity."
+    },
+    {
+      "id": 33,
+      "question": "How many merge requests were opened on GitLab.com in September 2026 targeting the main branch versus other branches, leaving out deleted ones?",
+      "subject": "engineering",
+      "overlap": false,
+      "gold": [
+        "model.gitlab_snowflake.dim_merge_request"
+      ],
+      "why": "one row per merge request with target_branch, is_deleted and its created date key."
+    },
+    {
+      "id": 34,
+      "question": "Which of our own internal projects used the most CI job minutes on shared runners last month, and how many pipelines and builds did they run?",
+      "subject": "engineering",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.rpt_internal_runner_activity"
+      ],
+      "why": "reporting_day, project_name, ci_job_minutes, count_of_pipelines, count_of_builds for internal namespaces on shared runners."
+    },
+    {
+      "id": 35,
+      "question": "Which open bugs in our product issue tracker are tied to the most customer revenue through support ticket mentions, and how long have they been open?",
+      "subject": "engineering",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.rpt_top_issues_by_arr"
+      ],
+      "why": "arr_rank, unique_customers, mentions, issue_type, severity, state and days_open per issue."
+    },
+    {
+      "id": 36,
+      "question": "What was voluntary versus involuntary attrition in FY2026, by termination reason?",
+      "subject": "people",
+      "overlap": false,
+      "gold": [
+        "model.gitlab_snowflake.fct_team_member_status"
+      ],
+      "why": "termination_type, termination_reason, exit_impact and status_effective_date per employee_id."
+    },
+    {
+      "id": 37,
+      "question": "What is our current headcount by region and country, and how many of those people were hired in the last 12 months?",
+      "subject": "people",
+      "overlap": false,
+      "gold": [
+        "model.gitlab_snowflake.mart_team_member_directory"
+      ],
+      "why": "is_current_team_member, region, country and hire_date per team member."
+    },
+    {
+      "id": 38,
+      "question": "What share of our own engineers used Duo AI features on their working days in October 2026, by department?",
+      "subject": "people",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.rpt_team_member_duo_adoption"
+      ],
+      "why": "daily is_engineer, has_ai_activity, has_workflow_activity, is_time_off_date, department and date_actual per employee."
+    },
+    {
+      "id": 39,
+      "question": "For support tickets from Premium customers in October 2026, what was the median time to first reply by ticket priority?",
+      "subject": "customer success and support",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.fct_support_ticket",
+        "model.gitlab_snowflake.dim_support_ticket"
+      ],
+      "why": "created_at and first_reply_at on the ticket fact; gitlab_plan and ticket_priority on the ticket dimension."
+    },
+    {
+      "id": 40,
+      "question": "Which customer accounts were red for CI adoption or license utilization in their health score last month?",
+      "subject": "customer success and support",
+      "overlap": true,
+      "gold": [
+        "model.gitlab_snowflake.rpt_product_usage_health_score_account_roll_up",
+        "model.gitlab_snowflake.dim_crm_account"
+      ],
+      "why": "reporting_month, account_level_ci_color, account_level_license_utilization_color per dim_crm_account_id; crm_account_name from dim_crm_account."
+    }
+  ]
+}
