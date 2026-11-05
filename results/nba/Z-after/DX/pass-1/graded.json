@@ -1,0 +1,1268 @@
+[
+  {
+    "question_id": 1,
+    "category": "lookup",
+    "question": "Who is the Houston Rockets' general manager in the data?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT team_id, city, team_nickname, general_manager\nFROM enterprise_dw.TRANSFORMED.dim_teams_cleansed\nWHERE LOWER(team_nickname) LIKE '%rockets%'\n   OR (LOWER(city) LIKE '%houston%' AND LOWER(team_nickname) LIKE '%rockets%')",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [],
+    "tables": [
+      "transformed.dim_teams_cleansed"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612745",
+        "Houston",
+        "Rockets",
+        "Daryl Morey"
+      ]
+    ]
+  },
+  {
+    "question_id": 2,
+    "category": "lookup",
+    "question": "Which teams list Staples Center as their home arena in the data?",
+    "gold_rows": 2,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT team_id, team_nickname, city, arena\nFROM enterprise_dw.TRANSFORMED.dim_teams_cleansed\nWHERE LOWER(arena) LIKE '%staples center%'\nORDER BY team_id",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [],
+    "tables": [
+      "transformed.dim_teams_cleansed"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 2,
+    "pred_sample": [
+      [
+        "1610612746",
+        "Clippers",
+        "Los Angeles",
+        "Staples Center"
+      ],
+      [
+        "1610612747",
+        "Lakers",
+        "Los Angeles",
+        "Staples Center"
+      ]
+    ]
+  },
+  {
+    "question_id": 3,
+    "category": "lookup",
+    "question": "How many rebounds did Kevin Love grab in his game on November 12, 2010?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, SUM(rebounds) AS rebounds\nFROM enterprise_dw.TRANSFORMED.local_player_game_facts\nWHERE LOWER(player_name) = 'kevin love'\n  AND game_date = DATE '2010-11-12'\nGROUP BY player_id, player_name",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "201567",
+        "Kevin Love",
+        "31.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 4,
+    "category": "lookup",
+    "question": "Who were the Toronto Raptors' five starters on June 13, 2019?",
+    "gold_rows": 5,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT d.PLAYER_ID AS player_id, d.PLAYER_NAME AS player_name, d.START_POSITION AS start_position\nFROM enterprise_dw.RAW.raw_games_details d\nJOIN enterprise_dw.TRANSFORMED.local_player_game_facts f\n  ON f.game_id = d.GAME_ID AND f.player_id = d.PLAYER_ID\nWHERE f.game_date = DATE '2019-06-13'\n  AND (d.TEAM_ABBREVIATION ILIKE 'TOR' OR d.TEAM_CITY ILIKE '%Toronto%' OR d.NICKNAME ILIKE '%Raptors%')\n  AND d.START_POSITION IS NOT NULL\n  AND TRIM(d.START_POSITION) <> ''\nGROUP BY d.PLAYER_ID, d.PLAYER_NAME, d.START_POSITION\nORDER BY d.START_POSITION, d.PLAYER_NAME",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local",
+      "raw"
+    ],
+    "tables": [
+      "raw.raw_games_details",
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 5,
+    "pred_sample": [
+      [
+        "201188",
+        "Marc Gasol",
+        "C"
+      ],
+      [
+        "202695",
+        "Kawhi Leonard",
+        "F"
+      ],
+      [
+        "1627783",
+        "Pascal Siakam",
+        "F"
+      ]
+    ]
+  },
+  {
+    "question_id": 5,
+    "category": "lookup",
+    "question": "When was Karl-Anthony Towns born, according to the data?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, MAX(birth_date) AS birth_date\nFROM enterprise_dw.TRANSFORMED.fct_player_journey\nWHERE LOWER(player_name) = LOWER('Karl-Anthony Towns')\nGROUP BY player_id, player_name",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "fct"
+    ],
+    "tables": [
+      "transformed.fct_player_journey"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1626157",
+        "Karl-Anthony Towns",
+        "1995-11-15"
+      ]
+    ]
+  },
+  {
+    "question_id": 6,
+    "category": "lookup",
+    "question": "On what date did Chris Paul play his first regular-season game for the Houston Rockets?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 7,
+    "category": "aggregate",
+    "question": "Who committed the most personal fouls in the 2013-14 regular season, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, SUM(total_personal_fouls) AS total_personal_fouls\nFROM enterprise_dw.TRANSFORMED.fct_player_journey\nWHERE season = 2013\nGROUP BY player_id, player_name\nORDER BY total_personal_fouls DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "fct"
+    ],
+    "tables": [
+      "transformed.fct_player_journey"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "201579",
+        "Roy Hibbert",
+        "350.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 8,
+    "category": "aggregate",
+    "question": "How many players averaged at least 25 points per game in the 2019-20 regular season, among those who played at least 40 games?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT COUNT(DISTINCT player_id) AS players_count\nFROM enterprise_dw.TRANSFORMED.local_player_season_facts\nWHERE season = 2019\n  AND points_per_game >= 25\n  AND games_played >= 40",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "11"
+      ]
+    ]
+  },
+  {
+    "question_id": 9,
+    "category": "aggregate",
+    "question": "Which team scored 120 or more points in the most games of the 2017-18 regular season, and in how many games?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT team_id, COUNT(DISTINCT game_id) AS games_120_plus\nFROM enterprise_dw.TRANSFORMED.local_team_game_facts\nWHERE season = 2017\n  AND CAST(game_id AS VARCHAR) LIKE '2%'\n  AND team_points >= 120\nGROUP BY team_id\nORDER BY games_120_plus DESC, team_id\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_team_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612744",
+        "30"
+      ]
+    ]
+  },
+  {
+    "question_id": 10,
+    "category": "aggregate",
+    "question": "What was the league-wide free-throw percentage in the 2008-09 regular season? Give it as a fraction rounded to three decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 11,
+    "category": "aggregate",
+    "question": "Which month of the 2018-19 regular season had the most games?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT DATE_TRUNC('month', game_date_est) AS game_month, COUNT(DISTINCT games_game_id) AS games\nFROM enterprise_dw.TRANSFORMED.src_games\nWHERE season = 2018\n  AND CAST(games_game_id AS VARCHAR) LIKE '2%'\nGROUP BY DATE_TRUNC('month', game_date_est)\nORDER BY games DESC, game_month\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "src"
+    ],
+    "tables": [
+      "transformed.src_games"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2019-03-01 00:00:00",
+        "224"
+      ]
+    ]
+  },
+  {
+    "question_id": 12,
+    "category": "aggregate",
+    "question": "What was the biggest margin of victory in any game in the data? Give the winner, the loser, the date and the margin.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT game_id, game_date, team_id AS winner_team_id, opponent_team_id AS loser_team_id, team_points - opponent_points AS margin\nFROM enterprise_dw.TRANSFORMED.local_team_game_facts\nWHERE team_won = true\nORDER BY margin DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_team_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "22100330",
+        "2021-12-02",
+        "1610612763",
+        "1610612760",
+        "73.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 13,
+    "category": "aggregate",
+    "question": "In how many games in the data did Dirk Nowitzki score 30 or more points?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(DISTINCT game_id) AS games_30_plus_points\nFROM enterprise_dw.TRANSFORMED.local_player_game_facts\nWHERE LOWER(player_name) = 'dirk nowitzki'\n  AND points >= 30",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "222"
+      ]
+    ]
+  },
+  {
+    "question_id": 14,
+    "category": "aggregate",
+    "question": "What is the fewest points a team scored in a regular-season game in the data? Give the team, the opponent, the date and the points.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT game_id, team_id, opponent_team_id, game_date, team_points AS points\nFROM enterprise_dw.TRANSFORMED.local_team_game_facts\nWHERE CAST(game_id AS VARCHAR) LIKE '2%'\n  AND team_points IS NOT NULL\nORDER BY team_points ASC, game_date ASC, game_id ASC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_team_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "20701006",
+        "1610612748",
+        "1610612761",
+        "2008-03-19",
+        "54.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 15,
+    "category": "aggregate",
+    "question": "How many players scored at least 1,000 points in the 2010-11 regular season?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT COUNT(DISTINCT player_id) AS players_with_1000_points\nFROM enterprise_dw.TRANSFORMED.local_player_season_facts\nWHERE season = 2010\n  AND total_points >= 1000",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "102"
+      ]
+    ]
+  },
+  {
+    "question_id": 16,
+    "category": "aggregate",
+    "question": "Who had the most 30-point games in the 2005-06 regular season, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, COUNT(DISTINCT game_id) AS games_30_plus\nFROM enterprise_dw.TRANSFORMED.local_player_game_facts\nWHERE season = 2005\n  AND CAST(game_id AS VARCHAR) LIKE '2%'\n  AND participated = true\n  AND points >= 30\nGROUP BY player_id, player_name\nORDER BY games_30_plus DESC, player_id\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "977",
+        "Kobe Bryant",
+        "56"
+      ]
+    ]
+  },
+  {
+    "question_id": 17,
+    "category": "layer",
+    "question": "How many rebounds per game did Pau Gasol average in the 2013-14 regular season? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, ROUND(SUM(rebounds) / COUNT(DISTINCT game_id), 2) AS rebounds_per_game\nFROM enterprise_dw.TRANSFORMED.local_player_game_facts\nWHERE LOWER(player_name) = 'pau gasol'\n  AND season = 2013\n  AND participated = true\n  AND CAST(game_id AS VARCHAR) LIKE '2%'\nGROUP BY player_id, player_name",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2200",
+        "Pau Gasol",
+        "9.67"
+      ]
+    ]
+  },
+  {
+    "question_id": 18,
+    "category": "layer",
+    "question": "How many different players played for the Cleveland Cavaliers in the 2019-20 regular season?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 19,
+    "category": "layer",
+    "question": "Which team gave up the fewest points in the 2020-21 regular season, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT team_id, SUM(opponent_points) AS points_allowed_total\nFROM enterprise_dw.TRANSFORMED.local_team_game_facts\nWHERE season = 2020\n  AND CAST(game_id AS VARCHAR) LIKE '2%'\nGROUP BY team_id\nORDER BY points_allowed_total ASC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_team_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612752",
+        "7540.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 20,
+    "category": "layer",
+    "question": "Who were the top four rebounders in the 2020-21 regular season by total rebounds?",
+    "gold_rows": 4,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, SUM(rebounds) AS total_rebounds\nFROM enterprise_dw.TRANSFORMED.local_player_game_facts\nWHERE season = 2020\n  AND CAST(game_id AS VARCHAR) LIKE '2%'\n  AND participated = true\nGROUP BY player_id, player_name\nORDER BY total_rebounds DESC\nLIMIT 4",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 4,
+    "pred_sample": [
+      [
+        "203497",
+        "Rudy Gobert",
+        "960.0"
+      ],
+      [
+        "203991",
+        "Clint Capela",
+        "903.0"
+      ],
+      [
+        "202696",
+        "Nikola Vucevic",
+        "817.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 21,
+    "category": "layer",
+    "question": "In which regular season in the data did Tim Duncan score the most points, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT season, SUM(total_points) AS total_points\nFROM enterprise_dw.TRANSFORMED.fct_player_journey\nWHERE LOWER(player_name) = 'tim duncan'\nGROUP BY season\nORDER BY total_points DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "fct"
+    ],
+    "tables": [
+      "transformed.fct_player_journey"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2012",
+        "1674.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 22,
+    "category": "layer",
+    "question": "Which team played the most games in the 2008 playoffs?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT\n  team_id,\n  COUNT(DISTINCT game_id) AS games_played\nFROM enterprise_dw.TRANSFORMED.local_team_game_facts\nWHERE season = 2008\n  AND CAST(game_id AS VARCHAR) LIKE '4%'\nGROUP BY team_id\nORDER BY games_played DESC, team_id\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_team_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612753",
+        "24"
+      ]
+    ]
+  },
+  {
+    "question_id": 23,
+    "category": "layer",
+    "question": "How many games were played in the 2020 playoffs?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT COUNT(DISTINCT games_game_id) AS games_played\nFROM enterprise_dw.TRANSFORMED.src_games\nWHERE season = 2020\n  AND CAST(games_game_id AS VARCHAR) LIKE '4%'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "src"
+    ],
+    "tables": [
+      "transformed.src_games"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "85"
+      ]
+    ]
+  },
+  {
+    "question_id": 24,
+    "category": "layer",
+    "question": "How many games in the 2015-16 regular season were decided by 20 or more points?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": null,
+    "sql": "WITH team_points AS (\n  SELECT game_id, team_id, SUM(points) AS team_pts\n  FROM enterprise_dw.TRANSFORMED.local_player_game_facts\n  WHERE season = 2015\n    AND CAST(game_id AS VARCHAR) LIKE '2%'\n  GROUP BY game_id, team_id\n),\ngame_margin AS (\n  SELECT game_id, MAX(team_pts) - MIN(team_pts) AS margin, COUNT(*) AS team_count\n  FROM team_points\n  GROUP BY game_id\n)\nSELECT COUNT(*) AS games_decided_by_20_or_more\nFROM game_margin\nWHERE team_count = 2\n  AND margin >= 20",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "175"
+      ]
+    ]
+  },
+  {
+    "question_id": 25,
+    "category": "layer",
+    "question": "What was the Golden State Warriors' winning percentage in the 2016-17 regular season? Give it as a fraction rounded to three decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 26,
+    "category": "layer",
+    "question": "Who had the most assists in the 2017-18 regular season, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT g.player_id, s.player_name, SUM(g.assists) AS total_assists\nFROM enterprise_dw.TRANSFORMED.local_player_game_facts g\nJOIN enterprise_dw.TRANSFORMED.local_player_season_facts s\n  ON s.player_id = g.player_id AND s.season = g.season\nWHERE g.season = 2017\n  AND CAST(g.game_id AS VARCHAR) LIKE '2%'\nGROUP BY g.player_id, s.player_name\nORDER BY total_assists DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts",
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "201566",
+        "Russell Westbrook",
+        "820.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 27,
+    "category": "vocabulary",
+    "question": "How many triple-doubles were recorded in the 2012-13 regular season?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 28,
+    "category": "vocabulary",
+    "question": "How many 20-20 games did Dwight Howard have in the data?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(DISTINCT game_id) AS games_20_20\nFROM enterprise_dw.TRANSFORMED.local_player_game_facts\nWHERE LOWER(player_name) = 'dwight howard'\n  AND points >= 20\n  AND rebounds >= 20\n  AND participated = true",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "57"
+      ]
+    ]
+  },
+  {
+    "question_id": 29,
+    "category": "vocabulary",
+    "question": "How many games did Andre Iguodala start in the 2015-16 regular season?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 30,
+    "category": "vocabulary",
+    "question": "How many back-to-backs did the Denver Nuggets play in the 2017-18 regular season?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 31,
+    "category": "vocabulary",
+    "question": "Which teams were swept in the 2017 playoffs?",
+    "gold_rows": 5,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT g.team_id, t.CITY, t.NICKNAME, g.opponent_team_id, COUNT(*) AS games_lost\nFROM enterprise_dw.TRANSFORMED.local_team_game_facts g\nLEFT JOIN enterprise_dw.RAW.raw_teams t ON t.TEAM_ID = g.team_id\nWHERE CAST(g.game_id AS VARCHAR) LIKE '4%'\n  AND g.season = 2016\n  AND EXTRACT(year FROM g.game_date) = 2017\nGROUP BY g.team_id, t.CITY, t.NICKNAME, g.opponent_team_id\nHAVING SUM(CASE WHEN g.team_won THEN 1 ELSE 0 END) = 0\n   AND COUNT(*) >= 4\nORDER BY t.CITY, t.NICKNAME",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local",
+      "other"
+    ],
+    "tables": [
+      "g.game_date",
+      "raw.raw_teams",
+      "transformed.local_team_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 5,
+    "pred_sample": [
+      [
+        "1610612754",
+        "Indiana",
+        "Pacers",
+        "1610612739",
+        "4"
+      ],
+      [
+        "1610612757",
+        "Portland",
+        "Trail Blazers",
+        "1610612744",
+        "4"
+      ],
+      [
+        "1610612759",
+        "San Antonio",
+        "Spurs",
+        "1610612744",
+        "4"
+      ]
+    ]
+  },
+  {
+    "question_id": 32,
+    "category": "vocabulary",
+    "question": "What was the longest winning streak in the 2012-13 regular season, and which team had it?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "WITH g AS (\n  SELECT team_id, game_id, game_date, team_won\n  FROM enterprise_dw.TRANSFORMED.local_team_game_facts\n  WHERE season = 2012\n    AND CAST(game_id AS VARCHAR) LIKE '2%'\n),\nr AS (\n  SELECT\n    team_id,\n    game_date,\n    team_won,\n    ROW_NUMBER() OVER (PARTITION BY team_id ORDER BY game_date, game_id) AS rn_all,\n    ROW_NUMBER() OVER (PARTITION BY team_id, team_won ORDER BY game_date, game_id) AS rn_result\n  FROM g\n),\ns AS (\n  SELECT\n    team_id,\n    COUNT(*) AS win_streak,\n    MIN(game_date) AS streak_start,\n    MAX(game_date) AS streak_end\n  FROM r\n  WHERE team_won\n  GROUP BY team_id, rn_all - rn_result\n)\nSELECT team_id, win_streak, streak_start, streak_end\nFROM s\nQUALIFY win_streak = MAX(win_streak) OVER ()\nORDER BY team_id",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_team_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612748",
+        "27",
+        "2013-02-03",
+        "2013-03-25"
+      ]
+    ]
+  },
+  {
+    "question_id": 33,
+    "category": "vocabulary",
+    "question": "Which teams made the 2021 playoffs through the play-in?",
+    "gold_rows": 4,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 34,
+    "category": "vocabulary",
+    "question": "In how many of his 2016-17 regular-season games did Draymond Green score in double figures?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(DISTINCT game_id) AS double_figure_games\nFROM enterprise_dw.TRANSFORMED.local_player_game_facts\nWHERE LOWER(player_name) = 'draymond green'\n  AND season = 2016\n  AND CAST(game_id AS VARCHAR) LIKE '2%'\n  AND participated = true\n  AND points >= 10",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "39"
+      ]
+    ]
+  },
+  {
+    "question_id": 35,
+    "category": "join",
+    "question": "What was the 2018-19 regular-season record of the team that lists Masai Ujiri as its general manager?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT t.team_id, t.team_nickname,\n  COUNT(DISTINCT CASE WHEN (p.is_home AND p.home_team_wins = 1) OR (NOT p.is_home AND p.home_team_wins = 0) THEN p.game_id END) AS wins,\n  COUNT(DISTINCT CASE WHEN (p.is_home AND p.home_team_wins = 0) OR (NOT p.is_home AND p.home_team_wins = 1) THEN p.game_id END) AS losses\nFROM enterprise_dw.TRANSFORMED.dim_teams_cleansed t\nJOIN enterprise_dw.TRANSFORMED.local_player_game_facts p ON p.team_id = t.team_id\nWHERE LOWER(t.general_manager) LIKE '%masai ujiri%'\n  AND p.season = 2018\n  AND CAST(p.game_id AS VARCHAR) LIKE '2%'\nGROUP BY t.team_id, t.team_nickname",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.dim_teams_cleansed",
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612761",
+        "Raptors",
+        "58",
+        "24"
+      ]
+    ]
+  },
+  {
+    "question_id": 36,
+    "category": "join",
+    "question": "Who scored the most points against the San Antonio Spurs in the 2013-14 regular season, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 37,
+    "category": "join",
+    "question": "For which team has Paul George scored the most points in the data, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT player_id, player_name, team_id, SUM(points) AS total_points\nFROM enterprise_dw.TRANSFORMED.local_player_game_facts\nWHERE LOWER(player_name) = 'paul george'\nGROUP BY player_id, player_name, team_id\nORDER BY total_points DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "202331",
+        "Paul George",
+        "1610612754",
+        "9816.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 38,
+    "category": "join",
+    "question": "How many games did Eastern Conference teams win against Western Conference teams in the 2016-17 regular season?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 39,
+    "category": "join",
+    "question": "What is the most points a player has scored in a single game at Madison Square Garden in the data, and who scored them?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT p.player_id, p.player_name, p.game_id, p.game_date, p.points AS max_points\nFROM enterprise_dw.TRANSFORMED.local_player_game_facts p\nJOIN enterprise_dw.RAW.raw_teams t\n  ON t.TEAM_ID = CASE WHEN p.is_home THEN p.team_id ELSE p.opponent_team_id END\nWHERE LOWER(t.ARENA) LIKE '%madison square garden%'\n  AND p.points IS NOT NULL\nORDER BY p.points DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "raw.raw_teams",
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2546",
+        "Carmelo Anthony",
+        "21300640",
+        "2014-01-24",
+        "62.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 40,
+    "category": "join",
+    "question": "How many games did the New Orleans Hornets win in the 2007-08 regular season?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": []
+  }
+]
