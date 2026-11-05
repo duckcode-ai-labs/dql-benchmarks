@@ -3,7 +3,10 @@
 // SQL writer more often than search alone, on GitLab's related areas?
 //
 //   DQL_CLI=<zlens dist/index.js> node gitlab/run-routing.mjs --project <dql dir> --db <duckdb>
-//        --run <id> --arm on|off [--only 3,5] [--model claude-sonnet-5-5]
+//        --run <id> --arm on|off [--only 3,5] [--model claude-sonnet-5-5] [--questions <reworded.json>]
+//
+// --questions swaps in reworded question text by id (gitlab/rank/reworded-questions.json);
+// the gold tables, subjects and overlap flags stay those of gitlab/routing-questions.json.
 //
 // The 40 questions were written blind from the table list (gitlab/routing-questions.json),
 // each with the tables that answer it. GitLab's warehouse here holds the tables' shape and
@@ -22,7 +25,7 @@ const RUN_ENV = { DQL_EMBEDDINGS_AUTODETECT: 'off', DQL_TELEMETRY_DISABLED: '1' 
 const QUESTIONS = join(REPO_ROOT, 'gitlab', 'routing-questions.json');
 
 function parseArgs(argv) {
-  const options = { project: null, db: null, run: null, arm: null, only: null, model: 'claude-sonnet-5-5' };
+  const options = { project: null, db: null, run: null, arm: null, only: null, model: 'claude-sonnet-5-5', questions: null };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--project') options.project = argv[++index];
@@ -31,6 +34,7 @@ function parseArgs(argv) {
     else if (arg === '--arm') options.arm = argv[++index];
     else if (arg === '--only') options.only = new Set(argv[++index].split(',').map(Number));
     else if (arg === '--model') options.model = argv[++index];
+    else if (arg === '--questions') options.questions = argv[++index];
     else throw new Error(`Unknown option ${arg}`);
   }
   if (!options.project || !options.db || !options.run || !['on', 'off'].includes(options.arm)) throw new Error('--project, --db, --run and --arm on|off are required.');
@@ -104,7 +108,10 @@ async function main() {
   rmSync(outDir, { recursive: true, force: true });
   mkdirSync(outDir, { recursive: true });
   mkdirSync(workDir, { recursive: true });
-  const questions = JSON.parse(readFileSync(QUESTIONS, 'utf-8')).questions.filter((question) => !options.only || options.only.has(question.id));
+  const reworded = options.questions ? new Map(JSON.parse(readFileSync(options.questions, 'utf-8')).questions.map((item) => [item.id, item.question])) : undefined;
+  const questions = JSON.parse(readFileSync(QUESTIONS, 'utf-8')).questions
+    .filter((question) => !options.only || options.only.has(question.id))
+    .map((question) => (reworded?.has(question.id) ? { ...question, question: reworded.get(question.id) } : question));
   const evalPath = join(workDir, 'evals.yml');
   writeFileSync(evalPath, `${JSON.stringify({ cases: questions.map((question) => ({ name: `q${question.id}`, question: question.question, expected: { answerable: true } })) }, null, 2)}\n`);
 
