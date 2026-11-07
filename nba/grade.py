@@ -40,12 +40,43 @@ TIMEOUT_S = 30.0
 TOLERANCE_DIGITS = 6
 
 _con = {}
+# BENCH_ENGINE=snowflake: gold and prediction both run on the benchmark's Snowflake copy
+# (nba/snowflake: the same tables and rows as the DuckDB file, checked by parity.py),
+# as the read-only role ZLens connects with. SNOWFLAKE_ACCOUNT and SNOWFLAKE_PRIVATE_KEY_PATH are needed.
+ENGINE = os.environ.get("BENCH_ENGINE", "duckdb")
+
+
+class SnowflakeConnection:
+    def __init__(self):
+        import snowflake.connector  # pip install snowflake-connector-python
+        self.con = snowflake.connector.connect(
+            account=os.environ["SNOWFLAKE_ACCOUNT"],
+            user=os.environ.get("SNOWFLAKE_USER", "ZLENS_APP_SVC"),
+            authenticator="SNOWFLAKE_JWT",
+            private_key_file=os.environ["SNOWFLAKE_PRIVATE_KEY_PATH"],
+            role=os.environ.get("SNOWFLAKE_ROLE", "ZLENS_READER"),
+            warehouse=os.environ.get("SNOWFLAKE_WAREHOUSE", "ZLENS_BENCH_WH"),
+            database="NBA",
+            session_parameters={"QUERY_TAG": "zlens-bench-grade"},
+        )
+
+    def execute(self, sql):
+        cursor = self.con.cursor()
+        # Snowflake cancels the statement itself past the timeout.
+        cursor.execute(sql, timeout=int(TIMEOUT_S))
+        return cursor
+
+    def interrupt(self):
+        pass
 
 
 def connection():
     if "c" not in _con:
-        _con["c"] = duckdb.connect(str(DB), read_only=True)
-        _con["c"].execute("SET enable_external_access = false")
+        if ENGINE == "snowflake":
+            _con["c"] = SnowflakeConnection()
+        else:
+            _con["c"] = duckdb.connect(str(DB), read_only=True)
+            _con["c"].execute("SET enable_external_access = false")
     return _con["c"]
 
 
