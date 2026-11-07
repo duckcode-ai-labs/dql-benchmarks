@@ -13,6 +13,10 @@
 //       sync warehouse. W1 = W0 + draft-meanings.
 //   DA  D0 + `zlens model draft --apply --passed-only`: the model ZLens drafts, as drafted (P6).
 //   DM  D0 + the hand-built model from R3 (nba/dm-model), for reference (P6).
+//   WA  W0 + `zlens model draft --apply --passed-only`: warehouse-first, the model ZLens drafts.
+//   WS  the same NBA tables on Snowflake (nba/snowflake), warehouse-first, as the read-only
+//       key-pair user ZLENS_APP_SVC (SNOWFLAKE_ACCOUNT, NBA_SNOWFLAKE_KEY). WAS = WS + the draft,
+//       applied as WA's is: WA vs WAS differ only in the engine.
 //
 // The dbt project is work/nba/dbt, a copy of /Users/Kranthi_1/dbt-projects/nba_analysis
 // (models, macros, snapshots, dbt_project.yml), with local_duckdb/target as its target/
@@ -112,6 +116,29 @@ function warehouseProject(cli, dir, record) {
   zlens(cli, dir, ['sync', 'warehouse', '.', '--schemas', 'RAW,TRANSFORMED,dev'], record);
 }
 
+/** WS: the NBA tables on Snowflake (nba/snowflake/README.md), warehouse-first, the way a customer connects. */
+function snowflakeWarehouseProject(cli, dir, record) {
+  const account = process.env.SNOWFLAKE_ACCOUNT;
+  if (!account) throw new Error('SNOWFLAKE_ACCOUNT is required for WS (orgname-accountname).');
+  const key = process.env.NBA_SNOWFLAKE_KEY ?? join(process.env.HOME ?? '', '.zlens-bench', 'snowflake', 'reader.p8');
+  rmSync(dir, { recursive: true, force: true });
+  const away = join(WORK, 'wh', 'projects', 'WS');
+  rmSync(away, { recursive: true, force: true });
+  mkdirSync(join(away, '..'), { recursive: true });
+  zlens(cli, join(away, '..'), ['init', away, '--warehouse-first'], record);
+  mkdirSync(join(dir, '..'), { recursive: true });
+  cpSync(away, dir, { recursive: true });
+  rmSync(join(WORK, 'wh'), { recursive: true, force: true });
+  updateConfig(dir, (cfg) => {
+    cfg.defaultConnection = 'default';
+    cfg.connections = { default: {
+      driver: 'snowflake', account, username: 'ZLENS_APP_SVC', authMethod: 'key_pair', privateKeyPath: key,
+      warehouse: 'ZLENS_BENCH_WH', database: 'NBA', schema: 'TRANSFORMED', role: 'ZLENS_READER',
+    } };
+  });
+  zlens(cli, dir, ['sync', 'warehouse', '.', '--database', 'NBA', '--schemas', 'RAW,TRANSFORMED,DEV'], record);
+}
+
 function draftMeanings(cli, dir, record) {
   writeProviderSettings(dir);
   record.dryRun = zlens(cli, dir, ['model', 'draft-meanings', '.', '--dry-run', '--format', 'json'], record);
@@ -127,12 +154,25 @@ function draftMeanings(cli, dir, record) {
 function main() {
   const armFlag = process.argv.indexOf('--arm');
   const arm = process.argv[armFlag + 1];
-  if (armFlag < 0 || !['D0', 'D1', 'D2', 'W0', 'W1', 'DA', 'DM'].includes(arm)) throw new Error('--arm D0|D1|D2|W0|W1|DA|DM is required.');
+  if (armFlag < 0 || !['D0', 'D1', 'D2', 'W0', 'W1', 'DA', 'DM', 'WA', 'WS', 'WAS'].includes(arm)) throw new Error('--arm D0|D1|D2|W0|W1|DA|DM|WA|WS|WAS is required.');
   const cli = resolveDqlCli();
   const dir = join(WORK, 'projects', arm);
   const record = { arm, builtAt: new Date().toISOString(), cli: cli.entry, steps: [] };
   if (arm === 'D0') dbtProject(cli, dir, record);
   if (arm === 'W0') warehouseProject(cli, dir, record);
+  if (arm === 'WS') snowflakeWarehouseProject(cli, dir, record);
+  // WA and WAS: the warehouse-first project plus the model ZLens drafts, applied as drafted.
+  if (arm === 'WA' || arm === 'WAS') {
+    const base = join(WORK, 'projects', arm === 'WA' ? 'W0' : 'WS');
+    if (!existsSync(base)) throw new Error(`Build ${arm === 'WA' ? 'W0' : 'WS'} first.`);
+    rmSync(dir, { recursive: true, force: true });
+    cpSync(base, dir, { recursive: true, verbatimSymlinks: true });
+    const started = Date.now();
+    record.draft = zlens(cli, dir, ['model', 'draft', '.'], record, 1_800_000);
+    record.apply = zlens(cli, dir, ['model', 'draft', '.', '--apply', '--passed-only'], record, 1_800_000);
+    record.draftSeconds = Math.round((Date.now() - started) / 1000);
+    record.validate = zlens(cli, dir, ['model', 'validate', '.'], record, 300_000, { mayFail: true });
+  }
   if (arm === 'D1' || arm === 'W1') {
     const base = join(WORK, 'projects', arm === 'D1' ? 'D0' : 'W0');
     if (!existsSync(base)) throw new Error(`Build ${arm === 'D1' ? 'D0' : 'W0'} first.`);

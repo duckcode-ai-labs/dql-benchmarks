@@ -27,7 +27,7 @@ const HOST_ROW_GUARD = /\nLIMIT 501\s*$/;
 const RUN_ENV = { DQL_EMBEDDINGS_AUTODETECT: 'off', DQL_TELEMETRY_DISABLED: '1' };
 
 function parseArgs(argv) {
-  const options = { arm: null, run: null, pass: 1, only: null, questions: join(REPO_ROOT, 'nba', 'questions.json'), model: 'claude-sonnet-5-5', keepCache: false, sourceDb: null };
+  const options = { arm: null, run: null, pass: 1, only: null, questions: join(REPO_ROOT, 'nba', 'questions.json'), model: 'claude-sonnet-5-5', keepCache: false, sourceDb: null, engine: 'duckdb' };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--arm') options.arm = argv[++index];
@@ -39,19 +39,23 @@ function parseArgs(argv) {
     // Q5: an arm with its own warehouse (the NBA tables plus decoy schemas); the copy keeps the file name, which names the database.
     else if (arg === '--source-db') options.sourceDb = argv[++index];
     else if (arg === '--keep-cache') options.keepCache = true;
+    // The arm reads the NBA tables on Snowflake (nba/snowflake): no database file to copy.
+    else if (arg === '--engine') options.engine = argv[++index];
     else throw new Error(`Unknown option ${arg}`);
   }
   if (!options.arm || !options.run) throw new Error('--arm and --run are required.');
   return options;
 }
 
-function freshProject(arm, workDir, keepCache, sourceDb = SOURCE_DB) {
+function freshProject(arm, workDir, keepCache, sourceDb = SOURCE_DB, engine = 'duckdb') {
   const target = join(workDir, 'project');
   rmSync(target, { recursive: true, force: true });
   // R2 keeps .dql/cache: on a dbt project the drafts are checked against the schema sync
   // stored there, and without it every draft reads as stale until a new sync (R1 left it out).
   const copy = spawnSync('rsync', ['-a', '--exclude', '.dql/local', ...(keepCache ? [] : ['--exclude', '.dql/cache']), '--exclude', 'logs', `${join(WORK, 'projects', arm)}/`, `${target}/`], { encoding: 'utf-8' });
   if (copy.status !== 0) throw new Error(`copying the ${arm} project failed: ${copy.stderr}`);
+  // On Snowflake every run reads the same tables, read-only: nothing to copy.
+  if (engine === 'snowflake') return target;
   // This run's own database file.
   const database = join(workDir, basename(sourceDb));
   copyFileSync(sourceDb, database);
@@ -130,7 +134,7 @@ async function main() {
   writeFileSync(evalPath, `${JSON.stringify({ cases: questions.map((question) => ({ name: `q${question.question_id}`, question: question.question, expected: { answerable: true } })) }, null, 2)}\n`);
 
   const cli = resolveDqlCli();
-  const projectDir = freshProject(options.arm, workDir, options.keepCache, options.sourceDb ?? undefined);
+  const projectDir = freshProject(options.arm, workDir, options.keepCache, options.sourceDb ?? undefined, options.engine);
   writeProviderSettings(projectDir, options.model);
   const dataHash = createHash('sha256').update(readFileSync(SOURCE_DB)).digest('hex');
   const identity = buildIdentity({ cli, dqlVersion: dqlVersion(cli), benchmark: 'nba', condition: options.arm, provider: 'claude-code', model: options.model, cassetteMode: 'record', dataHash, tools: { claudeCli: spawnSync('claude', ['--version'], { encoding: 'utf-8' }).stdout.trim() } });
