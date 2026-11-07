@@ -24,6 +24,7 @@ import duckdb
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "work" / "nba" / "source" / "nba_analysis.duckdb"
 OUT = ROOT / "work" / "nba" / "snowflake" / "parity.json"
+FLOATS = {"DOUBLE", "FLOAT", "REAL"}
 NUMERIC = ("BIGINT", "INTEGER", "SMALLINT", "TINYINT", "HUGEINT", "DOUBLE", "FLOAT", "REAL", "DECIMAL", "UBIGINT", "UINTEGER")
 # Stamped when a snapshot runs, never the same on two engines.
 BUILD_STAMPED = {"dbt_scd_id", "dbt_updated_at", "dbt_valid_from", "dbt_valid_to", "version_id", "valid_from", "valid_to", "is_current"}
@@ -45,7 +46,10 @@ def profile_sql(relation, table_ref, quote):
     parts = ["COUNT(*) AS n"]
     for index, (column, dtype) in enumerate(relation["columns"]):
         q = quote(column)
-        parts += [f"COUNT({q}) AS c{index}", f"COUNT(DISTINCT {q}) AS d{index}", f"MIN({q}) AS lo{index}", f"MAX({q}) AS hi{index}"]
+        # A float's distinct values are counted at 6 decimals, the tolerance: the engines sum in different
+        # orders, so an average can differ in its last binary digits (NBA int_season_stats, 2026-11-07).
+        distinct = f"ROUND({q}, 6)" if dtype in FLOATS else q
+        parts += [f"COUNT({q}) AS c{index}", f"COUNT(DISTINCT {distinct}) AS d{index}", f"MIN({q}) AS lo{index}", f"MAX({q}) AS hi{index}"]
         if dtype.startswith(NUMERIC):
             parts.append(f"SUM({q}) AS s{index}")
     return f"SELECT {', '.join(parts)} FROM {table_ref}"
@@ -93,8 +97,8 @@ class Snowflake:
         )
 
     def profile(self, relation):
-        # Unquoted names: Snowflake upper-cases them, as the tables were made.
-        sql = profile_sql(relation, f'NBA.{relation["schema"]}.{relation["name"]}', lambda c: c.upper())
+        # Snowflake keeps names upper-case (the tables were made unquoted); quoting them also covers reserved words ("TO").
+        sql = profile_sql(relation, f'NBA.{relation["schema"]}.{relation["name"]}', lambda c: f'"{c.upper()}"')
         cur = self.con.cursor()
         cur.execute(sql)
         return dict(zip([d[0].lower() for d in cur.description], cur.fetchone()))
