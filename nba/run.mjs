@@ -160,16 +160,28 @@ async function main() {
     throw new Error(`zlens agent eval exited ${result.code} without a JSON report; see ${workDir}`);
   }
   const outages = providerOutages(projectDir);
-  writeFileSync(join(outDir, `report${options.only ? '-resume' : ''}.json`), `${JSON.stringify({ identity, outages, metadataSync: synced, ...report }, null, 2)}\n`);
+  writeFileSync(join(outDir, `report${options.only ? '-resume' : ''}.json`), forPublic(`${JSON.stringify({ identity, outages, metadataSync: synced, ...report }, null, 2)}\n`));
   const runs = storedRuns(projectDir);
   const steps = schemaStep(projectDir);
   const outageQuestions = new Set(outages.map((outage) => outage.question ?? outage));
   const seconds = new Map((report.results ?? []).map((item) => [item.name, Math.round((item.durationMs ?? 0) / 1000)]));
   const predictions = join(outDir, 'predictions.jsonl');
   for (const question of questions) {
-    appendFileSync(predictions, `${JSON.stringify({ ...prediction(question, runs.get(question.question), outageQuestions), ...(steps.get(question.question) ?? {}), seconds: seconds.get(`q${question.question_id}`) })}\n`);
+    appendFileSync(predictions, forPublic(`${JSON.stringify({ ...prediction(question, runs.get(question.question), outageQuestions), ...(steps.get(question.question) ?? {}), seconds: seconds.get(`q${question.question_id}`) })}\n`));
   }
   console.error(`done: ${report.results?.length ?? 0} result(s), provider outages: ${outages.length}`);
+}
+
+/**
+ * results/ is published (dql-benchmarks is a public repository): a run's
+ * account, the warehouse ZLens connected to, never goes into it. ZLens's
+ * report names it as observedTarget.accountOrWorkspace.
+ */
+function forPublic(text) {
+  let out = text.replace(/("accountOrWorkspace"\s*:\s*)"[^"]*"/g, '$1"<account>"');
+  const account = process.env.SNOWFLAKE_ACCOUNT?.trim();
+  if (account) out = out.replace(new RegExp(account.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '<account>');
+  return out;
 }
 
 main().catch((error) => {
