@@ -3,7 +3,7 @@
 // each answer ran, for nba/grade.py. Adapted from wwi/run.mjs.
 //
 //   DQL_CLI=<zlens dist/index.js> node nba/run.mjs --arm D0 --run <id> [--pass 1]
-//        [--only 3,5] [--questions <file.json>] [--model claude-sonnet-5-5] [--keep-cache]
+//        [--only 3,5] [--questions <file.json>] [--model claude-sonnet-5-5] [--provider claude-code|cortex] [--keep-cache]
 //
 // Each run asks on a fresh copy of the built project and a fresh copy of the
 // database (DuckDB lets one process open a file), so nothing one run leaves
@@ -27,7 +27,7 @@ const HOST_ROW_GUARD = /\nLIMIT 501\s*$/;
 const RUN_ENV = { DQL_EMBEDDINGS_AUTODETECT: 'off', DQL_TELEMETRY_DISABLED: '1' };
 
 function parseArgs(argv) {
-  const options = { arm: null, run: null, pass: 1, only: null, questions: join(REPO_ROOT, 'nba', 'questions.json'), model: 'claude-sonnet-5-5', keepCache: false, sourceDb: null, engine: 'duckdb' };
+  const options = { arm: null, run: null, pass: 1, only: null, questions: join(REPO_ROOT, 'nba', 'questions.json'), model: 'claude-sonnet-5-5', provider: 'claude-code', keepCache: false, sourceDb: null, engine: 'duckdb' };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--arm') options.arm = argv[++index];
@@ -36,6 +36,8 @@ function parseArgs(argv) {
     else if (arg === '--only') options.only = new Set(argv[++index].split(',').map(Number));
     else if (arg === '--questions') options.questions = argv[++index];
     else if (arg === '--model') options.model = argv[++index];
+    // cortex: Claude through Snowflake Cortex, signed in with the project's Snowflake connection (an --engine snowflake arm).
+    else if (arg === '--provider') options.provider = argv[++index];
     // Q5: an arm with its own warehouse (the NBA tables plus decoy schemas); the copy keeps the file name, which names the database.
     else if (arg === '--source-db') options.sourceDb = argv[++index];
     else if (arg === '--keep-cache') options.keepCache = true;
@@ -44,6 +46,7 @@ function parseArgs(argv) {
     else throw new Error(`Unknown option ${arg}`);
   }
   if (!options.arm || !options.run) throw new Error('--arm and --run are required.');
+  if (!['claude-code', 'cortex'].includes(options.provider)) throw new Error('--provider claude-code|cortex');
   return options;
 }
 
@@ -67,11 +70,11 @@ function freshProject(arm, workDir, keepCache, sourceDb = SOURCE_DB, engine = 'd
   return target;
 }
 
-function writeProviderSettings(projectDir, model) {
+function writeProviderSettings(projectDir, model, provider = 'claude-code') {
   writeFileSync(join(projectDir, '.dql', 'provider-settings.json'), `${JSON.stringify({
     version: 1,
-    activeProvider: 'claude-code',
-    providers: { 'claude-code': { id: 'claude-code', enabled: true, model, updatedAt: new Date().toISOString() } },
+    activeProvider: provider,
+    providers: { [provider]: { id: provider, enabled: true, model, updatedAt: new Date().toISOString() } },
   }, null, 2)}\n`, { mode: 0o600 });
 }
 
@@ -135,9 +138,9 @@ async function main() {
 
   const cli = resolveDqlCli();
   const projectDir = freshProject(options.arm, workDir, options.keepCache, options.sourceDb ?? undefined, options.engine);
-  writeProviderSettings(projectDir, options.model);
+  writeProviderSettings(projectDir, options.model, options.provider);
   const dataHash = createHash('sha256').update(readFileSync(SOURCE_DB)).digest('hex');
-  const identity = buildIdentity({ cli, dqlVersion: dqlVersion(cli), benchmark: 'nba', condition: options.arm, provider: 'claude-code', model: options.model, cassetteMode: 'record', dataHash, tools: { claudeCli: spawnSync('claude', ['--version'], { encoding: 'utf-8' }).stdout.trim() } });
+  const identity = buildIdentity({ cli, dqlVersion: dqlVersion(cli), benchmark: 'nba', condition: options.arm, provider: options.provider, model: options.model, cassetteMode: 'record', dataHash, tools: options.provider === 'claude-code' ? { claudeCli: spawnSync('claude', ['--version'], { encoding: 'utf-8' }).stdout.trim() } : {} });
   const cassetteDir = join(workDir, 'cassettes');
   const runtime = await startRuntime(projectDir, { cli, env: RUN_ENV, cassetteMode: 'record', cassetteDir, startupTimeoutMs: 180_000 });
   let result;
