@@ -27,6 +27,7 @@ import { rowsMatch, valuesCovered } from '../lib/row-match.mjs';
 import { wilsonInterval } from '../lib/stats.mjs';
 import { tableCheck } from './score.mjs';
 import { heldoutPaths, heldoutSetOf } from './heldout.mjs';
+import { forPublic } from '../lib/public.mjs';
 
 const PYTHON = join(REPO_ROOT, '.venv', 'bin', 'python');
 
@@ -188,6 +189,6 @@ if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
   const rowsBySql = Object.fromEntries(statements.map((sql, index) => [sql, executed[String(index)]]));
   const rows = regrade(report, gold, rowsBySql);
   const out = file.replace(/report\.json$/, 'regrade.json');
-  writeFileSync(out, `${JSON.stringify({ run: report.run, identity: report.identity, rows }, null, 2)}\n`);
+  writeFileSync(out, forPublic(`${JSON.stringify({ run: report.run, identity: report.identity, rows }, null, 2)}\n`));
   console.log(renderRegrade(rows, `${report.run.layer} · run ${report.run.id}`, { sealed }));
 }

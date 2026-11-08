@@ -16,6 +16,7 @@ import { REPO_ROOT, dqlVersion, resolveDqlCli } from '../lib/dql.mjs';
 import { buildIdentity } from '../lib/build-identity.mjs';
 import { startRuntime } from '../lib/runtime.mjs';
 import { providerOutages } from '../insurance/run.mjs';
+import { forPublic } from '../lib/public.mjs';
 
 const WORK = join(REPO_ROOT, 'work', 'wwi');
 const CASE_TIMEOUT_MS = 900_000;
@@ -182,13 +183,13 @@ async function main() {
     throw new Error(`zlens agent eval exited ${result.code} without a JSON report; see ${workDir}`);
   }
   const outages = providerOutages(projectDir);
-  writeFileSync(join(outDir, `report${options.only ? '-resume' : ''}.json`), `${JSON.stringify({ identity, outages, ...report }, null, 2)}\n`);
+  writeFileSync(join(outDir, `report${options.only ? '-resume' : ''}.json`), forPublic(`${JSON.stringify({ identity, outages, ...report }, null, 2)}\n`));
   const runs = storedRuns(projectDir);
   const outageQuestions = new Set(outages.map((outage) => outage.question ?? outage));
   const seconds = new Map((report.results ?? []).map((item) => [item.name, Math.round((item.durationMs ?? 0) / 1000)]));
   const predictions = join(outDir, 'predictions.jsonl');
   for (const question of asked) {
-    appendFileSync(predictions, `${JSON.stringify({ ...prediction(question, runs.get(question.asked), outageQuestions), seconds: seconds.get(`q${question.question_id}`) })}\n`);
+    appendFileSync(predictions, forPublic(`${JSON.stringify({ ...prediction(question, runs.get(question.asked), outageQuestions), seconds: seconds.get(`q${question.question_id}`) })}\n`));
   }
   console.error(`done: ${report.results?.length ?? 0} result(s), provider outages: ${outages.length}`);
 }

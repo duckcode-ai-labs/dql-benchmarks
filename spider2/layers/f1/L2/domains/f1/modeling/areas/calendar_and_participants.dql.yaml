@@ -26,7 +26,7 @@ entities:
     analytical_role: dimension
     grain: year
     keys: [year]
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
   - id: circuit
     relation: main.circuits
     business_name: Circuit
@@ -38,7 +38,7 @@ entities:
     analytical_role: dimension
     grain: circuit_id
     keys: [circuit_id]
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
   - id: circuits_ext
     relation: main.circuits_ext
     business_name: Circuit (extended)
@@ -50,7 +50,7 @@ entities:
     analytical_role: dimension
     grain: circuit_id
     keys: [circuit_id]
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
   - id: race
     relation: main.races
     business_name: Race
@@ -65,7 +65,7 @@ entities:
     analytical_role: dimension
     grain: race_id
     keys: [race_id]
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
   - id: races_ext
     relation: main.races_ext
     business_name: Race (extended)
@@ -80,7 +80,7 @@ entities:
     analytical_role: dimension
     grain: race_id
     keys: [race_id]
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
   - id: short_grand_prix_name
     relation: main.short_grand_prix_names
     business_name: Short Grand Prix name
@@ -91,7 +91,7 @@ entities:
     analytical_role: dimension
     grain: full_name
     keys: [full_name]
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
   - id: driver
     relation: main.drivers
     business_name: Driver
@@ -104,7 +104,7 @@ entities:
     analytical_role: dimension
     grain: driver_id
     keys: [driver_id]
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
   - id: drivers_ext
     relation: main.drivers_ext
     business_name: Driver (extended)
@@ -116,7 +116,7 @@ entities:
     analytical_role: dimension
     grain: driver_id
     keys: [driver_id]
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
   - id: constructor
     relation: main.constructors
     business_name: Constructor
@@ -127,7 +127,7 @@ entities:
     analytical_role: dimension
     grain: constructor_id
     keys: [constructor_id]
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
   - id: constructors_ext
     relation: main.constructors_ext
     business_name: Constructor (extended)
@@ -138,7 +138,7 @@ entities:
     analytical_role: dimension
     grain: constructor_id
     keys: [constructor_id]
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
   - id: short_constructor_name
     relation: main.short_constructor_names
     business_name: Short constructor name
@@ -149,7 +149,7 @@ entities:
     analytical_role: dimension
     grain: constructor_ref
     keys: [constructor_ref]
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
   - id: livery
     relation: main.liveries
     business_name: Livery colour
@@ -161,7 +161,7 @@ entities:
     analytical_role: dimension
     grain: constructor_ref, start_year
     keys: [constructor_ref, start_year]
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
   - id: status
     relation: main.status
     business_name: Finishing status
@@ -174,7 +174,7 @@ entities:
     analytical_role: dimension
     grain: status_id
     keys: [status_id]
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
 relationships:
   - id: race_to_season
     from: race
@@ -183,7 +183,7 @@ relationships:
     keys: [{ from: year, to: year }]
     cardinality: many_to_one
     fanout: safe
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
     status: certified
     description: "Certified on the warehouse: 1,125 from rows, 75 to rows, 1,125 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 24 from rows per key), so the declared cardinality holds."
     certifiedAgainst:
@@ -210,7 +210,7 @@ relationships:
     keys: [{ from: circuit_id, to: circuit_id }]
     cardinality: many_to_one
     fanout: safe
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
     status: certified
     description: "Certified on the warehouse: 1,125 from rows, 77 to rows, 1,125 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 74 from rows per key), so the declared cardinality holds."
     certifiedAgainst:
@@ -237,7 +237,7 @@ relationships:
     keys: [{ from: race_id, to: race_id }]
     cardinality: one_to_one
     fanout: safe
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
     status: certified
     description: "Certified on the warehouse: 1,125 from rows, 1,125 to rows, 1,125 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 1 from rows per key), so the declared cardinality holds."
     certifiedAgainst:
@@ -264,7 +264,7 @@ relationships:
     keys: [{ from: name, to: full_name }]
     cardinality: many_to_one
     fanout: safe
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
     status: draft
     description: "Draft: many_to_one holds (full_name unique) and 1,033 of 1,125 races join, but the lookup has no row for 92 races (e.g. Argentine, Swedish, Las Vegas GPs), so an inner join drops races. races_ext.short_name already carries the short name with a fallback to the full name; use that column instead of this join."
     validation:
@@ -288,7 +288,7 @@ relationships:
     keys: [{ from: circuit_id, to: circuit_id }]
     cardinality: one_to_one
     fanout: safe
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
     status: certified
     description: "Certified on the warehouse: 77 from rows, 77 to rows, 77 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 1 from rows per key), so the declared cardinality holds."
     certifiedAgainst:
@@ -315,7 +315,7 @@ relationships:
     keys: [{ from: driver_id, to: driver_id }]
     cardinality: one_to_one
     fanout: safe
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
     status: certified
     description: "Certified on the warehouse: 859 from rows, 859 to rows, 859 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 1 from rows per key), so the declared cardinality holds."
     certifiedAgainst:
@@ -342,7 +342,7 @@ relationships:
     keys: [{ from: constructor_id, to: constructor_id }]
     cardinality: one_to_one
     fanout: safe
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
     status: certified
     description: "Certified on the warehouse: 212 from rows, 212 to rows, 212 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 1 from rows per key), so the declared cardinality holds."
     certifiedAgainst:
@@ -369,7 +369,7 @@ relationships:
     keys: [{ from: constructor_ref, to: constructor_ref }]
     cardinality: one_to_one
     fanout: safe
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
     status: certified
     description: "Certified on the warehouse: 44 from rows, 212 to rows, 44 joined rows, 0 unmatched from rows, 0 null keys; at most 1 to row per key (at most 1 from rows per key), so the declared cardinality holds."
     certifiedAgainst:
@@ -396,7 +396,7 @@ relationships:
     keys: [{ from: constructor_ref, to: constructor_ref }]
     cardinality: many_to_one
     fanout: safe
-    owner: 43963011+KKranthi6881@users.noreply.github.com
+    owner: benchmark-owner
     status: draft
     description: "Draft: 61 of 64 livery rows join constructors on constructor_ref and constructor_ref is unique in constructors, but 3 rows use \"benneton\", which is not a constructors value (the team is \"benetton\"). The keys do not all match, so this is not certified."
     validation:

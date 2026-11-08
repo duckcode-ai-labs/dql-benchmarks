@@ -17,7 +17,7 @@
 //   DA  D0 + `zlens model draft --apply --passed-only`: the model ZLens drafts, as drafted (P6).
 //   DM  D0 + the hand-built model from R3 (nba/dm-model), for reference (P6).
 //
-// The dbt project is work/nba/dbt, a copy of /Users/Kranthi_1/dbt-projects/nba_analysis
+// The dbt project is work/nba/dbt, a copy of ~/dbt-projects/nba_analysis
 // (models, macros, snapshots, dbt_project.yml), with local_duckdb/target as its target/
 // and local_duckdb/profiles.yml as its profiles.yml. Nothing here reads or writes the
 // owner's repo. Each project's paths are made absolute so a run can copy it anywhere;
@@ -27,6 +27,7 @@ import { spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { REPO_ROOT, resolveDqlCli } from '../lib/dql.mjs';
+import { forPublic } from '../lib/public.mjs';
 
 export const WORK = join(REPO_ROOT, 'work', 'postcard');
 export const DBT = join(WORK, 'dbt');
@@ -174,7 +175,7 @@ function main() {
     }
     record.validate = zlens(cli, dir, ['model', 'validate', '.'], record, 300_000, { mayFail: true });
   }
-  writeFileSync(join(RECORD_DIR ?? WORK, `build-${arm}.json`), `${JSON.stringify(record, null, 2)}\n`);
+  writeFileSync(join(RECORD_DIR ?? WORK, `build-${arm}.json`), forPublic(`${JSON.stringify(record, null, 2)}\n`));
   console.log(`${arm}: ${record.steps.length} steps`);
 }
 

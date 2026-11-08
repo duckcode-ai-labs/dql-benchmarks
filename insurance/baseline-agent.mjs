@@ -39,6 +39,7 @@ import { buildIdentity } from '../lib/build-identity.mjs';
 import { CODEX_DIRS, selectCases, unanswerableCases, useIsolatedCodexHome } from './run.mjs';
 import { heldoutPaths, heldoutSetOf, heldoutUnanswerableCases } from './heldout.mjs';
 import { loadPricing, priceUsage } from '../lib/usage.mjs';
+import { forPublic } from '../lib/public.mjs';
 
 const WORK = join(REPO_ROOT, 'work', 'insurance');
 const PYTHON = join(REPO_ROOT, '.venv', 'bin', 'python');
@@ -722,7 +723,7 @@ export async function main(argv = process.argv.slice(2)) {
       // invalid (exit 3), as baseline-text2sql.mjs does; the finished questions
       // are kept and the refused one is asked again from scratch next time.
       if (record.refused) {
-        appendFileSync(join(outDir, 'refused-attempts.jsonl'), `${JSON.stringify({ key, at: new Date().toISOString(), turn: record.turn, error: record.error, steps: record.steps.length })}\n`);
+        appendFileSync(join(outDir, 'refused-attempts.jsonl'), forPublic(`${JSON.stringify({ key, at: new Date().toISOString(), turn: record.turn, error: record.error, steps: record.steps.length })}\n`));
         console.error(`INVALID RUN: the provider refused the call for ${key} at turn ${record.turn}: ${String(record.error).slice(0, 300)}`);
         process.exitCode = 3;
         return null;
@@ -776,7 +777,7 @@ export async function main(argv = process.argv.slice(2)) {
       const priced = Object.values(byQuestion).every((item) => item.priced);
       report.usage = { byQuestion, outside: null, totalCostUsd: priced ? Object.values(byQuestion).reduce((sum, item) => sum + item.costUsd, 0) : null, pricingAsOf: pricing.asOf ?? null };
     }
-    writeFileSync(join(outDir, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
+    writeFileSync(join(outDir, 'report.json'), forPublic(`${JSON.stringify(report, null, 2)}\n`));
     const unanswerable = cases.some((c) => c.unanswerable);
     const passed = results.filter((r) => r.passed).length;
     const turns = results.reduce((sum, r) => sum + r.turns, 0);

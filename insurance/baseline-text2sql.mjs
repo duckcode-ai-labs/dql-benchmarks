@@ -27,6 +27,7 @@ import { buildIdentity } from '../lib/build-identity.mjs';
 import { CODEX_DIRS, selectCases, useIsolatedCodexHome } from './run.mjs';
 import { heldoutPaths, heldoutSetOf } from './heldout.mjs';
 import { loadPricing, priceUsage } from '../lib/usage.mjs';
+import { forPublic } from '../lib/public.mjs';
 
 const WORK = join(REPO_ROOT, 'work', 'insurance');
 const PYTHON = join(REPO_ROOT, '.venv', 'bin', 'python');
@@ -314,7 +315,7 @@ async function main() {
     const priced = Object.values(byQuestion).every((item) => item.priced);
     report.usage = { byQuestion, outside: null, totalCostUsd: priced ? Object.values(byQuestion).reduce((sum, item) => sum + item.costUsd, 0) : null, pricingAsOf: pricing.asOf ?? null };
   }
-  writeFileSync(join(outDir, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
+  writeFileSync(join(outDir, 'report.json'), forPublic(`${JSON.stringify(report, null, 2)}\n`));
   const right = results.filter((r) => r.executionMatched).length;
   const ran = results.filter((r) => !r.goldMatchReason?.startsWith('the SQL did not run')).length;
   console.log(`baseline-${options.ddl}/${options.set}: ${right}/${results.length} right; ${ran}/${results.length} ran on DuckDB → ${relative(REPO_ROOT, join(outDir, 'report.json'))}`);

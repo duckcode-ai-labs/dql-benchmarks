@@ -2,7 +2,7 @@
 id: f1-points-and-standings
 kind: metric_policy
 status: active
-owner: 43963011+KKranthi6881@users.noreply.github.com
+owner: benchmark-owner
 domain: f1
 description: "How points are recorded per race, per sprint and per constructor, and how the drivers' and constructors' championship standings work (cumulative after each race; the final table is the last race of the season)."
 triggers:

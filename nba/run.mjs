@@ -19,6 +19,7 @@ import { buildIdentity } from '../lib/build-identity.mjs';
 import { startRuntime } from '../lib/runtime.mjs';
 import { providerOutages } from '../insurance/run.mjs';
 import { storedRuns } from '../wwi/run.mjs';
+import { forPublic } from '../lib/public.mjs';
 
 const WORK = join(REPO_ROOT, 'work', 'nba');
 const SOURCE_DB = join(WORK, 'source', 'nba_analysis.duckdb');
@@ -180,15 +181,6 @@ async function main() {
  * account, the warehouse ZLens connected to, never goes into it. ZLens's
  * report names it as observedTarget.accountOrWorkspace.
  */
-function forPublic(text) {
-  let out = text.replace(/("accountOrWorkspace"\s*:\s*)"[^"]*"/g, '$1"<account>"');
-  const account = process.env.SNOWFLAKE_ACCOUNT?.trim();
-  if (account) out = out.replace(new RegExp(account.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '<account>');
-  // No local folder names either: this machine's home folder is written as ~.
-  const home = process.env.HOME?.trim();
-  if (home && home.length > 1) out = out.split(home).join('~');
-  return out;
-}
 
 main().catch((error) => {
   console.error(error.message);

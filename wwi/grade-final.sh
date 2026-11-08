@@ -1,5 +1,5 @@
 #!/bin/sh
-cd /Users/Kranthi_1/DuckCode-DQL/agent-worktrees/dql-benchmarks/wwi
+cd $HOME/DuckCode-DQL/agent-worktrees/dql-benchmarks/wwi
 for pair in main:WL index:WL drafts:WD terms:WT; do
   label=${pair%%:*}; arm=${pair##*:}
   dir=results/wwi/F1-$label/$arm/pass-1

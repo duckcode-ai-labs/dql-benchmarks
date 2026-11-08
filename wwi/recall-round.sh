@@ -1,8 +1,8 @@
 #!/bin/sh
 # name, arm: runs both question sets on one arm with the stub model
 name=$1; arm=$2
-ZL=/Users/Kranthi_1/DuckCode-DQL/agent-worktrees/zlens/report-match-xlsx
-cd /Users/Kranthi_1/DuckCode-DQL/agent-worktrees/dql-benchmarks/wwi
+ZL=$HOME/DuckCode-DQL/agent-worktrees/zlens/report-match-xlsx
+cd $HOME/DuckCode-DQL/agent-worktrees/dql-benchmarks/wwi
 PATH="$PWD/work/wwi/fakebin:$PATH" DQL_CLI=$ZL/apps/cli/dist/index.js node wwi/run.mjs --arm $arm --run $name --line none
 PATH="$PWD/work/wwi/fakebin:$PATH" DQL_CLI=$ZL/apps/cli/dist/index.js node wwi/run.mjs --arm $arm --run $name-fresh --line none --questions wwi/fresh-questions.json
 python3 wwi/recall.py --run $name --arm $arm --set nvidia

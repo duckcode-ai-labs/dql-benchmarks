@@ -19,6 +19,7 @@ import { startRuntime } from '../lib/runtime.mjs';
 import { CODEX_DIRS, RUN_ENV, providerOutages } from '../insurance/run.mjs';
 import { questionText, readTasks } from './tasks.mjs';
 import { taskSet } from './sets.mjs';
+import { forPublic } from '../lib/public.mjs';
 
 const WORK = join(REPO_ROOT, 'work', 'spider2');
 const DEFAULT_CASE_TIMEOUT_MS = 900_000;
@@ -151,7 +152,7 @@ async function main() {
     } finally {
       runtimeAlive = runtime.alive?.() ?? true;
       runtimeEnded = runtime.ended?.() ?? null;
-      writeFileSync(join(outDir, 'server.log'), runtime.logs());
+      writeFileSync(join(outDir, 'server.log'), forPublic(runtime.logs()));
       await runtime.close();
     }
     // A dead runtime is not an answer. Its cases say "fetch failed"; they are
@@ -168,7 +169,7 @@ async function main() {
     const outages = providerOutages(projectDir);
     let report;
     try { report = JSON.parse(result.stdout); } catch { throw new Error(`${db}: DQL returned no JSON report (exit ${result.code}); see ${relative(REPO_ROOT, join(outDir, 'eval.stderr.log'))}`); }
-    writeFileSync(join(outDir, 'report.json'), `${JSON.stringify(report, null, 2)}\n`);
+    writeFileSync(join(outDir, 'report.json'), forPublic(`${JSON.stringify(report, null, 2)}\n`));
     const answered = [];
     for (const item of report.results ?? []) {
       const sql = item.answer?.sql;

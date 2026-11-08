@@ -25,6 +25,7 @@ import { startRuntime } from '../lib/runtime.mjs';
 import { caseId } from './questions.mjs';
 import { attributeUsage, loadPricing, readLedger, runSpans } from '../lib/usage.mjs';
 import { heldoutPaths, heldoutSetOf, heldoutUnanswerableCases } from './heldout.mjs';
+import { forPublic } from '../lib/public.mjs';
 
 const WORK = join(REPO_ROOT, 'work', 'insurance');
 const SETS = ['all', 'dbt-labs', 'dev', 'unanswerable'];
@@ -478,14 +479,14 @@ async function main() {
     console.error(`${options.layer}/${options.set}: ${cases.length} question(s) on ${runtime.base}`);
     result = await runEval(cli, projectDir, evalPath, runtime.base, join(outDir, 'eval.stderr.log'), join(outDir, 'cassettes'), caseTimeoutMs(localEnv));
   } finally {
-    writeFileSync(join(outDir, 'server.log'), runtime.logs());
+    writeFileSync(join(outDir, 'server.log'), forPublic(runtime.logs()));
     await runtime.close();
   }
   let report;
   try {
     report = JSON.parse(result.stdout);
   } catch {
-    writeFileSync(join(outDir, 'eval.stdout.txt'), result.stdout);
+    writeFileSync(join(outDir, 'eval.stdout.txt'), forPublic(result.stdout));
     throw new Error(`dql agent eval exited ${result.code} without a JSON report; see ${relative(REPO_ROOT, outDir)}`);
   }
   const outages = providerOutages(projectDir);
@@ -515,7 +516,7 @@ async function main() {
     ...report,
     ...(usage ? { usage } : {}),
   };
-  writeFileSync(join(outDir, 'report.json'), `${JSON.stringify(out, null, 2)}\n`);
+  writeFileSync(join(outDir, 'report.json'), forPublic(`${JSON.stringify(out, null, 2)}\n`));
   const results = report.results ?? [];
   if (!out.provenance.realProviderQualityEligible) console.error(`not publishable: ${out.provenance.reasons.join('; ')}`);
   if (out.invalid) {

@@ -2,7 +2,7 @@
 id: ipl-runs-wickets-definitions
 kind: metric_policy
 status: active
-owner: 43963011+KKranthi6881@users.noreply.github.com
+owner: benchmark-owner
 description: "How runs off the bat, extras, team and innings totals, balls faced, legal balls, overs, wickets credited to a bowler, and standard batting and bowling rates are computed from the IPL delivery tables."
 triggers:
   - runs

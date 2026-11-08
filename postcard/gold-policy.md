@@ -3,7 +3,7 @@
 What the business's words mean in this data, decided before any gold SQL was written.
 Every count below was run read-only on `work/postcard/source/datamart.duckdb`
 (duckdb 1.5.6). Sources cited are in
-`/Users/Kranthi_1/DuckCode-DQL/blind-second-project/postcard-company-datamart`
+`~/DuckCode-DQL/blind-second-project/postcard-company-datamart`
 (`models/` means `postcard_company/models/`).
 
 The database is a clean dbt build of that project. The generator's window ends

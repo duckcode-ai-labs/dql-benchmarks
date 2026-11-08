@@ -4,7 +4,7 @@ REAL=/opt/homebrew/bin/claude
 case "$1" in
   --version|auth) exec "$REAL" "$@";;
 esac
-LOG=/Users/Kranthi_1/DuckCode-DQL/agent-worktrees/dql-benchmarks/wwi/work/nba/trace-prompts
+LOG=$HOME/DuckCode-DQL/agent-worktrees/dql-benchmarks/wwi/work/nba/trace-prompts
 stamp=$(date +%s)-$$
 cat > "$LOG/$stamp.stdin"
 printf '%s\n' "$@" > "$LOG/$stamp.args"

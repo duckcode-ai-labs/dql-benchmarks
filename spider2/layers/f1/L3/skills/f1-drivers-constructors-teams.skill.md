@@ -2,7 +2,7 @@
 id: f1-drivers-constructors-teams
 kind: domain_reference
 status: active
-owner: 43963011+KKranthi6881@users.noreply.github.com
+owner: benchmark-owner
 domain: f1
 description: "Drivers and constructors: names, codes, nationality, date of birth, which team a driver raced for, stints within a season, teammates and team driver rank, short team names and livery colours."
 triggers:

@@ -2,7 +2,7 @@
 id: f1-calendar-and-coverage
 kind: domain_reference
 status: active
-owner: 43963011+KKranthi6881@users.noreply.github.com
+owner: benchmark-owner
 domain: f1
 description: "Seasons, races, rounds, circuits, race dates and times, sprint weekends, the derived _ext tables, and how far each table's data goes."
 triggers:

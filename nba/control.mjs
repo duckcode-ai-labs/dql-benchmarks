@@ -14,6 +14,7 @@ import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSyn
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { REPO_ROOT } from '../lib/dql.mjs';
+import { forPublic } from '../lib/public.mjs';
 
 const SCHEMA = join(REPO_ROOT, 'work', 'nba', 'control-schema.sql');
 const QUESTIONS = join(REPO_ROOT, 'nba', 'questions.json');
@@ -93,7 +94,7 @@ async function main() {
   const questions = JSON.parse(readFileSync(options.questions, 'utf-8'))
     .slice(0, options.limit ?? undefined)
     .filter((question) => !done.has(question.question_id));
-  writeFileSync(join(outDir, 'settings.json'), `${JSON.stringify({ model: options.model, systemPrompt: system, schemaChars: schema.length, tools: 'none', startedAt: new Date().toISOString() }, null, 2)}\n`);
+  writeFileSync(join(outDir, 'settings.json'), forPublic(`${JSON.stringify({ model: options.model, systemPrompt: system, schemaChars: schema.length, tools: 'none', startedAt: new Date().toISOString() }, null, 2)}\n`));
 
   let next = 0;
   await Promise.all(Array.from({ length: WORKERS }, async () => {
