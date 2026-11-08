@@ -2,7 +2,7 @@
 id: ipl-data-model
 kind: domain_reference
 status: active
-owner: 43963011+KKranthi6881@users.noreply.github.com
+owner: benchmark-owner
 description: "What each IPL table records, its grain and keys, how deliveries, innings, overs and balls relate, how dates and seasons are stored, and the known gaps (missing team 1, player 35, match 419136)."
 triggers:
   - ipl

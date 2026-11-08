@@ -2,7 +2,7 @@
 id: f1-laps-pit-stops-overtakes
 kind: metric_policy
 status: active
-owner: 43963011+KKranthi6881@users.noreply.github.com
+owner: benchmark-owner
 domain: f1
 description: "Lap times and their units, running race time, per-driver lap statistics, positions per lap, pit stops (durations, red-flag stops) and overtakes (position changes and their types)."
 triggers:

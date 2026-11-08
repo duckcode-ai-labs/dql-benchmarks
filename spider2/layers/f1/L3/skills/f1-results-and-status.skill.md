@@ -2,7 +2,7 @@
 id: f1-results-and-status
 kind: metric_policy
 status: active
-owner: 43963011+KKranthi6881@users.noreply.github.com
+owner: benchmark-owner
 domain: f1
 description: "How race results, finishing positions, status codes, retirements, wins, podiums, pole positions, fastest laps and qualifying are recorded, with the codes checked on the data."
 triggers:

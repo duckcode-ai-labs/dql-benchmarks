@@ -1,0 +1,13 @@
+# This repository is public: a tracked file must not name a local home folder or a
+# person's email (lib/check-public.mjs; result writers go through lib/public.mjs).
+name: public check
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  public-check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: node lib/check-public.mjs
+      - run: node --test lib/public.test.mjs

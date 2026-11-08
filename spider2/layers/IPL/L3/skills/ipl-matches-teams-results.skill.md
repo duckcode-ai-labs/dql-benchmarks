@@ -2,7 +2,7 @@
 id: ipl-matches-teams-results
 kind: glossary
 status: active
-owner: 43963011+KKranthi6881@users.noreply.github.com
+owner: benchmark-owner
 description: "How IPL matches, toss, results, margins, man of the match, a team's matches and a player's team and appearances are read from the match, team, player and player_match tables."
 triggers:
   - match
