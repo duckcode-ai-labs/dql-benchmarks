@@ -184,6 +184,9 @@ function forPublic(text) {
   let out = text.replace(/("accountOrWorkspace"\s*:\s*)"[^"]*"/g, '$1"<account>"');
   const account = process.env.SNOWFLAKE_ACCOUNT?.trim();
   if (account) out = out.replace(new RegExp(account.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), '<account>');
+  // No local folder names either: this machine's home folder is written as ~.
+  const home = process.env.HOME?.trim();
+  if (home && home.length > 1) out = out.split(home).join('~');
   return out;
 }
 
