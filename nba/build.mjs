@@ -17,6 +17,8 @@
 //   WS  the same NBA tables on Snowflake (nba/snowflake), warehouse-first, as the read-only
 //       key-pair user ZLENS_APP_SVC (SNOWFLAKE_ACCOUNT, NBA_SNOWFLAKE_KEY). WAS = WS + the draft,
 //       applied as WA's is: WA vs WAS differ only in the engine.
+//   D0S the dbt project on Snowflake (work/nba/dbt-snowflake, nba/snowflake/make_dbt_parity.py),
+//       set up as D0 is, as ZLENS_APP_SVC. DAS = D0S + the draft, applied as DA's is.
 //
 // The dbt project is work/nba/dbt, a copy of /Users/Kranthi_1/dbt-projects/nba_analysis
 // (models, macros, snapshots, dbt_project.yml), with local_duckdb/target as its target/
@@ -92,6 +94,34 @@ function dbtProject(cli, dir, record) {
   if (SYNC_WAREHOUSE) record.syncWarehouse = zlens(cli, dir, ['sync', 'warehouse', '.', '--schemas', 'RAW,TRANSFORMED,dev'], record);
 }
 
+/** D0S: D0 on Snowflake: `zlens init ./dql` in the dbt project built there, connected as a customer would. */
+function snowflakeDbtProject(cli, dir, record) {
+  const account = process.env.SNOWFLAKE_ACCOUNT;
+  if (!account) throw new Error('SNOWFLAKE_ACCOUNT is required for D0S (orgname-accountname).');
+  const key = process.env.NBA_SNOWFLAKE_KEY ?? join(process.env.HOME ?? '', '.zlens-bench', 'snowflake', 'reader.p8');
+  const dbtDir = join(WORK, 'dbt-snowflake');
+  if (!existsSync(join(dbtDir, 'target', 'manifest.json'))) throw new Error('Build the Snowflake dbt project first (nba/snowflake/README.md, step 4).');
+  const initDir = join(dbtDir, 'dql');
+  rmSync(initDir, { recursive: true, force: true });
+  zlens(cli, dbtDir, ['init', './dql'], record);
+  record.initConfig = JSON.parse(readFileSync(join(initDir, 'dql.config.json'), 'utf-8'));
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(join(dir, '..'), { recursive: true });
+  cpSync(initDir, dir, { recursive: true });
+  rmSync(initDir, { recursive: true, force: true });
+  updateConfig(dir, (cfg) => {
+    cfg.dbt = { ...(cfg.dbt ?? {}), projectDir: dbtDir, manifestPath: 'target/manifest.json' };
+    if (cfg.semanticLayer?.projectPath) cfg.semanticLayer.projectPath = dbtDir;
+    cfg.defaultConnection = 'default';
+    cfg.connections = { default: {
+      driver: 'snowflake', account, username: 'ZLENS_APP_SVC', authMethod: 'key_pair', privateKeyPath: key,
+      warehouse: 'ZLENS_BENCH_WH', database: 'NBA', schema: 'TRANSFORMED', role: 'ZLENS_READER',
+    } };
+  });
+  zlens(cli, dir, ['sync', 'dbt', '.'], record);
+  if (SYNC_WAREHOUSE) record.syncWarehouse = zlens(cli, dir, ['sync', 'warehouse', '.', '--database', 'NBA', '--schemas', 'RAW,TRANSFORMED,DEV'], record);
+}
+
 /** W0: the same database with no dbt, the way no-dbt.md sets it up. */
 function warehouseProject(cli, dir, record) {
   rmSync(dir, { recursive: true, force: true });
@@ -154,13 +184,14 @@ function draftMeanings(cli, dir, record) {
 function main() {
   const armFlag = process.argv.indexOf('--arm');
   const arm = process.argv[armFlag + 1];
-  if (armFlag < 0 || !['D0', 'D1', 'D2', 'W0', 'W1', 'DA', 'DM', 'WA', 'WS', 'WAS'].includes(arm)) throw new Error('--arm D0|D1|D2|W0|W1|DA|DM|WA|WS|WAS is required.');
+  if (armFlag < 0 || !['D0', 'D1', 'D2', 'W0', 'W1', 'DA', 'DM', 'WA', 'WS', 'WAS', 'D0S', 'DAS'].includes(arm)) throw new Error('--arm D0|D1|D2|W0|W1|DA|DM|WA|WS|WAS|D0S|DAS is required.');
   const cli = resolveDqlCli();
   const dir = join(WORK, 'projects', arm);
   const record = { arm, builtAt: new Date().toISOString(), cli: cli.entry, steps: [] };
   if (arm === 'D0') dbtProject(cli, dir, record);
   if (arm === 'W0') warehouseProject(cli, dir, record);
   if (arm === 'WS') snowflakeWarehouseProject(cli, dir, record);
+  if (arm === 'D0S') snowflakeDbtProject(cli, dir, record);
   // WA and WAS: the warehouse-first project plus the model ZLens drafts, applied as drafted.
   if (arm === 'WA' || arm === 'WAS') {
     const base = join(WORK, 'projects', arm === 'WA' ? 'W0' : 'WS');
@@ -194,12 +225,12 @@ function main() {
   // P6 (design "ZLens drafts the whole business model"): DA is D0 plus the model ZLens
   // drafts, applied as drafted (everything whose checks passed, no edits); DM is D0
   // plus the business model built blind by hand in R3 (nba/dm-model).
-  if (arm === 'DA' || arm === 'DM') {
-    const base = join(WORK, 'projects', 'D0');
-    if (!existsSync(base)) throw new Error('Build D0 first.');
+  if (arm === 'DA' || arm === 'DM' || arm === 'DAS') {
+    const base = join(WORK, 'projects', arm === 'DAS' ? 'D0S' : 'D0');
+    if (!existsSync(base)) throw new Error(`Build ${arm === 'DAS' ? 'D0S' : 'D0'} first.`);
     rmSync(dir, { recursive: true, force: true });
     cpSync(base, dir, { recursive: true, verbatimSymlinks: true });
-    if (arm === 'DA') {
+    if (arm === 'DA' || arm === 'DAS') {
       const started = Date.now();
       record.draft = zlens(cli, dir, ['model', 'draft', '.'], record, 1_800_000);
       record.apply = zlens(cli, dir, ['model', 'draft', '.', '--apply', '--passed-only'], record, 1_800_000);

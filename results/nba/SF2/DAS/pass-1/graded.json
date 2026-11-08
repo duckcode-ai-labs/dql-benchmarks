@@ -1,0 +1,1348 @@
+[
+  {
+    "question_id": 1,
+    "category": "lookup",
+    "question": "What arena do the Golden State Warriors play in?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT TEAM_ID, CITY, TEAM_NICKNAME, ARENA\nFROM NBA.TRANSFORMED.dim_teams_cleansed\nWHERE LOWER(TEAM_NICKNAME) LIKE '%warriors%'\n  AND (LOWER(CITY) LIKE '%golden state%' OR LOWER(TEAM_NICKNAME) LIKE '%golden state%' OR TEAM_ABBREVIATION = 'GSW')",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [],
+    "tables": [
+      "transformed.dim_teams_cleansed"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612744",
+        "Golden State",
+        "Warriors",
+        "Chase Center"
+      ]
+    ]
+  },
+  {
+    "question_id": 2,
+    "category": "lookup",
+    "question": "Who is listed as the head coach of the Boston Celtics in the teams data?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT TEAM_ID, CITY, TEAM_NICKNAME, HEAD_COACH FROM NBA.TRANSFORMED.dim_teams_cleansed WHERE LOWER(CITY) = 'boston' AND LOWER(TEAM_NICKNAME) = 'celtics'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [],
+    "tables": [
+      "transformed.dim_teams_cleansed"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612738",
+        "Boston",
+        "Celtics",
+        "Brad Stevens"
+      ]
+    ]
+  },
+  {
+    "question_id": 3,
+    "category": "lookup",
+    "question": "What founding year does the teams data list for the San Antonio Spurs?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": null,
+    "sql": "SELECT MAX(YEAR_FOUNDED) AS year_founded\nFROM NBA.TRANSFORMED.dim_teams_cleansed\nWHERE LOWER(CITY) = 'san antonio'\n  AND LOWER(TEAM_NICKNAME) = 'spurs'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [],
+    "tables": [
+      "transformed.dim_teams_cleansed"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1976"
+      ]
+    ]
+  },
+  {
+    "question_id": 4,
+    "category": "lookup",
+    "question": "What are the earliest and latest game dates in the data?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": null,
+    "sql": "SELECT MIN(GAME_DATE) AS earliest_game_date, MAX(GAME_DATE) AS latest_game_date FROM NBA.TRANSFORMED.local_team_game_facts",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_team_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2003-10-05",
+        "2022-12-22"
+      ]
+    ]
+  },
+  {
+    "question_id": 5,
+    "category": "lookup",
+    "question": "How many points did LeBron James score in the game on June 19, 2016?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT PLAYER_ID, PLAYER_NAME, GAME_ID, SUM(POINTS) AS points\nFROM NBA.TRANSFORMED.local_player_game_facts\nWHERE LOWER(PLAYER_NAME) = 'lebron james'\n  AND GAME_DATE = '2016-06-19'\nGROUP BY PLAYER_ID, PLAYER_NAME, GAME_ID",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2544",
+        "LeBron James",
+        "41500407",
+        "27.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 6,
+    "category": "lookup",
+    "question": "Which team has the largest arena capacity? Give the team abbreviation and the capacity.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT TEAM_ID, TEAM_ABBREVIATION, ARENA_CAPACITY AS arena_capacity\nFROM NBA.TRANSFORMED.dim_teams_cleansed\nWHERE ARENA_CAPACITY IS NOT NULL\nORDER BY ARENA_CAPACITY DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [],
+    "tables": [
+      "transformed.dim_teams_cleansed"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612741",
+        "CHI",
+        "21711"
+      ]
+    ]
+  },
+  {
+    "question_id": 7,
+    "category": "aggregate",
+    "question": "Who scored the most points in the 2017 season, counting every game in the data, preseason and playoffs included, and how many points?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT\n  PLAYER_ID,\n  PLAYER_NAME,\n  TOTAL_POINTS AS total_points\nFROM NBA.TRANSFORMED.local_player_season_facts\nWHERE SEASON = 2017\nORDER BY TOTAL_POINTS DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2544",
+        "LeBron James",
+        "3016.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 8,
+    "category": "aggregate",
+    "question": "How many games were played in the 2019 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(DISTINCT GAMES_GAME_ID) AS games_played_2019\nFROM NBA.TRANSFORMED.src_games\nWHERE SEASON = 2019",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "src"
+    ],
+    "tables": [
+      "transformed.src_games"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1241"
+      ]
+    ]
+  },
+  {
+    "question_id": 9,
+    "category": "aggregate",
+    "question": "Who are the top 5 scorers across all seasons by total points, counting every game in the data, preseason and playoffs included? Give each player's name and total points.",
+    "gold_rows": 5,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT PLAYER_ID, MAX(PLAYER_NAME) AS PLAYER_NAME, SUM(TOTAL_POINTS) AS total_points\nFROM NBA.TRANSFORMED.local_player_season_facts\nGROUP BY PLAYER_ID\nORDER BY total_points DESC\nLIMIT 5",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 5,
+    "pred_sample": [
+      [
+        "2544",
+        "LeBron James",
+        "46612.0"
+      ],
+      [
+        "201142",
+        "Kevin Durant",
+        "32272.0"
+      ],
+      [
+        "2546",
+        "Carmelo Anthony",
+        "31658.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 10,
+    "category": "aggregate",
+    "question": "How many three-pointers were made in total in the 2015 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": null,
+    "sql": "SELECT SUM(TOTAL_THREE_POINTERS_MADE) AS three_pointers_made_2015\nFROM NBA.TRANSFORMED.local_player_season_facts\nWHERE SEASON = 2015",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "24179.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 11,
+    "category": "aggregate",
+    "question": "Which player had the most assists in the 2010 season, counting every game in the data, preseason and playoffs included, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT\n  PLAYER_ID,\n  PLAYER_NAME,\n  SUM(ASSISTS) AS total_assists\nFROM NBA.TRANSFORMED.local_player_game_facts\nWHERE SEASON = 2010\nGROUP BY PLAYER_ID, PLAYER_NAME\nORDER BY total_assists DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "202077",
+        "Jerel McNeal",
+        "None"
+      ]
+    ]
+  },
+  {
+    "question_id": 12,
+    "category": "aggregate",
+    "question": "How many points were scored in total in the 2012 season, counting both teams and counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": null,
+    "sql": "SELECT SUM(TOTAL_POINTS) AS total_points_2012\nFROM NBA.TRANSFORMED.local_team_season_facts\nWHERE SEASON = 2012",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_team_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "277604.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 13,
+    "category": "aggregate",
+    "question": "What is the most points one player scored in a single game in the data, and who scored them?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT\n  PLAYER_ID,\n  PLAYER_NAME,\n  GAME_ID,\n  GAME_DATE,\n  POINTS AS points_in_game\nFROM NBA.TRANSFORMED.local_player_game_facts\nWHERE POINTS IS NOT NULL\nQUALIFY RANK() OVER (ORDER BY POINTS DESC) = 1\nORDER BY PLAYER_NAME, GAME_ID",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "977",
+        "Kobe Bryant",
+        "20500591",
+        "2006-01-22",
+        "81.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 14,
+    "category": "aggregate",
+    "question": "Which season had the most games in the data?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT SEASON, COUNT(DISTINCT GAME_ID) AS games\nFROM NBA.TRANSFORMED.local_team_game_facts\nGROUP BY SEASON\nORDER BY games DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_team_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2005",
+        "1432"
+      ]
+    ]
+  },
+  {
+    "question_id": 15,
+    "category": "aggregate",
+    "question": "What was the average number of points a team scored per game in the 2021 season, counting every game in the data, preseason and playoffs included? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": null,
+    "sql": "SELECT ROUND(AVG(TEAM_POINTS), 2) AS avg_team_points_per_game\nFROM NBA.TRANSFORMED.local_team_game_facts\nWHERE SEASON = 2021",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_team_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "110.21"
+      ]
+    ]
+  },
+  {
+    "question_id": 16,
+    "category": "aggregate",
+    "question": "Which player blocked the most shots in the 2008 season, counting every game in the data, preseason and playoffs included, and how many blocks?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT PLAYER_ID, PLAYER_NAME, TOTAL_BLOCKS\nFROM NBA.TRANSFORMED.local_player_season_facts\nWHERE SEASON = 2008\nORDER BY TOTAL_BLOCKS DESC NULLS LAST\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2730",
+        "Dwight Howard",
+        "312.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 17,
+    "category": "layer",
+    "question": "How many games did LeBron James play in the 2017 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT PLAYER_ID, PLAYER_NAME, SUM(GAMES_PLAYED) AS games_played\nFROM NBA.TRANSFORMED.local_player_season_facts\nWHERE LOWER(PLAYER_NAME) = 'lebron james'\n  AND SEASON = 2017\nGROUP BY PLAYER_ID, PLAYER_NAME",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2544",
+        "LeBron James",
+        "105"
+      ]
+    ]
+  },
+  {
+    "question_id": 18,
+    "category": "layer",
+    "question": "What were Stephen Curry's points per game in the 2019 season, counting every game in the data, preseason and playoffs included? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": null,
+    "sql": "SELECT ROUND(SUM(POINTS) / COUNT(DISTINCT GAME_ID), 2) AS points_per_game\nFROM NBA.TRANSFORMED.local_player_game_facts\nWHERE LOWER(PLAYER_NAME) = 'stephen curry'\n  AND SEASON = 2019\n  AND PARTICIPATED = TRUE",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "23.44"
+      ]
+    ]
+  },
+  {
+    "question_id": 19,
+    "category": "layer",
+    "question": "How many games were played in the 2020 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(DISTINCT GAMES_GAME_ID) AS games_played_2020\nFROM NBA.TRANSFORMED.src_games\nWHERE SEASON = 2020",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "src"
+    ],
+    "tables": [
+      "transformed.src_games"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1220"
+      ]
+    ]
+  },
+  {
+    "question_id": 20,
+    "category": "layer",
+    "question": "How many points did Jayson Tatum score in total in the 2020 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT PLAYER_ID, PLAYER_NAME, SUM(TOTAL_POINTS) AS total_points\nFROM NBA.TRANSFORMED.local_player_season_facts\nWHERE LOWER(PLAYER_NAME) = 'jayson tatum'\n  AND SEASON = 2020\nGROUP BY PLAYER_ID, PLAYER_NAME",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1628369",
+        "Jayson Tatum",
+        "1924.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 21,
+    "category": "layer",
+    "question": "Which five players had the best field goal percentage in the 2017 season, counting every game in the data, preseason and playoffs included, among players with at least 100 field goal attempts? Give each name and the percentage as a fraction rounded to three decimals.",
+    "gold_rows": 5,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT\n  PLAYER_ID,\n  PLAYER_NAME,\n  ROUND(TOTAL_FIELD_GOALS_MADE / NULLIF(TOTAL_FIELD_GOALS_ATTEMPTED, 0), 3) AS field_goal_pct\nFROM NBA.TRANSFORMED.local_player_season_facts\nWHERE SEASON = 2017\n  AND TOTAL_FIELD_GOALS_ATTEMPTED >= 100\nORDER BY TOTAL_FIELD_GOALS_MADE / NULLIF(TOTAL_FIELD_GOALS_ATTEMPTED, 0) DESC\nLIMIT 5",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 5,
+    "pred_sample": [
+      [
+        "1627751",
+        "Jakob Poeltl",
+        "0.66"
+      ],
+      [
+        "203186",
+        "Willie Reed",
+        "0.659"
+      ],
+      [
+        "203991",
+        "Clint Capela",
+        "0.649"
+      ]
+    ]
+  },
+  {
+    "question_id": 22,
+    "category": "layer",
+    "question": "How many players took the floor (not DNP) in at least one game in the 2021 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(DISTINCT PLAYER_ID) AS players_played_2021\nFROM NBA.TRANSFORMED.local_player_game_facts\nWHERE SEASON = 2021\n  AND PARTICIPATED = TRUE",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "641"
+      ]
+    ]
+  },
+  {
+    "question_id": 23,
+    "category": "layer",
+    "question": "How many players took the floor for more than one team in the 2019 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(*) AS players_with_multiple_teams\nFROM (\n  SELECT PLAYER_ID\n  FROM NBA.TRANSFORMED.local_player_game_facts\n  WHERE SEASON = 2019\n    AND PARTICIPATED = TRUE\n  GROUP BY PLAYER_ID\n  HAVING COUNT(DISTINCT TEAM_ID) > 1\n) t",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "76"
+      ]
+    ]
+  },
+  {
+    "question_id": 24,
+    "category": "layer",
+    "question": "Who scored the most points in the 2005 season, counting every game in the data, preseason and playoffs included, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT PLAYER_ID, PLAYER_NAME, TOTAL_POINTS\nFROM NBA.TRANSFORMED.local_player_season_facts\nWHERE SEASON = 2005\nORDER BY TOTAL_POINTS DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "977",
+        "Kobe Bryant",
+        "3205.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 25,
+    "category": "layer",
+    "question": "Who had the highest points per game in the 2017 season among players with at least 20 games played, counting every game in the data, preseason and playoffs included? Give the name and points per game rounded to two decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT\n  PLAYER_ID,\n  PLAYER_NAME,\n  ROUND(TOTAL_POINTS / NULLIF(GAMES_PLAYED, 0), 2) AS points_per_game\nFROM NBA.TRANSFORMED.local_player_season_facts\nWHERE SEASON = 2017\n  AND GAMES_PLAYED >= 20\nORDER BY TOTAL_POINTS / NULLIF(GAMES_PLAYED, 0) DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "201935",
+        "James Harden",
+        "29.7"
+      ]
+    ]
+  },
+  {
+    "question_id": 26,
+    "category": "layer",
+    "question": "How many games did the Brooklyn Nets win in the 2020 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": null,
+    "sql": "SELECT SUM(s.WINS) AS nets_wins_2020\nFROM NBA.TRANSFORMED.local_team_season_facts s\nJOIN NBA.RAW.raw_teams t\n  ON s.TEAM_ID = t.TEAM_ID\nWHERE s.SEASON = 2020\n  AND LOWER(t.CITY) = 'brooklyn'\n  AND LOWER(t.NICKNAME) = 'nets'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "raw.raw_teams",
+      "transformed.local_team_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "57"
+      ]
+    ]
+  },
+  {
+    "question_id": 27,
+    "category": "vocabulary",
+    "question": "Who had the most double-doubles in the 2017 season, counting every game in the data, preseason and playoffs included, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT\n  PLAYER_ID,\n  PLAYER_NAME,\n  SUM(DOUBLE_DOUBLE_GAMES) AS double_doubles\nFROM NBA.TRANSFORMED.local_player_season_facts\nWHERE SEASON = 2017\nGROUP BY PLAYER_ID, PLAYER_NAME\nORDER BY double_doubles DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1626157",
+        "Karl-Anthony Towns",
+        "71"
+      ]
+    ]
+  },
+  {
+    "question_id": 28,
+    "category": "vocabulary",
+    "question": "What is the home win rate across all games in the data that have a final score, as a fraction rounded to three decimals?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT ROUND(AVG(HOME_TEAM_WINS), 3) AS home_win_rate\nFROM NBA.TRANSFORMED.src_games\nWHERE LOWER(GAME_STATUS_TEXT) = 'final'",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "src"
+    ],
+    "tables": [
+      "transformed.src_games"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "0.587"
+      ]
+    ]
+  },
+  {
+    "question_id": 29,
+    "category": "vocabulary",
+    "question": "Which team had the best home win rate in the 2018 season, counting every game in the data, preseason and playoffs included? Give the team abbreviation and the rate as a fraction rounded to three decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT t.TEAM_ID, d.TEAM_ABBREVIATION, ROUND(SUM(CASE WHEN t.TEAM_WON THEN 1 ELSE 0 END) / COUNT(DISTINCT t.GAME_ID), 3) AS home_win_rate\nFROM NBA.TRANSFORMED.local_team_game_facts t\nJOIN NBA.TRANSFORMED.dim_teams_cleansed d ON t.TEAM_ID = d.TEAM_ID\nWHERE t.IS_HOME = TRUE AND t.SEASON = 2018\nGROUP BY t.TEAM_ID, d.TEAM_ABBREVIATION\nORDER BY SUM(CASE WHEN t.TEAM_WON THEN 1 ELSE 0 END) / COUNT(DISTINCT t.GAME_ID) DESC, t.TEAM_ID\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.dim_teams_cleansed",
+      "transformed.local_team_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612749",
+        "MIL",
+        "0.804"
+      ]
+    ]
+  },
+  {
+    "question_id": 30,
+    "category": "vocabulary",
+    "question": "How many triple-doubles did Russell Westbrook have in the 2016 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT PLAYER_ID, PLAYER_NAME, COUNT(*) AS triple_doubles\nFROM NBA.TRANSFORMED.local_player_game_facts\nWHERE LOWER(PLAYER_NAME) = 'russell westbrook'\n  AND SEASON = 2016\n  AND PARTICIPATED = TRUE\n  AND (CASE WHEN POINTS >= 10 THEN 1 ELSE 0 END\n     + CASE WHEN REBOUNDS >= 10 THEN 1 ELSE 0 END\n     + CASE WHEN ASSISTS >= 10 THEN 1 ELSE 0 END\n     + CASE WHEN STEALS >= 10 THEN 1 ELSE 0 END\n     + CASE WHEN BLOCKS >= 10 THEN 1 ELSE 0 END) >= 3\nGROUP BY PLAYER_ID, PLAYER_NAME",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "201566",
+        "Russell Westbrook",
+        "45"
+      ]
+    ]
+  },
+  {
+    "question_id": 31,
+    "category": "vocabulary",
+    "question": "What was Giannis Antetokounmpo's points per game in the 2019 season, counting every game in the data, preseason and playoffs included? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT\n  PLAYER_ID,\n  PLAYER_NAME,\n  ROUND(SUM(POINTS) / COUNT(DISTINCT GAME_ID), 2) AS points_per_game\nFROM NBA.TRANSFORMED.local_player_game_facts\nWHERE PLAYER_NAME ILIKE 'Giannis Antetokounmpo'\n  AND SEASON = 2019\nGROUP BY PLAYER_ID, PLAYER_NAME",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "203507",
+        "Giannis Antetokounmpo",
+        "28.08"
+      ]
+    ]
+  },
+  {
+    "question_id": 32,
+    "category": "vocabulary",
+    "question": "Which team had the biggest total point differential (points scored minus points allowed) in the 2016 season, counting every game in the data, preseason and playoffs included? Give the team abbreviation and the differential.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT\n  s.TEAM_ID,\n  t.TEAM_ABBREVIATION,\n  SUM(s.POINT_DIFFERENTIAL) AS total_point_differential\nFROM NBA.TRANSFORMED.local_team_season_facts s\nJOIN NBA.TRANSFORMED.dim_teams_cleansed t\n  ON s.TEAM_ID = t.TEAM_ID\nWHERE s.SEASON = 2016\nGROUP BY s.TEAM_ID, t.TEAM_ABBREVIATION\nORDER BY total_point_differential DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.dim_teams_cleansed",
+      "transformed.local_team_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612744",
+        "GSW",
+        "1262.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 33,
+    "category": "vocabulary",
+    "question": "Who had the most double-doubles across all seasons, counting every game in the data, preseason and playoffs included, and how many?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT\n  PLAYER_ID,\n  PLAYER_NAME,\n  SUM(DOUBLE_DOUBLE_GAMES) AS total_double_doubles\nFROM NBA.TRANSFORMED.local_player_season_facts\nGROUP BY PLAYER_ID, PLAYER_NAME\nORDER BY total_double_doubles DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "2730",
+        "Dwight Howard",
+        "850"
+      ]
+    ]
+  },
+  {
+    "question_id": 34,
+    "category": "vocabulary",
+    "question": "How many 50-point games were there across all seasons, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": true,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": null,
+    "sql": "SELECT COUNT(GAME_ID) AS fifty_point_games\nFROM NBA.TRANSFORMED.local_player_game_facts\nWHERE POINTS >= 50",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "224"
+      ]
+    ]
+  },
+  {
+    "question_id": 35,
+    "category": "join",
+    "question": "Which team won the most games in the 2017 season, counting every game in the data, preseason and playoffs included? Give the team abbreviation and the number of wins.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT t.TEAM_ID, t.TEAM_ABBREVIATION, SUM(s.WINS) AS wins\nFROM NBA.TRANSFORMED.local_team_season_facts s\nJOIN NBA.TRANSFORMED.dim_teams_cleansed t ON s.TEAM_ID = t.TEAM_ID\nWHERE s.SEASON = 2017\nGROUP BY t.TEAM_ID, t.TEAM_ABBREVIATION\nORDER BY wins DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.dim_teams_cleansed",
+      "transformed.local_team_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612745",
+        "HOU",
+        "79"
+      ]
+    ]
+  },
+  {
+    "question_id": 36,
+    "category": "join",
+    "question": "Who is listed as the head coach of the team that won the most games in the 2018 season, counting every game in the data, preseason and playoffs included?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT t.TEAM_ID, d.HEAD_COACH, t.WINS\nFROM NBA.TRANSFORMED.local_team_season_facts t\nJOIN NBA.TRANSFORMED.dim_teams_cleansed d\n  ON t.TEAM_ID = d.TEAM_ID\nWHERE t.SEASON = 2018\nORDER BY t.WINS DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.dim_teams_cleansed",
+      "transformed.local_team_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612761",
+        "Nick Nurse",
+        "77"
+      ]
+    ]
+  },
+  {
+    "question_id": 37,
+    "category": "join",
+    "question": "Which arena hosted the most games in the 2019 season?",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT d.ARENA AS arena, SUM(s.HOME_GAMES) AS games_hosted\nFROM NBA.TRANSFORMED.local_team_season_facts s\nJOIN NBA.TRANSFORMED.dim_teams_cleansed d\n  ON s.TEAM_ID = d.TEAM_ID\nWHERE s.SEASON = 2019\nGROUP BY d.ARENA\nORDER BY games_hosted DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.dim_teams_cleansed",
+      "transformed.local_team_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "Staples Center",
+        "100"
+      ]
+    ]
+  },
+  {
+    "question_id": 38,
+    "category": "join",
+    "question": "What were LeBron James' points per game against the Boston Celtics across all seasons, counting every game in the data, preseason and playoffs included? Round to two decimals.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": false,
+    "shape": false,
+    "entities": false,
+    "failure_reason": "refused",
+    "sql": null,
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "blocked",
+    "fact_layers": [],
+    "tables": [],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": []
+  },
+  {
+    "question_id": 39,
+    "category": "join",
+    "question": "Against which team did Kevin Durant score the most total points across all seasons, counting every game in the data, preseason and playoffs included? Give the team abbreviation and the points.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT t.TEAM_ID, t.TEAM_ABBREVIATION, SUM(p.POINTS) AS total_points\nFROM NBA.TRANSFORMED.local_player_game_facts p\nJOIN NBA.DEV.scd_raw_teams t ON p.OPPONENT_TEAM_ID = t.TEAM_ID\nWHERE LOWER(p.PLAYER_NAME) = 'kevin durant'\nGROUP BY t.TEAM_ID, t.TEAM_ABBREVIATION\nORDER BY total_points DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "dev.scd_raw_teams",
+      "transformed.local_player_game_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612759",
+        "SAS",
+        "1742.0"
+      ]
+    ]
+  },
+  {
+    "question_id": 40,
+    "category": "join",
+    "question": "Which team scored the most total points in the 2021 season, counting every game in the data, preseason and playoffs included? Give the team abbreviation and the points.",
+    "gold_rows": 1,
+    "strict": false,
+    "form": true,
+    "shape": true,
+    "entities": true,
+    "failure_reason": "wrong_result",
+    "sql": "SELECT s.TEAM_ID, t.TEAM_ABBREVIATION, SUM(s.TOTAL_POINTS) AS total_points\nFROM NBA.TRANSFORMED.local_team_season_facts s\nJOIN NBA.TRANSFORMED.dim_teams_cleansed t ON s.TEAM_ID = t.TEAM_ID\nWHERE s.SEASON = 2021\nGROUP BY s.TEAM_ID, t.TEAM_ABBREVIATION\nORDER BY total_points DESC\nLIMIT 1",
+    "comment_cut": false,
+    "route": "generated_answer",
+    "trust": "review_required",
+    "fact_layers": [
+      "local"
+    ],
+    "tables": [
+      "transformed.dim_teams_cleansed",
+      "transformed.local_team_season_facts"
+    ],
+    "schema_path": "chosen",
+    "chosen": [],
+    "recalled": false,
+    "local_offered": false,
+    "drafted_notes": [],
+    "pred_rows": 1,
+    "pred_sample": [
+      [
+        "1610612744",
+        "GSW",
+        "12153.0"
+      ]
+    ]
+  }
+]
