@@ -1,0 +1,562 @@
+{
+  "cases": [
+    {
+      "name": "heldout-for-each-covered-policy-what-is-paid-loss-claim-844fa6",
+      "question": "For each covered policy, what is paid-loss claim severity?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            31003000336,
+            1750
+          ]
+        ],
+        "goldSql": "SELECT p.Policy_Number AS policy_number, SUM(ca.Claim_Amount)*1.0/COUNT(DISTINCT c.Claim_Identifier) AS paid_loss_severity FROM main.claim c JOIN main.claim_coverage cc ON cc.Claim_Identifier=c.Claim_Identifier JOIN main.policy_coverage_detail cd ON cd.Policy_Coverage_Detail_Identifier=cc.Policy_Coverage_Detail_Identifier JOIN main.policy p ON p.Policy_Identifier=cd.Policy_Identifier JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-what-is-the-total-amount-of-paid-losses-for-clai-7569c2",
+      "question": "What is the total amount of paid losses for claims opened in 2019?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            3500
+          ]
+        ],
+        "goldSql": "SELECT SUM(ca.Claim_Amount) AS total_amount FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.loss_payment k ON k.Claim_Amount_Identifier=ca.Claim_Amount_Identifier WHERE c.Claim_Open_Date>=DATE '2019-01-01' AND c.Claim_Open_Date<DATE '2020-01-01'",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-how-much-in-paid-losses-is-associated-with-each-8b38d1",
+      "question": "How much in paid losses is associated with each claim?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            12312701,
+            1200
+          ],
+          [
+            12312702,
+            2300
+          ]
+        ],
+        "goldSql": "SELECT c.Company_Claim_Number AS claim_number, SUM(ca.Claim_Amount) AS total_amount FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.loss_payment k ON k.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-which-claim-has-the-larger-amount-of-paid-losses-d71a47",
+      "question": "Which claim has the larger amount of paid losses, and how much is it?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            12312702,
+            2300
+          ]
+        ],
+        "goldSql": "SELECT c.Company_Claim_Number AS claim_number, SUM(ca.Claim_Amount) AS total_amount FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.loss_payment k ON k.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY total_amount DESC,claim_number LIMIT 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-what-is-the-total-amount-of-reserved-losses-for-0b55c1",
+      "question": "What is the total amount of reserved losses for claims opened in 2019?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            3100
+          ]
+        ],
+        "goldSql": "SELECT SUM(ca.Claim_Amount) AS total_amount FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.loss_reserve k ON k.Claim_Amount_Identifier=ca.Claim_Amount_Identifier WHERE c.Claim_Open_Date>=DATE '2019-01-01' AND c.Claim_Open_Date<DATE '2020-01-01'",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-how-much-in-reserved-losses-is-associated-with-e-8e2932",
+      "question": "How much in reserved losses is associated with each claim?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            12312701,
+            1000
+          ],
+          [
+            12312702,
+            2100
+          ]
+        ],
+        "goldSql": "SELECT c.Company_Claim_Number AS claim_number, SUM(ca.Claim_Amount) AS total_amount FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.loss_reserve k ON k.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-which-claim-has-the-larger-amount-of-reserved-lo-30a65e",
+      "question": "Which claim has the larger amount of reserved losses, and how much is it?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            12312702,
+            2100
+          ]
+        ],
+        "goldSql": "SELECT c.Company_Claim_Number AS claim_number, SUM(ca.Claim_Amount) AS total_amount FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.loss_reserve k ON k.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY total_amount DESC,claim_number LIMIT 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-what-is-the-total-amount-of-paid-expenses-for-cl-44d119",
+      "question": "What is the total amount of paid expenses for claims opened in 2019?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            3700
+          ]
+        ],
+        "goldSql": "SELECT SUM(ca.Claim_Amount) AS total_amount FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.expense_payment k ON k.Claim_Amount_Identifier=ca.Claim_Amount_Identifier WHERE c.Claim_Open_Date>=DATE '2019-01-01' AND c.Claim_Open_Date<DATE '2020-01-01'",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-how-much-in-paid-expenses-is-associated-with-eac-9db83c",
+      "question": "How much in paid expenses is associated with each claim?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            12312701,
+            1300
+          ],
+          [
+            12312702,
+            2400
+          ]
+        ],
+        "goldSql": "SELECT c.Company_Claim_Number AS claim_number, SUM(ca.Claim_Amount) AS total_amount FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.expense_payment k ON k.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-which-claim-has-the-larger-amount-of-paid-expens-bc2594",
+      "question": "Which claim has the larger amount of paid expenses, and how much is it?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            12312702,
+            2400
+          ]
+        ],
+        "goldSql": "SELECT c.Company_Claim_Number AS claim_number, SUM(ca.Claim_Amount) AS total_amount FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.expense_payment k ON k.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY total_amount DESC,claim_number LIMIT 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-what-is-the-total-amount-of-reserved-expenses-fo-f67efa",
+      "question": "What is the total amount of reserved expenses for claims opened in 2019?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            3300
+          ]
+        ],
+        "goldSql": "SELECT SUM(ca.Claim_Amount) AS total_amount FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.expense_reserve k ON k.Claim_Amount_Identifier=ca.Claim_Amount_Identifier WHERE c.Claim_Open_Date>=DATE '2019-01-01' AND c.Claim_Open_Date<DATE '2020-01-01'",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-how-much-in-reserved-expenses-is-associated-with-af8ebc",
+      "question": "How much in reserved expenses is associated with each claim?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            12312701,
+            1100
+          ],
+          [
+            12312702,
+            2200
+          ]
+        ],
+        "goldSql": "SELECT c.Company_Claim_Number AS claim_number, SUM(ca.Claim_Amount) AS total_amount FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.expense_reserve k ON k.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-which-claim-has-the-larger-amount-of-reserved-ex-e227ae",
+      "question": "Which claim has the larger amount of reserved expenses, and how much is it?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            12312702,
+            2200
+          ]
+        ],
+        "goldSql": "SELECT c.Company_Claim_Number AS claim_number, SUM(ca.Claim_Amount) AS total_amount FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.expense_reserve k ON k.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY total_amount DESC,claim_number LIMIT 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-for-each-claim-what-is-the-total-paid-loss-plus-450ca5",
+      "question": "For each claim, what is the total paid loss plus paid expense?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            12312701,
+            2500
+          ],
+          [
+            12312702,
+            4700
+          ]
+        ],
+        "goldSql": "SELECT c.Company_Claim_Number AS claim_number, SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL OR ep.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS paid_total FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier LEFT JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_reserve er ON er.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-for-each-claim-what-is-the-total-reserved-loss-p-14c0e6",
+      "question": "For each claim, what is the total reserved loss plus reserved expense?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            12312701,
+            2100
+          ],
+          [
+            12312702,
+            4300
+          ]
+        ],
+        "goldSql": "SELECT c.Company_Claim_Number AS claim_number, SUM(CASE WHEN lr.Claim_Amount_Identifier IS NOT NULL OR er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS reserved_total FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier LEFT JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_reserve er ON er.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-for-each-claim-what-is-the-difference-between-pa-0f06c0",
+      "question": "For each claim, what is the difference between paid losses and reserved losses?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            12312701,
+            200
+          ],
+          [
+            12312702,
+            200
+          ]
+        ],
+        "goldSql": "SELECT c.Company_Claim_Number AS claim_number, SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount WHEN lr.Claim_Amount_Identifier IS NOT NULL THEN -ca.Claim_Amount ELSE 0 END) AS paid_minus_reserved_loss FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier LEFT JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_reserve er ON er.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-for-each-claim-what-is-the-difference-between-pa-d2e06b",
+      "question": "For each claim, what is the difference between paid expenses and reserved expenses?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            12312701,
+            200
+          ],
+          [
+            12312702,
+            200
+          ]
+        ],
+        "goldSql": "SELECT c.Company_Claim_Number AS claim_number, SUM(CASE WHEN ep.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount WHEN er.Claim_Amount_Identifier IS NOT NULL THEN -ca.Claim_Amount ELSE 0 END) AS paid_minus_reserved_expense FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier LEFT JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_reserve er ON er.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-for-each-claim-what-share-of-its-total-recorded-035cbd",
+      "question": "For each claim, what share of its total recorded amount is paid loss?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            12312701,
+            0.2608695652173913
+          ],
+          [
+            12312702,
+            0.25555555555555554
+          ]
+        ],
+        "goldSql": "SELECT c.Company_Claim_Number AS claim_number, SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END)*1.0/SUM(ca.Claim_Amount) AS paid_loss_share FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier LEFT JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_reserve er ON er.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-for-each-claim-what-share-of-its-total-recorded-a5d462",
+      "question": "For each claim, what share of its total recorded amount is reserved expense?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            12312701,
+            0.2391304347826087
+          ],
+          [
+            12312702,
+            0.24444444444444444
+          ]
+        ],
+        "goldSql": "SELECT c.Company_Claim_Number AS claim_number, SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END)*1.0/SUM(ca.Claim_Amount) AS reserved_expense_share FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier LEFT JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_reserve er ON er.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-for-each-claim-what-is-its-paid-loss-to-reserved-13a10a",
+      "question": "For each claim, what is its paid-loss-to-reserved-loss ratio?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            12312701,
+            1.2
+          ],
+          [
+            12312702,
+            1.0952380952380953
+          ]
+        ],
+        "goldSql": "SELECT c.Company_Claim_Number AS claim_number, SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END)*1.0/NULLIF(SUM(CASE WHEN lr.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END),0) AS paid_to_reserved_loss_ratio FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier LEFT JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_reserve er ON er.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-for-each-claim-what-is-its-paid-expense-to-reser-b363d3",
+      "question": "For each claim, what is its paid-expense-to-reserved-expense ratio?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            12312701,
+            1.1818181818181819
+          ],
+          [
+            12312702,
+            1.0909090909090908
+          ]
+        ],
+        "goldSql": "SELECT c.Company_Claim_Number AS claim_number, SUM(CASE WHEN ep.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END)*1.0/NULLIF(SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END),0) AS paid_to_reserved_expense_ratio FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier LEFT JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_reserve er ON er.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-how-much-annual-premium-is-recorded-for-each-pol-bdf8d4",
+      "question": "How much annual premium is recorded for each policy across all effective years?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            31003000336,
+            86000
+          ],
+          [
+            31003000337,
+            12000
+          ]
+        ],
+        "goldSql": "SELECT p.Policy_Number AS policy_number, SUM(pa.Policy_Amount) AS total_annual_premium FROM main.policy p JOIN main.policy_amount pa ON pa.Policy_Identifier=p.Policy_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier=pa.Policy_Amount_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-what-is-the-average-annual-premium-entry-for-eac-35e8a5",
+      "question": "What is the average annual premium entry for each policy?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            31003000336,
+            17200
+          ],
+          [
+            31003000337,
+            12000
+          ]
+        ],
+        "goldSql": "SELECT p.Policy_Number AS policy_number, AVG(pa.Policy_Amount) AS average_annual_premium FROM main.policy p JOIN main.policy_amount pa ON pa.Policy_Identifier=p.Policy_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier=pa.Policy_Amount_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-which-policy-has-the-higher-annual-premium-effec-c950e0",
+      "question": "Which policy has the higher annual premium effective in 2019, and what is that premium?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            31003000336,
+            20000
+          ]
+        ],
+        "goldSql": "SELECT p.Policy_Number AS policy_number, SUM(pa.Policy_Amount) AS annual_premium_2019 FROM main.policy p JOIN main.policy_amount pa ON pa.Policy_Identifier=p.Policy_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier=pa.Policy_Amount_Identifier WHERE pa.Effective_Date>=DATE '2019-01-01' AND pa.Effective_Date<DATE '2020-01-01' GROUP BY 1 ORDER BY annual_premium_2019 DESC,policy_number LIMIT 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-what-was-the-2019-paid-loss-ratio-for-each-polic-131f8d",
+      "question": "What was the 2019 paid-loss ratio for each policy with a covered claim opened in 2019?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            31003000336,
+            0.175
+          ]
+        ],
+        "goldSql": "WITH prem AS (SELECT p.Policy_Number AS policy_number, SUM(pa.Policy_Amount) AS annual_premium FROM main.policy p JOIN main.policy_amount pa ON pa.Policy_Identifier=p.Policy_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier=pa.Policy_Amount_Identifier WHERE pa.Effective_Date>=DATE '2019-01-01' AND pa.Effective_Date<DATE '2020-01-01' GROUP BY 1), losses AS (SELECT p.Policy_Number AS policy_number, SUM(ca.Claim_Amount) AS paid_loss FROM main.policy p JOIN main.policy_coverage_detail cd ON cd.Policy_Identifier=p.Policy_Identifier JOIN main.claim_coverage cc ON cc.Policy_Coverage_Detail_Identifier=cd.Policy_Coverage_Detail_Identifier JOIN main.claim c ON c.Claim_Identifier=cc.Claim_Identifier JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier WHERE c.Claim_Open_Date>=DATE '2019-01-01' AND c.Claim_Open_Date<DATE '2020-01-01' GROUP BY 1) SELECT prem.policy_number, losses.paid_loss*1.0/prem.annual_premium AS paid_loss_ratio FROM prem JOIN losses USING (policy_number) ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-what-is-the-increase-from-the-2018-to-the-2019-a-f487d5",
+      "question": "What is the increase from the 2018 to the 2019 annual premium on policy 31003000336?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            2000
+          ]
+        ],
+        "goldSql": "SELECT MAX(CASE WHEN YEAR(pa.Effective_Date)=2019 THEN pa.Policy_Amount END)-MAX(CASE WHEN YEAR(pa.Effective_Date)=2018 THEN pa.Policy_Amount END) AS premium_increase FROM main.policy p JOIN main.policy_amount pa ON pa.Policy_Identifier=p.Policy_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier=pa.Policy_Amount_Identifier WHERE p.Policy_Number=31003000336",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-what-is-the-percentage-increase-from-the-2018-to-8f3d70",
+      "question": "What is the percentage increase from the 2018 to the 2019 annual premium on policy 31003000336?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            11.11111111111111
+          ]
+        ],
+        "goldSql": "SELECT 100.0*(MAX(CASE WHEN YEAR(pa.Effective_Date)=2019 THEN pa.Policy_Amount END)-MAX(CASE WHEN YEAR(pa.Effective_Date)=2018 THEN pa.Policy_Amount END))/MAX(CASE WHEN YEAR(pa.Effective_Date)=2018 THEN pa.Policy_Amount END) AS increase_percent FROM main.policy p JOIN main.policy_amount pa ON pa.Policy_Identifier=p.Policy_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier=pa.Policy_Amount_Identifier WHERE p.Policy_Number=31003000336",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-for-each-policy-how-many-covered-insured-objects-7bbd01",
+      "question": "For each policy, how many covered insured objects have an annual premium entry?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            31003000336,
+            1
+          ],
+          [
+            31003000337,
+            1
+          ]
+        ],
+        "goldSql": "SELECT p.Policy_Number AS policy_number, COUNT(DISTINCT cd.Insurable_Object_Identifier) AS insured_object_count FROM main.policy p JOIN main.policy_amount pa ON pa.Policy_Identifier=p.Policy_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier=pa.Policy_Amount_Identifier JOIN main.policy_coverage_detail cd ON cd.Policy_Coverage_Detail_Identifier=pa.Policy_Coverage_Detail_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-how-much-annual-premium-effective-in-2019-is-tie-ece432",
+      "question": "How much annual premium effective in 2019 is tied to each insured property postal code?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            78732,
+            12000
+          ],
+          [
+            78751,
+            20000
+          ]
+        ],
+        "goldSql": "SELECT a.Postal_Code AS postal_code, SUM(pa.Policy_Amount) AS annual_premium_2019 FROM main.policy p JOIN main.policy_amount pa ON pa.Policy_Identifier=p.Policy_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier=pa.Policy_Amount_Identifier JOIN main.policy_coverage_detail cd ON cd.Policy_Coverage_Detail_Identifier=pa.Policy_Coverage_Detail_Identifier JOIN main.insurable_object io ON io.Insurable_Object_Identifier=cd.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier=io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier=g.Location_Address_Identifier WHERE pa.Effective_Date>=DATE '2019-01-01' AND pa.Effective_Date<DATE '2020-01-01' GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-which-property-postal-code-has-the-most-covered-b42dab",
+      "question": "Which property postal code has the most covered claims, and how many claims are there?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            78732,
+            1
+          ]
+        ],
+        "goldSql": "SELECT a.Postal_Code AS postal_code, COUNT(DISTINCT c.Claim_Identifier) AS claim_count FROM main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier=c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier=io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier=g.Location_Address_Identifier GROUP BY 1 ORDER BY claim_count DESC,postal_code LIMIT 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-what-is-the-average-claim-closing-time-in-days-b-ab3e48",
+      "question": "What is the average claim closing time in days by claimed property postal code?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            78732,
+            25
+          ],
+          [
+            78751,
+            16
+          ]
+        ],
+        "goldSql": "SELECT a.Postal_Code AS postal_code, AVG(DATE_DIFF('day',c.Claim_Open_Date,c.Claim_Close_Date)) AS average_days_to_close FROM main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier=c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier=io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier=g.Location_Address_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    }
+  ]
+}

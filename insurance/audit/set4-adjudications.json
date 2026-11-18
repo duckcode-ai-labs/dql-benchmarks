@@ -1,0 +1,50 @@
+{
+  "scope": "Author decisions on individual set-4 items. Two were made during a preliminary review with an AI assistant (Codex) on 2 October 2026; one of them was revised on 3 October 2026 in the author's completed audit of the 120-item sample (work/insurance/audit/set4-audit-sample.csv), which also found one unanswerable item wrong. Apply to these set-4 items only; do not carry over to similar set-5 questions.",
+  "adjudicator": "author",
+  "conventions": [
+    {
+      "name": "elapsed days",
+      "rule": "January 1 to January 2 counts as one day (date_diff('day', start, end))",
+      "status": "confirmed by the author"
+    }
+  ],
+  "items": [
+    {
+      "set": "heldout-4",
+      "case_id": "heldout-which-of-our-policies-earns-more-premium-per-day-a6d127",
+      "kind": "answerable",
+      "decision": "correct",
+      "handling": "keep the original question, reference and score (no longer reported as an exclusion)",
+      "reason": "In the completed audit of the sample the author judged the reference correct, revising the preliminary 'ambiguous' decision of 2 October.",
+      "history": [
+        {
+          "date": "2026-10-02",
+          "decision": "ambiguous",
+          "reason": "The reference divides recorded written premium by the policy duration. 'Earns premium' can mean actuarial earned premium, which needs information the benchmark itself says is unavailable."
+        }
+      ],
+      "decided": "2026-10-03",
+      "audit_item": 60
+    },
+    {
+      "set": "heldout-4-unanswerable",
+      "case_id": "heldout-unanswerable-what-is-the-average-claim-payout-for-the-2021-ac-279a51",
+      "kind": "unanswerable",
+      "decision": "ambiguous",
+      "handling": "keep the original refusal-based score; additionally report results excluding it",
+      "reason": "There are no 2021 claims. An answer saying there are no matching records and the average is undefined is defensible, while the key requires a refusal; without a stated data-coverage assumption the two are not unambiguously different in correctness.",
+      "decided": "2026-10-02"
+    },
+    {
+      "set": "heldout-4-unanswerable",
+      "case_id": "heldout-unanswerable-what-s-the-earned-premium-for-2019-on-each-polic-1a6729",
+      "kind": "unanswerable",
+      "decision": "wrong",
+      "decided": "2026-10-03",
+      "audit_item": 102,
+      "handling": "pre-registered rule: report the benchmark on all items and without this item",
+      "reason": "Stated reason is true (Earning_Begin_Date/Earning_End_Date are empty), but 2019 earned premium can be computed the standard pro-rata way from written premium and coverage term dates, which are all present.",
+      "corrected_sql": "SELECT p.Policy_Number, ROUND(SUM(pa.Policy_Amount * (LEAST(d.Expiration_Date, DATE '2019-12-31') - GREATEST(d.Effective_Date, DATE '2019-01-01') + 1) * 1.0 / (d.Expiration_Date - d.Effective_Date + 1)), 2) AS earned_2019 FROM main.policy p JOIN main.policy_coverage_detail d ON d.Policy_Identifier = p.Policy_Identifier JOIN main.policy_amount pa ON pa.Policy_Coverage_Detail_Identifier = d.Policy_Coverage_Detail_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier WHERE d.Effective_Date <= DATE '2019-12-31' AND d.Expiration_Date >= DATE '2019-01-01' GROUP BY 1 ORDER BY 1"
+    }
+  ]
+}

@@ -1,0 +1,4457 @@
+{
+  "builtAt": "2026-09-30T14:06:48.575Z",
+  "database": "L0",
+  "set": 4,
+  "cases": [
+    {
+      "id": "heldout-how-many-fire-claims-do-we-have-on-file-3850e9",
+      "question": "How many fire claims do we have on file?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(*) AS fire_claims FROM main.fire_claim",
+      "gold": {
+        "columns": [
+          "fire_claims"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            820
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-average-loss-ratio-on-our-fire-claim-603eb7",
+      "question": "What is the average loss ratio on our fire claims?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim",
+      "gold": {
+        "columns": [
+          "avg_loss_ratio"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            0.6429268292682927
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-fire-claims-were-on-homes-that-have-a-f-851ca8",
+      "question": "How many fire claims were on homes that have a fireplace?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(*) AS claims FROM main.fire_claim WHERE Fireplace = 'yes'",
+      "gold": {
+        "columns": [
+          "claims"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            692
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-s-the-oldest-construction-year-among-the-ho-f68b07",
+      "question": "What's the oldest construction year among the homes in the fire claims data?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT MIN(Year_Built) AS oldest_year_built FROM main.fire_claim",
+      "gold": {
+        "columns": [
+          "oldest_year_built"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            1960
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-fire-claims-involved-homes-built-in-200-983f7e",
+      "question": "How many fire claims involved homes built in 2000 or later?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(*) AS claims FROM main.fire_claim WHERE Year_Built >= 2000",
+      "gold": {
+        "columns": [
+          "claims"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            203
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-worst-loss-ratio-seen-on-any-fire-cl-f1dca2",
+      "question": "What is the worst loss ratio seen on any fire claim?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT MAX(Loss_Ratio) AS max_loss_ratio FROM main.fire_claim",
+      "gold": {
+        "columns": [
+          "max_loss_ratio"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            1.1
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-on-average-how-many-miles-were-fire-claim-proper-b02af0",
+      "question": "On average, how many miles were fire-claim properties from the closest fire station?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT AVG(Nearest_Firestation_miles) AS avg_miles FROM main.fire_claim",
+      "gold": {
+        "columns": [
+          "avg_miles"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            8.768292682926829
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-different-firefighter-crew-sizes-show-up-i-390b33",
+      "question": "Which different firefighter crew sizes show up in the fire claims? List each one once.",
+      "quadrant": "LQLS",
+      "shape": "list",
+      "goldSql": "SELECT DISTINCT Number_of_Firefighters AS firefighters FROM main.fire_claim ORDER BY 1",
+      "gold": {
+        "columns": [
+          "firefighters"
+        ],
+        "rowCount": 7,
+        "rows": [
+          [
+            4
+          ],
+          [
+            5
+          ],
+          [
+            6
+          ],
+          [
+            7
+          ],
+          [
+            8
+          ],
+          [
+            9
+          ],
+          [
+            10
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-fire-claims-had-losses-bigger-than-the-e42c3f",
+      "question": "How many fire claims had losses bigger than the premium, meaning a loss ratio over 1?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(*) AS claims FROM main.fire_claim WHERE Loss_Ratio > 1",
+      "gold": {
+        "columns": [
+          "claims"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            82
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-show-the-number-of-fire-claims-for-homes-with-an-3306e9",
+      "question": "Show the number of fire claims for homes with and without a fireplace.",
+      "quadrant": "LQLS",
+      "shape": "grouped",
+      "goldSql": "SELECT Fireplace, COUNT(*) AS claims FROM main.fire_claim GROUP BY Fireplace ORDER BY Fireplace",
+      "gold": {
+        "columns": [
+          "Fireplace",
+          "claims"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            "no",
+            128
+          ],
+          [
+            "yes",
+            692
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-median-year-built-for-properties-wit-e63951",
+      "question": "What is the median year built for properties with fire claims?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT MEDIAN(Year_Built) AS median_year_built FROM main.fire_claim",
+      "gold": {
+        "columns": [
+          "median_year_built"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            1985
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-fire-claims-were-for-properties-more-th-550a67",
+      "question": "How many fire claims were for properties more than 15 miles from a fire station?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(*) AS claims FROM main.fire_claim WHERE Nearest_Firestation_miles > 15",
+      "gold": {
+        "columns": [
+          "claims"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            170
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-fire-claims-were-there-for-each-number-f7c1a6",
+      "question": "How many fire claims were there for each number of responding firefighters?",
+      "quadrant": "LQLS",
+      "shape": "grouped",
+      "goldSql": "SELECT Number_of_Firefighters AS firefighters, COUNT(*) AS claims FROM main.fire_claim GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "firefighters",
+          "claims"
+        ],
+        "rowCount": 7,
+        "rows": [
+          [
+            4,
+            117
+          ],
+          [
+            5,
+            143
+          ],
+          [
+            6,
+            124
+          ],
+          [
+            7,
+            107
+          ],
+          [
+            8,
+            115
+          ],
+          [
+            9,
+            104
+          ],
+          [
+            10,
+            110
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-across-all-fire-claims-how-many-firefighters-wer-8cc948",
+      "question": "Across all fire claims, how many firefighters were sent in total?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT SUM(Number_of_Firefighters) AS total_firefighters FROM main.fire_claim",
+      "gold": {
+        "columns": [
+          "total_firefighters"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            5632
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-when-the-nearest-station-was-only-1-mile-away-ho-c1054b",
+      "question": "When the nearest station was only 1 mile away, how many firefighters responded on average?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT AVG(Number_of_Firefighters) AS avg_firefighters FROM main.fire_claim WHERE Nearest_Firestation_miles = 1",
+      "gold": {
+        "columns": [
+          "avg_firefighters"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            7.602409638554217
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-catastrophes-do-we-track-fae000",
+      "question": "How many catastrophes do we track?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(*) AS catastrophes FROM main.catastrophe",
+      "gold": {
+        "columns": [
+          "catastrophes"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            4
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-list-the-names-of-all-catastrophes-in-the-system-0cb22b",
+      "question": "List the names of all catastrophes in the system.",
+      "quadrant": "LQLS",
+      "shape": "list",
+      "goldSql": "SELECT Catastrophe_Name FROM main.catastrophe ORDER BY Catastrophe_Name",
+      "gold": {
+        "columns": [
+          "Catastrophe_Name"
+        ],
+        "rowCount": 4,
+        "rows": [
+          [
+            "Fire"
+          ],
+          [
+            "Flood"
+          ],
+          [
+            "Hurricane"
+          ],
+          [
+            "Tornado"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-policy-expires-on-may-31-2020-just-give-me-35248e",
+      "question": "Which policy expires on May 31, 2020? Just give me its policy number.",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT Policy_Number FROM main.policy WHERE Expiration_Date = DATE '2020-05-31'",
+      "gold": {
+        "columns": [
+          "Policy_Number"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            31003000337
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-are-the-start-and-end-dates-of-policy-31003-db8bbd",
+      "question": "What are the start and end dates of policy 31003000336?",
+      "quadrant": "LQLS",
+      "shape": "list",
+      "goldSql": "SELECT Effective_Date, Expiration_Date FROM main.policy WHERE Policy_Number = 31003000336",
+      "gold": {
+        "columns": [
+          "Effective_Date",
+          "Expiration_Date"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "2015-01-01",
+            "2019-12-31"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-policies-are-in-the-book-86f0b2",
+      "question": "How many policies are in the book?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(*) AS policies FROM main.policy",
+      "gold": {
+        "columns": [
+          "policies"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            2
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-when-was-claim-12312701-opened-and-when-was-it-c-9c20db",
+      "question": "When was claim 12312701 opened, and when was it closed?",
+      "quadrant": "LQLS",
+      "shape": "list",
+      "goldSql": "SELECT Claim_Open_Date, Claim_Close_Date FROM main.claim WHERE Company_Claim_Number = 12312701",
+      "gold": {
+        "columns": [
+          "Claim_Open_Date",
+          "Claim_Close_Date"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "2019-01-15",
+            "2019-01-31"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-give-me-the-claim-numbers-of-every-claim-we-have-d5942a",
+      "question": "Give me the claim numbers of every claim we have.",
+      "quadrant": "LQLS",
+      "shape": "list",
+      "goldSql": "SELECT Company_Claim_Number FROM main.claim ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312701
+          ],
+          [
+            12312702
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-s-the-sum-of-every-claim-amount-recorded-re-0f2cff",
+      "question": "What's the sum of every claim amount recorded, regardless of type?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT SUM(Claim_Amount) AS total_claim_amount FROM main.claim_amount",
+      "gold": {
+        "columns": [
+          "total_claim_amount"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            13600
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-single-largest-claim-amount-entry-b79aa3",
+      "question": "What is the single largest claim amount entry?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT MAX(Claim_Amount) AS largest_amount FROM main.claim_amount",
+      "gold": {
+        "columns": [
+          "largest_amount"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            2400
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-party-roles-are-defined-show-the-role-names-480baa",
+      "question": "What party roles are defined? Show the role names.",
+      "quadrant": "LQLS",
+      "shape": "list",
+      "goldSql": "SELECT Party_Role_Name FROM main.party_role ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Party_Role_Name"
+        ],
+        "rowCount": 3,
+        "rows": [
+          [
+            "Agent"
+          ],
+          [
+            "PolicyHolder"
+          ],
+          [
+            "Underwriter"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-name-of-the-insurance-company-on-fil-5a5a4b",
+      "question": "What is the name of the insurance company on file, and what short name does it go by?",
+      "quadrant": "LQLS",
+      "shape": "list",
+      "goldSql": "SELECT Organization_Name, Alternate_Name FROM main.organizations",
+      "gold": {
+        "columns": [
+          "Organization_Name",
+          "Alternate_Name"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "Mesa Underwriters Specialty Insurance Company",
+            "MUSIC"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-street-addresses-are-in-zip-code-78704-d069b4",
+      "question": "Which street addresses are in ZIP code 78704?",
+      "quadrant": "LQLS",
+      "shape": "list",
+      "goldSql": "SELECT Line_1_Address FROM main.location_address WHERE Postal_Code = 78704 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Line_1_Address"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            "721 Barton Springs Road"
+          ],
+          [
+            "801 Post Oak Drive"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-addresses-do-we-have-in-each-zip-code-e98da9",
+      "question": "How many addresses do we have in each ZIP code?",
+      "quadrant": "LQLS",
+      "shape": "grouped",
+      "goldSql": "SELECT Postal_Code, COUNT(*) AS addresses FROM main.location_address GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Postal_Code",
+          "addresses"
+        ],
+        "rowCount": 7,
+        "rows": [
+          [
+            78701,
+            1
+          ],
+          [
+            78702,
+            1
+          ],
+          [
+            78704,
+            2
+          ],
+          [
+            78732,
+            1
+          ],
+          [
+            78738,
+            1
+          ],
+          [
+            78751,
+            1
+          ],
+          [
+            78756,
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-city-are-our-recorded-addresses-in-6b6def",
+      "question": "What city are our recorded addresses in?",
+      "quadrant": "LQLS",
+      "shape": "list",
+      "goldSql": "SELECT DISTINCT Municipality_Name FROM main.location_address",
+      "gold": {
+        "columns": [
+          "Municipality_Name"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "Austin"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-are-the-latitude-and-longitude-of-721-barto-6398b0",
+      "question": "What are the latitude and longitude of 721 Barton Springs Road?",
+      "quadrant": "LQLS",
+      "shape": "list",
+      "goldSql": "SELECT p.Latitude_Value, p.Longitude_Value FROM main.pysical_location p JOIN main.location_address a ON a.Location_Address_Identifier = p.Location_Address_Identifier WHERE a.Line_1_Address = '721 Barton Springs Road'",
+      "gold": {
+        "columns": [
+          "Latitude_Value",
+          "Longitude_Value"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            30.258621,
+            -97.751981
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-our-total-written-premium-across-all-pol-a4f355",
+      "question": "What is our total written premium across all policies?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT SUM(Policy_Amount) AS total_premium FROM (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t",
+      "gold": {
+        "columns": [
+          "total_premium"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            98000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-list-the-first-middle-and-last-names-of-everyone-5b253b",
+      "question": "List the first, middle and last names of everyone on file whose name is recorded.",
+      "quadrant": "LQLS",
+      "shape": "list",
+      "goldSql": "SELECT First_Name, Middle_Name, Last_Name FROM main.person WHERE First_Name IS NOT NULL ORDER BY Last_Name",
+      "gold": {
+        "columns": [
+          "First_Name",
+          "Middle_Name",
+          "Last_Name"
+        ],
+        "rowCount": 3,
+        "rows": [
+          [
+            "Bob",
+            "Insurance",
+            "Agent"
+          ],
+          [
+            "Mary",
+            "Policy",
+            "Holder"
+          ],
+          [
+            "Alice",
+            "Under",
+            "Writer"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-people-on-file-have-no-first-name-recor-a9ea70",
+      "question": "How many people on file have no first name recorded?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(*) AS people FROM main.person WHERE First_Name IS NULL",
+      "gold": {
+        "columns": [
+          "people"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            26
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-total-loss-reserve-held-across-all-c-9dfa7c",
+      "question": "What is the total loss reserve held across all claims?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT SUM(ca.Claim_Amount) AS total_loss_reserve FROM main.claim_amount ca JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier",
+      "gold": {
+        "columns": [
+          "total_loss_reserve"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            3100
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-much-have-we-paid-out-in-claim-expenses-in-t-058a62",
+      "question": "How much have we paid out in claim expenses in total?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT SUM(ca.Claim_Amount) AS total_expense_paid FROM main.claim_amount ca JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier",
+      "gold": {
+        "columns": [
+          "total_expense_paid"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            3700
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-assessment-results-came-back-as-ok-6adc87",
+      "question": "How many assessment results came back as OK?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(*) AS ok_results FROM main.assessment_result WHERE Assessment_Result_Type_Code = 'OK'",
+      "gold": {
+        "columns": [
+          "ok_results"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            2
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-when-did-the-assessment-that-started-in-may-2019-b10c0c",
+      "question": "When did the assessment that started in May 2019 end?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT End_Date FROM main.assessment WHERE Begin_Date >= DATE '2019-05-01' AND Begin_Date < DATE '2019-06-01'",
+      "gold": {
+        "columns": [
+          "End_Date"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "2019-05-27"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-coverage-terms-has-policy-31003000336-h-184518",
+      "question": "How many coverage terms has policy 31003000336 had?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(*) AS coverage_terms FROM main.policy_coverage_detail d JOIN main.policy p ON p.Policy_Identifier = d.Policy_Identifier WHERE p.Policy_Number = 31003000336",
+      "gold": {
+        "columns": [
+          "coverage_terms"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            5
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-on-what-date-did-the-loss-event-behind-claim-123-9db6a3",
+      "question": "On what date did the loss event behind claim 12312702 happen?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT o.Occurrence_Begin_Date FROM main.claim c JOIN main.occurrences o ON o.Occurrence_Identifier = c.Occurrence_Identifier WHERE c.Company_Claim_Number = 12312702",
+      "gold": {
+        "columns": [
+          "Occurrence_Begin_Date"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "2019-06-01"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-catastrophe-is-claim-12312701-linked-to-770daf",
+      "question": "Which catastrophe is claim 12312701 linked to?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT k.Catastrophe_Name FROM main.claim c JOIN main.catastrophe k ON k.Catastrophe_Identifier = c.Catastrophe_Identifier WHERE c.Company_Claim_Number = 12312701",
+      "gold": {
+        "columns": [
+          "Catastrophe_Name"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "Fire"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-geographic-locations-do-we-have-in-texa-2fd4fe",
+      "question": "How many geographic locations do we have in Texas?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(*) AS locations FROM main.geographic_location WHERE State_Code = 'TX'",
+      "gold": {
+        "columns": [
+          "locations"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            8
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-annual-premium-was-charged-for-the-coverage-94a207",
+      "question": "What annual premium was charged for the coverage term that began on January 1, 2017?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT Policy_Amount AS premium FROM (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t WHERE Effective_Date = DATE '2017-01-01'",
+      "gold": {
+        "columns": [
+          "premium"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            17000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-earliest-loss-occurrence-date-we-hav-875d54",
+      "question": "What is the earliest loss occurrence date we have?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT MIN(Occurrence_Begin_Date) AS earliest_loss_date FROM main.occurrences",
+      "gold": {
+        "columns": [
+          "earliest_loss_date"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "2019-01-14"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-amount-entries-have-been-recorded-again-707b8f",
+      "question": "How many amount entries have been recorded against each claim? Show the claim number.",
+      "quadrant": "LQLS",
+      "shape": "grouped",
+      "goldSql": "SELECT c.Company_Claim_Number, COUNT(*) AS amount_entries FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "amount_entries"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312701,
+            4
+          ],
+          [
+            12312702,
+            4
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-zip-code-for-5315-martin-ave-3af63c",
+      "question": "What is the ZIP code for 5315 Martin Ave?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT Postal_Code FROM main.location_address WHERE Line_1_Address = '5315 Martin Ave'",
+      "gold": {
+        "columns": [
+          "Postal_Code"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            78751
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-policy-has-the-most-recent-effective-date-659c69",
+      "question": "Which policy has the most recent effective date? Just the policy number.",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT Policy_Number FROM main.policy ORDER BY Effective_Date DESC LIMIT 1",
+      "gold": {
+        "columns": [
+          "Policy_Number"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            31003000337
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-days-did-the-assessment-that-began-in-n-2fa5f9",
+      "question": "How many days did the assessment that began in November 2014 take?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT DATE_DIFF('day', Begin_Date, End_Date) AS days FROM main.assessment WHERE Begin_Date >= DATE '2014-11-01' AND Begin_Date < DATE '2014-12-01'",
+      "gold": {
+        "columns": [
+          "days"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            44
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-fire-claims-were-on-homes-without-a-fir-91121a",
+      "question": "How many fire claims were on homes without a fireplace that were built before 1970?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(*) AS claims FROM main.fire_claim WHERE Fireplace = 'no' AND Year_Built < 1970",
+      "gold": {
+        "columns": [
+          "claims"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            19
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-s-the-average-annual-premium-per-coverage-t-4ed7d6",
+      "question": "What's the average annual premium per coverage term?",
+      "quadrant": "LQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT AVG(Policy_Amount) AS avg_premium FROM (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t",
+      "gold": {
+        "columns": [
+          "avg_premium"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            16333.333333333334
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-claims-were-opened-in-june-2019-give-the-c-496152",
+      "question": "Which claims were opened in June 2019? Give the claim numbers.",
+      "quadrant": "LQLS",
+      "shape": "list",
+      "goldSql": "SELECT Company_Claim_Number FROM main.claim WHERE Claim_Open_Date >= DATE '2019-06-01' AND Claim_Open_Date < DATE '2019-07-01'",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            12312702
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-compare-the-average-loss-ratio-of-fire-claims-on-1881e5",
+      "question": "Compare the average loss ratio of fire claims on homes with a fireplace versus homes without one.",
+      "quadrant": "HQLS",
+      "shape": "grouped",
+      "goldSql": "SELECT Fireplace, AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Fireplace",
+          "avg_loss_ratio"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            "no",
+            0.5609374999999999
+          ],
+          [
+            "yes",
+            0.6580924855491331
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-firefighter-crew-size-has-the-highest-aver-b08bfa",
+      "question": "Which firefighter crew size has the highest average loss ratio?",
+      "quadrant": "HQLS",
+      "shape": "ranked",
+      "goldSql": "SELECT Number_of_Firefighters AS firefighters FROM main.fire_claim GROUP BY 1 ORDER BY AVG(Loss_Ratio) DESC LIMIT 1",
+      "gold": {
+        "columns": [
+          "firefighters"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            5
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-percentage-of-fire-claims-had-a-loss-ratio-ba5818",
+      "question": "What percentage of fire claims had a loss ratio above 1?",
+      "quadrant": "HQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT 100.0 * COUNT(*) FILTER (WHERE Loss_Ratio > 1) / COUNT(*) AS pct_over_1 FROM main.fire_claim",
+      "gold": {
+        "columns": [
+          "pct_over_1"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            10
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-s-the-average-loss-ratio-for-properties-wit-fc0a0a",
+      "question": "What's the average loss ratio for properties within 4 miles of a fire station compared with those farther away?",
+      "quadrant": "HQLS",
+      "shape": "grouped",
+      "goldSql": "SELECT CASE WHEN Nearest_Firestation_miles <= 4 THEN 'within 4 miles' ELSE 'more than 4 miles' END AS distance_band, AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim GROUP BY 1 ORDER BY 1 DESC",
+      "gold": {
+        "columns": [
+          "distance_band",
+          "avg_loss_ratio"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            "within 4 miles",
+            0.30324675324675343
+          ],
+          [
+            "more than 4 miles",
+            0.8472656250000009
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-three-distances-to-the-nearest-fire-statio-34309c",
+      "question": "Which three distances to the nearest fire station (in miles) have the highest average loss ratio?",
+      "quadrant": "HQLS",
+      "shape": "ranked",
+      "goldSql": "SELECT Nearest_Firestation_miles AS miles, AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim GROUP BY 1 ORDER BY 2 DESC LIMIT 3",
+      "gold": {
+        "columns": [
+          "miles",
+          "avg_loss_ratio"
+        ],
+        "rowCount": 3,
+        "rows": [
+          [
+            16,
+            0.894871794871795
+          ],
+          [
+            8,
+            0.8894736842105264
+          ],
+          [
+            20,
+            0.8781249999999998
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-show-average-loss-ratio-by-the-decade-the-home-w-831ae8",
+      "question": "Show average loss ratio by the decade the home was built.",
+      "quadrant": "HQLS",
+      "shape": "grouped",
+      "goldSql": "SELECT (Year_Built // 10) * 10 AS decade_built, AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "decade_built",
+          "avg_loss_ratio"
+        ],
+        "rowCount": 7,
+        "rows": [
+          [
+            1960,
+            0.7106918238993714
+          ],
+          [
+            1970,
+            0.7204081632653061
+          ],
+          [
+            1980,
+            0.6945355191256825
+          ],
+          [
+            1990,
+            0.6148437500000002
+          ],
+          [
+            2000,
+            0.514141414141414
+          ],
+          [
+            2010,
+            0.5030927835051547
+          ],
+          [
+            2020,
+            0.4
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-is-there-a-relationship-between-distance-to-the-0cd4d1",
+      "question": "Is there a relationship between distance to the nearest fire station and loss ratio? Give me the correlation coefficient.",
+      "quadrant": "HQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT CORR(Nearest_Firestation_miles, Loss_Ratio) AS correlation FROM main.fire_claim",
+      "gold": {
+        "columns": [
+          "correlation"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            0.6831244971823931
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-of-the-homes-built-before-1980-that-had-a-fire-c-d04b71",
+      "question": "Of the homes built before 1980 that had a fire claim, what share had a fireplace?",
+      "quadrant": "HQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT 100.0 * COUNT(*) FILTER (WHERE Fireplace = 'yes') / COUNT(*) AS pct_with_fireplace FROM main.fire_claim WHERE Year_Built < 1980",
+      "gold": {
+        "columns": [
+          "pct_with_fireplace"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            87.90849673202614
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-bucket-fire-claims-into-low-under-0-5-medium-0-5-bb556e",
+      "question": "Bucket fire claims into low (under 0.5), medium (0.5 to 0.8) and high (above 0.8) loss ratio bands and count each band.",
+      "quadrant": "HQLS",
+      "shape": "grouped",
+      "goldSql": "SELECT CASE WHEN Loss_Ratio < 0.5 THEN 'low' WHEN Loss_Ratio <= 0.8 THEN 'medium' ELSE 'high' END AS band, COUNT(*) AS claims FROM main.fire_claim GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "band",
+          "claims"
+        ],
+        "rowCount": 3,
+        "rows": [
+          [
+            "high",
+            249
+          ],
+          [
+            "low",
+            253
+          ],
+          [
+            "medium",
+            318
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-decade-of-construction-produced-the-most-f-9d1710",
+      "question": "Which decade of construction produced the most fire claims?",
+      "quadrant": "HQLS",
+      "shape": "ranked",
+      "goldSql": "SELECT (Year_Built // 10) * 10 AS decade_built FROM main.fire_claim GROUP BY 1 ORDER BY COUNT(*) DESC LIMIT 1",
+      "gold": {
+        "columns": [
+          "decade_built"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            1980
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-s-the-average-build-year-of-homes-whose-los-a3d5b5",
+      "question": "What's the average build year of homes whose loss ratio was 1.0 or higher, versus those below 1.0?",
+      "quadrant": "HQLS",
+      "shape": "grouped",
+      "goldSql": "SELECT CASE WHEN Loss_Ratio >= 1.0 THEN '1.0 or higher' ELSE 'below 1.0' END AS loss_ratio_group, AVG(Year_Built) AS avg_year_built FROM main.fire_claim GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "loss_ratio_group",
+          "avg_year_built"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            "1.0 or higher",
+            1982.5602409638554
+          ],
+          [
+            "below 1.0",
+            1987.5550458715597
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-fireplace-status-give-the-claim-count-a-822311",
+      "question": "For each fireplace status, give the claim count and its percentage of all fire claims.",
+      "quadrant": "HQLS",
+      "shape": "grouped",
+      "goldSql": "SELECT Fireplace, COUNT(*) AS claims, 100.0 * COUNT(*) / SUM(COUNT(*)) OVER () AS pct_of_claims FROM main.fire_claim GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Fireplace",
+          "claims",
+          "pct_of_claims"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            "no",
+            128,
+            15.609756097560975
+          ],
+          [
+            "yes",
+            692,
+            84.39024390243902
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-firefighter-crew-sizes-have-an-average-los-9adb5d",
+      "question": "Which firefighter crew sizes have an average loss ratio above the overall fire claim average?",
+      "quadrant": "HQLS",
+      "shape": "list",
+      "goldSql": "SELECT Number_of_Firefighters AS firefighters FROM main.fire_claim GROUP BY 1 HAVING AVG(Loss_Ratio) > (SELECT AVG(Loss_Ratio) FROM main.fire_claim) ORDER BY 1",
+      "gold": {
+        "columns": [
+          "firefighters"
+        ],
+        "rowCount": 3,
+        "rows": [
+          [
+            4
+          ],
+          [
+            5
+          ],
+          [
+            6
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-much-higher-is-the-average-loss-ratio-for-ho-e1af07",
+      "question": "How much higher is the average loss ratio for homes 10 or more miles from a station than for homes within 3 miles?",
+      "quadrant": "HQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT AVG(Loss_Ratio) FILTER (WHERE Nearest_Firestation_miles >= 10) - AVG(Loss_Ratio) FILTER (WHERE Nearest_Firestation_miles <= 3) AS difference FROM main.fire_claim",
+      "gold": {
+        "columns": [
+          "difference"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            0.5431326709526594
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-are-the-two-most-common-crew-sizes-on-fire-cc0f92",
+      "question": "What are the two most common crew sizes on fire claims, and how many claims had each?",
+      "quadrant": "HQLS",
+      "shape": "ranked",
+      "goldSql": "SELECT Number_of_Firefighters AS firefighters, COUNT(*) AS claims FROM main.fire_claim GROUP BY 1 ORDER BY 2 DESC LIMIT 2",
+      "gold": {
+        "columns": [
+          "firefighters",
+          "claims"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            5,
+            143
+          ],
+          [
+            6,
+            124
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-homes-built-in-2000-or-later-that-have-a-fir-e9e1d9",
+      "question": "For homes built in 2000 or later that have a fireplace, what's the average loss ratio when 6 or fewer firefighters responded versus 7 or more?",
+      "quadrant": "HQLS",
+      "shape": "grouped",
+      "goldSql": "SELECT CASE WHEN Number_of_Firefighters <= 6 THEN '6 or fewer' ELSE '7 or more' END AS crew, AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim WHERE Year_Built >= 2000 AND Fireplace = 'yes' GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "crew",
+          "avg_loss_ratio"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            "6 or fewer",
+            0.5960000000000002
+          ],
+          [
+            "7 or more",
+            0.46904761904761905
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-among-fire-claims-more-than-4-miles-from-a-stati-a90284",
+      "question": "Among fire claims more than 4 miles from a station, what fraction had a loss ratio of 0.8 or more?",
+      "quadrant": "HQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(*) FILTER (WHERE Loss_Ratio >= 0.8) * 1.0 / COUNT(*) AS fraction FROM main.fire_claim WHERE Nearest_Firestation_miles > 4",
+      "gold": {
+        "columns": [
+          "fraction"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            0.65625
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-single-construction-year-has-the-most-fire-a29872",
+      "question": "Which single construction year has the most fire claims?",
+      "quadrant": "HQLS",
+      "shape": "ranked",
+      "goldSql": "SELECT Year_Built FROM main.fire_claim GROUP BY 1 ORDER BY COUNT(*) DESC LIMIT 1",
+      "gold": {
+        "columns": [
+          "Year_Built"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            1983
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-s-the-average-crew-size-on-fire-claims-wher-1862c6",
+      "question": "What's the average crew size on fire claims where the loss ratio exceeded 1, compared with all the others?",
+      "quadrant": "HQLS",
+      "shape": "grouped",
+      "goldSql": "SELECT CASE WHEN Loss_Ratio > 1 THEN 'above 1' ELSE '1 or below' END AS loss_ratio_group, AVG(Number_of_Firefighters) AS avg_firefighters FROM main.fire_claim GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "loss_ratio_group",
+          "avg_firefighters"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            "1 or below",
+            6.925474254742547
+          ],
+          [
+            "above 1",
+            6.353658536585366
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-spread-out-are-fire-loss-ratios-give-me-the-7965b9",
+      "question": "How spread out are fire loss ratios? Give me the standard deviation.",
+      "quadrant": "HQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT STDDEV_SAMP(Loss_Ratio) AS stddev_loss_ratio FROM main.fire_claim",
+      "gold": {
+        "columns": [
+          "stddev_loss_ratio"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            0.3074749969678608
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-rank-the-distance-to-station-values-by-how-many-0bdd51",
+      "question": "Rank the distance-to-station values by how many fire claims they have and show the top five.",
+      "quadrant": "HQLS",
+      "shape": "ranked",
+      "goldSql": "SELECT Nearest_Firestation_miles AS miles, COUNT(*) AS claims FROM main.fire_claim GROUP BY 1 ORDER BY 2 DESC LIMIT 5",
+      "gold": {
+        "columns": [
+          "miles",
+          "claims"
+        ],
+        "rowCount": 5,
+        "rows": [
+          [
+            1,
+            83
+          ],
+          [
+            3,
+            79
+          ],
+          [
+            2,
+            74
+          ],
+          [
+            4,
+            72
+          ],
+          [
+            16,
+            39
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-crew-size-what-share-of-its-fire-claims-0ef69c",
+      "question": "For each crew size, what share of its fire claims had a loss ratio above 0.8?",
+      "quadrant": "HQLS",
+      "shape": "grouped",
+      "goldSql": "SELECT Number_of_Firefighters AS firefighters, 100.0 * COUNT(*) FILTER (WHERE Loss_Ratio > 0.8) / COUNT(*) AS pct_above_08 FROM main.fire_claim GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "firefighters",
+          "pct_above_08"
+        ],
+        "rowCount": 7,
+        "rows": [
+          [
+            4,
+            36.75213675213675
+          ],
+          [
+            5,
+            44.75524475524475
+          ],
+          [
+            6,
+            37.096774193548384
+          ],
+          [
+            7,
+            25.233644859813083
+          ],
+          [
+            8,
+            20.869565217391305
+          ],
+          [
+            9,
+            25.96153846153846
+          ],
+          [
+            10,
+            16.363636363636363
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-among-homes-without-a-fireplace-which-decade-of-92aaa9",
+      "question": "Among homes without a fireplace, which decade of construction has the highest average loss ratio?",
+      "quadrant": "HQLS",
+      "shape": "ranked",
+      "goldSql": "SELECT (Year_Built // 10) * 10 AS decade_built FROM main.fire_claim WHERE Fireplace = 'no' GROUP BY 1 ORDER BY AVG(Loss_Ratio) DESC LIMIT 1",
+      "gold": {
+        "columns": [
+          "decade_built"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            1970
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-fire-claims-had-both-a-loss-ratio-of-at-b4bc01",
+      "question": "How many fire claims had both a loss ratio of at least 0.9 and a fire station more than 10 miles away?",
+      "quadrant": "HQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(*) AS claims FROM main.fire_claim WHERE Loss_Ratio >= 0.9 AND Nearest_Firestation_miles > 10",
+      "gold": {
+        "columns": [
+          "claims"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            153
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-by-what-percentage-did-the-annual-premium-grow-f-91586b",
+      "question": "By what percentage did the annual premium grow from the term starting January 1, 2015 to the term starting January 1, 2019?",
+      "quadrant": "HQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT 100.0 * (MAX(Policy_Amount) FILTER (WHERE Effective_Date = DATE '2019-01-01') - MAX(Policy_Amount) FILTER (WHERE Effective_Date = DATE '2015-01-01')) / MAX(Policy_Amount) FILTER (WHERE Effective_Date = DATE '2015-01-01') AS pct_growth FROM (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t",
+      "gold": {
+        "columns": [
+          "pct_growth"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            33.333333333333336
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-every-premium-charge-show-the-term-start-dat-486e59",
+      "question": "For every premium charge, show the term start date, the premium, and the change from the same policy's previous term.",
+      "quadrant": "HQLS",
+      "shape": "list",
+      "goldSql": "SELECT Effective_Date, Policy_Amount AS premium, Policy_Amount - LAG(Policy_Amount) OVER (PARTITION BY Policy_Identifier ORDER BY Effective_Date) AS change_from_prior FROM (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t ORDER BY Policy_Identifier, Effective_Date",
+      "gold": {
+        "columns": [
+          "Effective_Date",
+          "premium",
+          "change_from_prior"
+        ],
+        "rowCount": 6,
+        "rows": [
+          [
+            "2015-01-01",
+            15000,
+            null
+          ],
+          [
+            "2016-01-01",
+            16000,
+            1000
+          ],
+          [
+            "2017-01-01",
+            17000,
+            1000
+          ],
+          [
+            "2018-01-01",
+            18000,
+            1000
+          ],
+          [
+            "2019-01-01",
+            20000,
+            2000
+          ],
+          [
+            "2019-06-01",
+            12000,
+            null
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-rank-all-catastrophes-by-how-many-claims-are-tie-48c160",
+      "question": "Rank all catastrophes by how many claims are tied to them, including catastrophes with no claims.",
+      "quadrant": "HQLS",
+      "shape": "ranked",
+      "goldSql": "SELECT k.Catastrophe_Name, COUNT(c.Claim_Identifier) AS claims FROM main.catastrophe k LEFT JOIN main.claim c ON c.Catastrophe_Identifier = k.Catastrophe_Identifier GROUP BY 1 ORDER BY 2 DESC, 1",
+      "gold": {
+        "columns": [
+          "Catastrophe_Name",
+          "claims"
+        ],
+        "rowCount": 4,
+        "rows": [
+          [
+            "Fire",
+            2
+          ],
+          [
+            "Flood",
+            0
+          ],
+          [
+            "Hurricane",
+            0
+          ],
+          [
+            "Tornado",
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-coverage-term-what-is-the-premium-as-a-a2f1e4",
+      "question": "For each coverage term, what is the premium as a percentage of the other (non-premium) amount recorded for that same term?",
+      "quadrant": "HQLS",
+      "shape": "list",
+      "goldSql": "SELECT p.Effective_Date, 100.0 * p.Policy_Amount / o.Policy_Amount AS premium_pct FROM (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) p JOIN main.policy_amount o ON o.Policy_Coverage_Detail_Identifier = p.Policy_Coverage_Detail_Identifier AND o.Policy_Amount_Identifier NOT IN (SELECT Policy_Amount_Identifier FROM main.premium) ORDER BY p.Policy_Identifier, p.Effective_Date",
+      "gold": {
+        "columns": [
+          "Effective_Date",
+          "premium_pct"
+        ],
+        "rowCount": 6,
+        "rows": [
+          [
+            "2015-01-01",
+            1.5
+          ],
+          [
+            "2016-01-01",
+            1.6
+          ],
+          [
+            "2017-01-01",
+            1.7
+          ],
+          [
+            "2018-01-01",
+            1.8
+          ],
+          [
+            "2019-01-01",
+            2
+          ],
+          [
+            "2019-06-01",
+            2
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-claim-stayed-open-the-longest-and-for-how-23b438",
+      "question": "Which claim stayed open the longest, and for how many days?",
+      "quadrant": "HQLS",
+      "shape": "ranked",
+      "goldSql": "SELECT Company_Claim_Number, DATE_DIFF('day', Claim_Open_Date, Claim_Close_Date) AS days_open FROM main.claim ORDER BY 2 DESC LIMIT 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "days_open"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            12312702,
+            25
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-s-the-average-number-of-days-it-took-to-clo-8e98c8",
+      "question": "What's the average number of days it took to close a claim?",
+      "quadrant": "HQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT AVG(DATE_DIFF('day', Claim_Open_Date, Claim_Close_Date)) AS avg_days_to_close FROM main.claim",
+      "gold": {
+        "columns": [
+          "avg_days_to_close"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            20.5
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-claim-how-many-days-passed-between-the-6abf61",
+      "question": "For each claim, how many days passed between the loss happening and the claim being opened?",
+      "quadrant": "HQLS",
+      "shape": "list",
+      "goldSql": "SELECT c.Company_Claim_Number, DATE_DIFF('day', o.Occurrence_Begin_Date, c.Claim_Open_Date) AS days_to_open FROM main.claim c JOIN main.occurrences o ON o.Occurrence_Identifier = c.Occurrence_Identifier ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "days_to_open"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312701,
+            1
+          ],
+          [
+            12312702,
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-rank-claims-by-the-total-of-all-amounts-recorded-07a68c",
+      "question": "Rank claims by the total of all amounts recorded against them, highest first.",
+      "quadrant": "HQLS",
+      "shape": "ranked",
+      "goldSql": "SELECT c.Company_Claim_Number, SUM(ca.Claim_Amount) AS total_amount FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier GROUP BY 1 ORDER BY 2 DESC",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "total_amount"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312702,
+            9000
+          ],
+          [
+            12312701,
+            4600
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-policy-runs-for-longer-overall-and-by-how-16dd6a",
+      "question": "Which policy runs for longer overall, and by how many days is its term longer than the other policy's?",
+      "quadrant": "HQLS",
+      "shape": "ranked",
+      "goldSql": "SELECT Policy_Number, DATE_DIFF('day', Effective_Date, Expiration_Date) - (SELECT MIN(DATE_DIFF('day', Effective_Date, Expiration_Date)) FROM main.policy) AS days_longer FROM main.policy ORDER BY DATE_DIFF('day', Effective_Date, Expiration_Date) DESC LIMIT 1",
+      "gold": {
+        "columns": [
+          "Policy_Number",
+          "days_longer"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            31003000336,
+            1460
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-recorded-address-is-the-furthest-north-giv-768b14",
+      "question": "Which recorded address is the furthest north? Give the street address and its latitude.",
+      "quadrant": "HQLS",
+      "shape": "ranked",
+      "goldSql": "SELECT a.Line_1_Address, p.Latitude_Value FROM main.pysical_location p JOIN main.location_address a ON a.Location_Address_Identifier = p.Location_Address_Identifier ORDER BY p.Latitude_Value DESC LIMIT 1",
+      "gold": {
+        "columns": [
+          "Line_1_Address",
+          "Latitude_Value"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "13017 Zen Gardens Way",
+            30.34149
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-zip-codes-have-more-than-one-recorded-addr-78b781",
+      "question": "Which ZIP codes have more than one recorded address, and how many addresses does each have?",
+      "quadrant": "HQLS",
+      "shape": "grouped",
+      "goldSql": "SELECT Postal_Code, COUNT(*) AS addresses FROM main.location_address GROUP BY 1 HAVING COUNT(*) > 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Postal_Code",
+          "addresses"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            78704,
+            2
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-claim-amount-entries-are-2-000-or-more-07f464",
+      "question": "How many claim amount entries are 2,000 or more, and what do they add up to?",
+      "quadrant": "HQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(*) AS entries, SUM(Claim_Amount) AS total FROM main.claim_amount WHERE Claim_Amount >= 2000",
+      "gold": {
+        "columns": [
+          "entries",
+          "total"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            4,
+            9000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-claim-show-the-smallest-and-largest-amo-991462",
+      "question": "For each claim, show the smallest and largest amount recorded and the spread between them.",
+      "quadrant": "HQLS",
+      "shape": "grouped",
+      "goldSql": "SELECT c.Company_Claim_Number, MIN(ca.Claim_Amount) AS smallest, MAX(ca.Claim_Amount) AS largest, MAX(ca.Claim_Amount) - MIN(ca.Claim_Amount) AS spread FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "smallest",
+          "largest",
+          "spread"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312701,
+            1000,
+            1300,
+            300
+          ],
+          [
+            12312702,
+            2100,
+            2400,
+            300
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-share-of-all-written-premium-was-charged-on-3bb7bf",
+      "question": "What share of all written premium was charged on coverage terms that started in 2019?",
+      "quadrant": "HQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT 100.0 * SUM(Policy_Amount) FILTER (WHERE YEAR(Effective_Date) = 2019) / SUM(Policy_Amount) AS pct_2019 FROM (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t",
+      "gold": {
+        "columns": [
+          "pct_2019"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            32.6530612244898
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-was-the-average-length-of-our-underwriting-64b885",
+      "question": "What was the average length of our underwriting assessments, in days?",
+      "quadrant": "HQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT AVG(DATE_DIFF('day', a.Begin_Date, a.End_Date)) AS avg_days FROM main.assessment a JOIN main.agreement_assessment aa ON aa.Assessment_Identifier = a.Assessment_Identifier",
+      "gold": {
+        "columns": [
+          "avg_days"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            35
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-year-how-many-coverage-terms-started-an-8b8be2",
+      "question": "For each year, how many coverage terms started and what total premium was charged on them?",
+      "quadrant": "HQLS",
+      "shape": "grouped",
+      "goldSql": "SELECT YEAR(Effective_Date) AS year, COUNT(*) AS terms, SUM(Policy_Amount) AS total_premium FROM (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "year",
+          "terms",
+          "total_premium"
+        ],
+        "rowCount": 5,
+        "rows": [
+          [
+            2015,
+            1,
+            15000
+          ],
+          [
+            2016,
+            1,
+            16000
+          ],
+          [
+            2017,
+            1,
+            17000
+          ],
+          [
+            2018,
+            1,
+            18000
+          ],
+          [
+            2019,
+            2,
+            32000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-firefighter-crew-size-has-the-lowest-share-ca7846",
+      "question": "Which firefighter crew size has the lowest share of homes with a fireplace among its fire claims?",
+      "quadrant": "HQLS",
+      "shape": "ranked",
+      "goldSql": "SELECT Number_of_Firefighters AS firefighters FROM main.fire_claim GROUP BY 1 ORDER BY AVG(CASE WHEN Fireplace = 'yes' THEN 1.0 ELSE 0 END) ASC LIMIT 1",
+      "gold": {
+        "columns": [
+          "firefighters"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            9
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-s-the-average-loss-ratio-for-fire-claims-on-8c7733",
+      "question": "What's the average loss ratio for fire claims on homes built in the 1960s that are more than 10 miles from a station?",
+      "quadrant": "HQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim WHERE Year_Built BETWEEN 1960 AND 1969 AND Nearest_Firestation_miles > 10",
+      "gold": {
+        "columns": [
+          "avg_loss_ratio"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            0.8532467532467535
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-show-the-average-distance-to-the-nearest-station-8c4b21",
+      "question": "Show the average distance to the nearest station for each loss ratio value, from the highest loss ratio down.",
+      "quadrant": "HQLS",
+      "shape": "grouped",
+      "goldSql": "SELECT Loss_Ratio, AVG(Nearest_Firestation_miles) AS avg_miles FROM main.fire_claim GROUP BY 1 ORDER BY 1 DESC",
+      "gold": {
+        "columns": [
+          "Loss_Ratio",
+          "avg_miles"
+        ],
+        "rowCount": 11,
+        "rows": [
+          [
+            1.1,
+            12.512195121951219
+          ],
+          [
+            1,
+            12.869047619047619
+          ],
+          [
+            0.9,
+            12.493975903614459
+          ],
+          [
+            0.8,
+            12.655172413793103
+          ],
+          [
+            0.7,
+            12.22680412371134
+          ],
+          [
+            0.6,
+            12.69620253164557
+          ],
+          [
+            0.5,
+            2.6
+          ],
+          [
+            0.4,
+            2.217948717948718
+          ],
+          [
+            0.3,
+            2.280701754385965
+          ],
+          [
+            0.2,
+            2.7586206896551726
+          ],
+          [
+            0.1,
+            2.5
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-fire-claims-have-a-loss-ratio-above-the-975f9b",
+      "question": "How many fire claims have a loss ratio above the overall average?",
+      "quadrant": "HQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(*) AS claims FROM main.fire_claim WHERE Loss_Ratio > (SELECT AVG(Loss_Ratio) FROM main.fire_claim)",
+      "gold": {
+        "columns": [
+          "claims"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            433
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-split-fire-claims-into-homes-built-before-1985-a-a5c191",
+      "question": "Split fire claims into homes built before 1985 and those built in 1985 or later: how many claims and what average loss ratio in each group?",
+      "quadrant": "HQLS",
+      "shape": "grouped",
+      "goldSql": "SELECT CASE WHEN Year_Built < 1985 THEN 'before 1985' ELSE '1985 or later' END AS build_group, COUNT(*) AS claims, AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "build_group",
+          "claims",
+          "avg_loss_ratio"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            "1985 or later",
+            418,
+            0.5885167464114831
+          ],
+          [
+            "before 1985",
+            402,
+            0.6995024875621881
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-among-fire-claims-with-a-loss-ratio-of-1-1-what-50478c",
+      "question": "Among fire claims with a loss ratio of 1.1, what percentage were on homes with a fireplace?",
+      "quadrant": "HQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT 100.0 * COUNT(*) FILTER (WHERE Fireplace = 'yes') / COUNT(*) AS pct_with_fireplace FROM main.fire_claim WHERE Loss_Ratio = 1.1",
+      "gold": {
+        "columns": [
+          "pct_with_fireplace"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            90.2439024390244
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-crew-size-on-average-responds-to-the-prope-1095ed",
+      "question": "Which crew size, on average, responds to the properties farthest from a fire station?",
+      "quadrant": "HQLS",
+      "shape": "ranked",
+      "goldSql": "SELECT Number_of_Firefighters AS firefighters FROM main.fire_claim GROUP BY 1 ORDER BY AVG(Nearest_Firestation_miles) DESC LIMIT 1",
+      "gold": {
+        "columns": [
+          "firefighters"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            5
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-average-loss-ratio-when-the-nearest-8c7ead",
+      "question": "What is the average loss ratio when the nearest station is 5 or more miles away and at least 8 firefighters responded?",
+      "quadrant": "HQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT AVG(Loss_Ratio) AS avg_loss_ratio FROM main.fire_claim WHERE Nearest_Firestation_miles >= 5 AND Number_of_Firefighters >= 8",
+      "gold": {
+        "columns": [
+          "avg_loss_ratio"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            0.8358108108108108
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-distinct-construction-years-appear-in-t-fcdf26",
+      "question": "How many distinct construction years appear in the fire claims, and how many years separate the oldest from the newest?",
+      "quadrant": "HQLS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(DISTINCT Year_Built) AS distinct_years, MAX(Year_Built) - MIN(Year_Built) AS span_years FROM main.fire_claim",
+      "gold": {
+        "columns": [
+          "distinct_years",
+          "span_years"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            61,
+            60
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-rank-the-decades-of-construction-by-the-percenta-abc798",
+      "question": "Rank the decades of construction by the percentage of their fire claims with a loss ratio above 1.",
+      "quadrant": "HQLS",
+      "shape": "ranked",
+      "goldSql": "SELECT (Year_Built // 10) * 10 AS decade_built, 100.0 * COUNT(*) FILTER (WHERE Loss_Ratio > 1) / COUNT(*) AS pct_above_1 FROM main.fire_claim GROUP BY 1 ORDER BY 2 DESC",
+      "gold": {
+        "columns": [
+          "decade_built",
+          "pct_above_1"
+        ],
+        "rowCount": 7,
+        "rows": [
+          [
+            1970,
+            14.965986394557824
+          ],
+          [
+            1980,
+            14.207650273224044
+          ],
+          [
+            1960,
+            10.69182389937107
+          ],
+          [
+            1990,
+            6.25
+          ],
+          [
+            2010,
+            6.185567010309279
+          ],
+          [
+            2000,
+            3.0303030303030303
+          ],
+          [
+            2020,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-who-is-the-policyholder-on-policy-31003000336-803bf9",
+      "question": "Who is the policyholder on policy 31003000336?",
+      "quadrant": "LQHS",
+      "shape": "list",
+      "goldSql": "SELECT pe.First_Name, pe.Last_Name FROM main.policy p JOIN main.agreement_party_role r ON r.Agreement_Identifier = p.Policy_Identifier JOIN main.person pe ON pe.Person_Identifier = r.Party_Identifier WHERE p.Policy_Number = 31003000336 AND r.Party_Role_Code = 'PH'",
+      "gold": {
+        "columns": [
+          "First_Name",
+          "Last_Name"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "Mary",
+            "Holder"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-who-is-the-agent-on-policy-31003000337-739abc",
+      "question": "Who is the agent on policy 31003000337?",
+      "quadrant": "LQHS",
+      "shape": "list",
+      "goldSql": "SELECT pe.First_Name, pe.Last_Name FROM main.policy p JOIN main.agreement_party_role r ON r.Agreement_Identifier = p.Policy_Identifier JOIN main.person pe ON pe.Person_Identifier = r.Party_Identifier WHERE p.Policy_Number = 31003000337 AND r.Party_Role_Code = 'AG'",
+      "gold": {
+        "columns": [
+          "First_Name",
+          "Last_Name"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "Bob",
+            "Agent"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-underwriter-assessed-policy-31003000337-b0dd8d",
+      "question": "Which underwriter assessed policy 31003000337?",
+      "quadrant": "LQHS",
+      "shape": "list",
+      "goldSql": "SELECT pe.First_Name, pe.Last_Name FROM main.policy p JOIN main.agreement_assessment aa ON aa.Agreement_Identifier = p.Policy_Identifier JOIN main.assesment_party_role r ON r.Assessment_Identifier = aa.Assessment_Identifier AND r.Party_Role_Code = 'UW' JOIN main.person pe ON pe.Person_Identifier = r.Party_Identifier WHERE p.Policy_Number = 31003000337",
+      "gold": {
+        "columns": [
+          "First_Name",
+          "Last_Name"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "Alice",
+            "Writer"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-list-the-policy-numbers-on-which-mary-holder-is-fa22e0",
+      "question": "List the policy numbers on which Mary Holder is the policyholder.",
+      "quadrant": "LQHS",
+      "shape": "list",
+      "goldSql": "SELECT p.Policy_Number FROM main.person pe JOIN main.agreement_party_role r ON r.Party_Identifier = pe.Person_Identifier AND r.Party_Role_Code = 'PH' JOIN main.policy p ON p.Policy_Identifier = r.Agreement_Identifier WHERE pe.First_Name = 'Mary' AND pe.Last_Name = 'Holder' ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Policy_Number"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            31003000336
+          ],
+          [
+            31003000337
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-kind-of-catastrophe-is-the-claim-on-the-pro-8f13c8",
+      "question": "What kind of catastrophe is the claim on the property at 5315 Martin Ave tied to?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT k.Catastrophe_Name FROM main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier JOIN main.catastrophe k ON k.Catastrophe_Identifier = c.Catastrophe_Identifier WHERE a.Line_1_Address = '5315 Martin Ave'",
+      "gold": {
+        "columns": [
+          "Catastrophe_Name"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "Fire"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-s-the-street-address-of-the-insured-propert-bb8e09",
+      "question": "What's the street address of the insured property for claim 12312702?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT a.Line_1_Address FROM main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier WHERE c.Company_Claim_Number = 12312702",
+      "gold": {
+        "columns": [
+          "Line_1_Address"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "13017 Zen Gardens Way"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-zip-code-is-the-property-insured-under-poli-9ee4d6",
+      "question": "What ZIP code is the property insured under policy 31003000337 in?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT DISTINCT a.Postal_Code FROM main.policy p JOIN main.policy_coverage_detail d ON d.Policy_Identifier = p.Policy_Identifier JOIN main.insurable_object io ON io.Insurable_Object_Identifier = d.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier WHERE p.Policy_Number = 31003000337",
+      "gold": {
+        "columns": [
+          "Postal_Code"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            78732
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-are-the-latitude-and-longitude-of-the-prope-205fc2",
+      "question": "What are the latitude and longitude of the property involved in claim 12312701?",
+      "quadrant": "LQHS",
+      "shape": "list",
+      "goldSql": "SELECT pl.Latitude_Value, pl.Longitude_Value FROM main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.pysical_location pl ON pl.Physical_Location_Identifier = g.Physical_Location_Identifier WHERE c.Company_Claim_Number = 12312701",
+      "gold": {
+        "columns": [
+          "Latitude_Value",
+          "Longitude_Value"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            30.31639,
+            -97.71592
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-much-loss-payment-has-been-made-on-claim-123-68e08a",
+      "question": "How much loss payment has been made on claim 12312701?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT SUM(ca.Claim_Amount) AS loss_paid FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier WHERE c.Company_Claim_Number = 12312701",
+      "gold": {
+        "columns": [
+          "loss_paid"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            1200
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-expense-reserve-on-claim-12312702-5f03c5",
+      "question": "What is the expense reserve on claim 12312702?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT SUM(ca.Claim_Amount) AS expense_reserve FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier JOIN main.expense_reserve er ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier WHERE c.Company_Claim_Number = 12312702",
+      "gold": {
+        "columns": [
+          "expense_reserve"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            2200
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-was-the-outcome-of-the-underwriting-assessm-48f382",
+      "question": "What was the outcome of the underwriting assessment on policy 31003000336?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT ar.Assessment_Result_Type_Code FROM main.policy p JOIN main.agreement_assessment aa ON aa.Agreement_Identifier = p.Policy_Identifier JOIN main.assessment_result ar ON ar.Assessment_Identifier = aa.Assessment_Identifier JOIN main.underwriting_assessment ua ON ua.Assessment_Result_Identifier = ar.Assessment_Result_Identifier WHERE p.Policy_Number = 31003000336",
+      "gold": {
+        "columns": [
+          "Assessment_Result_Type_Code"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "OK"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-role-does-alice-writer-play-a9949e",
+      "question": "What role does Alice Writer play?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT DISTINCT pr.Party_Role_Name FROM main.person pe JOIN main.assesment_party_role r ON r.Party_Identifier = pe.Person_Identifier JOIN main.party_role pr ON pr.Party_Role_Code = r.Party_Role_Code WHERE pe.First_Name = 'Alice' AND pe.Last_Name = 'Writer'",
+      "gold": {
+        "columns": [
+          "Party_Role_Name"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "Underwriter"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-on-how-many-policies-is-bob-the-agent-b79091",
+      "question": "On how many policies is Bob the agent?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(DISTINCT r.Agreement_Identifier) AS policies FROM main.person pe JOIN main.agreement_party_role r ON r.Party_Identifier = pe.Person_Identifier JOIN main.party_role pr ON pr.Party_Role_Code = r.Party_Role_Code WHERE pe.First_Name = 'Bob' AND pr.Party_Role_Name = 'Agent'",
+      "gold": {
+        "columns": [
+          "policies"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            2
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-under-which-policy-number-was-claim-12312701-cov-49e5af",
+      "question": "Under which policy number was claim 12312701 covered?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT p.Policy_Number FROM main.claim c JOIN main.claim_coverage cc ON cc.Claim_Identifier = c.Claim_Identifier JOIN main.policy_coverage_detail d ON d.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier JOIN main.policy p ON p.Policy_Identifier = d.Policy_Identifier WHERE c.Company_Claim_Number = 12312701",
+      "gold": {
+        "columns": [
+          "Policy_Number"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            31003000336
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-who-is-the-policyholder-behind-claim-12312701-4b8459",
+      "question": "Who is the policyholder behind claim 12312701?",
+      "quadrant": "LQHS",
+      "shape": "list",
+      "goldSql": "SELECT pe.First_Name, pe.Last_Name FROM main.claim c JOIN main.claim_coverage cc ON cc.Claim_Identifier = c.Claim_Identifier JOIN main.policy_coverage_detail d ON d.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier JOIN main.agreement_party_role r ON r.Agreement_Identifier = d.Policy_Identifier AND r.Party_Role_Code = 'PH' JOIN main.person pe ON pe.Person_Identifier = r.Party_Identifier WHERE c.Company_Claim_Number = 12312701",
+      "gold": {
+        "columns": [
+          "First_Name",
+          "Last_Name"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "Mary",
+            "Holder"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-agent-sold-the-policy-that-claim-12312702-dbbe6a",
+      "question": "Which agent sold the policy that claim 12312702 was filed on?",
+      "quadrant": "LQHS",
+      "shape": "list",
+      "goldSql": "SELECT DISTINCT pe.First_Name, pe.Last_Name FROM main.claim c JOIN main.claim_coverage cc ON cc.Claim_Identifier = c.Claim_Identifier JOIN main.policy_coverage_detail d ON d.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier JOIN main.agreement_party_role r ON r.Agreement_Identifier = d.Policy_Identifier AND r.Party_Role_Code = 'AG' JOIN main.person pe ON pe.Person_Identifier = r.Party_Identifier WHERE c.Company_Claim_Number = 12312702",
+      "gold": {
+        "columns": [
+          "First_Name",
+          "Last_Name"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "Bob",
+            "Agent"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-premium-was-charged-for-the-coverage-term-t-bfdd0c",
+      "question": "What premium was charged for the coverage term that claim 12312701 was filed under?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT pa.Policy_Amount AS premium FROM main.claim c JOIN main.claim_coverage cc ON cc.Claim_Identifier = c.Claim_Identifier JOIN main.policy_amount pa ON pa.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier WHERE c.Company_Claim_Number = 12312701",
+      "gold": {
+        "columns": [
+          "premium"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            20000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-list-every-person-who-has-a-role-on-a-policy-alo-1979fb",
+      "question": "List every person who has a role on a policy, along with the name of that role.",
+      "quadrant": "LQHS",
+      "shape": "list",
+      "goldSql": "SELECT DISTINCT pe.First_Name, pe.Last_Name, pr.Party_Role_Name FROM main.agreement_party_role r JOIN main.person pe ON pe.Person_Identifier = r.Party_Identifier JOIN main.party_role pr ON pr.Party_Role_Code = r.Party_Role_Code ORDER BY 3",
+      "gold": {
+        "columns": [
+          "First_Name",
+          "Last_Name",
+          "Party_Role_Name"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            "Bob",
+            "Agent",
+            "Agent"
+          ],
+          [
+            "Mary",
+            "Holder",
+            "PolicyHolder"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-when-was-the-claim-opened-for-the-property-insur-5fcb4b",
+      "question": "When was the claim opened for the property insured by policy 31003000337?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT DISTINCT c.Claim_Open_Date FROM main.policy p JOIN main.policy_coverage_detail d ON d.Policy_Identifier = p.Policy_Identifier JOIN main.insurable_object io ON io.Insurable_Object_Identifier = d.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier JOIN main.claim c ON c.Insurable_Object_Identifier = io.Insurable_Object_Identifier WHERE p.Policy_Number = 31003000337",
+      "gold": {
+        "columns": [
+          "Claim_Open_Date"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "2019-06-02"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-claims-tied-to-the-fire-catastrophe-wer-d81014",
+      "question": "How many claims tied to the Fire catastrophe were on properties in Austin?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(*) AS claims FROM main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier JOIN main.catastrophe k ON k.Catastrophe_Identifier = c.Catastrophe_Identifier WHERE k.Catastrophe_Name = 'Fire' AND a.Municipality_Name = 'Austin'",
+      "gold": {
+        "columns": [
+          "claims"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            2
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-total-premium-on-policies-held-by-ma-c3ae80",
+      "question": "What is the total premium on policies held by Mary Holder?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT SUM(pa.Policy_Amount) AS total_premium FROM main.person pe JOIN main.agreement_party_role r ON r.Party_Identifier = pe.Person_Identifier AND r.Party_Role_Code = 'PH' JOIN main.policy_amount pa ON pa.Policy_Identifier = r.Agreement_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier WHERE pe.First_Name = 'Mary' AND pe.Last_Name = 'Holder'",
+      "gold": {
+        "columns": [
+          "total_premium"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            98000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-total-of-all-amounts-recorded-on-cla-a175d1",
+      "question": "What is the total of all amounts recorded on claims for properties in ZIP 78751?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT SUM(ca.Claim_Amount) AS total_amount FROM main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier JOIN main.claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier WHERE a.Postal_Code = 78751",
+      "gold": {
+        "columns": [
+          "total_amount"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            4600
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-list-the-loss-dates-for-claims-linked-to-the-fir-9c6176",
+      "question": "List the loss dates for claims linked to the Fire catastrophe, with each claim number.",
+      "quadrant": "LQHS",
+      "shape": "list",
+      "goldSql": "SELECT c.Company_Claim_Number, o.Occurrence_Begin_Date FROM main.claim c JOIN main.catastrophe k ON k.Catastrophe_Identifier = c.Catastrophe_Identifier JOIN main.occurrences o ON o.Occurrence_Identifier = c.Occurrence_Identifier WHERE k.Catastrophe_Name = 'Fire' ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "Occurrence_Begin_Date"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312701,
+            "2019-01-14"
+          ],
+          [
+            12312702,
+            "2019-06-01"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-policy-number-had-its-underwriting-assessm-ca810f",
+      "question": "Which policy number had its underwriting assessment begin on November 1, 2014?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT p.Policy_Number FROM main.assessment a JOIN main.agreement_assessment aa ON aa.Assessment_Identifier = a.Assessment_Identifier JOIN main.policy p ON p.Policy_Identifier = aa.Agreement_Identifier WHERE a.Begin_Date = DATE '2014-11-01'",
+      "gold": {
+        "columns": [
+          "Policy_Number"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            31003000336
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-list-each-amount-recorded-on-claim-12312701-with-bd8541",
+      "question": "List each amount recorded on claim 12312701 with its type (loss payment, loss reserve, expense payment or expense reserve).",
+      "quadrant": "LQHS",
+      "shape": "list",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ) SELECT t.amount_type, t.Claim_Amount FROM typed t JOIN main.claim c ON c.Claim_Identifier = t.Claim_Identifier WHERE c.Company_Claim_Number = 12312701 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "amount_type",
+          "Claim_Amount"
+        ],
+        "rowCount": 4,
+        "rows": [
+          [
+            "Expense Payment",
+            1300
+          ],
+          [
+            "Expense Reserve",
+            1100
+          ],
+          [
+            "Loss Payment",
+            1200
+          ],
+          [
+            "Loss Reserve",
+            1000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-who-underwrote-the-policy-that-claim-12312701-fa-1c63a9",
+      "question": "Who underwrote the policy that claim 12312701 falls under?",
+      "quadrant": "LQHS",
+      "shape": "list",
+      "goldSql": "SELECT pe.First_Name, pe.Last_Name FROM main.claim c JOIN main.claim_coverage cc ON cc.Claim_Identifier = c.Claim_Identifier JOIN main.policy_coverage_detail d ON d.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier JOIN main.agreement_assessment aa ON aa.Agreement_Identifier = d.Policy_Identifier JOIN main.assesment_party_role r ON r.Assessment_Identifier = aa.Assessment_Identifier AND r.Party_Role_Code = 'UW' JOIN main.person pe ON pe.Person_Identifier = r.Party_Identifier WHERE c.Company_Claim_Number = 12312701",
+      "gold": {
+        "columns": [
+          "First_Name",
+          "Last_Name"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "Alice",
+            "Writer"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-people-hold-the-policyholder-role-on-any-p-5ff724",
+      "question": "Which people hold the policyholder role on any policy? List each name once.",
+      "quadrant": "LQHS",
+      "shape": "list",
+      "goldSql": "SELECT DISTINCT pe.First_Name, pe.Last_Name FROM main.agreement_party_role r JOIN main.party_role pr ON pr.Party_Role_Code = r.Party_Role_Code JOIN main.person pe ON pe.Person_Identifier = r.Party_Identifier WHERE pr.Party_Role_Name = 'PolicyHolder'",
+      "gold": {
+        "columns": [
+          "First_Name",
+          "Last_Name"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "Mary",
+            "Holder"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-total-expense-payment-on-claims-for-c5adf6",
+      "question": "What is the total expense payment on claims for the property at 13017 Zen Gardens Way?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT SUM(ca.Claim_Amount) AS expense_paid FROM main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier JOIN main.claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier WHERE a.Line_1_Address = '13017 Zen Gardens Way'",
+      "gold": {
+        "columns": [
+          "expense_paid"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            2400
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-coverage-terms-have-covered-the-insured-4442e4",
+      "question": "How many coverage terms have covered the insured property at 5315 Martin Ave?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(*) AS coverage_terms FROM main.policy_coverage_detail d JOIN main.insurable_object io ON io.Insurable_Object_Identifier = d.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier WHERE a.Line_1_Address = '5315 Martin Ave'",
+      "gold": {
+        "columns": [
+          "coverage_terms"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            5
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-s-the-policy-number-covering-the-property-a-fda8c3",
+      "question": "What's the policy number covering the property at 13017 Zen Gardens Way?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT DISTINCT p.Policy_Number FROM main.policy p JOIN main.policy_coverage_detail d ON d.Policy_Identifier = p.Policy_Identifier JOIN main.insurable_object io ON io.Insurable_Object_Identifier = d.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier WHERE a.Line_1_Address = '13017 Zen Gardens Way'",
+      "gold": {
+        "columns": [
+          "Policy_Number"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            31003000337
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-when-did-the-loss-occur-for-the-claim-at-5315-ma-8fccf5",
+      "question": "When did the loss occur for the claim at 5315 Martin Ave?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT o.Occurrence_Begin_Date FROM main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier JOIN main.occurrences o ON o.Occurrence_Identifier = c.Occurrence_Identifier WHERE a.Line_1_Address = '5315 Martin Ave'",
+      "gold": {
+        "columns": [
+          "Occurrence_Begin_Date"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "2019-01-14"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-total-loss-reserve-across-claims-tie-50af03",
+      "question": "What is the total loss reserve across claims tied to the Fire catastrophe?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT SUM(ca.Claim_Amount) AS loss_reserve FROM main.claim c JOIN main.catastrophe k ON k.Catastrophe_Identifier = c.Catastrophe_Identifier JOIN main.claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier WHERE k.Catastrophe_Name = 'Fire'",
+      "gold": {
+        "columns": [
+          "loss_reserve"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            3100
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-list-the-start-and-end-dates-of-every-coverage-t-58fd82",
+      "question": "List the start and end dates of every coverage term on policies where Bob is the agent.",
+      "quadrant": "LQHS",
+      "shape": "list",
+      "goldSql": "SELECT d.Effective_Date, d.Expiration_Date FROM main.person pe JOIN main.agreement_party_role r ON r.Party_Identifier = pe.Person_Identifier AND r.Party_Role_Code = 'AG' JOIN main.policy_coverage_detail d ON d.Policy_Identifier = r.Agreement_Identifier WHERE pe.First_Name = 'Bob' ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Effective_Date",
+          "Expiration_Date"
+        ],
+        "rowCount": 6,
+        "rows": [
+          [
+            "2015-01-01",
+            "2015-12-31"
+          ],
+          [
+            "2016-01-01",
+            "2016-12-31"
+          ],
+          [
+            "2017-01-01",
+            "2017-12-31"
+          ],
+          [
+            "2018-01-01",
+            "2018-12-31"
+          ],
+          [
+            "2019-01-01",
+            "2019-12-31"
+          ],
+          [
+            "2019-06-01",
+            "2020-05-31"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-claims-were-filed-against-coverages-of-20ba39",
+      "question": "How many claims were filed against coverages of policy 31003000336?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(DISTINCT cc.Claim_Identifier) AS claims FROM main.claim_coverage cc JOIN main.policy_coverage_detail d ON d.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier JOIN main.policy p ON p.Policy_Identifier = d.Policy_Identifier WHERE p.Policy_Number = 31003000336",
+      "gold": {
+        "columns": [
+          "claims"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            2
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-give-the-map-coordinates-of-the-property-insured-dc2d96",
+      "question": "Give the map coordinates of the property insured by policy 31003000337.",
+      "quadrant": "LQHS",
+      "shape": "list",
+      "goldSql": "SELECT DISTINCT pl.Latitude_Value, pl.Longitude_Value FROM main.policy p JOIN main.policy_coverage_detail d ON d.Policy_Identifier = p.Policy_Identifier JOIN main.insurable_object io ON io.Insurable_Object_Identifier = d.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.pysical_location pl ON pl.Physical_Location_Identifier = g.Physical_Location_Identifier WHERE p.Policy_Number = 31003000337",
+      "gold": {
+        "columns": [
+          "Latitude_Value",
+          "Longitude_Value"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            30.34149,
+            -97.92346
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-zip-code-is-the-claim-with-a-loss-payment-a-1543b3",
+      "question": "What ZIP code is the claim with a loss payment above 2,000 located in?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT DISTINCT a.Postal_Code FROM main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier JOIN main.claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier WHERE ca.Claim_Amount > 2000",
+      "gold": {
+        "columns": [
+          "Postal_Code"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            78732
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-list-each-claim-number-with-the-name-of-its-cata-d19d48",
+      "question": "List each claim number with the name of its catastrophe and the street address of the damaged property.",
+      "quadrant": "LQHS",
+      "shape": "list",
+      "goldSql": "SELECT c.Company_Claim_Number, k.Catastrophe_Name, a.Line_1_Address FROM main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier JOIN main.catastrophe k ON k.Catastrophe_Identifier = c.Catastrophe_Identifier ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "Catastrophe_Name",
+          "Line_1_Address"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312701,
+            "Fire",
+            "5315 Martin Ave"
+          ],
+          [
+            12312702,
+            "Fire",
+            "13017 Zen Gardens Way"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-days-after-its-underwriting-assessment-2df2c5",
+      "question": "How many days after its underwriting assessment ended did policy 31003000337 take effect?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT DATE_DIFF('day', a.End_Date, p.Effective_Date) AS days FROM main.policy p JOIN main.agreement_assessment aa ON aa.Agreement_Identifier = p.Policy_Identifier JOIN main.assessment a ON a.Assessment_Identifier = aa.Assessment_Identifier WHERE p.Policy_Number = 31003000337",
+      "gold": {
+        "columns": [
+          "days"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            5
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-street-address-had-a-claim-closed-in-janua-d23927",
+      "question": "Which street address had a claim closed in January 2019?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT a.Line_1_Address FROM main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier WHERE c.Claim_Close_Date >= DATE '2019-01-01' AND c.Claim_Close_Date < DATE '2019-02-01'",
+      "gold": {
+        "columns": [
+          "Line_1_Address"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "5315 Martin Ave"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-distinct-people-have-any-role-on-a-poli-3beb40",
+      "question": "How many distinct people have any role on a policy or on an assessment?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(DISTINCT Party_Identifier) AS people FROM (SELECT Party_Identifier FROM main.agreement_party_role UNION SELECT Party_Identifier FROM main.assesment_party_role) t",
+      "gold": {
+        "columns": [
+          "people"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            3
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-list-the-underwriting-assessment-result-codes-al-85fe7a",
+      "question": "List the underwriting assessment result codes along with the policy number each one relates to.",
+      "quadrant": "LQHS",
+      "shape": "list",
+      "goldSql": "SELECT p.Policy_Number, ar.Assessment_Result_Type_Code FROM main.underwriting_assessment ua JOIN main.assessment_result ar ON ar.Assessment_Result_Identifier = ua.Assessment_Result_Identifier JOIN main.agreement_assessment aa ON aa.Assessment_Identifier = ar.Assessment_Identifier JOIN main.policy p ON p.Policy_Identifier = aa.Agreement_Identifier ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Policy_Number",
+          "Assessment_Result_Type_Code"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            31003000336,
+            "OK"
+          ],
+          [
+            31003000337,
+            "OK"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-was-the-premium-on-the-coverage-term-for-th-a5e481",
+      "question": "What was the premium on the coverage term for the property at 13017 Zen Gardens Way?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT SUM(pa.Policy_Amount) AS premium FROM main.policy_coverage_detail d JOIN main.insurable_object io ON io.Insurable_Object_Identifier = d.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier JOIN main.policy_amount pa ON pa.Policy_Coverage_Detail_Identifier = d.Policy_Coverage_Detail_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier WHERE a.Line_1_Address = '13017 Zen Gardens Way'",
+      "gold": {
+        "columns": [
+          "premium"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            12000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-policies-in-total-does-the-policyholder-ae7574",
+      "question": "How many policies in total does the policyholder on claim 12312702 hold?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(DISTINCT r2.Agreement_Identifier) AS policies FROM main.claim c JOIN main.claim_coverage cc ON cc.Claim_Identifier = c.Claim_Identifier JOIN main.policy_coverage_detail d ON d.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier JOIN main.agreement_party_role r ON r.Agreement_Identifier = d.Policy_Identifier AND r.Party_Role_Code = 'PH' JOIN main.agreement_party_role r2 ON r2.Party_Identifier = r.Party_Identifier AND r2.Party_Role_Code = 'PH' WHERE c.Company_Claim_Number = 12312702",
+      "gold": {
+        "columns": [
+          "policies"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            2
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-list-each-insured-property-s-street-address-with-4113ea",
+      "question": "List each insured property's street address with the policy number that covers it.",
+      "quadrant": "LQHS",
+      "shape": "list",
+      "goldSql": "SELECT DISTINCT a.Line_1_Address, p.Policy_Number FROM main.policy p JOIN main.policy_coverage_detail d ON d.Policy_Identifier = p.Policy_Identifier JOIN main.insurable_object io ON io.Insurable_Object_Identifier = d.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier ORDER BY 2",
+      "gold": {
+        "columns": [
+          "Line_1_Address",
+          "Policy_Number"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            "5315 Martin Ave",
+            31003000336
+          ],
+          [
+            "13017 Zen Gardens Way",
+            31003000337
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-claim-amount-entries-are-recorded-as-re-6cbe85",
+      "question": "How many claim amount entries are recorded as reserves, either loss or expense?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT (SELECT COUNT(*) FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier) + (SELECT COUNT(*) FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier) AS reserve_entries",
+      "gold": {
+        "columns": [
+          "reserve_entries"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            4
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-catastrophe-is-behind-the-claims-on-polici-6f4ca3",
+      "question": "Which catastrophe is behind the claims on policies where Mary Holder is the policyholder?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT DISTINCT k.Catastrophe_Name FROM main.person pe JOIN main.agreement_party_role r ON r.Party_Identifier = pe.Person_Identifier AND r.Party_Role_Code = 'PH' JOIN main.policy_coverage_detail d ON d.Policy_Identifier = r.Agreement_Identifier JOIN main.claim_coverage cc ON cc.Policy_Coverage_Detail_Identifier = d.Policy_Coverage_Detail_Identifier JOIN main.claim c ON c.Claim_Identifier = cc.Claim_Identifier JOIN main.catastrophe k ON k.Catastrophe_Identifier = c.Catastrophe_Identifier WHERE pe.First_Name = 'Mary' AND pe.Last_Name = 'Holder'",
+      "gold": {
+        "columns": [
+          "Catastrophe_Name"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "Fire"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-s-the-loss-reserve-on-the-claim-whose-loss-5e3bfb",
+      "question": "What's the loss reserve on the claim whose loss occurred on June 1, 2019?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT SUM(ca.Claim_Amount) AS loss_reserve FROM main.occurrences o JOIN main.claim c ON c.Occurrence_Identifier = o.Occurrence_Identifier JOIN main.claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier WHERE o.Occurrence_Begin_Date = DATE '2019-06-01'",
+      "gold": {
+        "columns": [
+          "loss_reserve"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            2100
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-show-the-underwriter-s-name-and-the-start-date-o-cdd738",
+      "question": "Show the underwriter's name and the start date of each underwriting assessment.",
+      "quadrant": "LQHS",
+      "shape": "list",
+      "goldSql": "SELECT pe.First_Name, pe.Last_Name, a.Begin_Date FROM main.assessment a JOIN main.assesment_party_role r ON r.Assessment_Identifier = a.Assessment_Identifier AND r.Party_Role_Code = 'UW' JOIN main.person pe ON pe.Person_Identifier = r.Party_Identifier ORDER BY a.Begin_Date",
+      "gold": {
+        "columns": [
+          "First_Name",
+          "Last_Name",
+          "Begin_Date"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            "Alice",
+            "Writer",
+            "2014-11-01"
+          ],
+          [
+            "Alice",
+            "Writer",
+            "2019-05-01"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-street-address-of-the-property-on-th-56ca1a",
+      "question": "What is the street address of the property on the policy whose underwriting assessment ended in December 2014?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT DISTINCT la.Line_1_Address FROM main.assessment a JOIN main.agreement_assessment aa ON aa.Assessment_Identifier = a.Assessment_Identifier JOIN main.policy_coverage_detail d ON d.Policy_Identifier = aa.Agreement_Identifier JOIN main.insurable_object io ON io.Insurable_Object_Identifier = d.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address la ON la.Location_Address_Identifier = g.Location_Address_Identifier WHERE a.End_Date >= DATE '2014-12-01' AND a.End_Date < DATE '2015-01-01'",
+      "gold": {
+        "columns": [
+          "Line_1_Address"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "5315 Martin Ave"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-distinct-insured-properties-do-we-cover-8a56f7",
+      "question": "How many distinct insured properties do we cover, and in how many different ZIP codes are they?",
+      "quadrant": "LQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT COUNT(DISTINCT io.Insurable_Object_Identifier) AS properties, COUNT(DISTINCT a.Postal_Code) AS zip_codes FROM main.policy p JOIN main.policy_coverage_detail d ON d.Policy_Identifier = p.Policy_Identifier JOIN main.insurable_object io ON io.Insurable_Object_Identifier = d.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier",
+      "gold": {
+        "columns": [
+          "properties",
+          "zip_codes"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            2,
+            2
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-break-down-total-claim-dollars-by-amount-type-lo-00f3e9",
+      "question": "Break down total claim dollars by amount type: loss payments, loss reserves, expense payments and expense reserves.",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ) SELECT amount_type, SUM(Claim_Amount) AS total FROM typed GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "amount_type",
+          "total"
+        ],
+        "rowCount": 4,
+        "rows": [
+          [
+            "Expense Payment",
+            3700
+          ],
+          [
+            "Expense Reserve",
+            3300
+          ],
+          [
+            "Loss Payment",
+            3500
+          ],
+          [
+            "Loss Reserve",
+            3100
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-incurred-loss-loss-payments-plus-los-e9723f",
+      "question": "What is the incurred loss (loss payments plus loss reserves) for each claim number?",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ) SELECT c.Company_Claim_Number, SUM(t.Claim_Amount) AS incurred_loss FROM typed t JOIN main.claim c ON c.Claim_Identifier = t.Claim_Identifier WHERE t.amount_type IN ('Loss Payment','Loss Reserve') GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "incurred_loss"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312701,
+            2200
+          ],
+          [
+            12312702,
+            4400
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-s-our-overall-paid-loss-ratio-i-e-total-los-acab23",
+      "question": "What's our overall paid loss ratio, i.e. total loss payments divided by total written premium?",
+      "quadrant": "HQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT (SELECT SUM(ca.Claim_Amount) FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier) * 1.0 / (SELECT SUM(Policy_Amount) FROM (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t) AS paid_loss_ratio",
+      "gold": {
+        "columns": [
+          "paid_loss_ratio"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            0.03571428571428571
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-incurred-loss-ratio-for-the-2019-cov-d92d9d",
+      "question": "What is the incurred loss ratio for the 2019 coverage term of policy 31003000336, counting the claims filed against that coverage?",
+      "quadrant": "HQHS",
+      "shape": "scalar",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ), term AS (SELECT d.Policy_Coverage_Detail_Identifier FROM main.policy_coverage_detail d JOIN main.policy p ON p.Policy_Identifier = d.Policy_Identifier WHERE p.Policy_Number = 31003000336 AND YEAR(d.Effective_Date) = 2019) SELECT (SELECT SUM(t.Claim_Amount) FROM typed t JOIN main.claim_coverage cc ON cc.Claim_Identifier = t.Claim_Identifier WHERE cc.Policy_Coverage_Detail_Identifier IN (SELECT * FROM term) AND t.amount_type IN ('Loss Payment','Loss Reserve')) * 1.0 / (SELECT SUM(pa.Policy_Amount) FROM (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) pa WHERE pa.Policy_Coverage_Detail_Identifier IN (SELECT * FROM term)) AS incurred_loss_ratio",
+      "gold": {
+        "columns": [
+          "incurred_loss_ratio"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            0.33
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-claim-has-the-highest-total-expenses-expen-80b0ba",
+      "question": "Which claim has the highest total expenses (expense payments plus expense reserves)? Give the claim number and amount.",
+      "quadrant": "HQHS",
+      "shape": "ranked",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ) SELECT c.Company_Claim_Number, SUM(t.Claim_Amount) AS total_expense FROM typed t JOIN main.claim c ON c.Claim_Identifier = t.Claim_Identifier WHERE t.amount_type LIKE 'Expense%' GROUP BY 1 ORDER BY 2 DESC LIMIT 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "total_expense"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            12312702,
+            4600
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-claim-show-the-loss-paid-the-expense-pa-367b9e",
+      "question": "For each claim, show the loss paid, the expense paid, and the expense paid as a percentage of the loss paid.",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ) SELECT c.Company_Claim_Number, SUM(t.Claim_Amount) FILTER (WHERE amount_type = 'Loss Payment') AS loss_paid, SUM(t.Claim_Amount) FILTER (WHERE amount_type = 'Expense Payment') AS expense_paid, 100.0 * SUM(t.Claim_Amount) FILTER (WHERE amount_type = 'Expense Payment') / SUM(t.Claim_Amount) FILTER (WHERE amount_type = 'Loss Payment') AS expense_pct_of_loss FROM typed t JOIN main.claim c ON c.Claim_Identifier = t.Claim_Identifier GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "loss_paid",
+          "expense_paid",
+          "expense_pct_of_loss"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312701,
+            1200,
+            1300,
+            108.33333333333333
+          ],
+          [
+            12312702,
+            2300,
+            2400,
+            104.34782608695652
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-rank-claims-by-incurred-loss-and-show-each-one-s-a62c84",
+      "question": "Rank claims by incurred loss and show each one's catastrophe name and the street address of the property.",
+      "quadrant": "HQHS",
+      "shape": "ranked",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ), inc AS (SELECT Claim_Identifier, SUM(Claim_Amount) AS incurred_loss FROM typed WHERE amount_type IN ('Loss Payment','Loss Reserve') GROUP BY 1) SELECT c.Company_Claim_Number, k.Catastrophe_Name, a.Line_1_Address, i.incurred_loss FROM inc i JOIN main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier ON c.Claim_Identifier = i.Claim_Identifier JOIN main.catastrophe k ON k.Catastrophe_Identifier = c.Catastrophe_Identifier ORDER BY i.incurred_loss DESC",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "Catastrophe_Name",
+          "Line_1_Address",
+          "incurred_loss"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312702,
+            "Fire",
+            "13017 Zen Gardens Way",
+            4400
+          ],
+          [
+            12312701,
+            "Fire",
+            "5315 Martin Ave",
+            2200
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-policyholder-mary-holder-what-is-her-total-w-501841",
+      "question": "For policyholder Mary Holder, what is her total written premium, the total loss paid on her claims, and the ratio of losses paid to premium?",
+      "quadrant": "HQHS",
+      "shape": "scalar",
+      "goldSql": "WITH pol AS (SELECT r.Agreement_Identifier FROM main.agreement_party_role r JOIN main.person pe ON pe.Person_Identifier = r.Party_Identifier WHERE r.Party_Role_Code = 'PH' AND pe.First_Name = 'Mary' AND pe.Last_Name = 'Holder'), prem AS (SELECT SUM(Policy_Amount) AS premium FROM (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t WHERE Policy_Identifier IN (SELECT * FROM pol)), loss AS (SELECT SUM(ca.Claim_Amount) AS loss_paid FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier WHERE ca.Claim_Identifier IN (SELECT cc.Claim_Identifier FROM main.claim_coverage cc JOIN main.policy_coverage_detail d ON d.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier WHERE d.Policy_Identifier IN (SELECT * FROM pol))) SELECT prem.premium, loss.loss_paid, loss.loss_paid * 1.0 / prem.premium AS paid_loss_ratio FROM prem, loss",
+      "gold": {
+        "columns": [
+          "premium",
+          "loss_paid",
+          "paid_loss_ratio"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            98000,
+            3500,
+            0.03571428571428571
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-agent-how-many-policies-do-they-handle-7cb47d",
+      "question": "For each agent, how many policies do they handle and how much premium do those policies carry?",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "SELECT pe.First_Name, pe.Last_Name, COUNT(DISTINCT r.Agreement_Identifier) AS policies, SUM(t.Policy_Amount) AS total_premium FROM main.agreement_party_role r JOIN main.person pe ON pe.Person_Identifier = r.Party_Identifier JOIN (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t ON t.Policy_Identifier = r.Agreement_Identifier WHERE r.Party_Role_Code = 'AG' GROUP BY 1, 2",
+      "gold": {
+        "columns": [
+          "First_Name",
+          "Last_Name",
+          "policies",
+          "total_premium"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "Bob",
+            "Agent",
+            2,
+            98000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-s-the-average-incurred-loss-per-claim-claim-0b999a",
+      "question": "What's the average incurred loss per claim (claim severity) for claims tied to the Fire catastrophe?",
+      "quadrant": "HQHS",
+      "shape": "scalar",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ) SELECT SUM(t.Claim_Amount) * 1.0 / COUNT(DISTINCT c.Claim_Identifier) AS severity FROM main.claim c JOIN main.catastrophe k ON k.Catastrophe_Identifier = c.Catastrophe_Identifier JOIN typed t ON t.Claim_Identifier = c.Claim_Identifier AND t.amount_type IN ('Loss Payment','Loss Reserve') WHERE k.Catastrophe_Name = 'Fire'",
+      "gold": {
+        "columns": [
+          "severity"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            3300
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-policy-how-many-days-passed-between-the-b8aec4",
+      "question": "For each policy, how many days passed between the end of its underwriting assessment and the policy's effective date?",
+      "quadrant": "HQHS",
+      "shape": "list",
+      "goldSql": "SELECT p.Policy_Number, DATE_DIFF('day', a.End_Date, p.Effective_Date) AS days_between FROM main.policy p JOIN main.agreement_assessment aa ON aa.Agreement_Identifier = p.Policy_Identifier JOIN main.assessment a ON a.Assessment_Identifier = aa.Assessment_Identifier ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Policy_Number",
+          "days_between"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            31003000336,
+            17
+          ],
+          [
+            31003000337,
+            5
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-policy-give-the-number-of-coverage-term-95bd6a",
+      "question": "For each policy, give the number of coverage terms, the total premium, and the average premium per term.",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "SELECT p.Policy_Number, COUNT(*) AS terms, SUM(t.Policy_Amount) AS total_premium, AVG(t.Policy_Amount) AS avg_premium_per_term FROM main.policy p JOIN main.policy_coverage_detail d ON d.Policy_Identifier = p.Policy_Identifier JOIN (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t ON t.Policy_Coverage_Detail_Identifier = d.Policy_Coverage_Detail_Identifier GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Policy_Number",
+          "terms",
+          "total_premium",
+          "avg_premium_per_term"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            31003000336,
+            5,
+            86000,
+            17200
+          ],
+          [
+            31003000337,
+            1,
+            12000,
+            12000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-share-of-total-claim-dollars-is-expense-pay-3e4698",
+      "question": "What share of total claim dollars is expense (payments plus reserves) rather than loss?",
+      "quadrant": "HQHS",
+      "shape": "scalar",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ) SELECT 100.0 * SUM(Claim_Amount) FILTER (WHERE amount_type LIKE 'Expense%') / SUM(Claim_Amount) AS expense_pct FROM typed",
+      "gold": {
+        "columns": [
+          "expense_pct"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            51.470588235294116
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-claim-what-percentage-of-its-total-reco-8c018e",
+      "question": "For each claim, what percentage of its total recorded amounts is still sitting in reserves (loss and expense reserves)?",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ) SELECT c.Company_Claim_Number, 100.0 * SUM(t.Claim_Amount) FILTER (WHERE amount_type LIKE '%Reserve') / SUM(t.Claim_Amount) AS reserve_pct FROM typed t JOIN main.claim c ON c.Claim_Identifier = t.Claim_Identifier GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "reserve_pct"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312701,
+            45.65217391304348
+          ],
+          [
+            12312702,
+            47.77777777777778
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-show-incurred-losses-by-the-zip-code-of-the-dama-3313ed",
+      "question": "Show incurred losses by the ZIP code of the damaged property.",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ) SELECT a.Postal_Code, SUM(t.Claim_Amount) AS incurred_loss FROM typed t JOIN main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier ON c.Claim_Identifier = t.Claim_Identifier WHERE t.amount_type IN ('Loss Payment','Loss Reserve') GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Postal_Code",
+          "incurred_loss"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            78732,
+            4400
+          ],
+          [
+            78751,
+            2200
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-policy-31003000336-which-coverage-term-had-t-5196ef",
+      "question": "For policy 31003000336, which coverage term had the largest premium increase over the previous term, and by how much?",
+      "quadrant": "HQHS",
+      "shape": "ranked",
+      "goldSql": "WITH t AS (SELECT pa.Effective_Date, pa.Policy_Amount - LAG(pa.Policy_Amount) OVER (ORDER BY pa.Effective_Date) AS increase FROM (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) pa JOIN main.policy_coverage_detail d ON d.Policy_Coverage_Detail_Identifier = pa.Policy_Coverage_Detail_Identifier JOIN main.policy p ON p.Policy_Identifier = d.Policy_Identifier WHERE p.Policy_Number = 31003000336) SELECT Effective_Date, increase FROM t WHERE increase IS NOT NULL ORDER BY increase DESC LIMIT 1",
+      "gold": {
+        "columns": [
+          "Effective_Date",
+          "increase"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "2019-01-01",
+            2000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-list-the-claims-with-the-number-of-days-each-was-b2c72f",
+      "question": "List the claims with the number of days each was open and its incurred loss, longest-open first.",
+      "quadrant": "HQHS",
+      "shape": "ranked",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ) SELECT c.Company_Claim_Number, DATE_DIFF('day', c.Claim_Open_Date, c.Claim_Close_Date) AS days_open, SUM(t.Claim_Amount) AS incurred_loss FROM main.claim c JOIN typed t ON t.Claim_Identifier = c.Claim_Identifier AND t.amount_type IN ('Loss Payment','Loss Reserve') GROUP BY 1, 2 ORDER BY 2 DESC",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "days_open",
+          "incurred_loss"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312702,
+            25,
+            4400
+          ],
+          [
+            12312701,
+            16,
+            2200
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-loss-paid-per-day-the-claim-was-open-79d26a",
+      "question": "What is the loss paid per day the claim was open, for each claim?",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "SELECT c.Company_Claim_Number, SUM(ca.Claim_Amount) * 1.0 / DATE_DIFF('day', c.Claim_Open_Date, c.Claim_Close_Date) AS loss_paid_per_day FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY c.Company_Claim_Number, c.Claim_Open_Date, c.Claim_Close_Date ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "loss_paid_per_day"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312701,
+            75
+          ],
+          [
+            12312702,
+            92
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-total-premium-across-all-policies-he-982299",
+      "question": "What is the total premium across all policies held by the policyholder on claim 12312702?",
+      "quadrant": "HQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT SUM(t.Policy_Amount) AS total_premium FROM (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t WHERE t.Policy_Identifier IN (SELECT r2.Agreement_Identifier FROM main.claim c JOIN main.claim_coverage cc ON cc.Claim_Identifier = c.Claim_Identifier JOIN main.policy_coverage_detail d ON d.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier JOIN main.agreement_party_role r ON r.Agreement_Identifier = d.Policy_Identifier AND r.Party_Role_Code = 'PH' JOIN main.agreement_party_role r2 ON r2.Party_Identifier = r.Party_Identifier AND r2.Party_Role_Code = 'PH' WHERE c.Company_Claim_Number = 12312702)",
+      "gold": {
+        "columns": [
+          "total_premium"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            98000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-claim-has-the-higher-ratio-of-loss-reserve-bc727c",
+      "question": "Which claim has the higher ratio of loss reserve to loss paid?",
+      "quadrant": "HQHS",
+      "shape": "ranked",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ) SELECT c.Company_Claim_Number FROM typed t JOIN main.claim c ON c.Claim_Identifier = t.Claim_Identifier GROUP BY 1 ORDER BY SUM(t.Claim_Amount) FILTER (WHERE amount_type = 'Loss Reserve') * 1.0 / SUM(t.Claim_Amount) FILTER (WHERE amount_type = 'Loss Payment') DESC LIMIT 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            12312702
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-policy-list-the-policy-number-the-polic-2e795c",
+      "question": "For each policy, list the policy number, the policyholder's name and the agent's name.",
+      "quadrant": "HQHS",
+      "shape": "list",
+      "goldSql": "SELECT p.Policy_Number, ph.First_Name AS policyholder_first_name, ph.Last_Name AS policyholder_last_name, ag.First_Name AS agent_first_name, ag.Last_Name AS agent_last_name FROM main.policy p JOIN main.agreement_party_role rph ON rph.Agreement_Identifier = p.Policy_Identifier AND rph.Party_Role_Code = 'PH' JOIN main.person ph ON ph.Person_Identifier = rph.Party_Identifier JOIN main.agreement_party_role rag ON rag.Agreement_Identifier = p.Policy_Identifier AND rag.Party_Role_Code = 'AG' JOIN main.person ag ON ag.Person_Identifier = rag.Party_Identifier ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Policy_Number",
+          "policyholder_first_name",
+          "policyholder_last_name",
+          "agent_first_name",
+          "agent_last_name"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            31003000336,
+            "Mary",
+            "Holder",
+            "Bob",
+            "Agent"
+          ],
+          [
+            31003000337,
+            "Mary",
+            "Holder",
+            "Bob",
+            "Agent"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-across-all-claims-how-much-has-been-paid-loss-pl-b12885",
+      "question": "Across all claims, how much has been paid (loss plus expense payments) versus how much is held in reserves (loss plus expense reserves)?",
+      "quadrant": "HQHS",
+      "shape": "scalar",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ) SELECT SUM(Claim_Amount) FILTER (WHERE amount_type LIKE '%Payment') AS total_paid, SUM(Claim_Amount) FILTER (WHERE amount_type LIKE '%Reserve') AS total_reserves FROM typed",
+      "gold": {
+        "columns": [
+          "total_paid",
+          "total_reserves"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            7200,
+            6400
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-catastrophe-that-has-claims-show-the-nu-fc0008",
+      "question": "For each catastrophe that has claims, show the number of claims and the total incurred loss.",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ) SELECT k.Catastrophe_Name, COUNT(DISTINCT c.Claim_Identifier) AS claims, SUM(t.Claim_Amount) AS incurred_loss FROM main.catastrophe k JOIN main.claim c ON c.Catastrophe_Identifier = k.Catastrophe_Identifier JOIN typed t ON t.Claim_Identifier = c.Claim_Identifier AND t.amount_type IN ('Loss Payment','Loss Reserve') GROUP BY 1",
+      "gold": {
+        "columns": [
+          "Catastrophe_Name",
+          "claims",
+          "incurred_loss"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "Fire",
+            2,
+            6600
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-zip-code-s-claims-have-the-largest-total-e-3bc69d",
+      "question": "Which ZIP code's claims have the largest total expense payments?",
+      "quadrant": "HQHS",
+      "shape": "ranked",
+      "goldSql": "SELECT a.Postal_Code FROM main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier JOIN main.claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY SUM(ca.Claim_Amount) DESC LIMIT 1",
+      "gold": {
+        "columns": [
+          "Postal_Code"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            78732
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-claim-compare-the-loss-reserve-with-the-967548",
+      "question": "For each claim, compare the loss reserve with the loss actually paid: show the claim number, the reserve, the payment, and payment minus reserve.",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ) SELECT c.Company_Claim_Number, SUM(t.Claim_Amount) FILTER (WHERE amount_type = 'Loss Reserve') AS loss_reserve, SUM(t.Claim_Amount) FILTER (WHERE amount_type = 'Loss Payment') AS loss_paid, SUM(t.Claim_Amount) FILTER (WHERE amount_type = 'Loss Payment') - SUM(t.Claim_Amount) FILTER (WHERE amount_type = 'Loss Reserve') AS difference FROM typed t JOIN main.claim c ON c.Claim_Identifier = t.Claim_Identifier GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "loss_reserve",
+          "loss_paid",
+          "difference"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312701,
+            1000,
+            1200,
+            200
+          ],
+          [
+            12312702,
+            2100,
+            2300,
+            200
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-many-days-after-the-loss-was-each-claim-clos-231f35",
+      "question": "How many days after the loss was each claim closed, and what was the total paid on it (loss plus expense payments)?",
+      "quadrant": "HQHS",
+      "shape": "list",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ) SELECT c.Company_Claim_Number, DATE_DIFF('day', o.Occurrence_Begin_Date, c.Claim_Close_Date) AS days_loss_to_close, SUM(t.Claim_Amount) AS total_paid FROM main.claim c JOIN main.occurrences o ON o.Occurrence_Identifier = c.Occurrence_Identifier JOIN typed t ON t.Claim_Identifier = c.Claim_Identifier AND t.amount_type LIKE '%Payment' GROUP BY 1, 2 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "days_loss_to_close",
+          "total_paid"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312701,
+            17,
+            2500
+          ],
+          [
+            12312702,
+            26,
+            4700
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-underwriter-assessed-the-policies-carrying-15b654",
+      "question": "Which underwriter assessed the policies carrying the most premium, and how much premium was that?",
+      "quadrant": "HQHS",
+      "shape": "ranked",
+      "goldSql": "SELECT pe.First_Name, pe.Last_Name, SUM(t.Policy_Amount) AS total_premium FROM main.assesment_party_role r JOIN main.person pe ON pe.Person_Identifier = r.Party_Identifier JOIN main.agreement_assessment aa ON aa.Assessment_Identifier = r.Assessment_Identifier JOIN (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t ON t.Policy_Identifier = aa.Agreement_Identifier WHERE r.Party_Role_Code = 'UW' GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 1",
+      "gold": {
+        "columns": [
+          "First_Name",
+          "Last_Name",
+          "total_premium"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "Alice",
+            "Writer",
+            98000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-insured-property-by-street-address-what-e9010e",
+      "question": "For each insured property (by street address), what's the total premium charged across all of its coverage terms?",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "SELECT a.Line_1_Address, SUM(t.Policy_Amount) AS total_premium FROM main.policy_coverage_detail d JOIN main.insurable_object io ON io.Insurable_Object_Identifier = d.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier JOIN (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t ON t.Policy_Coverage_Detail_Identifier = d.Policy_Coverage_Detail_Identifier GROUP BY 1 ORDER BY 2 DESC",
+      "gold": {
+        "columns": [
+          "Line_1_Address",
+          "total_premium"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            "5315 Martin Ave",
+            86000
+          ],
+          [
+            "13017 Zen Gardens Way",
+            12000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-insured-property-has-generated-the-most-cl-b30551",
+      "question": "Which insured property has generated the most claim dollars relative to the premium charged on it? Give the street address.",
+      "quadrant": "HQHS",
+      "shape": "ranked",
+      "goldSql": "WITH prem AS (SELECT d.Insurable_Object_Identifier, SUM(t.Policy_Amount) AS premium FROM main.policy_coverage_detail d JOIN (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t ON t.Policy_Coverage_Detail_Identifier = d.Policy_Coverage_Detail_Identifier GROUP BY 1), clm AS (SELECT c.Insurable_Object_Identifier, SUM(ca.Claim_Amount) AS claim_dollars FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier GROUP BY 1) SELECT a.Line_1_Address FROM prem JOIN clm ON clm.Insurable_Object_Identifier = prem.Insurable_Object_Identifier JOIN main.insurable_object io ON io.Insurable_Object_Identifier = prem.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier ORDER BY clm.claim_dollars * 1.0 / prem.premium DESC LIMIT 1",
+      "gold": {
+        "columns": [
+          "Line_1_Address"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "13017 Zen Gardens Way"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-policy-what-is-the-average-premium-per-fa3690",
+      "question": "For each policy, what is the average premium per coverage term, and how far above or below that average is the latest term's premium?",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "WITH t AS (SELECT p.Policy_Number, pa.Effective_Date, pa.Policy_Amount FROM (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) pa JOIN main.policy p ON p.Policy_Identifier = pa.Policy_Identifier) SELECT Policy_Number, AVG(Policy_Amount) AS avg_premium, ARG_MAX(Policy_Amount, Effective_Date) - AVG(Policy_Amount) AS latest_minus_avg FROM t GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Policy_Number",
+          "avg_premium",
+          "latest_minus_avg"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            31003000336,
+            17200,
+            2800
+          ],
+          [
+            31003000337,
+            12000,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-s-the-average-number-of-days-from-loss-to-c-87577e",
+      "question": "What's the average number of days from loss to claim closure for claims on properties in Austin?",
+      "quadrant": "HQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT AVG(DATE_DIFF('day', o.Occurrence_Begin_Date, c.Claim_Close_Date)) AS avg_days FROM main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier JOIN main.occurrences o ON o.Occurrence_Identifier = c.Occurrence_Identifier WHERE a.Municipality_Name = 'Austin'",
+      "gold": {
+        "columns": [
+          "avg_days"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            21.5
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-claim-what-s-the-expense-to-loss-ratio-dcfb93",
+      "question": "For each claim, what's the expense-to-loss ratio on an incurred basis (expense payments plus reserves over loss payments plus reserves)?",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ) SELECT c.Company_Claim_Number, SUM(t.Claim_Amount) FILTER (WHERE amount_type LIKE 'Expense%') * 1.0 / SUM(t.Claim_Amount) FILTER (WHERE amount_type LIKE 'Loss%') AS expense_to_loss FROM typed t JOIN main.claim c ON c.Claim_Identifier = t.Claim_Identifier GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "expense_to_loss"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312701,
+            1.0909090909090908
+          ],
+          [
+            12312702,
+            1.0454545454545454
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-is-the-total-loss-paid-on-claims-filed-agai-36694d",
+      "question": "What is the total loss paid on claims filed against policies where Bob is the agent?",
+      "quadrant": "HQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT SUM(ca.Claim_Amount) AS loss_paid FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier WHERE ca.Claim_Identifier IN (SELECT cc.Claim_Identifier FROM main.claim_coverage cc JOIN main.policy_coverage_detail d ON d.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier JOIN main.agreement_party_role r ON r.Agreement_Identifier = d.Policy_Identifier AND r.Party_Role_Code = 'AG' JOIN main.person pe ON pe.Person_Identifier = r.Party_Identifier WHERE pe.First_Name = 'Bob')",
+      "gold": {
+        "columns": [
+          "loss_paid"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            3500
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-coverage-term-has-the-most-claim-dollars-r-8e5195",
+      "question": "Which coverage term has the most claim dollars recorded against it? Show its start and end dates and the amount.",
+      "quadrant": "HQHS",
+      "shape": "ranked",
+      "goldSql": "SELECT d.Effective_Date, d.Expiration_Date, SUM(ca.Claim_Amount) AS claim_dollars FROM main.claim_coverage cc JOIN main.policy_coverage_detail d ON d.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier JOIN main.claim_amount ca ON ca.Claim_Identifier = cc.Claim_Identifier GROUP BY 1, 2 ORDER BY 3 DESC LIMIT 1",
+      "gold": {
+        "columns": [
+          "Effective_Date",
+          "Expiration_Date",
+          "claim_dollars"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            "2019-01-01",
+            "2019-12-31",
+            13600
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-role-name-how-many-distinct-people-hold-05d8d8",
+      "question": "For each role name, how many distinct people hold it across policies and assessments?",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "SELECT pr.Party_Role_Name, COUNT(DISTINCT t.Party_Identifier) AS people FROM (SELECT Party_Identifier, Party_Role_Code FROM main.agreement_party_role UNION ALL SELECT Party_Identifier, Party_Role_Code FROM main.assesment_party_role) t JOIN main.party_role pr ON pr.Party_Role_Code = t.Party_Role_Code GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Party_Role_Name",
+          "people"
+        ],
+        "rowCount": 3,
+        "rows": [
+          [
+            "Agent",
+            1
+          ],
+          [
+            "PolicyHolder",
+            1
+          ],
+          [
+            "Underwriter",
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-claim-how-many-days-after-the-start-of-4062f4",
+      "question": "For each claim, how many days after the start of the coverage term it was filed against did the loss occur?",
+      "quadrant": "HQHS",
+      "shape": "list",
+      "goldSql": "SELECT c.Company_Claim_Number, DATE_DIFF('day', d.Effective_Date, o.Occurrence_Begin_Date) AS days_into_term FROM main.claim c JOIN main.claim_coverage cc ON cc.Claim_Identifier = c.Claim_Identifier JOIN main.policy_coverage_detail d ON d.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier JOIN main.occurrences o ON o.Occurrence_Identifier = c.Occurrence_Identifier ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "days_into_term"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312701,
+            13
+          ],
+          [
+            12312702,
+            151
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-percentage-of-our-total-written-premium-com-10c6a3",
+      "question": "What percentage of our total written premium comes from policy 31003000337?",
+      "quadrant": "HQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT 100.0 * SUM(t.Policy_Amount) FILTER (WHERE p.Policy_Number = 31003000337) / SUM(t.Policy_Amount) AS pct FROM (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t JOIN main.policy p ON p.Policy_Identifier = t.Policy_Identifier",
+      "gold": {
+        "columns": [
+          "pct"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            12.244897959183673
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-policy-what-fraction-of-its-coverage-te-940398",
+      "question": "For each policy, what fraction of its coverage terms had at least one claim filed against them?",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "SELECT p.Policy_Number, COUNT(DISTINCT cc.Policy_Coverage_Detail_Identifier) * 1.0 / COUNT(DISTINCT d.Policy_Coverage_Detail_Identifier) AS fraction_with_claims FROM main.policy p JOIN main.policy_coverage_detail d ON d.Policy_Identifier = p.Policy_Identifier LEFT JOIN main.claim_coverage cc ON cc.Policy_Coverage_Detail_Identifier = d.Policy_Coverage_Detail_Identifier GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Policy_Number",
+          "fraction_with_claims"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            31003000336,
+            0.2
+          ],
+          [
+            31003000337,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-underwriting-assessment-show-the-underw-17acba",
+      "question": "For each underwriting assessment, show the underwriter's name, the policy number assessed, and how many days the assessment took.",
+      "quadrant": "HQHS",
+      "shape": "list",
+      "goldSql": "SELECT pe.First_Name, pe.Last_Name, p.Policy_Number, DATE_DIFF('day', a.Begin_Date, a.End_Date) AS days FROM main.assessment a JOIN main.assesment_party_role r ON r.Assessment_Identifier = a.Assessment_Identifier AND r.Party_Role_Code = 'UW' JOIN main.person pe ON pe.Person_Identifier = r.Party_Identifier JOIN main.agreement_assessment aa ON aa.Assessment_Identifier = a.Assessment_Identifier JOIN main.policy p ON p.Policy_Identifier = aa.Agreement_Identifier ORDER BY 3",
+      "gold": {
+        "columns": [
+          "First_Name",
+          "Last_Name",
+          "Policy_Number",
+          "days"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            "Alice",
+            "Writer",
+            31003000336,
+            44
+          ],
+          [
+            "Alice",
+            "Writer",
+            31003000337,
+            26
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-of-our-policies-earns-more-premium-per-day-a6d127",
+      "question": "Which of our policies earns more premium per day of its policy term? Give the policy number.",
+      "quadrant": "HQHS",
+      "shape": "ranked",
+      "goldSql": "SELECT p.Policy_Number FROM main.policy p JOIN (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t ON t.Policy_Identifier = p.Policy_Identifier GROUP BY p.Policy_Number, p.Effective_Date, p.Expiration_Date ORDER BY SUM(t.Policy_Amount) * 1.0 / DATE_DIFF('day', p.Effective_Date, p.Expiration_Date) DESC LIMIT 1",
+      "gold": {
+        "columns": [
+          "Policy_Number"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            31003000336
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-break-down-the-claim-dollars-by-amount-type-for-20d6ea",
+      "question": "Break down the claim dollars by amount type for claims on the property at 5315 Martin Ave.",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ) SELECT t.amount_type, SUM(t.Claim_Amount) AS total FROM typed t JOIN main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier ON c.Claim_Identifier = t.Claim_Identifier WHERE a.Line_1_Address = '5315 Martin Ave' GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "amount_type",
+          "total"
+        ],
+        "rowCount": 4,
+        "rows": [
+          [
+            "Expense Payment",
+            1300
+          ],
+          [
+            "Expense Reserve",
+            1100
+          ],
+          [
+            "Loss Payment",
+            1200
+          ],
+          [
+            "Loss Reserve",
+            1000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-how-much-in-loss-payments-was-made-on-claims-und-420cad",
+      "question": "How much in loss payments was made on claims under policies that Alice Writer underwrote?",
+      "quadrant": "HQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT SUM(ca.Claim_Amount) AS loss_paid FROM main.claim_amount ca JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier WHERE ca.Claim_Identifier IN (SELECT cc.Claim_Identifier FROM main.claim_coverage cc JOIN main.policy_coverage_detail d ON d.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier JOIN main.agreement_assessment aa ON aa.Agreement_Identifier = d.Policy_Identifier JOIN main.assesment_party_role r ON r.Assessment_Identifier = aa.Assessment_Identifier AND r.Party_Role_Code = 'UW' JOIN main.person pe ON pe.Person_Identifier = r.Party_Identifier WHERE pe.First_Name = 'Alice' AND pe.Last_Name = 'Writer')",
+      "gold": {
+        "columns": [
+          "loss_paid"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            3500
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-claim-what-total-premium-was-charged-ac-507e04",
+      "question": "For each claim, what total premium was charged across all of our coverage terms that were in force on the day the loss occurred?",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "SELECT c.Company_Claim_Number, SUM(t.Policy_Amount) AS premium_in_force FROM main.claim c JOIN main.occurrences o ON o.Occurrence_Identifier = c.Occurrence_Identifier JOIN main.policy_coverage_detail d ON o.Occurrence_Begin_Date BETWEEN d.Effective_Date AND d.Expiration_Date JOIN (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t ON t.Policy_Coverage_Detail_Identifier = d.Policy_Coverage_Detail_Identifier GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "premium_in_force"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312701,
+            20000
+          ],
+          [
+            12312702,
+            32000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-recorded-addresses-are-not-tied-to-any-ins-d959f5",
+      "question": "Which recorded addresses are not tied to any insured property? List the street addresses.",
+      "quadrant": "HQHS",
+      "shape": "list",
+      "goldSql": "SELECT a.Line_1_Address FROM main.location_address a JOIN main.geographic_location g ON g.Location_Address_Identifier = a.Location_Address_Identifier LEFT JOIN main.insurable_object io ON io.Geographic_Location_Identifier = g.Geographic_Location_Identifier WHERE io.Insurable_Object_Identifier IS NULL ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Line_1_Address"
+        ],
+        "rowCount": 6,
+        "rows": [
+          [
+            "1603 East 14th Street"
+          ],
+          [
+            "309 East 11th Street"
+          ],
+          [
+            "3801 Peak Lookout Drive"
+          ],
+          [
+            "6303 Indian Canyon Drive"
+          ],
+          [
+            "721 Barton Springs Road"
+          ],
+          [
+            "801 Post Oak Drive"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-claim-what-are-its-total-recorded-amoun-5e9f7f",
+      "question": "For each claim, what are its total recorded amounts as a percentage of the premium for the coverage term it was filed against?",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "SELECT c.Company_Claim_Number, 100.0 * (SELECT SUM(Claim_Amount) FROM main.claim_amount ca WHERE ca.Claim_Identifier = c.Claim_Identifier) / SUM(pa.Policy_Amount) AS pct_of_premium FROM main.claim c JOIN main.claim_coverage cc ON cc.Claim_Identifier = c.Claim_Identifier JOIN main.policy_amount pa ON pa.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier GROUP BY c.Company_Claim_Number, c.Claim_Identifier ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "pct_of_premium"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312701,
+            23
+          ],
+          [
+            12312702,
+            45
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-which-claim-took-the-longest-from-the-date-of-lo-f01a8c",
+      "question": "Which claim took the longest from the date of loss to closure, and what ZIP code is its property in?",
+      "quadrant": "HQHS",
+      "shape": "ranked",
+      "goldSql": "SELECT c.Company_Claim_Number, a.Postal_Code FROM main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier = c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier = g.Location_Address_Identifier JOIN main.occurrences o ON o.Occurrence_Identifier = c.Occurrence_Identifier ORDER BY DATE_DIFF('day', o.Occurrence_Begin_Date, c.Claim_Close_Date) DESC LIMIT 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "Postal_Code"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            12312702,
+            78732
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-policy-what-is-the-ratio-of-its-latest-15c166",
+      "question": "For each policy, what is the ratio of its latest coverage term's premium to its first term's premium?",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "SELECT p.Policy_Number, ARG_MAX(t.Policy_Amount, t.Effective_Date) * 1.0 / ARG_MIN(t.Policy_Amount, t.Effective_Date) AS latest_to_first FROM (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t JOIN main.policy p ON p.Policy_Identifier = t.Policy_Identifier GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Policy_Number",
+          "latest_to_first"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            31003000336,
+            1.3333333333333333
+          ],
+          [
+            31003000337,
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-what-total-premium-was-written-on-policies-whose-a52936",
+      "question": "What total premium was written on policies whose underwriting assessment came back OK?",
+      "quadrant": "HQHS",
+      "shape": "scalar",
+      "goldSql": "SELECT SUM(t.Policy_Amount) AS total_premium FROM (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t WHERE t.Policy_Identifier IN (SELECT aa.Agreement_Identifier FROM main.agreement_assessment aa JOIN main.assessment_result ar ON ar.Assessment_Identifier = aa.Assessment_Identifier JOIN main.underwriting_assessment ua ON ua.Assessment_Result_Identifier = ar.Assessment_Result_Identifier WHERE ar.Assessment_Result_Type_Code = 'OK')",
+      "gold": {
+        "columns": [
+          "total_premium"
+        ],
+        "rowCount": 1,
+        "rows": [
+          [
+            98000
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-per-claim-what-is-the-paid-to-incurred-ratio-for-267537",
+      "question": "Per claim, what is the paid-to-incurred ratio for losses, i.e. loss payments divided by loss payments plus loss reserves?",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ) SELECT c.Company_Claim_Number, SUM(t.Claim_Amount) FILTER (WHERE amount_type = 'Loss Payment') * 1.0 / SUM(t.Claim_Amount) FILTER (WHERE amount_type LIKE 'Loss%') AS paid_to_incurred FROM typed t JOIN main.claim c ON c.Claim_Identifier = t.Claim_Identifier GROUP BY 1 ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Company_Claim_Number",
+          "paid_to_incurred"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            12312701,
+            0.5454545454545454
+          ],
+          [
+            12312702,
+            0.5227272727272727
+          ]
+        ]
+      }
+    },
+    {
+      "id": "heldout-for-each-policy-number-show-the-policyholder-s-n-7103dd",
+      "question": "For each policy number, show the policyholder's name, the total premium, and the total incurred loss on claims filed against its coverages.",
+      "quadrant": "HQHS",
+      "shape": "grouped",
+      "goldSql": "WITH typed AS ( SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Payment' AS amount_type FROM main.claim_amount ca JOIN main.loss_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Loss Reserve' FROM main.claim_amount ca JOIN main.loss_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Payment' FROM main.claim_amount ca JOIN main.expense_payment x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier UNION ALL SELECT ca.Claim_Identifier, ca.Claim_Amount, 'Expense Reserve' FROM main.claim_amount ca JOIN main.expense_reserve x ON x.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ), prem AS (SELECT Policy_Identifier, SUM(Policy_Amount) AS premium FROM (SELECT pa.* FROM main.policy_amount pa JOIN main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier) t GROUP BY 1), inc AS (SELECT d.Policy_Identifier, SUM(t.Claim_Amount) AS incurred_loss FROM typed t JOIN main.claim_coverage cc ON cc.Claim_Identifier = t.Claim_Identifier JOIN main.policy_coverage_detail d ON d.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier WHERE t.amount_type IN ('Loss Payment','Loss Reserve') GROUP BY 1) SELECT p.Policy_Number, pe.First_Name, pe.Last_Name, prem.premium, COALESCE(inc.incurred_loss, 0) AS incurred_loss FROM main.policy p JOIN main.agreement_party_role r ON r.Agreement_Identifier = p.Policy_Identifier AND r.Party_Role_Code = 'PH' JOIN main.person pe ON pe.Person_Identifier = r.Party_Identifier JOIN prem ON prem.Policy_Identifier = p.Policy_Identifier LEFT JOIN inc ON inc.Policy_Identifier = p.Policy_Identifier ORDER BY 1",
+      "gold": {
+        "columns": [
+          "Policy_Number",
+          "First_Name",
+          "Last_Name",
+          "premium",
+          "incurred_loss"
+        ],
+        "rowCount": 2,
+        "rows": [
+          [
+            31003000336,
+            "Mary",
+            "Holder",
+            86000,
+            6600
+          ],
+          [
+            31003000337,
+            "Mary",
+            "Holder",
+            12000,
+            0
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "cases": [
+    {
+      "name": "heldout-which-policies-expiring-in-2020-involve-bob-agen-a8ce41",
+      "question": "Which policies expiring in 2020 involve Bob Agent, and what role code does he hold?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            31003000337,
+            "AG"
+          ]
+        ],
+        "goldSql": "SELECT p.Policy_Number AS policy_number, r.Party_Role_Code AS role_code FROM main.policy p JOIN main.agreement_party_role r ON r.Agreement_Identifier=p.Policy_Identifier JOIN main.person pe ON pe.Person_Identifier=r.Party_Identifier WHERE pe.First_Name='Bob' AND pe.Last_Name='Agent' AND p.Expiration_Date>=DATE '2020-01-01' AND p.Expiration_Date<DATE '2021-01-01'",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-how-much-annual-premium-is-recorded-for-each-pol-bdf8d4",
+      "question": "How much annual premium is recorded for each policy across all effective years?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            31003000336,
+            86000
+          ],
+          [
+            31003000337,
+            12000
+          ]
+        ],
+        "goldSql": "SELECT p.Policy_Number AS policy_number, SUM(pa.Policy_Amount) AS total_annual_premium FROM main.policy p JOIN main.policy_amount pa ON pa.Policy_Identifier=p.Policy_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier=pa.Policy_Amount_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    }
+  ]
+}

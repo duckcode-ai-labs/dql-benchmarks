@@ -1,0 +1,50 @@
+{
+  "cases": [
+    {
+      "name": "heldout-how-many-fire-loss-records-show-a-loss-ratio-bel-a4a754",
+      "question": "How many fire loss records show a loss ratio below 0.4?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            175
+          ]
+        ],
+        "goldSql": "SELECT COUNT(*) AS record_count FROM main.fire_claim WHERE Loss_Ratio<0.4",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-for-fire-loss-records-within-three-miles-of-a-st-fce264",
+      "question": "For fire loss records within three miles of a station, what is the maximum recorded loss ratio?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            0.5
+          ]
+        ],
+        "goldSql": "SELECT MAX(Loss_Ratio) AS maximum_loss_ratio FROM main.fire_claim WHERE Nearest_Firestation_miles<=3",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-for-each-covered-policy-what-is-the-sum-of-all-r-4d8c95",
+      "question": "For each covered policy, what is the sum of all recorded amounts on its claims?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            31003000336,
+            13600
+          ]
+        ],
+        "goldSql": "SELECT p.Policy_Number AS policy_number, SUM(ca.Claim_Amount) AS total_claim_amount FROM main.claim c JOIN main.claim_coverage cc ON cc.Claim_Identifier=c.Claim_Identifier JOIN main.policy_coverage_detail cd ON cd.Policy_Coverage_Detail_Identifier=cc.Policy_Coverage_Detail_Identifier JOIN main.policy p ON p.Policy_Identifier=cd.Policy_Identifier JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,1484 @@
+{
+  "identity": {
+    "benchmark": "insurance",
+    "condition": "agent-modeling",
+    "repoCommit": "eed7c279e6841522b7239250014b13d1590c27ae",
+    "repoDirty": false,
+    "contentFingerprint": "2171d4854041fb31",
+    "dql": {
+      "version": "none (agentic text-to-SQL)",
+      "source": "none",
+      "commit": "eed7c279e6841522b7239250014b13d1590c27ae",
+      "dirty": false
+    },
+    "provider": "ollama",
+    "model": "qwen3.8:27b",
+    "cassetteMode": "record",
+    "dataHash": null,
+    "tools": {
+      "ollama": "http://127.0.0.1:11434",
+      "effort": "medium"
+    },
+    "node": "v22.18.0",
+    "createdAt": "2026-10-06T13:51:44.486Z",
+    "publishable": true,
+    "notPublishableBecause": []
+  },
+  "provenance": {
+    "source": "saved agent transcripts",
+    "recordings": 50,
+    "realProviderQualityEligible": true,
+    "reasons": []
+  },
+  "run": {
+    "id": "ag5m-qwen",
+    "layer": "agent-modeling",
+    "set": "heldout-5-unanswerable",
+    "warehouse": "W2",
+    "startedAt": "2026-10-06T13:51:44.489Z",
+    "repeat": 1
+  },
+  "method": {
+    "design": "insurance/AGENT-BASELINE.md",
+    "protocol": "text protocol: one JSON action per reply; each turn is a fresh call carrying the whole transcript",
+    "systemPrompt": "You are a data analyst. You answer one business question by writing one SQL query against a DuckDB database. You cannot see the database: you explore it through the actions below, and after each reply you are shown what your action returned.\n\nActions (reply with exactly one JSON object per reply, and nothing else):\n{\"action\": \"list_tables\"}                             every table and view you can query\n{\"action\": \"describe_table\", \"table\": \"<name>\"}       the table's columns and types\n{\"action\": \"sample_rows\", \"table\": \"<name>\", \"n\": 3}  up to 5 rows of the table\n{\"action\": \"run_sql\", \"sql\": \"<query>\"}               run one read-only query; you see at most 50 rows\nFinish with exactly one of:\n{\"action\": \"final_sql\", \"sql\": \"<query>\"}             the query whose full result answers the question\n{\"action\": \"cannot_answer\", \"reason\": \"<why>\"}        the data does not hold what the question needs\n(A reply that starts with CANNOT_ANSWER: <reason> also finishes with cannot_answer.)\n\nRules:\n- The database is DuckDB and read-only.\n- Your final query's full result is the answer, and it is checked by its values: return the columns and rows the question asks for, not a preview. The 50-row limit applies only to what you are shown while exploring.\n- If a query fails, you are shown the error and may try again. If your final query fails to run, you are shown the error and may send a corrected final_sql.\n- Use cannot_answer only when the data does not hold what the question needs (a missing measure, attribute, entity or period). Do not substitute a different measure.\n- You have at most 12 replies and 20 tool calls for this question. A question left without final_sql or cannot_answer when they run out gets no answer.\n- Reply with one JSON object only: no prose, no Markdown.",
+    "systemPromptSha256": "6abec871ffb9966e688e399268a6efe8a84526a880bc42bd9279157d126a8db5",
+    "context": "modeling",
+    "contextSha256": "fdfcd9de654bd1112f416cec633a5cdeee2a92cf95c7d30019b11db5de1ce0eb",
+    "tools": [
+      "list_tables",
+      "describe_table",
+      "sample_rows",
+      "run_sql",
+      "final_sql",
+      "cannot_answer"
+    ],
+    "limits": {
+      "maxTurns": 12,
+      "maxToolCalls": 20,
+      "maxWallMs": 900000,
+      "callTimeoutMs": 300000,
+      "rowCap": 50,
+      "cellChars": 200,
+      "sampleMax": 5,
+      "statementTimeoutS": 30
+    },
+    "grading": "final query run in full on the warehouse copy; lib/row-match.mjs with extra columns allowed (as baseline P); cannot_answer is a correct stop only on an unanswerable set"
+  },
+  "results": [
+    {
+      "name": "heldout-unanswerable-why-was-policy-31003000336-cancelled-098f76",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 144579,
+      "providerDispatchCount": 12,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The data does not record why policy 31003000336 was cancelled. The policy's Status_Code is empty (null), and the only assessment linked to it (Assessment_Identifier 1) has an empty Assessment_Description and Assessment_Reason_Description, with a result of 'OK'. No field in the warehouse holds a cancellation reason for this policy."
+      },
+      "usage": {
+        "input": 91171,
+        "output": 500,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 12,
+      "toolCalls": 11,
+      "sqlStatementsRun": 11,
+      "protocolErrors": 0,
+      "totalMs": 144579,
+      "modelMs": 142874,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-deductible-applies-to-claim-12312701-2f07f9",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 62283,
+      "providerDispatchCount": 1,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "No deductible measure or attribute exists anywhere in the schema: there is no deductible column in claim, claim_amount, policy, policy_amount, policy_coverage_detail or any other table, and no approved metric or dimension for deductibles. The data does not hold what the question needs."
+      },
+      "usage": {
+        "input": 6840,
+        "output": 68,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 1,
+      "toolCalls": 0,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 62283,
+      "modelMs": 62283,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-is-the-coverage-limit-for-policy-3100300033-7b97b2",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "durationMs": 77650,
+      "providerDispatchCount": 4,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT pa.Policy_Amount AS Coverage_Limit\nFROM policy p\nJOIN policy_amount pa ON pa.Policy_Identifier = p.Policy_Identifier\nWHERE p.Policy_Number = 31003000337\n  AND pa.Amount_Type_Code IS NULL",
+        "rowCount": 1
+      },
+      "usage": {
+        "input": 28113,
+        "output": 161,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "final_sql",
+      "turns": 4,
+      "toolCalls": 3,
+      "sqlStatementsRun": 4,
+      "protocolErrors": 0,
+      "totalMs": 77650,
+      "modelMs": 76934,
+      "finalSql": "SELECT pa.Policy_Amount AS Coverage_Limit\nFROM policy p\nJOIN policy_amount pa ON pa.Policy_Identifier = p.Policy_Identifier\nWHERE p.Policy_Number = 31003000337\n  AND pa.Amount_Type_Code IS NULL"
+    },
+    {
+      "name": "heldout-unanswerable-which-line-of-business-was-policy-31003000336-wr-d20dd5",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 208536,
+      "providerDispatchCount": 12,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "No 'line of business' attribute exists anywhere in the schema. The policy (31003000336) is fully described by its parties, coverage details, insurable object, amounts and assessments, but no field records a line of business (e.g., property, casualty, specialty). The only candidate, the insurer's Industry_Code/Industry_Type_Code in organizations, is null, and the insurable object type code is also null. The data does not hold what the question needs."
+      },
+      "usage": {
+        "input": 93695,
+        "output": 376,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 12,
+      "toolCalls": 11,
+      "sqlStatementsRun": 10,
+      "protocolErrors": 0,
+      "totalMs": 208536,
+      "modelMs": 206146,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-how-much-commission-did-bob-agent-earn-on-the-20-ff6480",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "durationMs": 107306,
+      "providerDispatchCount": 6,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT SUM(pa.Policy_Amount) AS commission FROM policy_amount pa JOIN premium p ON pa.Policy_Amount_Identifier = p.Policy_Amount_Identifier JOIN agreement_party_role apr ON apr.Agreement_Identifier = pa.Policy_Identifier AND apr.Party_Role_Code = 'AG' JOIN person per ON per.Person_Identifier = apr.Party_Identifier WHERE per.First_Name = 'Bob' AND per.Last_Name = 'Agent' AND pa.Effective_Date = '2019-01-01'",
+        "rowCount": 1
+      },
+      "usage": {
+        "input": 43763,
+        "output": 311,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "final_sql",
+      "turns": 6,
+      "toolCalls": 5,
+      "sqlStatementsRun": 3,
+      "protocolErrors": 0,
+      "totalMs": 107306,
+      "modelMs": 105405,
+      "finalSql": "SELECT SUM(pa.Policy_Amount) AS commission FROM policy_amount pa JOIN premium p ON pa.Policy_Amount_Identifier = p.Policy_Amount_Identifier JOIN agreement_party_role apr ON apr.Agreement_Identifier = pa.Policy_Identifier AND apr.Party_Role_Code = 'AG' JOIN person per ON per.Person_Identifier = apr.Party_Identifier WHERE per.First_Name = 'Bob' AND per.Last_Name = 'Agent' AND pa.Effective_Date = '2019-01-01'"
+    },
+    {
+      "name": "heldout-unanswerable-what-was-the-underwriting-decision-for-policy-31-3fc6d2",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "durationMs": 68776,
+      "providerDispatchCount": 2,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT p.Policy_Number, ar.Assessment_Result_Type_Code AS Underwriting_Decision FROM policy p JOIN agreement_assessment aa ON aa.Agreement_Identifier = p.Policy_Identifier JOIN assessment_result ar ON ar.Assessment_Identifier = aa.Assessment_Identifier JOIN underwriting_assessment ua ON ua.Assessment_Result_Identifier = ar.Assessment_Result_Identifier WHERE p.Policy_Number = 31003000337",
+        "rowCount": 1
+      },
+      "usage": {
+        "input": 13850,
+        "output": 205,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "final_sql",
+      "turns": 2,
+      "toolCalls": 1,
+      "sqlStatementsRun": 2,
+      "protocolErrors": 0,
+      "totalMs": 68776,
+      "modelMs": 68528,
+      "finalSql": "SELECT p.Policy_Number, ar.Assessment_Result_Type_Code AS Underwriting_Decision FROM policy p JOIN agreement_assessment aa ON aa.Agreement_Identifier = p.Policy_Identifier JOIN assessment_result ar ON ar.Assessment_Identifier = aa.Assessment_Identifier JOIN underwriting_assessment ua ON ua.Assessment_Result_Identifier = ar.Assessment_Result_Identifier WHERE p.Policy_Number = 31003000337"
+    },
+    {
+      "name": "heldout-unanswerable-what-risk-score-did-the-underwriter-assign-to-th-16f03e",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 128912,
+      "providerDispatchCount": 12,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The underwriting assessment data does not contain a numeric risk score. The only outcome stored is assessment_result.Assessment_Result_Type_Code, which holds the value 'OK' (a pass/fail-style result), and the assessment table's description and reason fields are empty. There is no risk-score measure or attribute anywhere in the schema, so the risk score assigned to the property at 5315 Martin Ave cannot be retrieved."
+      },
+      "usage": {
+        "input": 88333,
+        "output": 311,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 12,
+      "toolCalls": 11,
+      "sqlStatementsRun": 8,
+      "protocolErrors": 0,
+      "totalMs": 128912,
+      "modelMs": 126958,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-how-much-earned-premium-did-policy-31003000336-p-2bfff5",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "durationMs": 91868,
+      "providerDispatchCount": 4,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT SUM(pa.Policy_Amount) AS earned_premium_2019\nFROM policy_amount pa\nJOIN premium pr ON pa.Policy_Amount_Identifier = pr.Policy_Amount_Identifier\nJOIN policy p ON pa.Policy_Identifier = p.Policy_Identifier\nWHERE p.Policy_Number = 31003000336\n  AND pa.Effective_Date = DATE '2019-01-01'",
+        "rowCount": 1
+      },
+      "usage": {
+        "input": 29310,
+        "output": 304,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "final_sql",
+      "turns": 4,
+      "toolCalls": 3,
+      "sqlStatementsRun": 3,
+      "protocolErrors": 0,
+      "totalMs": 91868,
+      "modelMs": 90093,
+      "finalSql": "SELECT SUM(pa.Policy_Amount) AS earned_premium_2019\nFROM policy_amount pa\nJOIN premium pr ON pa.Policy_Amount_Identifier = pr.Policy_Amount_Identifier\nJOIN policy p ON pa.Policy_Identifier = p.Policy_Identifier\nWHERE p.Policy_Number = 31003000336\n  AND pa.Effective_Date = DATE '2019-01-01'"
+    },
+    {
+      "name": "heldout-unanswerable-on-what-date-did-mary-holder-pay-the-2019-premiu-8df47f",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "durationMs": 81357,
+      "providerDispatchCount": 3,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT pa.Effective_Date AS premium_date\nFROM policy_amount pa\nJOIN premium p ON pa.Policy_Amount_Identifier = p.Policy_Amount_Identifier\nJOIN agreement_party_role apr ON apr.Agreement_Identifier = pa.Policy_Identifier\nJOIN person per ON per.Person_Identifier = apr.Party_Identifier\nWHERE per.First_Name = 'Mary' AND per.Last_Name = 'Holder' AND apr.Party_Role_Code = 'PH'\n  AND pa.Effective_Date = DATE '2019-01-01'",
+        "rowCount": 1
+      },
+      "usage": {
+        "input": 21187,
+        "output": 279,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "final_sql",
+      "turns": 3,
+      "toolCalls": 2,
+      "sqlStatementsRun": 2,
+      "protocolErrors": 0,
+      "totalMs": 81357,
+      "modelMs": 79955,
+      "finalSql": "SELECT pa.Effective_Date AS premium_date\nFROM policy_amount pa\nJOIN premium p ON pa.Policy_Amount_Identifier = p.Policy_Amount_Identifier\nJOIN agreement_party_role apr ON apr.Agreement_Identifier = pa.Policy_Identifier\nJOIN person per ON per.Person_Identifier = apr.Party_Identifier\nWHERE per.First_Name = 'Mary' AND per.Last_Name = 'Holder' AND apr.Party_Role_Code = 'PH'\n  AND pa.Effective_Date = DATE '2019-01-01'"
+    },
+    {
+      "name": "heldout-unanswerable-what-balance-is-overdue-on-policy-31003000336-864923",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "durationMs": 100437,
+      "providerDispatchCount": 4,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT SUM(ca.Claim_Amount) AS overdue_balance FROM claim_amount ca JOIN loss_reserve lr ON ca.Claim_Amount_Identifier = lr.Claim_Amount_Identifier WHERE ca.Claim_Identifier IN (SELECT cc.Claim_Identifier FROM claim_coverage cc JOIN policy_coverage_detail pcd ON cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier AND cc.Effective_Date = pcd.Effective_Date WHERE pcd.Policy_Identifier = (SELECT Policy_Identifier FROM policy WHERE Policy_Number = 31003000336))",
+        "rowCount": 1
+      },
+      "usage": {
+        "input": 28497,
+        "output": 533,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "final_sql",
+      "turns": 4,
+      "toolCalls": 3,
+      "sqlStatementsRun": 4,
+      "protocolErrors": 0,
+      "totalMs": 100437,
+      "modelMs": 99320,
+      "finalSql": "SELECT SUM(ca.Claim_Amount) AS overdue_balance FROM claim_amount ca JOIN loss_reserve lr ON ca.Claim_Amount_Identifier = lr.Claim_Amount_Identifier WHERE ca.Claim_Identifier IN (SELECT cc.Claim_Identifier FROM claim_coverage cc JOIN policy_coverage_detail pcd ON cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier AND cc.Effective_Date = pcd.Effective_Date WHERE pcd.Policy_Identifier = (SELECT Policy_Identifier FROM policy WHERE Policy_Number = 31003000336))"
+    },
+    {
+      "name": "heldout-unanswerable-what-was-the-monthly-installment-amount-for-poli-e563b6",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "durationMs": 70154,
+      "providerDispatchCount": 2,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT pa.Policy_Amount / 12 AS monthly_installment FROM policy_amount pa JOIN premium p ON pa.Policy_Amount_Identifier = p.Policy_Amount_Identifier JOIN policy pol ON pa.Policy_Identifier = pol.Policy_Identifier WHERE pol.Policy_Number = 31003000337",
+        "rowCount": 1
+      },
+      "usage": {
+        "input": 13862,
+        "output": 178,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "final_sql",
+      "turns": 2,
+      "toolCalls": 1,
+      "sqlStatementsRun": 2,
+      "protocolErrors": 0,
+      "totalMs": 70154,
+      "modelMs": 69671,
+      "finalSql": "SELECT pa.Policy_Amount / 12 AS monthly_installment FROM policy_amount pa JOIN premium p ON pa.Policy_Amount_Identifier = p.Policy_Amount_Identifier JOIN policy pol ON pa.Policy_Identifier = pol.Policy_Identifier WHERE pol.Policy_Number = 31003000337"
+    },
+    {
+      "name": "heldout-unanswerable-which-renewal-offer-was-sent-for-policy-31003000-cb99de",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 209002,
+      "providerDispatchCount": 12,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The data does not contain any 'renewal offer' entity or field. The only offer-related column is claim_amount.Claim_Offer_Identifier, which is empty and pertains to claim settlement offers, not renewal offers. There is no table or attribute recording a renewal offer sent for a policy after expiration, so the question cannot be answered from this warehouse."
+      },
+      "usage": {
+        "input": 94511,
+        "output": 318,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 12,
+      "toolCalls": 11,
+      "sqlStatementsRun": 10,
+      "protocolErrors": 0,
+      "totalMs": 209002,
+      "modelMs": 207263,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-is-mary-holder-s-email-address-a417b5",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 64342,
+      "providerDispatchCount": 1,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "No table in the schema stores an email address. The person table only has name fields (First_Name, Middle_Name, Last_Name, etc.) and the party table has no contact information, so Mary Holder's email address is not available in this database."
+      },
+      "usage": {
+        "input": 6833,
+        "output": 64,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 1,
+      "toolCalls": 0,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 64342,
+      "modelMs": 64342,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-phone-number-is-on-file-for-bob-agent-f8511d",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 81108,
+      "providerDispatchCount": 4,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "There is no phone number column anywhere in the database. The person table (which contains Bob Agent, Person_Identifier 2) only has name fields (First_Name, Middle_Name, Last_Name, etc.) and no contact/phone information, and no other table holds a phone number. The data does not contain the requested measure."
+      },
+      "usage": {
+        "input": 29163,
+        "output": 122,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 4,
+      "toolCalls": 3,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 81108,
+      "modelMs": 79633,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-is-mary-holder-s-date-of-birth-f2758e",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 62592,
+      "providerDispatchCount": 2,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The person table has a row for Mary Holder (Person_Identifier 1, First_Name 'Mary', Last_Name 'Holder'), but its Birth_Date column is NULL (empty) for every person, so the database does not hold Mary Holder's date of birth."
+      },
+      "usage": {
+        "input": 13836,
+        "output": 86,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 2,
+      "toolCalls": 1,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 62592,
+      "modelMs": 62265,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-is-bob-agent-s-gender-050abf",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 70080,
+      "providerDispatchCount": 3,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "Bob Agent (Person_Identifier 2) has a NULL Gender_Code in the person table, and there is no other table or attribute that records a person's gender. The data does not hold Bob Agent's gender."
+      },
+      "usage": {
+        "input": 20930,
+        "output": 119,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 3,
+      "toolCalls": 2,
+      "sqlStatementsRun": 1,
+      "protocolErrors": 0,
+      "totalMs": 70080,
+      "modelMs": 69638,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-is-the-policyholder-s-occupation-8fdd75",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 82323,
+      "providerDispatchCount": 4,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The database has no occupation attribute for any party or person. The person table only holds name fields (first/middle/last) and empty demographic fields (birth date, place, gender); the party and organizations tables have no occupation column either. There is no measure, attribute, or entity recording a policyholder's occupation, so the question cannot be answered from this data."
+      },
+      "usage": {
+        "input": 29155,
+        "output": 130,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 4,
+      "toolCalls": 3,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 82323,
+      "modelMs": 80600,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-is-the-policyholder-s-household-income-c4822d",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 57080,
+      "providerDispatchCount": 1,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "No table or column in the schema holds a policyholder's household income. The person table only has name fields (first, middle, last) and the party table has only an identifier; there is no income, salary, or financial-attribute column anywhere in the database."
+      },
+      "usage": {
+        "input": 6834,
+        "output": 68,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 1,
+      "toolCalls": 0,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 57080,
+      "modelMs": 57080,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-is-mary-holder-s-marital-status-28a1ef",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 63862,
+      "providerDispatchCount": 2,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The person table has no marital status column (only name, birth date/place, gender code, and name parts, all of which are empty except names), so Mary Holder's marital status is not stored in this database."
+      },
+      "usage": {
+        "input": 13834,
+        "output": 77,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 2,
+      "toolCalls": 1,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 63862,
+      "modelMs": 63016,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-credit-score-was-used-to-price-policy-31003-e81df3",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 67359,
+      "providerDispatchCount": 2,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "No table or column in the schema holds a credit score. The question asks for the credit score used to price policy 31003000336, but the warehouse contains no credit-score measure, attribute, or entity (no credit_score column in policy, policy_amount, assessment, or any other table)."
+      },
+      "usage": {
+        "input": 14115,
+        "output": 88,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 2,
+      "toolCalls": 1,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 67359,
+      "modelMs": 66501,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-how-many-claims-did-mary-holder-file-with-other-7416fb",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 242976,
+      "providerDispatchCount": 12,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The data does not hold what the question needs. The only insurer in the database is Mesa Underwriters Specialty Insurance Company (the company itself), and there is no field identifying which insurer a claim was filed with. All claims in the data are filed against this company's own policies (Mary Holder is the policy holder, not the insurer), and both claims are dated 2019 (after 2015). There is no way to identify claims filed with 'other insurers' or to distinguish them from claims filed with this insurer, so the count of claims Mary Holder filed with other insurers before 2015 cannot be determined from the data."
+      },
+      "usage": {
+        "input": 94848,
+        "output": 902,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 12,
+      "toolCalls": 11,
+      "sqlStatementsRun": 9,
+      "protocolErrors": 0,
+      "totalMs": 242976,
+      "modelMs": 240346,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-repair-estimate-did-the-adjuster-approve-fo-e1b34f",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 156560,
+      "providerDispatchCount": 12,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The data does not contain a 'repair estimate' or any 'adjuster' role. The only money amounts on claim 12312701 (Claim_Identifier 1) are loss_reserve (1000), loss_payment (1200), expense_reserve (1100) and expense_payment (1300); the only party roles that exist are Agent, Underwriter and PolicyHolder, and the assessments are underwriting assessments (result 'OK'), not adjuster-approved repair estimates. No measure, attribute or entity for a repair estimate approved by an adjuster exists in the warehouse."
+      },
+      "usage": {
+        "input": 91358,
+        "output": 627,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 12,
+      "toolCalls": 11,
+      "sqlStatementsRun": 11,
+      "protocolErrors": 0,
+      "totalMs": 156560,
+      "modelMs": 154920,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-caused-the-loss-in-claim-12312702-c2b244",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "durationMs": 76764,
+      "providerDispatchCount": 3,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT ca.Catastrophe_Name AS cause_of_loss FROM claim c JOIN catastrophe ca ON c.Catastrophe_Identifier = ca.Catastrophe_Identifier WHERE c.Company_Claim_Number = 12312702",
+        "rowCount": 1
+      },
+      "usage": {
+        "input": 21060,
+        "output": 212,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "final_sql",
+      "turns": 3,
+      "toolCalls": 2,
+      "sqlStatementsRun": 3,
+      "protocolErrors": 0,
+      "totalMs": 76764,
+      "modelMs": 76222,
+      "finalSql": "SELECT ca.Catastrophe_Name AS cause_of_loss FROM claim c JOIN catastrophe ca ON c.Catastrophe_Identifier = ca.Catastrophe_Identifier WHERE c.Company_Claim_Number = 12312702"
+    },
+    {
+      "name": "heldout-unanswerable-how-many-people-were-injured-in-claim-12312701-f17e34",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 59812,
+      "providerDispatchCount": 1,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The schema has no field recording the number of people injured in a claim. The claim table holds only dates, status, catastrophe/occurrence/insurable-object links and a description (which is empty in this data); claim_amount holds money amounts (loss/expense payments and reserves), and the fire_claim sample table has no injury count either. There is no injury or casualty count measure anywhere in the database."
+      },
+      "usage": {
+        "input": 6842,
+        "output": 95,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 1,
+      "toolCalls": 0,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 59812,
+      "modelMs": 59812,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-was-claim-12312702-flagged-as-potentially-fraudu-e4fd03",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 59109,
+      "providerDispatchCount": 1,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The database has no fraud or fraud-flag data. The claim table has no fraud indicator, and the only assessments in the data are underwriting assessments (assessment_result type 'OK', marked by underwriting_assessment) tied to policies, not to claims, and none relate to fraud. There is no field, table or measure that records whether a claim was flagged as potentially fraudulent."
+      },
+      "usage": {
+        "input": 6841,
+        "output": 89,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 1,
+      "toolCalls": 0,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 59109,
+      "modelMs": 59108,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-which-attorney-handled-litigation-for-claim-1231-1e4a13",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 204536,
+      "providerDispatchCount": 12,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The data has no attorney/litigation role or entity. Party roles are only AG (Agent), UW (Underwriter), PH (PolicyHolder); claim 12312701 links to policy 1 whose parties are the policy holder (Mary Policy Holder) and agent (Bob Insurance Agent), and the only assessment is an underwriting assessment by underwriter Alice Under Writer. There is no field, role code, or table recording an attorney who handled litigation for the claim."
+      },
+      "usage": {
+        "input": 92953,
+        "output": 380,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 12,
+      "toolCalls": 11,
+      "sqlStatementsRun": 11,
+      "protocolErrors": 0,
+      "totalMs": 204536,
+      "modelMs": 202923,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-which-adjuster-was-assigned-to-claim-12312702-89ca04",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 212519,
+      "providerDispatchCount": 12,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The data has no 'adjuster' role or any party linked to a claim. The only party roles that exist are AG (Agent), PH (PolicyHolder) and UW (Underwriter), and none of them is an adjuster. The claim (Company_Claim_Number 12312702) connects to a policy whose parties are the policy holder (Mary Policy Holder) and agent (Bob Insurance Agent), and the underwriter (Alice Under Writer) is tied to the policy's underwriting assessment — but no adjuster is recorded anywhere, so the question cannot be answered from this data."
+      },
+      "usage": {
+        "input": 93273,
+        "output": 405,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 12,
+      "toolCalls": 11,
+      "sqlStatementsRun": 11,
+      "protocolErrors": 0,
+      "totalMs": 212519,
+      "modelMs": 210883,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-satisfaction-rating-did-the-claimant-give-a-e8fa0d",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 65513,
+      "providerDispatchCount": 1,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The database contains no satisfaction rating or customer feedback data. There is no column, table, or measure that records a claimant's satisfaction rating after a claim closes. The claim table only has dates, status codes, and identifiers, and no survey/feedback entity exists."
+      },
+      "usage": {
+        "input": 6846,
+        "output": 67,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 1,
+      "toolCalls": 0,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 65513,
+      "modelMs": 65513,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-how-much-salvage-was-recovered-for-claim-1231270-d91582",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "durationMs": 82779,
+      "providerDispatchCount": 4,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT ca.Claim_Amount AS salvage_recovered\nFROM claim c\nJOIN claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier\nJOIN loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\nWHERE c.Company_Claim_Number = 12312702",
+        "rowCount": 1
+      },
+      "usage": {
+        "input": 28029,
+        "output": 262,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "final_sql",
+      "turns": 4,
+      "toolCalls": 3,
+      "sqlStatementsRun": 4,
+      "protocolErrors": 0,
+      "totalMs": 82779,
+      "modelMs": 82052,
+      "finalSql": "SELECT ca.Claim_Amount AS salvage_recovered\nFROM claim c\nJOIN claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier\nJOIN loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier\nWHERE c.Company_Claim_Number = 12312702"
+    },
+    {
+      "name": "heldout-unanswerable-how-much-was-recovered-through-subrogation-on-cl-7d534e",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 56523,
+      "providerDispatchCount": 1,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The data model has no subrogation concept: claim_amount is classified only into loss_payment, loss_reserve, expense_payment and expense_reserve, and there is no subrogation table, code or attribute. The amount recovered through subrogation on claim 12312701 is not recorded."
+      },
+      "usage": {
+        "input": 6845,
+        "output": 76,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 1,
+      "toolCalls": 0,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 56523,
+      "modelMs": 56523,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-on-what-date-was-the-loss-payment-for-claim-1231-cb03ac",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 141336,
+      "providerDispatchCount": 11,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The loss payment for claim 12312701 (claim_amount 1200, Claim_Amount_Identifier 3) has no payment date: claim_amount.Event_Date is null for every row, and the loss_payment marker table holds only the Claim_Amount_Identifier with no date column. The only dates available are the claim open/close dates and the occurrence date, none of which is the loss payment issue date."
+      },
+      "usage": {
+        "input": 82333,
+        "output": 565,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 11,
+      "toolCalls": 10,
+      "sqlStatementsRun": 10,
+      "protocolErrors": 0,
+      "totalMs": 141336,
+      "modelMs": 140088,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-how-did-the-loss-reserve-for-claim-12312702-chan-ea10b3",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 112334,
+      "providerDispatchCount": 6,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The loss reserve for claim 12312702 (Claim_Identifier 2) is a single amount (2100, Claim_Amount_Identifier 5) with no date of its own (claim_amount.Event_Date is empty), and there is no month or period attribute on the loss_reserve table or anywhere else. The data holds only one loss-reserve value, not a month-by-month series, so a month-by-month change cannot be produced."
+      },
+      "usage": {
+        "input": 43148,
+        "output": 530,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 6,
+      "toolCalls": 5,
+      "sqlStatementsRun": 5,
+      "protocolErrors": 0,
+      "totalMs": 112334,
+      "modelMs": 111123,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-in-what-currency-was-the-expense-payment-for-cla-3553a2",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 218991,
+      "providerDispatchCount": 12,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "No currency attribute exists anywhere in the schema. The claim's expense payment amount (claim_amount.Claim_Amount) is a bare number with no currency column, and the only location data (all in Austin, TX, USA) is not linked to the claim's payment. There is no field recording the currency in which the expense payment was made."
+      },
+      "usage": {
+        "input": 92603,
+        "output": 418,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 12,
+      "toolCalls": 11,
+      "sqlStatementsRun": 10,
+      "protocolErrors": 0,
+      "totalMs": 218991,
+      "modelMs": 212379,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-which-vendor-received-the-expense-payment-for-cl-3d547a",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 156506,
+      "providerDispatchCount": 12,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The data does not link expense payments to vendors. The expense_payment table only marks which claim_amount rows are expense payments (via Claim_Amount_Identifier); there is no vendor, payee, or counterparty attribute anywhere in the schema. The only parties in the data are the policy holder (Mary Holder) and the agent (Bob Agent) on the claim's policy, neither of which is a vendor receiving an expense payment. No vendor entity or payment-recipient field exists, so the vendor that received the expense payment for claim 12312702 cannot be determined from this database."
+      },
+      "usage": {
+        "input": 90007,
+        "output": 626,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 12,
+      "toolCalls": 11,
+      "sqlStatementsRun": 11,
+      "protocolErrors": 0,
+      "totalMs": 156506,
+      "modelMs": 154940,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-was-the-insurer-s-total-industry-insured-lo-cd78a1",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "durationMs": 95231,
+      "providerDispatchCount": 4,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT SUM(ca.Claim_Amount) AS total_industry_insured_loss\nFROM claim cl\nJOIN catastrophe c ON cl.Catastrophe_Identifier = c.Catastrophe_Identifier\nJOIN claim_amount ca ON cl.Claim_Identifier = ca.Claim_Identifier\nWHERE c.Catastrophe_Name = 'Fire'",
+        "rowCount": 1
+      },
+      "usage": {
+        "input": 28387,
+        "output": 429,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "final_sql",
+      "turns": 4,
+      "toolCalls": 3,
+      "sqlStatementsRun": 3,
+      "protocolErrors": 0,
+      "totalMs": 95231,
+      "modelMs": 93970,
+      "finalSql": "SELECT SUM(ca.Claim_Amount) AS total_industry_insured_loss\nFROM claim cl\nJOIN catastrophe c ON cl.Catastrophe_Identifier = c.Catastrophe_Identifier\nJOIN claim_amount ca ON cl.Claim_Identifier = ca.Claim_Identifier\nWHERE c.Catastrophe_Name = 'Fire'"
+    },
+    {
+      "name": "heldout-unanswerable-what-was-the-wind-speed-at-the-property-when-cla-e6e7bd",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 67798,
+      "providerDispatchCount": 2,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The database contains no wind speed data. There is no weather, wind, or meteorological table or column anywhere in the schema; the closest fields are physical location coordinates (latitude/longitude) and catastrophe peril types (Hurricane, Tornado, Flood, Fire), none of which record wind speed. The question asks for a wind speed measure that does not exist in this warehouse."
+      },
+      "usage": {
+        "input": 14115,
+        "output": 97,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 2,
+      "toolCalls": 1,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 67798,
+      "modelMs": 66943,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-how-much-rain-fell-during-the-occurrence-behind-104aa8",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 86051,
+      "providerDispatchCount": 4,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The database contains no rainfall or weather data. The occurrence behind claim 12312702 (Occurrence_Identifier 2, dated 2019-06-01) has only a begin/end date; its name, location and catastrophic-event indicator are empty, and there is no table or column recording how much rain fell. The catastrophe table only holds peril-type names (Hurricane, Tornado, Flood, Fire), not rainfall amounts."
+      },
+      "usage": {
+        "input": 29180,
+        "output": 189,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 4,
+      "toolCalls": 3,
+      "sqlStatementsRun": 2,
+      "protocolErrors": 0,
+      "totalMs": 86051,
+      "modelMs": 83225,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-is-the-claimed-property-at-13017-zen-gardens-way-eb5e3c",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "durationMs": 102698,
+      "providerDispatchCount": 5,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT CASE WHEN COUNT(*) > 0 THEN 'Yes' ELSE 'No' END AS in_flood_zone FROM claim c JOIN catastrophe cat ON c.Catastrophe_Identifier = cat.Catastrophe_Identifier JOIN insurable_object io ON c.Insurable_Object_Identifier = io.Insurable_Object_Identifier JOIN geographic_location gl ON io.Geographic_Location_Identifier = gl.Geographic_Location_Identifier JOIN location_address la ON gl.Location_Address_Identifier = la.Location_Address_Identifier WHERE cat.Catastrophe_Name = 'Flood' AND la.Line_1_Address = '13017 Zen Gardens Way'",
+        "rowCount": 1
+      },
+      "usage": {
+        "input": 35754,
+        "output": 430,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "final_sql",
+      "turns": 5,
+      "toolCalls": 4,
+      "sqlStatementsRun": 5,
+      "protocolErrors": 0,
+      "totalMs": 102698,
+      "modelMs": 100429,
+      "finalSql": "SELECT CASE WHEN COUNT(*) > 0 THEN 'Yes' ELSE 'No' END AS in_flood_zone FROM claim c JOIN catastrophe cat ON c.Catastrophe_Identifier = cat.Catastrophe_Identifier JOIN insurable_object io ON c.Insurable_Object_Identifier = io.Insurable_Object_Identifier JOIN geographic_location gl ON io.Geographic_Location_Identifier = gl.Geographic_Location_Identifier JOIN location_address la ON gl.Location_Address_Identifier = la.Location_Address_Identifier WHERE cat.Catastrophe_Name = 'Flood' AND la.Line_1_Address = '13017 Zen Gardens Way'"
+    },
+    {
+      "name": "heldout-unanswerable-how-many-square-feet-is-the-property-at-5315-mar-3eed02",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 63845,
+      "providerDispatchCount": 1,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "No table in the database records a property's square footage. The location tables (location_address, pysical_location, geographic_location, insurable_object) hold only street address, city, state, zip, country, latitude/longitude and identifiers; there is no area/square-feet measure anywhere in the schema, so the square feet of the property at 5315 Martin Ave cannot be determined."
+      },
+      "usage": {
+        "input": 6841,
+        "output": 95,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 1,
+      "toolCalls": 0,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 63845,
+      "modelMs": 63844,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-roof-material-does-the-property-at-13017-ze-efed39",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 58363,
+      "providerDispatchCount": 1,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "No table or column records a property's roof material. The location/address tables (location_address, pysical_location, geographic_location) hold only street, city, state, zip, country and coordinates; insurable_object has no attribute for roof material, and no other table stores property physical characteristics like roof material."
+      },
+      "usage": {
+        "input": 6843,
+        "output": 75,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 1,
+      "toolCalls": 0,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 58363,
+      "modelMs": 58361,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-does-the-insured-property-in-claim-12312701-have-f45689",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 61440,
+      "providerDispatchCount": 1,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The schema has no attribute recording whether an insured property has a sprinkler system. The insurable_object table only holds an identifier, a geographic location and an empty type code; the location tables hold only address and coordinates. The fire_claim table has a Fireplace yes/no column but no sprinkler field, and it is a stand-alone sample not linked to claims or insured objects. No table or column captures sprinkler-system presence, so the question cannot be answered from this data."
+      },
+      "usage": {
+        "input": 6846,
+        "output": 108,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 1,
+      "toolCalls": 0,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 61440,
+      "modelMs": 61440,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-does-the-property-in-claim-12312702-have-a-smoke-2ce422",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 72351,
+      "providerDispatchCount": 2,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "No table or column records whether a property has a smoke alarm. The insurable_object table only has an identifier, geographic location and an empty type code; the fire_claim table records Fireplace (yes/no) but has no smoke-alarm attribute, and its keys (PolicyNo, ClaimNumber) are empty so it cannot be tied to claim 12312702. The data does not hold a smoke-alarm attribute for any property."
+      },
+      "usage": {
+        "input": 14111,
+        "output": 113,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 2,
+      "toolCalls": 1,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 72351,
+      "modelMs": 71580,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-is-the-current-market-value-of-the-property-b68b60",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "durationMs": 255370,
+      "providerDispatchCount": 8,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT pa.Policy_Amount AS market_value\nFROM policy_amount pa\nJOIN policy_coverage_detail pcd ON pa.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier AND pa.Effective_Date = pcd.Effective_Date\nJOIN insurable_object io ON pcd.Insurable_Object_Identifier = io.Insurable_Object_Identifier\nJOIN geographic_location gl ON io.Geographic_Location_Identifier = gl.Geographic_Location_Identifier\nJOIN location_address la ON gl.Location_Address_Identifier = la.Location_Address_Identifier\nWHERE la.Line_1_Address = '5315 Martin Ave'\n  AND pa.Amount_Type_Code IS NULL",
+        "rowCount": 5
+      },
+      "usage": {
+        "input": 59493,
+        "output": 440,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "final_sql",
+      "turns": 8,
+      "toolCalls": 7,
+      "sqlStatementsRun": 7,
+      "protocolErrors": 0,
+      "totalMs": 255370,
+      "modelMs": 216006,
+      "finalSql": "SELECT pa.Policy_Amount AS market_value\nFROM policy_amount pa\nJOIN policy_coverage_detail pcd ON pa.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier AND pa.Effective_Date = pcd.Effective_Date\nJOIN insurable_object io ON pcd.Insurable_Object_Identifier = io.Insurable_Object_Identifier\nJOIN geographic_location gl ON io.Geographic_Location_Identifier = gl.Geographic_Location_Identifier\nJOIN location_address la ON gl.Location_Address_Identifier = la.Location_Address_Identifier\nWHERE la.Line_1_Address = '5315 Martin Ave'\n  AND pa.Amount_Type_Code IS NULL"
+    },
+    {
+      "name": "heldout-unanswerable-what-is-the-replacement-cost-of-the-home-in-clai-2ee0a9",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "durationMs": 203603,
+      "providerDispatchCount": 8,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT pa.Policy_Amount AS replacement_cost\nFROM policy_coverage_detail pcd\nJOIN policy_amount pa\n  ON pa.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier\n AND pa.Effective_Date = pcd.Effective_Date\nLEFT JOIN premium p ON pa.Policy_Amount_Identifier = p.Policy_Amount_Identifier\nJOIN claim c ON c.Insurable_Object_Identifier = pcd.Insurable_Object_Identifier\nWHERE c.Company_Claim_Number = 12312702\n  AND p.Policy_Amount_Identifier IS NULL",
+        "rowCount": 1
+      },
+      "usage": {
+        "input": 58709,
+        "output": 597,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "final_sql",
+      "turns": 8,
+      "toolCalls": 7,
+      "sqlStatementsRun": 8,
+      "protocolErrors": 0,
+      "totalMs": 203603,
+      "modelMs": 160693,
+      "finalSql": "SELECT pa.Policy_Amount AS replacement_cost\nFROM policy_coverage_detail pcd\nJOIN policy_amount pa\n  ON pa.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier\n AND pa.Effective_Date = pcd.Effective_Date\nLEFT JOIN premium p ON pa.Policy_Amount_Identifier = p.Policy_Amount_Identifier\nJOIN claim c ON c.Insurable_Object_Identifier = pcd.Insurable_Object_Identifier\nWHERE c.Company_Claim_Number = 12312702\n  AND p.Policy_Amount_Identifier IS NULL"
+    },
+    {
+      "name": "heldout-unanswerable-was-the-property-in-claim-12312701-owner-occupie-14c444",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 155567,
+      "providerDispatchCount": 5,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The data does not record whether a property was owner-occupied at the time of loss. The insurable_object table has no occupancy attribute (Insurable_Object_Type_Code is empty), and no table in the schema captures occupancy status. The only property details available are its address (5315 Martin Ave, Austin, TX) and coordinates, which do not indicate owner-occupancy."
+      },
+      "usage": {
+        "input": 35651,
+        "output": 217,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 5,
+      "toolCalls": 4,
+      "sqlStatementsRun": 4,
+      "protocolErrors": 0,
+      "totalMs": 155567,
+      "modelMs": 125799,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-how-many-bedrooms-are-in-the-property-at-13017-z-634abb",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 71718,
+      "providerDispatchCount": 1,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "No table in this database records the number of bedrooms of any property. The location tables (location_address, geographic_location, pysical_location, insurable_object) hold only street address, city, state, zip, coordinates and object identifiers; there is no bedrooms attribute anywhere in the schema."
+      },
+      "usage": {
+        "input": 6843,
+        "output": 71,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 1,
+      "toolCalls": 0,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 71718,
+      "modelMs": 71718,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-how-many-minutes-did-the-nearest-fire-station-ta-3bccbb",
+      "round": 1,
+      "passed": false,
+      "executionMatched": false,
+      "durationMs": 89114,
+      "providerDispatchCount": 5,
+      "kind": "uncertified",
+      "answer": {
+        "trustState": "none",
+        "sql": "SELECT 1 AS minutes FROM fire_claim LIMIT 1",
+        "rowCount": 1
+      },
+      "usage": {
+        "input": 35785,
+        "output": 163,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "final_sql",
+      "turns": 5,
+      "toolCalls": 4,
+      "sqlStatementsRun": 4,
+      "protocolErrors": 0,
+      "totalMs": 89114,
+      "modelMs": 87396,
+      "finalSql": "SELECT 1 AS minutes FROM fire_claim LIMIT 1"
+    },
+    {
+      "name": "heldout-unanswerable-what-equipment-did-the-responding-firefighters-b-b7be52",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 67864,
+      "providerDispatchCount": 1,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "No table records the equipment that responding firefighters brought to a fire. The fire_claim table only has Number_of_Firefighters, Nearest_Firestation_miles, Fireplace, Year_Built, Loss_Ratio, Premium, PolicyNo, ClaimNumber and InsuredLocation — there is no equipment field anywhere in the schema."
+      },
+      "usage": {
+        "input": 6838,
+        "output": 78,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 1,
+      "toolCalls": 0,
+      "sqlStatementsRun": 0,
+      "protocolErrors": 0,
+      "totalMs": 67864,
+      "modelMs": 67864,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-how-many-vehicles-were-damaged-in-claim-12312701-d0387b",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 215850,
+      "providerDispatchCount": 12,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "The data does not record the kind of insurable object (vehicle vs. house) or the number of vehicles damaged. insurable_object.Insurable_Object_Type_Code is empty for every row, and claim 12312701 links to a single insurable object (a property at 5315 Martin Ave, Austin, TX) with no vehicle count or vehicle attribute anywhere in the schema. There is no measure or attribute that identifies vehicles, so the number of vehicles damaged cannot be determined."
+      },
+      "usage": {
+        "input": 92675,
+        "output": 383,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 12,
+      "toolCalls": 11,
+      "sqlStatementsRun": 11,
+      "protocolErrors": 0,
+      "totalMs": 215850,
+      "modelMs": 214283,
+      "finalSql": null
+    },
+    {
+      "name": "heldout-unanswerable-what-was-the-quoted-premium-for-renewing-policy-35627a",
+      "round": 1,
+      "passed": true,
+      "executionMatched": false,
+      "durationMs": 148550,
+      "providerDispatchCount": 9,
+      "kind": "no_answer",
+      "answer": {
+        "trustState": "none",
+        "declineReason": "Policy 31003000337 has only one premium amount on record (12000, effective 2019-06-01, term 2019-06-01 to 2020-05-31). There is no premium or policy amount dated in 2021 for this policy, so the quoted premium for a 2021 renewal is not present in the data."
+      },
+      "usage": {
+        "input": 69109,
+        "output": 669,
+        "cacheRead": 0,
+        "cacheWrite": 0
+      },
+      "costUsd": null,
+      "stop": "cannot_answer",
+      "turns": 9,
+      "toolCalls": 8,
+      "sqlStatementsRun": 8,
+      "protocolErrors": 0,
+      "totalMs": 148550,
+      "modelMs": 147441,
+      "finalSql": null
+    }
+  ]
+}

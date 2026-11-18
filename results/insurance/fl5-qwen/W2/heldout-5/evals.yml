@@ -1,0 +1,52 @@
+{
+  "cases": [
+    {
+      "name": "heldout-how-many-fire-loss-records-have-a-station-within-ce0474",
+      "question": "How many fire loss records have a station within three miles?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            236
+          ]
+        ],
+        "goldSql": "SELECT COUNT(*) AS record_count FROM main.fire_claim WHERE Nearest_Firestation_miles<=3",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-how-many-claims-are-linked-to-each-policyholder-51652a",
+      "question": "How many claims are linked to each policyholder through covered policies?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            "Mary",
+            "Holder",
+            2
+          ]
+        ],
+        "goldSql": "SELECT pe.First_Name AS first_name, pe.Last_Name AS last_name, COUNT(DISTINCT c.Claim_Identifier) AS claim_count FROM main.policy p JOIN main.agreement_party_role r ON r.Agreement_Identifier=p.Policy_Identifier JOIN main.person pe ON pe.Person_Identifier=r.Party_Identifier JOIN main.policy_coverage_detail cd ON cd.Policy_Identifier=p.Policy_Identifier JOIN main.claim_coverage cc ON cc.Policy_Coverage_Detail_Identifier=cd.Policy_Coverage_Detail_Identifier JOIN main.claim c ON c.Claim_Identifier=cc.Claim_Identifier WHERE r.Party_Role_Code='PH' GROUP BY 1,2",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    },
+    {
+      "name": "heldout-for-each-covered-policy-what-is-the-sum-of-all-r-4d8c95",
+      "question": "For each covered policy, what is the sum of all recorded amounts on its claims?",
+      "expected": {
+        "answerable": true,
+        "goldRows": [
+          [
+            31003000336,
+            13600
+          ]
+        ],
+        "goldSql": "SELECT p.Policy_Number AS policy_number, SUM(ca.Claim_Amount) AS total_claim_amount FROM main.claim c JOIN main.claim_coverage cc ON cc.Claim_Identifier=c.Claim_Identifier JOIN main.policy_coverage_detail cd ON cd.Policy_Coverage_Detail_Identifier=cc.Policy_Coverage_Detail_Identifier JOIN main.policy p ON p.Policy_Identifier=cd.Policy_Identifier JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier GROUP BY 1 ORDER BY 1",
+        "goldAllowExtraColumns": true,
+        "goldOrdered": false
+      }
+    }
+  ]
+}

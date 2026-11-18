@@ -1,0 +1,785 @@
+item,question,reference result,Answer 1 result,Answer 2 result,ANSWER 1 (acceptable / not acceptable / unsure),ANSWER 2 (acceptable / not acceptable / unsure),better answer (1 / 2 / same),reason,reviewer,date,Answer 1 SQL (optional; its style may reveal the system),Answer 2 SQL (optional),reference SQL
+1,How many covered claims opened in each month of 2019?,"open_month | claim_count
+2019-01-01T00:00:00 | 1
+2019-06-01T00:00:00 | 1
+(2 rows)","claim_open_date_month | claims
+2019-01-01T00:00:00.000Z | 1
+2019-02-01T00:00:00.000Z | 0
+2019-03-01T00:00:00.000Z | 0
+2019-04-01T00:00:00.000Z | 0
+2019-05-01T00:00:00.000Z | 0
+2019-06-01T00:00:00.000Z | 1
+2019-07-01T00:00:00.000Z | 0
+2019-08-01T00:00:00.000Z | 0
+2019-09-01T00:00:00.000Z | 0
+2019-10-01T00:00:00.000Z | 0
+... 2 more rows
+(12 rows)","month | covered_claims
+2019-01-01 00:00:00 | 1
+2019-06-01 00:00:00 | 1
+(2 rows)",,,,,,,"SELECT
+  DATE_TRUNC('month', ""acme_insurance"".""main"".""claim"".claim_open_date) AS claim_open_date_month,
+  COUNT(company_claim_number) AS claims
+FROM ""acme_insurance"".""main"".""claim""
+WHERE claim_open_date >= '2019-01-01'
+  AND claim_open_date < '2020-01-01'
+GROUP BY DATE_TRUNC('month', ""acme_insurance"".""main"".""claim"".claim_open_date)","SELECT date_trunc('month', c.Claim_Open_Date) AS month, COUNT(DISTINCT c.Claim_Identifier) AS covered_claims FROM claim c JOIN claim_coverage cc ON cc.Claim_Identifier = c.Claim_Identifier WHERE c.Claim_Open_Date >= DATE '2019-01-01' AND c.Claim_Open_Date < DATE '2020-01-01' GROUP BY 1 ORDER BY 1","SELECT DATE_TRUNC('month',c.Claim_Open_Date) AS open_month, COUNT(*) AS claim_count FROM main.claim c JOIN main.claim_coverage cc ON cc.Claim_Identifier=c.Claim_Identifier JOIN main.policy_coverage_detail cd ON cd.Policy_Coverage_Detail_Identifier=cc.Policy_Coverage_Detail_Identifier JOIN main.policy p ON p.Policy_Identifier=cd.Policy_Identifier WHERE c.Claim_Open_Date>=DATE '2019-01-01' AND c.Claim_Open_Date<DATE '2020-01-01' GROUP BY 1 ORDER BY 1"
+2,"For each claim, what is the total paid loss plus paid expense?","claim_number | paid_total
+12312701 | 2500
+12312702 | 4700
+(2 rows)","Claim_Identifier | total_paid_loss_and_expense
+1 | 2500
+2 | 4700
+(2 rows)","Claim_Identifier | Company_Claim_Number | total_paid_loss_plus_expense
+1 | 12312701 | 2500
+2 | 12312702 | 4700
+(2 rows)",,,,,,,"SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS total_paid_loss_and_expense FROM claim_amount ca WHERE ca.Claim_Amount_Identifier IN (SELECT Claim_Amount_Identifier FROM loss_payment) OR ca.Claim_Amount_Identifier IN (SELECT Claim_Amount_Identifier FROM expense_payment) GROUP BY ca.Claim_Identifier ORDER BY ca.Claim_Identifier","SELECT
+  c.Claim_Identifier,
+  c.Company_Claim_Number,
+  COALESCE(SUM(ca.Claim_Amount), 0) AS total_paid_loss_plus_expense
+FROM acme_insurance.main.claim AS c
+LEFT JOIN acme_insurance.main.claim_amount AS ca
+  ON ca.Claim_Identifier = c.Claim_Identifier
+  AND (
+    EXISTS (
+      SELECT 1
+      FROM acme_insurance.main.loss_payment AS lp
+      WHERE lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+    )
+    OR EXISTS (
+      SELECT 1
+      FROM acme_insurance.main.expense_payment AS ep
+      WHERE ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+    )
+  )
+GROUP BY c.Claim_Identifier, c.Company_Claim_Number
+ORDER BY c.Claim_Identifier
+LIMIT 500","SELECT c.Company_Claim_Number AS claim_number, SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL OR ep.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS paid_total FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier LEFT JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_reserve er ON er.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1"
+3,How much annual premium is recorded for each policy across all effective years?,"policy_number | total_annual_premium
+31003000336 | 86000
+31003000337 | 12000
+(2 rows)","Policy_Identifier | Policy_Number | annual_premium
+1 | 31003000336 | 86000
+2 | 31003000337 | 12000
+(2 rows)","Policy_Identifier | Policy_Number | Effective_Date | Annual_Premium
+1 | 31003000336 | 2015-01-01 | 15000
+1 | 31003000336 | 2016-01-01 | 16000
+1 | 31003000336 | 2017-01-01 | 17000
+1 | 31003000336 | 2018-01-01 | 18000
+1 | 31003000336 | 2019-01-01 | 20000
+2 | 31003000337 | 2019-06-01 | 12000
+(6 rows)",,,,,,,"SELECT p.Policy_Identifier, p.Policy_Number, SUM(pa.Policy_Amount) AS annual_premium
+FROM acme_insurance.main.policy_amount pa
+JOIN acme_insurance.main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier
+JOIN acme_insurance.main.policy p ON pa.Policy_Identifier = p.Policy_Identifier
+GROUP BY p.Policy_Identifier, p.Policy_Number
+ORDER BY p.Policy_Number
+LIMIT 500","SELECT p.Policy_Identifier, p.Policy_Number, pa.Effective_Date, pa.Policy_Amount AS Annual_Premium FROM policy_amount pa JOIN premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier JOIN policy p ON p.Policy_Identifier = pa.Policy_Identifier WHERE pa.Amount_Type_Code = 'Year' ORDER BY p.Policy_Identifier, pa.Effective_Date","SELECT p.Policy_Number AS policy_number, SUM(pa.Policy_Amount) AS total_annual_premium FROM main.policy p JOIN main.policy_amount pa ON pa.Policy_Identifier=p.Policy_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier=pa.Policy_Amount_Identifier GROUP BY 1 ORDER BY 1"
+4,Which policy start dates belong to policies held by Mary Holder?,"policy_number | policy_start
+31003000336 | 2015-01-01
+31003000337 | 2019-06-01
+(2 rows)","Policy_Identifier | Policy_Number | Effective_Date
+1 | 31003000336 | 2015-01-01T00:00:00.000Z
+2 | 31003000337 | 2019-06-01T00:00:00.000Z
+(2 rows)","policy_start_date
+2015-01-01
+2019-06-01
+(2 rows)",,,,,,,"SELECT DISTINCT p.Policy_Identifier, p.Policy_Number, p.Effective_Date
+FROM acme_insurance.main.policy p
+JOIN acme_insurance.main.agreement_party_role apr ON apr.Agreement_Identifier = p.Policy_Identifier
+JOIN acme_insurance.main.party_role pr ON pr.Party_Role_Code = apr.Party_Role_Code
+JOIN acme_insurance.main.person pe ON pe.Person_Identifier = apr.Party_Identifier
+WHERE LOWER(pe.First_Name) = 'mary'
+  AND LOWER(pe.Last_Name) = 'holder'
+  AND LOWER(pr.Party_Role_Name) LIKE '%policy%holder%'
+ORDER BY p.Effective_Date, p.Policy_Identifier
+LIMIT 500",SELECT DISTINCT pol.Effective_Date AS policy_start_date FROM person p JOIN agreement_party_role apr ON apr.Party_Identifier = p.Person_Identifier AND apr.Party_Role_Code = 'PH' JOIN policy pol ON pol.Policy_Identifier = apr.Agreement_Identifier WHERE p.First_Name = 'Mary' AND p.Last_Name = 'Holder' ORDER BY 1,"SELECT p.Policy_Number AS policy_number, p.Effective_Date AS policy_start FROM main.policy p JOIN main.agreement_party_role r ON r.Agreement_Identifier=p.Policy_Identifier JOIN main.person pe ON pe.Person_Identifier=r.Party_Identifier WHERE r.Party_Role_Code='PH' AND pe.First_Name='Mary' AND pe.Last_Name='Holder' ORDER BY p.Policy_Number"
+5,How much annual premium is recorded for each policyholder across their policies?,"first_name | last_name | total_annual_premium
+Mary | Holder | 98000
+(1 rows)","Party_Identifier | First_Name | Last_Name | annual_premium
+1 | Mary | Holder | 98000
+(1 rows)","Party_Identifier | annual_premium
+1 | 98000
+(1 rows)",,,,,,,"SELECT apr.Party_Identifier, p.First_Name, p.Last_Name, SUM(pa.Policy_Amount) AS annual_premium FROM policy_amount pa JOIN premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier JOIN agreement_party_role apr ON apr.Agreement_Identifier = pa.Policy_Identifier AND apr.Party_Role_Code = 'PH' LEFT JOIN person p ON p.Person_Identifier = apr.Party_Identifier WHERE pa.Amount_Type_Code = 'Year' GROUP BY ALL ORDER BY apr.Party_Identifier","SELECT apr.Party_Identifier, SUM(pa.Policy_Amount) AS annual_premium
+FROM (
+  SELECT DISTINCT Agreement_Identifier, Party_Identifier
+  FROM acme_insurance.main.agreement_party_role
+  WHERE LOWER(Party_Role_Code) = 'ph'
+) apr
+JOIN acme_insurance.main.policy_amount pa
+  ON pa.Policy_Identifier = apr.Agreement_Identifier
+JOIN acme_insurance.main.premium pr
+  ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier
+WHERE LOWER(pa.Amount_Type_Code) = 'year'
+GROUP BY apr.Party_Identifier
+ORDER BY apr.Party_Identifier
+LIMIT 500","SELECT pe.First_Name AS first_name, pe.Last_Name AS last_name, SUM(pa.Policy_Amount) AS total_annual_premium FROM main.policy p JOIN main.agreement_party_role r ON r.Agreement_Identifier=p.Policy_Identifier JOIN main.person pe ON pe.Person_Identifier=r.Party_Identifier JOIN main.policy_amount pa ON pa.Policy_Identifier=p.Policy_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier=pa.Policy_Amount_Identifier WHERE r.Party_Role_Code='PH' GROUP BY 1,2"
+6,"For each claim, what is the total reserved loss plus reserved expense?","claim_number | reserved_total
+12312701 | 2100
+12312702 | 4300
+(2 rows)","Claim_Identifier | total_reserved_loss_plus_expense
+1 | 2100
+2 | 4300
+(2 rows)","Claim_Identifier | Company_Claim_Number | total_reserved_loss_plus_expense
+1 | 12312701 | 2100
+2 | 12312702 | 4300
+(2 rows)",,,,,,,"SELECT c.Claim_Identifier, COALESCE(SUM(ca.Claim_Amount), 0) AS total_reserved_loss_plus_expense FROM claim c LEFT JOIN claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier AND (ca.Claim_Amount_Identifier IN (SELECT Claim_Amount_Identifier FROM loss_reserve) OR ca.Claim_Amount_Identifier IN (SELECT Claim_Amount_Identifier FROM expense_reserve)) GROUP BY c.Claim_Identifier ORDER BY c.Claim_Identifier","SELECT c.Claim_Identifier, c.Company_Claim_Number,
+  COALESCE(SUM(CASE WHEN lr.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END), 0)
+  + COALESCE(SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END), 0) AS total_reserved_loss_plus_expense
+FROM acme_insurance.main.claim c
+LEFT JOIN acme_insurance.main.claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier
+LEFT JOIN acme_insurance.main.loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+LEFT JOIN acme_insurance.main.expense_reserve er ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+GROUP BY c.Claim_Identifier, c.Company_Claim_Number
+ORDER BY c.Claim_Identifier
+LIMIT 500","SELECT c.Company_Claim_Number AS claim_number, SUM(CASE WHEN lr.Claim_Amount_Identifier IS NOT NULL OR er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS reserved_total FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier LEFT JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_reserve er ON er.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1"
+7,What was the 2019 paid-loss ratio for each policy with a covered claim opened in 2019?,"policy_number | paid_loss_ratio
+31003000336 | 0.175
+(1 rows)","Policy_Identifier | Policy_Number | paid_loss | premium | paid_loss_ratio
+1 | 31003000336 | 3500 | 20000 | 0.175
+(1 rows)","Policy_Identifier | Policy_Number | paid_loss | total_premium | paid_loss_ratio
+1 | 31003000336 | 3500 | 86000 | 0.0406977
+(1 rows)",,,,,,,"WITH cl AS (SELECT DISTINCT c.Claim_Identifier, pcd.Policy_Identifier FROM claim c JOIN claim_coverage cc ON cc.Claim_Identifier=c.Claim_Identifier JOIN policy_coverage_detail pcd ON pcd.Effective_Date=cc.Effective_Date AND pcd.Policy_Coverage_Detail_Identifier=cc.Policy_Coverage_Detail_Identifier WHERE EXTRACT(year FROM c.Claim_Open_Date)=2019), pols AS (SELECT DISTINCT Policy_Identifier FROM cl), paid AS (SELECT cl.Policy_Identifier, SUM(ca.Claim_Amount) AS paid_loss FROM cl JOIN claim_amount ca ON ca.Claim_Identifier=cl.Claim_Identifier JOIN loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY cl.Policy_Identifier), prem AS (SELECT pa.Policy_Identifier, SUM(pa.Policy_Amount) AS premium FROM policy_amount pa JOIN premium p ON p.Policy_Amount_Identifier=pa.Policy_Amount_Identifier WHERE EXTRACT(year FROM pa.Effective_Date)=2019 GROUP BY pa.Policy_Identifier) SELECT po.Policy_Identifier, po.Policy_Number, COALESCE(paid.paid_loss, 0) AS paid_loss, prem.premium, COALESCE(paid.paid_loss, 0)*1.0/prem.premium AS paid_loss_ratio FROM pols JOIN policy po ON po.Policy_Identifier=pols.Policy_Identifier LEFT JOIN paid ON paid.Policy_Identifier=pols.Policy_Identifier JOIN prem ON prem.Policy_Identifier=pols.Policy_Identifier ORDER BY 1","WITH policy_claims AS (
+  SELECT DISTINCT pcd.Policy_Identifier, c.Claim_Identifier
+  FROM acme_insurance.main.claim c
+  JOIN acme_insurance.main.claim_coverage cc ON cc.Claim_Identifier = c.Claim_Identifier
+  JOIN acme_insurance.main.policy_coverage_detail pcd ON pcd.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier AND pcd.Effective_Date = cc.Effective_Date
+  WHERE c.Claim_Open_Date >= DATE '2019-01-01' AND c.Claim_Open_Date < DATE '2020-01-01'
+),
+paid AS (
+  SELECT pc.Policy_Identifier, SUM(ca.Claim_Amount) AS paid_loss
+  FROM policy_claims pc
+  JOIN acme_insurance.main.claim_amount ca ON ca.Claim_Identifier = pc.Claim_Identifier
+  JOIN acme_insurance.main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+  GROUP BY pc.Policy_Identifier
+),
+prem AS (
+  SELECT pa.Policy_Identifier, SUM(pa.Policy_Amount) AS total_premium
+  FROM acme_insurance.main.policy_amount pa
+  JOIN acme_insurance.main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier
+  GROUP BY pa.Policy_Identifier
+)
+SELECT p.Policy_Identifier, p.Policy_Number,
+       COALESCE(paid.paid_loss, 0) AS paid_loss,
+       prem.total_premium,
+       COALESCE(paid.paid_loss, 0) * 1.0 / NULLIF(prem.total_premium, 0) AS paid_loss_ratio
+FROM acme_insurance.main.policy p
+JOIN (SELECT DISTINCT Policy_Identifier FROM policy_claims) x ON x.Policy_Identifier = p.Policy_Identifier
+LEFT JOIN paid ON paid.Policy_Identifier = p.Policy_Identifier
+LEFT JOIN prem ON prem.Policy_Identifier = p.Policy_Identifier
+ORDER BY p.Policy_Number
+LIMIT 500","WITH prem AS (SELECT p.Policy_Number AS policy_number, SUM(pa.Policy_Amount) AS annual_premium FROM main.policy p JOIN main.policy_amount pa ON pa.Policy_Identifier=p.Policy_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier=pa.Policy_Amount_Identifier WHERE pa.Effective_Date>=DATE '2019-01-01' AND pa.Effective_Date<DATE '2020-01-01' GROUP BY 1), losses AS (SELECT p.Policy_Number AS policy_number, SUM(ca.Claim_Amount) AS paid_loss FROM main.policy p JOIN main.policy_coverage_detail cd ON cd.Policy_Identifier=p.Policy_Identifier JOIN main.claim_coverage cc ON cc.Policy_Coverage_Detail_Identifier=cd.Policy_Coverage_Detail_Identifier JOIN main.claim c ON c.Claim_Identifier=cc.Claim_Identifier JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier WHERE c.Claim_Open_Date>=DATE '2019-01-01' AND c.Claim_Open_Date<DATE '2020-01-01' GROUP BY 1) SELECT prem.policy_number, losses.paid_loss*1.0/prem.annual_premium AS paid_loss_ratio FROM prem JOIN losses USING (policy_number) ORDER BY 1"
+8,"For each claim, what share of its total recorded amount is paid loss?","claim_number | paid_loss_share
+12312701 | 0.26087
+12312702 | 0.255556
+(2 rows)","Claim_Identifier | Company_Claim_Number | paid_loss_amount | total_claim_amount | paid_loss_share
+1 | 12312701 | 1200 | 4600 | 0.26087
+2 | 12312702 | 2300 | 9000 | 0.255556
+(2 rows)","Claim_Identifier | paid_loss_share
+1 | 0.26087
+2 | 0.255556
+(2 rows)",,,,,,,"SELECT
+  c.Claim_Identifier,
+  c.Company_Claim_Number,
+  SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS paid_loss_amount,
+  SUM(ca.Claim_Amount) AS total_claim_amount,
+  SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) * 1.0 / NULLIF(SUM(ca.Claim_Amount), 0) AS paid_loss_share
+FROM acme_insurance.main.claim_amount ca
+JOIN acme_insurance.main.claim c
+  ON ca.Claim_Identifier = c.Claim_Identifier
+LEFT JOIN acme_insurance.main.loss_payment lp
+  ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+GROUP BY c.Claim_Identifier, c.Company_Claim_Number
+ORDER BY c.Claim_Identifier
+LIMIT 500","SELECT ca.Claim_Identifier, SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END) * 1.0 / SUM(ca.Claim_Amount) AS paid_loss_share FROM claim_amount ca LEFT JOIN loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier ORDER BY ca.Claim_Identifier","SELECT c.Company_Claim_Number AS claim_number, SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END)*1.0/SUM(ca.Claim_Amount) AS paid_loss_share FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier LEFT JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_reserve er ON er.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1"
+9,What annual premium entries are recorded for each policy?,"policy_number | premium_start | annual_premium
+31003000336 | 2015-01-01 | 15000
+31003000336 | 2016-01-01 | 16000
+31003000336 | 2017-01-01 | 17000
+31003000336 | 2018-01-01 | 18000
+31003000336 | 2019-01-01 | 20000
+31003000337 | 2019-06-01 | 12000
+(6 rows)","Policy_Identifier | Policy_Number | Policy_Amount_Identifier | Policy_Amount | Effective_Date
+1 | 31003000336 | 2 | 15000 | 2015-01-01T00:00:00.000Z
+1 | 31003000336 | 4 | 16000 | 2016-01-01T00:00:00.000Z
+1 | 31003000336 | 6 | 17000 | 2017-01-01T00:00:00.000Z
+1 | 31003000336 | 8 | 18000 | 2018-01-01T00:00:00.000Z
+1 | 31003000336 | 10 | 20000 | 2019-01-01T00:00:00.000Z
+2 | 31003000337 | 12 | 12000 | 2019-06-01T00:00:00.000Z
+(6 rows)","Policy_Identifier | Effective_Date | Policy_Amount
+1 | 2015-01-01 | 15000
+1 | 2016-01-01 | 16000
+1 | 2017-01-01 | 17000
+1 | 2018-01-01 | 18000
+1 | 2019-01-01 | 20000
+2 | 2019-06-01 | 12000
+(6 rows)",,,,,,,"SELECT p.Policy_Identifier, p.Policy_Number, pa.Policy_Amount_Identifier, pa.Policy_Amount, pa.Effective_Date
+FROM acme_insurance.main.premium pr
+JOIN acme_insurance.main.policy_amount pa ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier
+JOIN acme_insurance.main.policy p ON pa.Policy_Identifier = p.Policy_Identifier
+WHERE LOWER(pa.Amount_Type_Code) = 'year'
+ORDER BY p.Policy_Number, pa.Effective_Date, pa.Policy_Amount_Identifier
+LIMIT 500","SELECT pa.Policy_Identifier, pa.Effective_Date, pa.Policy_Amount FROM policy_amount pa JOIN premium p ON p.Policy_Amount_Identifier = pa.Policy_Amount_Identifier WHERE pa.Amount_Type_Code = 'Year' ORDER BY pa.Policy_Identifier, pa.Effective_Date","SELECT p.Policy_Number AS policy_number, pa.Effective_Date AS premium_start, pa.Policy_Amount AS annual_premium FROM main.policy p JOIN main.policy_amount pa ON pa.Policy_Identifier=p.Policy_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier=pa.Policy_Amount_Identifier ORDER BY policy_number,premium_start"
+10,What are the expiration dates of the recorded policies?,"policy_number | expiration_date
+31003000336 | 2019-12-31
+31003000337 | 2020-05-31
+(2 rows)","Policy_Identifier | Policy_Number | Expiration_Date
+1 | 31003000336 | 2019-12-31T00:00:00.000Z
+2 | 31003000337 | 2020-05-31T00:00:00.000Z
+(2 rows)","Expiration_Date
+2019-12-31
+2020-05-31
+(2 rows)",,,,,,,"SELECT Policy_Identifier, Policy_Number, Expiration_Date
+FROM acme_insurance.main.policy
+ORDER BY Policy_Identifier
+LIMIT 500",SELECT Expiration_Date FROM policy ORDER BY Policy_Identifier,"SELECT Policy_Number AS policy_number, Expiration_Date AS expiration_date FROM main.policy ORDER BY Policy_Number"
+11,"For each claim, what share of its total recorded amount is reserved expense?","claim_number | reserved_expense_share
+12312701 | 0.23913
+12312702 | 0.244444
+(2 rows)","Claim_Identifier | expense_reserve_share
+1 | 0.23913
+2 | 0.244444
+(2 rows)","Claim_Identifier | Company_Claim_Number | expense_reserve_amount | total_claim_amount | expense_reserve_share
+1 | 12312701 | 1100 | 4600 | 0.23913
+2 | 12312702 | 2200 | 9000 | 0.244444
+(2 rows)",,,,,,,"SELECT ca.Claim_Identifier, SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) * 1.0 / SUM(ca.Claim_Amount) AS expense_reserve_share FROM claim_amount ca LEFT JOIN expense_reserve er ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier ORDER BY ca.Claim_Identifier","SELECT
+  c.Claim_Identifier,
+  c.Company_Claim_Number,
+  SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) AS expense_reserve_amount,
+  SUM(ca.Claim_Amount) AS total_claim_amount,
+  SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END) * 1.0 / NULLIF(SUM(ca.Claim_Amount), 0) AS expense_reserve_share
+FROM acme_insurance.main.claim_amount ca
+JOIN acme_insurance.main.claim c
+  ON ca.Claim_Identifier = c.Claim_Identifier
+LEFT JOIN acme_insurance.main.expense_reserve er
+  ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+GROUP BY c.Claim_Identifier, c.Company_Claim_Number
+ORDER BY c.Claim_Identifier
+LIMIT 500","SELECT c.Company_Claim_Number AS claim_number, SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END)*1.0/SUM(ca.Claim_Amount) AS reserved_expense_share FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier LEFT JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_reserve er ON er.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1"
+12,What are the individual loss reserves for each claim?,"claim_number | amount
+12312701 | 1000
+12312702 | 2100
+(2 rows)","Claim_Identifier | Loss_Reserve
+1 | 1000
+2 | 2100
+(2 rows)","Claim_Identifier | Company_Claim_Number | Claim_Amount_Identifier | Loss_Reserve_Amount
+1 | 12312701 | 1 | 1000
+2 | 12312702 | 5 | 2100
+(2 rows)",,,,,,,"SELECT ca.Claim_Identifier, ca.Claim_Amount AS Loss_Reserve FROM loss_reserve lr JOIN claim_amount ca ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier ORDER BY ca.Claim_Identifier, ca.Claim_Amount_Identifier","SELECT c.Claim_Identifier, c.Company_Claim_Number, ca.Claim_Amount_Identifier, ca.Claim_Amount AS Loss_Reserve_Amount
+FROM acme_insurance.main.loss_reserve lr
+JOIN acme_insurance.main.claim_amount ca ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+JOIN acme_insurance.main.claim c ON ca.Claim_Identifier = c.Claim_Identifier
+ORDER BY c.Claim_Identifier, ca.Claim_Amount_Identifier
+LIMIT 500","SELECT c.Company_Claim_Number AS claim_number, ca.Claim_Amount AS amount FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.loss_reserve t ON t.Claim_Amount_Identifier=ca.Claim_Amount_Identifier ORDER BY claim_number"
+13,"For each claim, what is its paid-loss-to-reserved-loss ratio?","claim_number | paid_to_reserved_loss_ratio
+12312701 | 1.2
+12312702 | 1.09524
+(2 rows)","Claim_Identifier | paid_to_reserved_loss_ratio
+1 | 1.2
+2 | 1.09524
+(2 rows)","Claim_Identifier | Company_Claim_Number | paid_loss | reserved_loss | paid_to_reserved_loss_ratio
+1 | 12312701 | 1200 | 1000 | 1.2
+2 | 12312702 | 2300 | 2100 | 1.09524
+(2 rows)",,,,,,,"SELECT c.Claim_Identifier, SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END) * 1.0 / NULLIF(SUM(CASE WHEN lr.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END), 0) AS paid_to_reserved_loss_ratio FROM claim c LEFT JOIN claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier LEFT JOIN loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier LEFT JOIN loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY c.Claim_Identifier ORDER BY c.Claim_Identifier","WITH paid AS (
+  SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS paid_loss
+  FROM acme_insurance.main.claim_amount ca
+  JOIN acme_insurance.main.loss_payment lp
+    ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+  GROUP BY ca.Claim_Identifier
+),
+reserved AS (
+  SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS reserved_loss
+  FROM acme_insurance.main.claim_amount ca
+  JOIN acme_insurance.main.loss_reserve lr
+    ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+  GROUP BY ca.Claim_Identifier
+)
+SELECT
+  c.Claim_Identifier,
+  c.Company_Claim_Number,
+  p.paid_loss,
+  r.reserved_loss,
+  CAST(p.paid_loss AS DOUBLE) / NULLIF(CAST(r.reserved_loss AS DOUBLE), 0) AS paid_to_reserved_loss_ratio
+FROM acme_insurance.main.claim c
+LEFT JOIN paid p ON p.Claim_Identifier = c.Claim_Identifier
+LEFT JOIN reserved r ON r.Claim_Identifier = c.Claim_Identifier
+ORDER BY c.Claim_Identifier
+LIMIT 500","SELECT c.Company_Claim_Number AS claim_number, SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END)*1.0/NULLIF(SUM(CASE WHEN lr.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END),0) AS paid_to_reserved_loss_ratio FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier LEFT JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_reserve er ON er.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1"
+14,"Which property postal code has the most covered claims, and how many claims are there?","postal_code | claim_count
+78732 | 1
+(1 rows)","Postal_Code | claim_count
+78751 | 2
+(1 rows)","postal_code | claims
+78732 | 1
+(1 rows)",,,,,,,"SELECT la.Postal_Code, COUNT(DISTINCT cc.Claim_Identifier) AS claim_count FROM claim_coverage cc JOIN policy_coverage_detail pcd ON pcd.Effective_Date = cc.Effective_Date AND pcd.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier JOIN insurable_object io ON io.Insurable_Object_Identifier = pcd.Insurable_Object_Identifier JOIN geographic_location gl ON gl.Geographic_Location_Identifier = io.Geographic_Location_Identifier JOIN location_address la ON la.Location_Address_Identifier = gl.Location_Address_Identifier GROUP BY la.Postal_Code ORDER BY claim_count DESC LIMIT 1","SELECT
+  location_address.postal_code AS postal_code,
+  COUNT(claim.company_claim_number) AS claims
+FROM ""acme_insurance"".""main"".""claim"" AS claim
+LEFT JOIN ""acme_insurance"".""main"".""insurable_object"" AS insurable_object ON claim.insurable_object_identifier = insurable_object.Insurable_Object_Identifier
+LEFT JOIN ""acme_insurance"".""main"".""geographic_location"" AS geographic_location ON insurable_object.Geographic_Location_Identifier = geographic_location.Geographic_Location_Identifier
+LEFT JOIN ""acme_insurance"".""main"".""location_address"" AS location_address ON geographic_location.Location_Address_Identifier = location_address.location_address_identifier
+GROUP BY location_address.postal_code
+ORDER BY claims DESC
+LIMIT 1","SELECT a.Postal_Code AS postal_code, COUNT(DISTINCT c.Claim_Identifier) AS claim_count FROM main.claim c JOIN main.insurable_object io ON io.Insurable_Object_Identifier=c.Insurable_Object_Identifier JOIN main.geographic_location g ON g.Geographic_Location_Identifier=io.Geographic_Location_Identifier JOIN main.location_address a ON a.Location_Address_Identifier=g.Location_Address_Identifier GROUP BY 1 ORDER BY claim_count DESC,postal_code LIMIT 1"
+15,How many claims are linked to each policyholder through covered policies?,"first_name | last_name | claim_count
+Mary | Holder | 2
+(1 rows)","Party_Identifier | Party_Name | claim_count
+1 | Mary Policy Holder | 2
+(1 rows)","Party_Identifier | First_Name | Last_Name | claims
+1 | Mary | Holder | 2
+(1 rows)",,,,,,,"SELECT
+  apr.Party_Identifier,
+  COALESCE(o.Organization_Name, NULLIF(concat_ws(' ', pe.First_Name, pe.Middle_Name, pe.Last_Name), '')) AS Party_Name,
+  COUNT(DISTINCT c.Claim_Identifier) AS claim_count
+FROM acme_insurance.main.claim c
+JOIN acme_insurance.main.claim_coverage cc
+  ON cc.Claim_Identifier = c.Claim_Identifier
+JOIN acme_insurance.main.policy_coverage_detail pcd
+  ON cc.Effective_Date = pcd.Effective_Date
+ AND cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier
+JOIN acme_insurance.main.policy pol
+  ON pcd.Policy_Identifier = pol.Policy_Identifier
+JOIN acme_insurance.main.agreement_party_role apr
+  ON apr.Agreement_Identifier = pol.Policy_Identifier
+JOIN acme_insurance.main.party p
+  ON apr.Party_Identifier = p.Party_Identifier
+LEFT JOIN acme_insurance.main.person pe
+  ON pe.Person_Identifier = p.Party_Identifier
+LEFT JOIN acme_insurance.main.organizations o
+  ON o.Organization_Identifier = p.Party_Identifier
+WHERE UPPER(apr.Party_Role_Code) = 'PH'
+GROUP BY apr.Party_Identifier, COALESCE(o.Organization_Name, NULLIF(concat_ws(' ', pe.First_Name, pe.Middle_Name, pe.Last_Name), ''))
+ORDER BY claim_count DESC, apr.Party_Identifier
+LIMIT 500","SELECT apr.Party_Identifier, p.First_Name, p.Last_Name, COUNT(DISTINCT cc.Claim_Identifier) AS claims FROM claim_coverage cc JOIN policy_coverage_detail pcd ON cc.Effective_Date = pcd.Effective_Date AND cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier JOIN policy po ON pcd.Policy_Identifier = po.Policy_Identifier JOIN agreement_party_role apr ON apr.Agreement_Identifier = po.Policy_Identifier AND apr.Party_Role_Code = 'PH' LEFT JOIN person p ON p.Person_Identifier = apr.Party_Identifier GROUP BY apr.Party_Identifier, p.First_Name, p.Last_Name ORDER BY apr.Party_Identifier","SELECT pe.First_Name AS first_name, pe.Last_Name AS last_name, COUNT(DISTINCT c.Claim_Identifier) AS claim_count FROM main.policy p JOIN main.agreement_party_role r ON r.Agreement_Identifier=p.Policy_Identifier JOIN main.person pe ON pe.Person_Identifier=r.Party_Identifier JOIN main.policy_coverage_detail cd ON cd.Policy_Identifier=p.Policy_Identifier JOIN main.claim_coverage cc ON cc.Policy_Coverage_Detail_Identifier=cd.Policy_Coverage_Detail_Identifier JOIN main.claim c ON c.Claim_Identifier=cc.Claim_Identifier WHERE r.Party_Role_Code='PH' GROUP BY 1,2"
+16,When were claims on policy 31003000336 closed?,"claim_number | close_date
+12312701 | 2019-01-31
+12312702 | 2019-06-27
+(2 rows)","Claim_Identifier | Company_Claim_Number | claim_close_date
+1 | 12312701 | 2019-01-31T00:00:00.000Z
+2 | 12312702 | 2019-06-27T00:00:00.000Z
+(2 rows)","Claim_Close_Date
+2019-01-31
+2019-06-27
+(2 rows)",,,,,,,"SELECT c.Claim_Identifier, c.Company_Claim_Number, MAX(c.Claim_Close_Date) AS claim_close_date
+FROM acme_insurance.main.claim c
+JOIN acme_insurance.main.claim_coverage cc ON cc.Claim_Identifier = c.Claim_Identifier
+JOIN acme_insurance.main.policy_coverage_detail pcd ON cc.Effective_Date = pcd.Effective_Date AND cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier
+JOIN acme_insurance.main.policy p ON pcd.Policy_Identifier = p.Policy_Identifier
+WHERE p.Policy_Number = 31003000336
+GROUP BY c.Claim_Identifier, c.Company_Claim_Number
+ORDER BY c.Company_Claim_Number, c.Claim_Identifier
+LIMIT 500",SELECT c.Claim_Close_Date FROM claim c WHERE c.Claim_Identifier IN (SELECT cc.Claim_Identifier FROM claim_coverage cc JOIN policy_coverage_detail pcd ON cc.Effective_Date = pcd.Effective_Date AND cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier JOIN policy p ON p.Policy_Identifier = pcd.Policy_Identifier WHERE p.Policy_Number = 31003000336) ORDER BY c.Claim_Close_Date,"SELECT c.Company_Claim_Number AS claim_number, c.Claim_Close_Date AS close_date FROM main.claim c JOIN main.claim_coverage cc ON cc.Claim_Identifier=c.Claim_Identifier JOIN main.policy_coverage_detail cd ON cd.Policy_Coverage_Detail_Identifier=cc.Policy_Coverage_Detail_Identifier JOIN main.policy p ON p.Policy_Identifier=cd.Policy_Identifier WHERE p.Policy_Number=31003000336 ORDER BY claim_number"
+17,What is the earliest annual premium entry for policy 31003000336?,"premium_start | annual_premium
+2015-01-01 | 15000
+(1 rows)","Policy_Amount_Identifier | Effective_Date | Amount_Type_Code | Policy_Amount
+2 | 2015-01-01 | Year | 15000
+(1 rows)","earliest_annual_premium_date
+2015-01-01T00:00:00.000Z
+(1 rows)",,,,,,,"SELECT pa.Policy_Amount_Identifier, pa.Effective_Date, pa.Amount_Type_Code, pa.Policy_Amount FROM policy p JOIN policy_amount pa ON pa.Policy_Identifier = p.Policy_Identifier JOIN premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier WHERE p.Policy_Number = 31003000336 AND pa.Amount_Type_Code = 'Year' ORDER BY pa.Effective_Date ASC LIMIT 1","SELECT MIN(pa.Effective_Date) AS earliest_annual_premium_date
+FROM acme_insurance.main.policy_amount pa
+JOIN acme_insurance.main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier
+JOIN acme_insurance.main.policy p ON pa.Policy_Identifier = p.Policy_Identifier
+WHERE p.Policy_Number = 31003000336
+  AND LOWER(pa.Amount_Type_Code) = 'year'
+LIMIT 501","SELECT pa.Effective_Date AS premium_start, pa.Policy_Amount AS annual_premium FROM main.policy p JOIN main.policy_amount pa ON pa.Policy_Identifier=p.Policy_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier=pa.Policy_Amount_Identifier WHERE p.Policy_Number=31003000336 ORDER BY pa.Effective_Date LIMIT 1"
+18,"Which claim has the larger amount of paid losses, and how much is it?","claim_number | total_amount
+12312702 | 2300
+(1 rows)","Claim_Identifier | paid_loss
+2 | 2300
+(1 rows)","Claim_Identifier | Company_Claim_Number | total_paid_losses
+2 | 12312702 | 2300
+(1 rows)",,,,,,,"SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS paid_loss FROM claim_amount ca JOIN loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier ORDER BY paid_loss DESC LIMIT 1","SELECT c.Claim_Identifier, c.Company_Claim_Number, SUM(ca.Claim_Amount) AS total_paid_losses
+FROM acme_insurance.main.claim_amount ca
+JOIN acme_insurance.main.loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+JOIN acme_insurance.main.claim c ON ca.Claim_Identifier = c.Claim_Identifier
+GROUP BY c.Claim_Identifier, c.Company_Claim_Number
+ORDER BY total_paid_losses DESC
+LIMIT 1","SELECT c.Company_Claim_Number AS claim_number, SUM(ca.Claim_Amount) AS total_amount FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.loss_payment k ON k.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY total_amount DESC,claim_number LIMIT 1"
+19,Which role codes and names are defined for people involved with policies?,"role_code | role_name
+AG | Agent
+PH | PolicyHolder
+UW | Underwriter
+(3 rows)","Party_Role_Code | Party_Role_Name
+AG | Agent
+PH | PolicyHolder
+(2 rows)","Party_Role_Code | Party_Role_Name
+AG | Agent
+UW | Underwriter
+PH | PolicyHolder
+(3 rows)",,,,,,,"SELECT DISTINCT pr.Party_Role_Code, pr.Party_Role_Name
+FROM acme_insurance.main.party_role pr
+JOIN acme_insurance.main.agreement_party_role apr ON apr.Party_Role_Code = pr.Party_Role_Code
+JOIN acme_insurance.main.policy p ON p.Policy_Identifier = apr.Agreement_Identifier
+ORDER BY pr.Party_Role_Code
+LIMIT 500","SELECT Party_Role_Code, Party_Role_Name FROM party_role","SELECT Party_Role_Code AS role_code, Party_Role_Name AS role_name FROM main.party_role ORDER BY Party_Role_Code"
+20,Who is the policyholder for each policy?,"policy_number | first_name | last_name
+31003000336 | Mary | Holder
+31003000337 | Mary | Holder
+(2 rows)","Policy_Identifier | Policy_Number | Party_Identifier | First_Name | Middle_Name | Last_Name
+1 | 31003000336 | 1 | Mary | Policy | Holder
+2 | 31003000337 | 1 | Mary | Policy | Holder
+(2 rows)","Policy_Identifier | Policy_Number | Party_Identifier | Policyholder_Name
+1 | 31003000336 | 1 | Mary Policy Holder
+2 | 31003000337 | 1 | Mary Policy Holder
+(2 rows)",,,,,,,"SELECT p.Policy_Identifier, p.Policy_Number, apr.Party_Identifier, pe.First_Name, pe.Middle_Name, pe.Last_Name FROM policy p JOIN agreement_party_role apr ON apr.Agreement_Identifier = p.Policy_Identifier AND apr.Party_Role_Code = 'PH' LEFT JOIN person pe ON pe.Person_Identifier = apr.Party_Identifier ORDER BY p.Policy_Identifier","SELECT
+  p.Policy_Identifier,
+  p.Policy_Number,
+  apr.Party_Identifier,
+  COALESCE(
+    o.Organization_Name,
+    NULLIF(TRIM(CONCAT_WS(' ', pe.First_Name, pe.Middle_Name, pe.Last_Name)), '')
+  ) AS Policyholder_Name
+FROM acme_insurance.main.policy AS p
+JOIN acme_insurance.main.agreement_party_role AS apr
+  ON apr.Agreement_Identifier = p.Policy_Identifier
+JOIN acme_insurance.main.party_role AS pr
+  ON pr.Party_Role_Code = apr.Party_Role_Code
+LEFT JOIN acme_insurance.main.person AS pe
+  ON pe.Person_Identifier = apr.Party_Identifier
+LEFT JOIN acme_insurance.main.organizations AS o
+  ON o.Organization_Identifier = apr.Party_Identifier
+WHERE pr.Party_Role_Name ILIKE '%policy%holder%'
+ORDER BY p.Policy_Number, p.Policy_Identifier
+LIMIT 500","SELECT p.Policy_Number AS policy_number, pe.First_Name AS first_name, pe.Last_Name AS last_name FROM main.policy p JOIN main.agreement_party_role r ON r.Agreement_Identifier=p.Policy_Identifier JOIN main.person pe ON pe.Person_Identifier=r.Party_Identifier WHERE r.Party_Role_Code='PH' ORDER BY p.Policy_Number"
+21,Which coverage start date applies to each claim?,"claim_number | coverage_start
+12312701 | 2019-01-01
+12312702 | 2019-01-01
+(2 rows)","Claim_Identifier | Company_Claim_Number | Policy_Coverage_Detail_Identifier | Coverage_Start_Date
+1 | 12312701 | 5 | 2019-01-01T00:00:00.000Z
+2 | 12312702 | 5 | 2019-01-01T00:00:00.000Z
+(2 rows)","Claim_Identifier | Coverage_Start_Date
+1 | 2019-01-01
+2 | 2019-01-01
+(2 rows)",,,,,,,"SELECT DISTINCT
+  c.Claim_Identifier,
+  c.Company_Claim_Number,
+  pcd.Policy_Coverage_Detail_Identifier,
+  pcd.Effective_Date AS Coverage_Start_Date
+FROM acme_insurance.main.claim c
+JOIN acme_insurance.main.claim_coverage cc
+  ON cc.Claim_Identifier = c.Claim_Identifier
+JOIN acme_insurance.main.policy_coverage_detail pcd
+  ON cc.Effective_Date = pcd.Effective_Date
+  AND cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier
+ORDER BY c.Claim_Identifier, pcd.Policy_Coverage_Detail_Identifier
+LIMIT 500","SELECT c.Claim_Identifier, pcd.Effective_Date AS Coverage_Start_Date FROM claim c JOIN claim_coverage cc ON cc.Claim_Identifier = c.Claim_Identifier JOIN policy_coverage_detail pcd ON pcd.Effective_Date = cc.Effective_Date AND pcd.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier ORDER BY c.Claim_Identifier","SELECT c.Company_Claim_Number AS claim_number, cd.Effective_Date AS coverage_start FROM main.claim c JOIN main.claim_coverage cc ON cc.Claim_Identifier=c.Claim_Identifier JOIN main.policy_coverage_detail cd ON cd.Policy_Coverage_Detail_Identifier=cc.Policy_Coverage_Detail_Identifier JOIN main.policy p ON p.Policy_Identifier=cd.Policy_Identifier ORDER BY claim_number"
+22,"Which agent has the highest total recorded claim amount on covered policies, and what is that total?","first_name | last_name | total_claim_amount
+Bob | Agent | 13600
+(1 rows)","Agent_Identifier | First_Name | Last_Name | total_claim_amount
+2 | Bob | Agent | 13600
+(1 rows)","Party_Identifier | Agent_Name | total_claim_amount
+2 | Bob Insurance Agent | 13600
+(1 rows)",,,,,,,"SELECT apr.Party_Identifier AS Agent_Identifier, p.First_Name, p.Last_Name, SUM(ca.Claim_Amount) AS total_claim_amount FROM claim_amount ca JOIN claim_coverage cc ON cc.Claim_Identifier = ca.Claim_Identifier JOIN policy_coverage_detail pcd ON pcd.Effective_Date = cc.Effective_Date AND pcd.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier JOIN agreement_party_role apr ON apr.Agreement_Identifier = pcd.Policy_Identifier AND apr.Party_Role_Code = 'AG' LEFT JOIN person p ON p.Person_Identifier = apr.Party_Identifier GROUP BY 1,2,3 ORDER BY total_claim_amount DESC LIMIT 1","WITH claim_policy AS (
+  SELECT DISTINCT cc.Claim_Identifier, pcd.Policy_Identifier
+  FROM acme_insurance.main.claim_coverage cc
+  JOIN acme_insurance.main.policy_coverage_detail pcd
+    ON cc.Effective_Date = pcd.Effective_Date
+   AND cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier
+),
+claim_total AS (
+  SELECT Claim_Identifier, SUM(Claim_Amount) AS claim_total
+  FROM acme_insurance.main.claim_amount
+  GROUP BY Claim_Identifier
+),
+agent_policy AS (
+  SELECT DISTINCT apr.Party_Identifier, apr.Agreement_Identifier AS Policy_Identifier
+  FROM acme_insurance.main.agreement_party_role apr
+  JOIN acme_insurance.main.party_role pr
+    ON pr.Party_Role_Code = apr.Party_Role_Code
+  WHERE LOWER(pr.Party_Role_Name) LIKE '%agent%'
+)
+SELECT
+  ap.Party_Identifier,
+  COALESCE(
+    o.Organization_Name,
+    NULLIF(TRIM(CONCAT_WS(' ', pe.First_Name, pe.Middle_Name, pe.Last_Name)), '')
+  ) AS Agent_Name,
+  SUM(ct.claim_total) AS total_claim_amount
+FROM agent_policy ap
+JOIN claim_policy cp ON cp.Policy_Identifier = ap.Policy_Identifier
+JOIN claim_total ct ON ct.Claim_Identifier = cp.Claim_Identifier
+LEFT JOIN acme_insurance.main.organizations o ON o.Organization_Identifier = ap.Party_Identifier
+LEFT JOIN acme_insurance.main.person pe ON pe.Person_Identifier = ap.Party_Identifier
+GROUP BY
+  ap.Party_Identifier,
+  COALESCE(
+    o.Organization_Name,
+    NULLIF(TRIM(CONCAT_WS(' ', pe.First_Name, pe.Middle_Name, pe.Last_Name)), '')
+  )
+ORDER BY total_claim_amount DESC
+LIMIT 1","SELECT pe.First_Name AS first_name, pe.Last_Name AS last_name, SUM(ca.Claim_Amount) AS total_claim_amount FROM main.policy p JOIN main.agreement_party_role r ON r.Agreement_Identifier=p.Policy_Identifier JOIN main.person pe ON pe.Person_Identifier=r.Party_Identifier JOIN main.policy_coverage_detail cd ON cd.Policy_Identifier=p.Policy_Identifier JOIN main.claim_coverage cc ON cc.Policy_Coverage_Detail_Identifier=cd.Policy_Coverage_Detail_Identifier JOIN main.claim_amount ca ON ca.Claim_Identifier=cc.Claim_Identifier WHERE r.Party_Role_Code='AG' GROUP BY 1,2 ORDER BY total_claim_amount DESC,first_name LIMIT 1"
+23,How many policies is each agent assigned to?,"first_name | last_name | policy_count
+Bob | Agent | 2
+(1 rows)","Party_Identifier | agent_name | policy_count
+2 | Bob Insurance Agent | 2
+(1 rows)","Agent_Identifier | First_Name | Last_Name | number_of_policies
+2 | Bob | Agent | 2
+(1 rows)",,,,,,,"SELECT
+  apr.Party_Identifier,
+  COALESCE(NULLIF(CONCAT_WS(' ', per.First_Name, per.Middle_Name, per.Last_Name), ''), org.Organization_Name) AS agent_name,
+  COUNT(DISTINCT pol.Policy_Identifier) AS policy_count
+FROM acme_insurance.main.agreement_party_role apr
+JOIN acme_insurance.main.party_role pr
+  ON pr.Party_Role_Code = apr.Party_Role_Code
+JOIN acme_insurance.main.policy pol
+  ON pol.Policy_Identifier = apr.Agreement_Identifier
+LEFT JOIN acme_insurance.main.person per
+  ON per.Person_Identifier = apr.Party_Identifier
+LEFT JOIN acme_insurance.main.organizations org
+  ON org.Organization_Identifier = apr.Party_Identifier
+WHERE LOWER(pr.Party_Role_Name) LIKE '%agent%'
+GROUP BY apr.Party_Identifier, COALESCE(NULLIF(CONCAT_WS(' ', per.First_Name, per.Middle_Name, per.Last_Name), ''), org.Organization_Name)
+ORDER BY policy_count DESC, apr.Party_Identifier
+LIMIT 500","SELECT apr.Party_Identifier AS Agent_Identifier, p.First_Name, p.Last_Name, COUNT(DISTINCT apr.Agreement_Identifier) AS number_of_policies FROM agreement_party_role apr JOIN policy po ON po.Policy_Identifier = apr.Agreement_Identifier LEFT JOIN person p ON p.Person_Identifier = apr.Party_Identifier WHERE apr.Party_Role_Code = 'AG' GROUP BY apr.Party_Identifier, p.First_Name, p.Last_Name ORDER BY apr.Party_Identifier","SELECT pe.First_Name AS first_name, pe.Last_Name AS last_name, COUNT(DISTINCT p.Policy_Identifier) AS policy_count FROM main.policy p JOIN main.agreement_party_role r ON r.Agreement_Identifier=p.Policy_Identifier JOIN main.person pe ON pe.Person_Identifier=r.Party_Identifier WHERE r.Party_Role_Code='AG' GROUP BY 1,2 ORDER BY 1,2"
+24,What are the individual loss payments for each claim?,"claim_number | amount
+12312701 | 1200
+12312702 | 2300
+(2 rows)","Claim_Identifier | Company_Claim_Number | Claim_Amount_Identifier | Claim_Amount
+1 | 12312701 | 3 | 1200
+2 | 12312702 | 7 | 2300
+(2 rows)","Claim_Identifier | Claim_Amount_Identifier | Claim_Amount
+1 | 3 | 1200
+2 | 7 | 2300
+(2 rows)",,,,,,,"SELECT c.Claim_Identifier, c.Company_Claim_Number, ca.Claim_Amount_Identifier, ca.Claim_Amount
+FROM acme_insurance.main.loss_payment lp
+JOIN acme_insurance.main.claim_amount ca ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+JOIN acme_insurance.main.claim c ON ca.Claim_Identifier = c.Claim_Identifier
+ORDER BY c.Claim_Identifier, ca.Claim_Amount_Identifier
+LIMIT 500","SELECT ca.Claim_Identifier, ca.Claim_Amount_Identifier, ca.Claim_Amount FROM loss_payment lp JOIN claim_amount ca ON ca.Claim_Amount_Identifier = lp.Claim_Amount_Identifier ORDER BY ca.Claim_Identifier, ca.Claim_Amount_Identifier","SELECT c.Company_Claim_Number AS claim_number, ca.Claim_Amount AS amount FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.loss_payment t ON t.Claim_Amount_Identifier=ca.Claim_Amount_Identifier ORDER BY claim_number"
+25,"For each claim, what is the difference between paid losses and reserved losses?","claim_number | paid_minus_reserved_loss
+12312701 | 200
+12312702 | 200
+(2 rows)","Claim_Identifier | Company_Claim_Number | paid_losses | reserved_losses | paid_minus_reserved
+1 | 12312701 | 1200 | 1000 | 200
+2 | 12312702 | 2300 | 2100 | 200
+(2 rows)","Claim_Identifier | paid_minus_reserved
+1 | 200
+2 | 200
+(2 rows)",,,,,,,"WITH paid AS (
+  SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS paid_losses
+  FROM acme_insurance.main.claim_amount ca
+  JOIN acme_insurance.main.loss_payment lp
+    ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+  GROUP BY ca.Claim_Identifier
+),
+reserved AS (
+  SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS reserved_losses
+  FROM acme_insurance.main.claim_amount ca
+  JOIN acme_insurance.main.loss_reserve lr
+    ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+  GROUP BY ca.Claim_Identifier
+)
+SELECT
+  c.Claim_Identifier,
+  c.Company_Claim_Number,
+  COALESCE(p.paid_losses, 0) AS paid_losses,
+  COALESCE(r.reserved_losses, 0) AS reserved_losses,
+  COALESCE(p.paid_losses, 0) - COALESCE(r.reserved_losses, 0) AS paid_minus_reserved
+FROM acme_insurance.main.claim c
+LEFT JOIN paid p ON p.Claim_Identifier = c.Claim_Identifier
+LEFT JOIN reserved r ON r.Claim_Identifier = c.Claim_Identifier
+WHERE p.Claim_Identifier IS NOT NULL OR r.Claim_Identifier IS NOT NULL
+ORDER BY c.Claim_Identifier
+LIMIT 500","SELECT c.Claim_Identifier, COALESCE(SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END),0) - COALESCE(SUM(CASE WHEN lr.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END),0) AS paid_minus_reserved FROM claim c LEFT JOIN claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier LEFT JOIN loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier LEFT JOIN loss_reserve lr ON lr.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY c.Claim_Identifier ORDER BY c.Claim_Identifier","SELECT c.Company_Claim_Number AS claim_number, SUM(CASE WHEN lp.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount WHEN lr.Claim_Amount_Identifier IS NOT NULL THEN -ca.Claim_Amount ELSE 0 END) AS paid_minus_reserved_loss FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier LEFT JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_reserve er ON er.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1"
+26,How much in reserved expenses is associated with each claim?,"claim_number | total_amount
+12312701 | 1100
+12312702 | 2200
+(2 rows)","Claim_Identifier | Company_Claim_Number | reserved_expense_amount
+1 | 12312701 | 1100
+2 | 12312702 | 2200
+(2 rows)","Claim_Identifier | reserved_expenses
+1 | 1100
+2 | 2200
+(2 rows)",,,,,,,"SELECT c.Claim_Identifier, c.Company_Claim_Number, SUM(ca.Claim_Amount) AS reserved_expense_amount
+FROM acme_insurance.main.claim c
+JOIN acme_insurance.main.claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier
+JOIN acme_insurance.main.expense_reserve er ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+GROUP BY c.Claim_Identifier, c.Company_Claim_Number
+ORDER BY c.Claim_Identifier
+LIMIT 500","SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS reserved_expenses FROM claim_amount ca JOIN expense_reserve er ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier ORDER BY ca.Claim_Identifier","SELECT c.Company_Claim_Number AS claim_number, SUM(ca.Claim_Amount) AS total_amount FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.expense_reserve k ON k.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1"
+27,"For each covered policy, what is the sum of all recorded amounts on its claims?","policy_number | total_claim_amount
+31003000336 | 13600
+(1 rows)","Policy_Identifier | Policy_Number | total_claim_amount
+1 | 31003000336 | 13600
+(1 rows)","Policy_Identifier | total_claim_amount
+1 | 13600
+(1 rows)",,,,,,,"WITH claim_policy AS (
+  SELECT DISTINCT pcd.Policy_Identifier, cc.Claim_Identifier
+  FROM acme_insurance.main.claim_coverage cc
+  JOIN acme_insurance.main.policy_coverage_detail pcd
+    ON cc.Effective_Date = pcd.Effective_Date
+   AND cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier
+)
+SELECT
+  p.Policy_Identifier,
+  p.Policy_Number,
+  SUM(ca.Claim_Amount) AS total_claim_amount
+FROM claim_policy cp
+JOIN acme_insurance.main.policy p
+  ON p.Policy_Identifier = cp.Policy_Identifier
+JOIN acme_insurance.main.claim c
+  ON c.Claim_Identifier = cp.Claim_Identifier
+JOIN acme_insurance.main.claim_amount ca
+  ON ca.Claim_Identifier = c.Claim_Identifier
+GROUP BY p.Policy_Identifier, p.Policy_Number
+ORDER BY p.Policy_Number
+LIMIT 500","SELECT p.Policy_Identifier, SUM(ca.Claim_Amount) AS total_claim_amount FROM claim_amount ca JOIN claim_coverage cc ON cc.Claim_Identifier = ca.Claim_Identifier JOIN policy_coverage_detail pcd ON pcd.Effective_Date = cc.Effective_Date AND pcd.Policy_Coverage_Detail_Identifier = cc.Policy_Coverage_Detail_Identifier JOIN policy p ON p.Policy_Identifier = pcd.Policy_Identifier GROUP BY p.Policy_Identifier ORDER BY p.Policy_Identifier","SELECT p.Policy_Number AS policy_number, SUM(ca.Claim_Amount) AS total_claim_amount FROM main.claim c JOIN main.claim_coverage cc ON cc.Claim_Identifier=c.Claim_Identifier JOIN main.policy_coverage_detail cd ON cd.Policy_Coverage_Detail_Identifier=cc.Policy_Coverage_Detail_Identifier JOIN main.policy p ON p.Policy_Identifier=cd.Policy_Identifier JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier GROUP BY 1 ORDER BY 1"
+28,How much in paid losses is associated with each claim?,"claim_number | total_amount
+12312701 | 1200
+12312702 | 2300
+(2 rows)","Claim_Identifier | Company_Claim_Number | paid_loss_amount
+1 | 12312701 | 1200
+2 | 12312702 | 2300
+(2 rows)","Claim_Identifier | paid_loss_amount
+1 | 1200
+2 | 2300
+(2 rows)",,,,,,,"SELECT
+  c.Claim_Identifier,
+  c.Company_Claim_Number,
+  SUM(ca.Claim_Amount) AS paid_loss_amount
+FROM acme_insurance.main.claim c
+JOIN acme_insurance.main.claim_amount ca
+  ON ca.Claim_Identifier = c.Claim_Identifier
+JOIN acme_insurance.main.loss_payment lp
+  ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+GROUP BY c.Claim_Identifier, c.Company_Claim_Number
+ORDER BY c.Claim_Identifier
+LIMIT 500","SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS paid_loss_amount FROM claim_amount ca JOIN loss_payment lp ON lp.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier ORDER BY ca.Claim_Identifier","SELECT c.Company_Claim_Number AS claim_number, SUM(ca.Claim_Amount) AS total_amount FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.loss_payment k ON k.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1"
+29,"Which claim has the larger amount of paid expenses, and how much is it?","claim_number | total_amount
+12312702 | 2400
+(1 rows)","Claim_Identifier | paid_expenses
+2 | 2400
+(1 rows)","Claim_Identifier | Company_Claim_Number | total_paid_expenses
+2 | 12312702 | 2400
+(1 rows)",,,,,,,"SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS paid_expenses FROM claim_amount ca JOIN expense_payment ep ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY ca.Claim_Identifier ORDER BY paid_expenses DESC LIMIT 1","SELECT c.Claim_Identifier, c.Company_Claim_Number, SUM(ca.Claim_Amount) AS total_paid_expenses
+FROM acme_insurance.main.claim_amount ca
+JOIN acme_insurance.main.expense_payment ep ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+JOIN acme_insurance.main.claim c ON ca.Claim_Identifier = c.Claim_Identifier
+GROUP BY c.Claim_Identifier, c.Company_Claim_Number
+ORDER BY total_paid_expenses DESC
+LIMIT 1","SELECT c.Company_Claim_Number AS claim_number, SUM(ca.Claim_Amount) AS total_amount FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier JOIN main.expense_payment k ON k.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY total_amount DESC,claim_number LIMIT 1"
+30,"For each claim, what is the difference between paid expenses and reserved expenses?","claim_number | paid_minus_reserved_expense
+12312701 | 200
+12312702 | 200
+(2 rows)","Claim_Identifier | Company_Claim_Number | paid_expenses | reserved_expenses | paid_minus_reserved_expenses
+1 | 12312701 | 1300 | 1100 | 200
+2 | 12312702 | 2400 | 2200 | 200
+(2 rows)","Claim_Identifier | paid_minus_reserved_expenses
+1 | 200
+2 | 200
+(2 rows)",,,,,,,"SELECT c.Claim_Identifier, c.Company_Claim_Number,
+  COALESCE(SUM(CASE WHEN ep.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END), 0) AS paid_expenses,
+  COALESCE(SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END), 0) AS reserved_expenses,
+  COALESCE(SUM(CASE WHEN ep.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END), 0)
+  - COALESCE(SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END), 0) AS paid_minus_reserved_expenses
+FROM acme_insurance.main.claim AS c
+JOIN acme_insurance.main.claim_amount AS ca ON ca.Claim_Identifier = c.Claim_Identifier
+LEFT JOIN acme_insurance.main.expense_payment AS ep ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+LEFT JOIN acme_insurance.main.expense_reserve AS er ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+GROUP BY c.Claim_Identifier, c.Company_Claim_Number
+ORDER BY c.Claim_Identifier
+LIMIT 500","SELECT c.Claim_Identifier, COALESCE(SUM(CASE WHEN ep.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END), 0) - COALESCE(SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END), 0) AS paid_minus_reserved_expenses FROM claim c LEFT JOIN claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier LEFT JOIN expense_payment ep ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier LEFT JOIN expense_reserve er ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY c.Claim_Identifier ORDER BY c.Claim_Identifier","SELECT c.Company_Claim_Number AS claim_number, SUM(CASE WHEN ep.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount WHEN er.Claim_Amount_Identifier IS NOT NULL THEN -ca.Claim_Amount ELSE 0 END) AS paid_minus_reserved_expense FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier LEFT JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_reserve er ON er.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1"
+31,Which insured object identifier appears on the coverage linked to each claim?,"claim_number | insured_object_id
+12312701 | 1
+12312702 | 1
+(2 rows)","Claim_Identifier | Insurable_Object_Identifier
+1 | 1
+2 | 1
+(2 rows)","Claim_Identifier | Company_Claim_Number | Insurable_Object_Identifier
+1 | 12312701 | 1
+2 | 12312702 | 1
+(2 rows)",,,,,,,"SELECT cc.Claim_Identifier, pcd.Insurable_Object_Identifier FROM claim_coverage cc JOIN policy_coverage_detail pcd ON cc.Effective_Date = pcd.Effective_Date AND cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier ORDER BY cc.Claim_Identifier","SELECT DISTINCT
+  c.Claim_Identifier,
+  c.Company_Claim_Number,
+  pcd.Insurable_Object_Identifier
+FROM acme_insurance.main.claim_coverage cc
+JOIN acme_insurance.main.claim c
+  ON cc.Claim_Identifier = c.Claim_Identifier
+JOIN acme_insurance.main.policy_coverage_detail pcd
+  ON cc.Effective_Date = pcd.Effective_Date
+  AND cc.Policy_Coverage_Detail_Identifier = pcd.Policy_Coverage_Detail_Identifier
+ORDER BY c.Claim_Identifier, pcd.Insurable_Object_Identifier
+LIMIT 500","SELECT c.Company_Claim_Number AS claim_number, cd.Insurable_Object_Identifier AS insured_object_id FROM main.claim c JOIN main.claim_coverage cc ON cc.Claim_Identifier=c.Claim_Identifier JOIN main.policy_coverage_detail cd ON cd.Policy_Coverage_Detail_Identifier=cc.Policy_Coverage_Detail_Identifier JOIN main.policy p ON p.Policy_Identifier=cd.Policy_Identifier ORDER BY claim_number"
+32,What is the average annual premium entry for each policy?,"policy_number | average_annual_premium
+31003000336 | 17200
+31003000337 | 12000
+(2 rows)","Policy_Identifier | Policy_Number | avg_annual_premium
+1 | 31003000336 | 17200
+2 | 31003000337 | 12000
+(2 rows)","Policy_Identifier | avg_annual_premium
+1 | 17200
+2 | 12000
+(2 rows)",,,,,,,"SELECT p.Policy_Identifier, p.Policy_Number, AVG(pa.Policy_Amount) AS avg_annual_premium
+FROM acme_insurance.main.policy_amount pa
+JOIN acme_insurance.main.premium pr ON pr.Policy_Amount_Identifier = pa.Policy_Amount_Identifier
+JOIN acme_insurance.main.policy p ON pa.Policy_Identifier = p.Policy_Identifier
+WHERE LOWER(pa.Amount_Type_Code) = 'year'
+GROUP BY p.Policy_Identifier, p.Policy_Number
+ORDER BY p.Policy_Number
+LIMIT 500","SELECT pa.Policy_Identifier, AVG(pa.Policy_Amount) AS avg_annual_premium FROM policy_amount pa JOIN premium p ON p.Policy_Amount_Identifier = pa.Policy_Amount_Identifier WHERE pa.Amount_Type_Code = 'Year' GROUP BY pa.Policy_Identifier ORDER BY pa.Policy_Identifier","SELECT p.Policy_Number AS policy_number, AVG(pa.Policy_Amount) AS average_annual_premium FROM main.policy p JOIN main.policy_amount pa ON pa.Policy_Identifier=p.Policy_Identifier JOIN main.premium pr ON pr.Policy_Amount_Identifier=pa.Policy_Amount_Identifier GROUP BY 1 ORDER BY 1"
+33,"By construction decade, what is the average station distance in miles?","construction_decade | average_station_miles
+1960 | 10.4717
+1970 | 9.72789
+1980 | 9.53005
+1990 | 8.39844
+2000 | 6.34343
+2010 | 6.36082
+2020 | 4.42857
+(7 rows)","construction_decade | avg_station_distance_miles
+1960 | 10.0816
+1970 | 10.4724
+1980 | 9.22165
+1990 | 10.0662
+2000 | 6.11009
+2010 | 6.65556
+2020 | 5.84314
+(7 rows)","construction_decade | avg_station_distance_miles
+1960 | 10.4717
+1970 | 9.72789
+1980 | 9.53005
+1990 | 8.39844
+2000 | 6.34343
+2010 | 6.36082
+2020 | 4.42857
+(7 rows)",,,,,,,"SELECT
+  (CAST(Year_Built / 10 AS INTEGER) * 10) AS construction_decade,
+  AVG(Nearest_Firestation_miles) AS avg_station_distance_miles
+FROM acme_insurance.main.fire_claim
+WHERE Year_Built IS NOT NULL
+GROUP BY CAST(Year_Built / 10 AS INTEGER) * 10
+ORDER BY construction_decade
+LIMIT 500","SELECT (Year_Built // 10) * 10 AS construction_decade, AVG(Nearest_Firestation_miles) AS avg_station_distance_miles FROM fire_claim WHERE Year_Built IS NOT NULL GROUP BY 1 ORDER BY 1","SELECT CAST(FLOOR(Year_Built/10)*10 AS INTEGER) AS construction_decade, AVG(Nearest_Firestation_miles) AS average_station_miles FROM main.fire_claim GROUP BY 1 ORDER BY 1"
+34,"For each claim, what is its paid-expense-to-reserved-expense ratio?","claim_number | paid_to_reserved_expense_ratio
+12312701 | 1.18182
+12312702 | 1.09091
+(2 rows)","Claim_Identifier | Company_Claim_Number | paid_expense | reserved_expense | paid_to_reserved_expense_ratio
+1 | 12312701 | 1300 | 1100 | 1.18182
+2 | 12312702 | 2400 | 2200 | 1.09091
+(2 rows)","Claim_Identifier | paid_to_reserved_expense_ratio
+1 | 1.18182
+2 | 1.09091
+(2 rows)",,,,,,,"WITH paid AS (
+  SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS paid_expense
+  FROM acme_insurance.main.claim_amount ca
+  JOIN acme_insurance.main.expense_payment ep
+    ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+  GROUP BY ca.Claim_Identifier
+),
+reserved AS (
+  SELECT ca.Claim_Identifier, SUM(ca.Claim_Amount) AS reserved_expense
+  FROM acme_insurance.main.claim_amount ca
+  JOIN acme_insurance.main.expense_reserve er
+    ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier
+  GROUP BY ca.Claim_Identifier
+)
+SELECT
+  c.Claim_Identifier,
+  c.Company_Claim_Number,
+  p.paid_expense,
+  r.reserved_expense,
+  CAST(p.paid_expense AS DOUBLE) / NULLIF(CAST(r.reserved_expense AS DOUBLE), 0) AS paid_to_reserved_expense_ratio
+FROM acme_insurance.main.claim c
+LEFT JOIN paid p ON p.Claim_Identifier = c.Claim_Identifier
+LEFT JOIN reserved r ON r.Claim_Identifier = c.Claim_Identifier
+ORDER BY c.Claim_Identifier
+LIMIT 500","SELECT c.Claim_Identifier, SUM(CASE WHEN ep.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END) * 1.0 / NULLIF(SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount END), 0) AS paid_to_reserved_expense_ratio FROM claim c LEFT JOIN claim_amount ca ON ca.Claim_Identifier = c.Claim_Identifier LEFT JOIN expense_payment ep ON ep.Claim_Amount_Identifier = ca.Claim_Amount_Identifier LEFT JOIN expense_reserve er ON er.Claim_Amount_Identifier = ca.Claim_Amount_Identifier GROUP BY c.Claim_Identifier ORDER BY c.Claim_Identifier","SELECT c.Company_Claim_Number AS claim_number, SUM(CASE WHEN ep.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END)*1.0/NULLIF(SUM(CASE WHEN er.Claim_Amount_Identifier IS NOT NULL THEN ca.Claim_Amount ELSE 0 END),0) AS paid_to_reserved_expense_ratio FROM main.claim c JOIN main.claim_amount ca ON ca.Claim_Identifier=c.Claim_Identifier LEFT JOIN main.loss_payment lp ON lp.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.loss_reserve lr ON lr.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_payment ep ON ep.Claim_Amount_Identifier=ca.Claim_Amount_Identifier LEFT JOIN main.expense_reserve er ON er.Claim_Amount_Identifier=ca.Claim_Amount_Identifier GROUP BY 1 ORDER BY 1"
