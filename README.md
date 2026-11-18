@@ -1,10 +1,12 @@
 # DQL Benchmarks
 
+[![DOI](https://zenodo.org/badge/1398903034.svg)](https://doi.org/10.5281/zenodo.24329319)
+
 Everything behind the paper **[Context, Trust Labels and Abstention in a Governed Text-to-SQL Layer: A Pre-registered Evaluation on an Insurance Warehouse](analysis/insurance-2026-09-29/paper/paper.pdf)** (Kondapaka, 2026, preprint v1, 24 pages): the harness that ran it, all five question sets, every run report, the human audits, the statistics script and the paper generator.
 
 [DQL](https://github.com/duckcode-ai-labs/dql) is the open-source engine of **[ZLens](https://zlens.app)**, an analytics layer that labels every answer by how it was made: *certified* by a person, *governed* (built from approved metrics), *review required* (drafted SQL) or *blocked*.
 
-**[Read the paper (PDF)](analysis/insurance-2026-09-29/paper/paper.pdf)** · [Pre-registration](insurance/PREREGISTRATION-SET5.md) · [Sealing hashes](docs/SEALING.md) · [Reproduce the numbers](docs/REPRODUCE.md)
+**[Read the paper (PDF)](analysis/insurance-2026-09-29/paper/paper.pdf)** · [Pre-registration](insurance/PREREGISTRATION-SET5.md) · [Sealing hashes](docs/SEALING.md) · [Reproduce the numbers](docs/REPRODUCE.md) · DOI [10.5281/zenodo.24329320](https://doi.org/10.5281/zenodo.24329320)
 
 ## The short version
 
@@ -39,6 +41,12 @@ The earlier, exploratory sets (3 and 4), the database-variant check and a root-c
 ## What is in this repository
 
 All five question sets are public. Sets 4 and 5 were sealed until the paper was posted; their SHA-256 hashes were published in [docs/SEALING.md](docs/SEALING.md) before any system was run on them, so you can check that the released files are the ones that were run. The run archive (run stores, cassettes and project copies, needed to re-grade from raw rows) will be deposited with a persistent identifier and linked here.
+
+## How to cite
+
+Kondapaka, K. (2026). *Context, Trust Labels and Abstention in a Governed Text-to-SQL Layer: A Pre-registered Evaluation on an Insurance Warehouse* (preprint v1). DuckCode AI Labs. https://doi.org/10.5281/zenodo.24329320
+
+That DOI is the archived v1 of this repository on Zenodo, with the paper inside. https://doi.org/10.5281/zenodo.24329319 always resolves to the latest version. GitHub's "Cite this repository" button reads [CITATION.cff](CITATION.cff).
 
 ## Layout
 
